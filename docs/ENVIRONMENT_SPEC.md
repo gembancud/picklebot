@@ -1,13 +1,13 @@
 # Picklebot environment specification
 
-Specification version: **env-v0-draft**
+Specification version: **env-v0**
 
 Scope: **Phase 0 simulation contract**
 
-Normative terms such as **must**, **must not**, **should**, and **may** describe
-requirements for declaring Phase 0 complete. This document becomes `env-v0`
-when every Phase 0 exit criterion is satisfied. Incompatible contract changes
-after that point require a new environment version.
+Normative terms such as **must**, **must not**, **should**, and **may** define
+the frozen `env-v0` contract. Phase 0 completion evidence is recorded in the
+roadmap milestone. Incompatible contract changes require a new environment
+version.
 
 ## 1. Design goals
 

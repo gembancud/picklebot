@@ -6,7 +6,7 @@ namespace Picklebot.Core
 {
     public static class EnvironmentVersion
     {
-        public const string Current = "env-v0-draft";
+        public const string Current = "env-v0";
         public const int PhysicsTicksPerSecond = 120;
         public const int DefaultTicksPerAction = 2;
         public const float PhysicsDeltaTime = 1f / PhysicsTicksPerSecond;

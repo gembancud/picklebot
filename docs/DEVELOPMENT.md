@@ -7,7 +7,7 @@
 | Unity Editor | `6000.5.5f1` |
 | Unity Test Framework | `1.7.0` |
 | CoplayDev MCP for Unity | `10.0.0` |
-| Phase 0 environment | `env-v0-draft` |
+| Phase 0 environment | `env-v0` |
 
 Package versions and Git dependencies are pinned in `Packages/manifest.json`.
 Do not change a pinned version without a decision entry and a passing
