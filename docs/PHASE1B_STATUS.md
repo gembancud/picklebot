@@ -52,9 +52,12 @@ artifacts/phase1b/provisional/
 artifacts/phase1b/soak/
 ```
 
-It is intentionally ignored by Git and records `sourceCommit: uncommitted`.
-Model-derived flight checks use published coefficients but are not measured
-reference trajectories. They are marked:
+It is intentionally ignored by Git and, by default, records
+`sourceCommit: uncommitted`. When the runner receives
+`PICKLEBOT_SOURCE_COMMIT`, it records that exact checkpoint commit instead;
+this improves reproducibility but does not promote the artifacts to closing
+evidence. Model-derived flight checks use published coefficients but are not
+measured reference trajectories. They are marked:
 
 ```text
 qualifiesForEmpiricalClose: false
