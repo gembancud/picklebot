@@ -76,8 +76,10 @@ The Unity Test Framework command-line filters are intentional:
 - the soak selects its exact full test name.
 
 Generated NUnit XML and Unity logs are written below
-`artifacts/phase0/tests/` and remain local. The versioned soak summary and
-per-episode manifests are written to:
+`artifacts/phase0/tests/` and remain local during development. The Phase 0
+closing NUnit XML snapshots are versioned below
+`docs/evidence/phase0/tests/`. The versioned soak summary and per-episode
+manifests are written to:
 
 ```text
 docs/evidence/phase0/soak/summary.json

@@ -25,7 +25,7 @@ Accepted decisions are never silently rewritten. A behavioral change needs a
 new decision entry, updated tests, and updates to every affected canonical
 document.
 
-## Current milestone: Phase 0
+## Current milestone: Phase 0 complete
 
 Phase 0 establishes:
 
@@ -37,9 +37,10 @@ Phase 0 establishes:
 
 No reinforcement-learning framework is required for Phase 0.
 
-Phase 0 is complete only after the committed verification suite and a
-10,000-episode seeded headless soak pass, the run is recorded, and the
-environment contract is tagged `env-v0`.
+Phase 0 closed on 2026-07-26 after the committed verification suite and a
+10,000-episode seeded headless soak passed from the frozen source snapshot.
+The run is recorded in the roadmap milestone and the environment contract is
+tagged `env-v0`. Phase 1 training has not started.
 
 ## Direction in one paragraph
 

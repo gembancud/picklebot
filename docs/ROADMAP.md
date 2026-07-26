@@ -237,3 +237,65 @@ When a phase closes, add a dated section here containing:
 
 Do not rewrite an old milestone to match later understanding. Correct it with a
 dated note or a superseding decision so the historical record stays legible.
+
+### 2026-07-26 — Phase 0 closed and env-v0 frozen
+
+- Environment: `env-v0`
+- Verified source commit:
+  `b84125dbd2742d17fdd706ab79515069e8683f7e`
+- Closing decision: [D-016](DECISIONS.md#d-016--freeze-the-passing-phase-0-contract-as-env-v0)
+- Release tag: `env-v0`
+- Supported verification setup: Unity `6000.5.5f1`, `OSXEditor`, Apple M1 Pro,
+  16 GB memory
+
+The source-exact checkout was verified with:
+
+```bash
+PICKLEBOT_SOURCE_COMMIT=b84125dbd2742d17fdd706ab79515069e8683f7e \
+  ./scripts/phase0-editmode.sh
+PICKLEBOT_SOURCE_COMMIT=b84125dbd2742d17fdd706ab79515069e8683f7e \
+  ./scripts/phase0-playmode.sh
+PICKLEBOT_SOURCE_COMMIT=b84125dbd2742d17fdd706ab79515069e8683f7e \
+  ./scripts/phase0-soak.sh
+```
+
+Results:
+
+- EditMode: 27 passed, 0 failed, 0 skipped.
+- Normal PlayMode: 16 passed, 0 failed, 0 skipped.
+- Soak gate: 1 passed test covering exactly 10,000 episodes over seeds
+  `1000000`–`1009999`.
+- Soak integrity: 10,000 terminals, 0 invalid numeric states, 0 unclassified
+  terminations, and 0 state-leak failures.
+- Terminal distribution: 5,082 `FarCourtLanding`, 3,331
+  `NearCourtLanding`, 476 `OutOfBoundsLanding`, and 1,111
+  `PlayableVolumeExit`.
+- Configuration identity: `sim-config-v0` /
+  `b584437e3d227d89`.
+- Physics settings identity: `17155161017eb197`.
+
+Versioned evidence:
+
+- [EditMode NUnit result](evidence/phase0/tests/editmode-results.xml) —
+  SHA-256 `d813b45477cd6f0710dc8081df0a9a1d73c993695ea1b436ab18a3e78500710c`
+- [PlayMode NUnit result](evidence/phase0/tests/playmode-results.xml) —
+  SHA-256 `466b8c73e5b57684886419d37ed4947ba45194389f8266f6814569c66eb6b36a`
+- [Soak NUnit result](evidence/phase0/tests/soak-results.xml) —
+  SHA-256 `7133848e4ecfa24a48eafbd313b931566b8d87c999edec5347b64981a5e90c23`
+- [Soak summary](evidence/phase0/soak/summary.json) —
+  SHA-256 `a9ad0127841e5fb940ca56a73cbaae554ab7d6cb54c017b1f5abb44cba734378`
+- [10,000 episode manifests](evidence/phase0/soak/episodes.jsonl) —
+  SHA-256 `bc588c26c395ebf13811fcf7c410bb73071e0e4bc82972d9a41f66be5e9e390e`
+- [Runtime scene](evidence/phase0/phase0-runtime-sloped-net.png)
+
+Known limits:
+
+- Replay is supported as event-equivalent with the numeric tolerances in the
+  environment specification; cross-platform bit identity is not claimed.
+- The paddle and sloped two-box net are intentionally simplified collision
+  models, and the invisible catch floor exists only to classify out landings.
+- Phase 0 covers deterministic single-exchange simulation, not a learned
+  policy, humanoid locomotion, full match rules/scoring, or a skill benchmark.
+
+Phase 1 may now begin under its accepted scope, but no trainer, policy, or
+Phase 1 implementation is included in this milestone.

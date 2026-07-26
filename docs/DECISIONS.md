@@ -241,6 +241,38 @@ and only the top collision surface is behaviorally relevant in Phase 0.
 Affected roadmap/spec sections: environment specification sections 3, 9, 13,
 14, and 15.
 
+### D-016 — Freeze the passing Phase 0 contract as env-v0
+
+- Date: 2026-07-26
+- Status: Accepted
+
+The trainer-independent contract at verified source commit
+`b84125dbd2742d17fdd706ab79515069e8683f7e` is frozen as `env-v0`. Phase 0 is
+closed, its evidence remains versioned with the project, and later behavioral
+or breaking changes follow the change-control rules in the environment
+specification.
+
+Evidence: a source-exact clean checkout, using a package/import cache warmed by
+the preceding clean-clone gate, passed 27 EditMode tests, 16 normal PlayMode
+tests, and the exact 10,000-episode soak. All 10,000 episodes terminated with
+zero invalid numeric states, zero unclassified terminations, and zero state
+leaks. The roadmap milestone records the commands, hashes, terminal counts, and
+artifact paths.
+
+Trade-offs: this freeze covers the documented Apple M1 Pro/OSXEditor
+reproducibility envelope and event-equivalent replay tolerances. It does not
+claim bit-identical PhysX trajectories across arbitrary Unity versions,
+hardware, or operating systems. The simplified paddle, two-segment net, and
+single-exchange scenario scope remain deliberate `env-v0` limits.
+
+Migration and compatibility: Phase 1 adapters must consume `env-v0` without
+adding trainer dependencies to the core or simulation assemblies. Phase 1
+training is permitted by the roadmap but is not part of this decision or the
+Phase 0 release.
+
+Affected roadmap/spec sections: Phase 0 exit criteria, milestone record,
+environment specification sections 14–16, and development verification.
+
 ## Decision proposal template
 
 Copy this section to the end of the file:
