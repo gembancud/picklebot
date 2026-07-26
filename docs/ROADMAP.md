@@ -318,3 +318,82 @@ Known limits:
 
 Phase 1 may now begin under its accepted scope, but no trainer, policy, or
 Phase 1 implementation is included in this milestone.
+
+### 2026-07-26 — Phase 1A evaluation foundation closed
+
+- Environment: `env-v0`
+- Protocol: `phase1a-protocol-v0` / `4ae0928d344f1c3c`
+- Reward mapping: `d8a9bd0a07a33a23`
+- Verified implementation commit:
+  `48963c26d761b423e2ca124f11c576cd6880eea0`
+- Closing decision:
+  [D-019](DECISIONS.md#d-019--close-phase-1a-on-source-exact-baseline-evidence)
+- Supported verification setup: Unity `6000.5.5f1`, `OSXEditor`, Apple M1 Pro,
+  16 GB memory
+
+The source-exact clean checkout was verified with:
+
+```bash
+PICKLEBOT_SOURCE_COMMIT=48963c26d761b423e2ca124f11c576cd6880eea0 \
+  ./scripts/phase1a-verify.sh
+```
+
+Test results:
+
+- Phase 0 EditMode: 27 passed, 0 failed, 0 skipped.
+- Phase 0 normal PlayMode: 16 passed, 0 failed, 0 skipped.
+- Phase 1A EditMode: 12 passed, 0 failed, 0 skipped.
+- Phase 1A normal PlayMode: 3 passed, 0 failed, 0 skipped.
+- Phase 1A exact evidence gate: 1 passed test covering two policies over
+  exactly 1,000 held-out episodes each.
+
+Baseline results:
+
+- Zero action: 0% contact, 0% legal return, 0% target hit; all 1,000 episodes
+  ended as `NearCourtLanding`.
+- Intercept heuristic: 100% contact, 33.4% legal return, 28.8% overall target
+  hit, and 86.23% target hit conditioned on a legal return.
+- Intercept terminals: 334 `FarCourtLanding` and 666 `PlayableVolumeExit`;
+  there were no out landings, invalid states, invalid actions, or unclassified
+  terminals.
+- Intercept limitations: 0% legal returns in the 333-episode fast bucket and
+  50.07% in the 667-episode medium bucket.
+- Mean landing error over 334 legal returns: `0.93166 m`.
+- Mean action delta: `0.015901`; peak paddle speed: `6.201724 m/s`.
+
+Readiness results:
+
+- 20,000 measured actions and 527 completed validation episodes.
+- `4,439.06` actions/second against a minimum of `500`.
+- `2,093.23` managed bytes/action against a maximum of `4,096`.
+- Unity's `GC Allocated In Frame` counter was available; the readiness gate
+  passed.
+
+Versioned evidence:
+
+- [Phase 1A summary](evidence/phase1a/summary.json) —
+  SHA-256 `f11cf14dc397be51eedab2511c6bfd3ef549192ce909ac016c071504ecf3e4f4`
+- [Phase 1A readiness](evidence/phase1a/readiness.json) —
+  SHA-256 `54b67691b274010bb38392cf5f9a403a7dbce3fa0633a06eb469f94de058a0fe`
+- [2,000 held-out episode records](evidence/phase1a/episodes.jsonl) —
+  SHA-256 `ded856b722306349bf571c4a6e7688b947a7d6f28b13986519fec3ed6285df5b`
+- [Phase 1A EditMode NUnit result](evidence/phase1a/tests/editmode-results.xml) —
+  SHA-256 `10473abaf4bbec2ceab445a1768def4cbfd15324955202334c097f114f6952b4`
+- [Phase 1A PlayMode NUnit result](evidence/phase1a/tests/playmode-results.xml) —
+  SHA-256 `6df96fe7946f2b12866b044468459992d8efd03d49d4cc85b808ff4dd65b5855`
+- [Phase 1A evidence NUnit result](evidence/phase1a/tests/evidence-results.xml) —
+  SHA-256 `ebd919b78a0c7f78c207531113f1bd34cc5c6ede9ca2d0680f4769c092d676aa`
+
+Known limits:
+
+- Phase 1A establishes evaluation and readiness, not a learned policy.
+- The selected ML-Agents and Python packages are not installed; their exact
+  interoperability remains a Phase 1B smoke gate.
+- Allocation and throughput were measured synchronously in the Unity Editor,
+  not in a trainer-connected standalone player.
+- The heuristic's 66.6% playable-volume-exit rate and complete failure in the
+  fast bucket are explicit training opportunities, not hidden successes.
+
+Phase 1B may now install the isolated trainer environment and adapter, then run
+a bounded learning smoke on training/validation seeds. The held-out seeds remain
+untouched until a checkpoint and experiment configuration are frozen.

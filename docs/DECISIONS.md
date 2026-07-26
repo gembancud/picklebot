@@ -327,6 +327,38 @@ fallback if the smoke exposes a blocker.
 Affected roadmap/spec sections: Phase 1A and 1B, Phase 1A specification,
 architecture, and development setup.
 
+### D-019 — Close Phase 1A on source-exact baseline evidence
+
+- Date: 2026-07-26
+- Status: Accepted
+
+`phase1a-protocol-v0` with hash `4ae0928d344f1c3c` is frozen at implementation
+commit `48963c26d761b423e2ca124f11c576cd6880eea0`. Phase 1A is complete and
+Phase 1B may begin with trainer installation, adapter integration, and a bounded
+learning smoke.
+
+Evidence: a clean checkout passed the existing 27 EditMode and 16 normal
+PlayMode Phase 0 tests, plus 12 Phase 1A EditMode tests, 3 normal Phase 1A
+PlayMode tests, and the exact Phase 1A evidence test. Both baselines completed
+all 1,000 held-out episodes without invalid or unclassified termination. The
+readiness run completed 20,000 real actions at 4,439 actions per second and
+2,093 managed bytes per action in the Unity Editor.
+
+Trade-offs: the heuristic contacts every held-out launch but produces a legal
+return in only 33.4% and exits the playable volume in 66.6%. It has no legal
+return in the fast launch bucket. This weakness is deliberately committed as
+the Phase 1B comparison target, not tuned away after seeing held-out results.
+Editor throughput and allocation do not predict trainer-connected player
+performance, which Phase 1B must measure separately.
+
+Migration and compatibility: Phase 1B must retain the frozen held-out suite and
+must not use it for learning, model selection, early stopping, or reward tuning.
+Learned-policy claims must name their trainer configuration, training seeds,
+checkpoint, source commit, and this protocol hash.
+
+Affected roadmap/spec sections: Phase 1A close gate, milestone record, Phase 1B
+entry, and README milestone.
+
 ## Decision proposal template
 
 Copy this section to the end of the file:

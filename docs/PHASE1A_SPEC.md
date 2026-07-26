@@ -1,8 +1,10 @@
 # Picklebot Phase 1A specification
 
-Status: **Normative**
+Status: **Frozen by D-019**
 
 Version: `phase1a-protocol-v0`
+
+Protocol hash: `4ae0928d344f1c3c`
 
 Environment dependency: `env-v0`
 

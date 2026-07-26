@@ -27,7 +27,7 @@ Accepted decisions are never silently rewritten. A behavioral change needs a
 new decision entry, updated tests, and updates to every affected canonical
 document.
 
-## Current milestone: Phase 1A
+## Current milestone: Phase 1A complete
 
 Phase 0 establishes:
 
@@ -46,7 +46,9 @@ Phase 1A adds the trainer-independent evaluation foundation: disjoint seed
 partitions, a staged curriculum, frozen observations and reward mapping,
 scripted baselines, metrics, and training-readiness checks. It prepares a
 repeatable Phase 1B training experiment; it does not claim that reinforcement
-learning has started or produced a checkpoint.
+learning has started or produced a checkpoint. Phase 1A closed on 2026-07-26
+from the source-exact clean-checkout evidence recorded in the roadmap. Phase 1B
+trainer installation and the first learning smoke are next.
 
 ## Direction in one paragraph
 
