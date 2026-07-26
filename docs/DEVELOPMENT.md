@@ -8,6 +8,8 @@
 | Unity Test Framework | `1.7.0` |
 | CoplayDev MCP for Unity | `10.0.0` |
 | Phase 0 environment | `env-v0` |
+| Phase 1A protocol | `phase1a-protocol-v0` |
+| Selected trainer adapter target | `com.unity.ml-agents@4.0.3` |
 
 Package versions and Git dependencies are pinned in `Packages/manifest.json`.
 Do not change a pinned version without a decision entry and a passing
@@ -69,6 +71,25 @@ Run the complete Phase 0 gate:
 ./scripts/phase0-verify.sh
 ```
 
+Run the Phase 1A fast suites:
+
+```bash
+./scripts/phase1a-editmode.sh
+./scripts/phase1a-playmode.sh
+```
+
+Generate the explicit 1,000-episode-per-policy baseline and readiness evidence:
+
+```bash
+./scripts/phase1a-evidence.sh
+```
+
+Run the complete Phase 0 plus Phase 1A regression gate:
+
+```bash
+./scripts/phase1a-verify.sh
+```
+
 The Unity Test Framework command-line filters are intentional:
 
 - EditMode selects only `Picklebot.Tests.EditMode`;
@@ -89,6 +110,30 @@ docs/evidence/phase0/soak/episodes.jsonl
 Set `PICKLEBOT_SOURCE_COMMIT` when verifying a checkout that should be named
 explicitly in the soak summary. If it is unset, the soak script reads the
 current Git `HEAD`.
+
+Phase 1A uses the same variable for baseline and readiness reports. Local NUnit
+XML and logs are written under `artifacts/phase1a/tests/`; versioned closing
+evidence belongs under `docs/evidence/phase1a/`.
+
+## Trainer environment
+
+Phase 1A selects the ML-Agents 4.0 package line but does not install it. The
+project manifest therefore remains free of ML-Agents, and the machine's current
+Python environment is not treated as a trainer environment.
+
+Before Phase 1B:
+
+1. prepare Python `3.10.12` in a dedicated environment;
+2. install and smoke-test ML-Agents Python `1.1.0` against the exact selected
+   Unity package;
+3. place Python, PyTorch, run artifacts, and checkpoints on a volume with
+   sufficient free space;
+4. run a short adapter handshake and inference/training smoke before a long
+   experiment.
+
+The version guidance is from the upstream
+[ML-Agents installation guide](https://github.com/Unity-Technologies/ml-agents/blob/develop/docs/Installation.md)
+and [release table](https://github.com/Unity-Technologies/ml-agents).
 
 The headless command shape and semicolon/filter behavior follow Unity's current
 Test Framework command-line reference:

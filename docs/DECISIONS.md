@@ -273,6 +273,60 @@ Phase 0 release.
 Affected roadmap/spec sections: Phase 0 exit criteria, milestone record,
 environment specification sections 14–16, and development verification.
 
+### D-017 — Freeze the Phase 1A evaluation protocol before training
+
+- Date: 2026-07-26
+- Status: Accepted
+
+Phase 1 is divided into Phase 1A evaluation/training readiness and Phase 1B
+learned returns. Phase 1A freezes disjoint seed partitions, a four-stage
+curriculum, a 37-value numeric observation encoding, the existing six-value
+action contract, a scalar reward mapping, metric definitions, and zero/intercept
+baselines before a trainer is installed.
+
+Evidence: contract tests verify disjoint partitions and assembly direction;
+PlayMode runs both baselines through `env-v0`. The committed held-out gate uses
+1,000 manifests in seeds `4000000`–`4000999`.
+
+Trade-offs: the protocol adds explicit upward velocity to the inbound launch
+manifests. Unmodified easy/default `env-v0` launches can strike the net before
+reaching the paddle, so they are valid environment cases but poor first-control
+curricula. The override is manifest-recorded and does not change `env-v0`.
+
+Migration and compatibility: Phase 1B uses `phase1a-protocol-v0`. Any change to
+its seeds, stages, encoding, actions, reward weights, metrics, or thresholds
+requires a new decision and protocol version.
+
+Affected roadmap/spec sections: Phase 1, Phase 1A specification, architecture,
+and development verification.
+
+### D-018 — Target ML-Agents 4.0 without installing it in Phase 1A
+
+- Date: 2026-07-26
+- Status: Accepted
+
+The first trainer adapter targets `com.unity.ml-agents@4.0.3`, the exact package
+reported by the Unity 6 package registry during Phase 1A. Upstream Release 23
+documents the compatible release line as Unity package 4.0, ML-Agents Python
+1.1.0, and Python 3.10.12. The adapter and Python/PyTorch environment are
+deferred to Phase 1B and must first pass an exact-version handshake smoke.
+
+Evidence: live package-registry inspection in Unity 6000.5.5f1 and the current
+official ML-Agents release and installation documentation.
+
+Trade-offs: this avoids consuming scarce system-volume storage before the
+environment is ready and avoids treating the machine's Python 3.14 installation
+as supported. It postpones proof that Unity package 4.0.3 and Python package
+1.1.0 interoperate on this machine.
+
+Migration and compatibility: trainer types belong in a new adapter assembly.
+`Picklebot.Core`, `Picklebot.Simulation`, and `Picklebot.Evaluation` remain free
+of ML-Agents references. A custom Python low-level adapter remains a permitted
+fallback if the smoke exposes a blocker.
+
+Affected roadmap/spec sections: Phase 1A and 1B, Phase 1A specification,
+architecture, and development setup.
+
 ## Decision proposal template
 
 Copy this section to the end of the file:

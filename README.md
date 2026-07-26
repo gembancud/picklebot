@@ -16,16 +16,18 @@ Start here before changing simulation, learning, or evaluation behavior:
 3. [Environment specification](docs/ENVIRONMENT_SPEC.md) — the normative Phase
    0 contract, geometry, timing, lifecycle, observations, actions, events,
    termination, and verification requirements.
-4. [Decision record](docs/DECISIONS.md) — the accepted rationale and the only
+4. [Phase 1A specification](docs/PHASE1A_SPEC.md) — the frozen seed partitions,
+   curriculum, observation/reward protocol, baselines, and readiness gates.
+5. [Decision record](docs/DECISIONS.md) — the accepted rationale and the only
    process for changing established direction.
-5. [Development setup](docs/DEVELOPMENT.md) — pinned Unity and editor-tooling
+6. [Development setup](docs/DEVELOPMENT.md) — pinned Unity and editor-tooling
    versions, local project setup, and verification entry points.
 
 Accepted decisions are never silently rewritten. A behavioral change needs a
 new decision entry, updated tests, and updates to every affected canonical
 document.
 
-## Current milestone: Phase 0 complete
+## Current milestone: Phase 1A
 
 Phase 0 establishes:
 
@@ -35,12 +37,16 @@ Phase 0 establishes:
 - automated simulation tests and visible debugging tools;
 - a trainer-independent observations/actions/rewards interface.
 
-No reinforcement-learning framework is required for Phase 0.
-
 Phase 0 closed on 2026-07-26 after the committed verification suite and a
 10,000-episode seeded headless soak passed from the frozen source snapshot.
 The run is recorded in the roadmap milestone and the environment contract is
-tagged `env-v0`. Phase 1 training has not started.
+tagged `env-v0`.
+
+Phase 1A adds the trainer-independent evaluation foundation: disjoint seed
+partitions, a staged curriculum, frozen observations and reward mapping,
+scripted baselines, metrics, and training-readiness checks. It prepares a
+repeatable Phase 1B training experiment; it does not claim that reinforcement
+learning has started or produced a checkpoint.
 
 ## Direction in one paragraph
 

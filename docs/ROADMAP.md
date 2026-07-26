@@ -80,7 +80,26 @@ camera observations, photorealistic assets, and full match scoring.
 Prove that a policy can learn ball contact and target placement without
 locomotion or whole-body control obscuring the result.
 
-### Scope
+### Phase 1A — Evaluation and training readiness
+
+Before installing a trainer or producing a checkpoint:
+
+- freeze disjoint training, validation, and held-out seed partitions;
+- freeze the numeric observation, action, reward, curriculum, and metric
+  protocol;
+- establish zero-action and deterministic intercept baselines;
+- prove the real environment step path meets provisional throughput and managed
+  allocation limits;
+- select a trainer adapter target while keeping trainer dependencies outside
+  the simulator;
+- record clean-checkout evidence without claiming learned behavior.
+
+The normative details and close gate are in
+[PHASE1A_SPEC.md](PHASE1A_SPEC.md).
+
+### Phase 1B — First learned return
+
+#### Scope
 
 - Use the Phase 0 simplified paddle and numeric observations.
 - Train continuous paddle motion against seeded launch curricula.
@@ -90,7 +109,7 @@ locomotion or whole-body control obscuring the result.
   unchanged.
 - Establish scripted and heuristic baselines before comparing learned policies.
 
-### Evaluation set
+#### Evaluation set
 
 Use a held-out, versioned seed set. Report at minimum:
 
@@ -102,7 +121,7 @@ Use a held-out, versioned seed set. Report at minimum:
 - action smoothness and peak paddle speed;
 - performance by launch-speed, spin, and placement bucket.
 
-### Exit criteria
+#### Exit criteria
 
 - A trained policy materially exceeds the committed scripted baseline on legal
   returns and target accuracy.
