@@ -33,14 +33,15 @@ replace any exit criterion.
 - no API that can construct a Phase 1C final-evaluation request before
   checkpoint and experiment freeze.
 
-Current regular suites:
+Current source-exact checkpoint suites:
 
-- Phase 1B EditMode: `11/11` passing;
-- Phase 1B PlayMode and explicit soak: `13/13` passing at the last combined
-  run before readiness/evidence additions;
-- provisional evidence generator: `1/1` passing.
+- combined Phase 0, Phase 1A, and Phase 1B EditMode: `50/50` passing;
+- Phase 1B regular PlayMode: `13/13` passing;
+- Phase 1B provisional evidence generator: `1/1` passing;
+- Phase 1B 10,000-episode calibrated soak: `1/1` passing.
 
-The next source-exact run must refresh these counts after all changes freeze.
+These are checkpoint results, not Phase 1B closing evidence. The final
+source-exact run must refresh them after the configuration and tag freeze.
 
 ## Provisional evidence only
 

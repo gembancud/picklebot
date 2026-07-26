@@ -172,7 +172,7 @@ namespace Picklebot.Tests.Phase1B.PlayMode
                     "No project-owned or equivalent published acrylic-court trace is committed.",
                     "The official drop release-height datum awaits a cited detailed procedure.",
                     "The calibration configuration remains provisional-unfitted.",
-                    "A clean source-exact rerun and env-v1 tag do not yet exist."
+                    "Final closing artifacts from an accepted env-v1 tag do not yet exist."
                 };
                 File.WriteAllText(
                     Path.Combine(outputDirectory, "summary.json"),
