@@ -6,6 +6,7 @@
   "required": [
     "trialId",
     "caseType",
+    "coordinateFrame",
     "provenance",
     "surface",
     "ball",
@@ -17,16 +18,24 @@
   "properties": {
     "trialId": { "type": "string", "minLength": 1 },
     "caseType": { "enum": ["vertical", "shallow", "spun"] },
+    "coordinateFrame": {
+      "const": "picklebot-world-v1"
+    },
     "provenance": {
       "type": "object",
       "required": [
+        "kind",
         "source",
         "capturedAt",
         "method",
         "velocityUncertaintyMps",
-        "rawArtifactSha256"
+        "rawArtifactSha256",
+        "coordinateArtifactSha256"
       ],
       "properties": {
+        "kind": {
+          "enum": ["project-physical-capture", "published-raw-trace"]
+        },
         "source": { "type": "string", "minLength": 1 },
         "capturedAt": { "type": "string", "format": "date-time" },
         "method": { "type": "string", "minLength": 1 },
@@ -35,6 +44,10 @@
           "minimum": 0
         },
         "rawArtifactSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "coordinateArtifactSha256": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
         }
@@ -54,12 +67,21 @@
     },
     "ball": {
       "type": "object",
-      "required": ["model", "sampleId", "massKg", "diameterM"],
+      "required": [
+        "model",
+        "sampleId",
+        "holeCount",
+        "massKg",
+        "diameterM",
+        "approval"
+      ],
       "properties": {
         "model": { "type": "string", "minLength": 1 },
         "sampleId": { "type": "string", "minLength": 1 },
+        "holeCount": { "const": 40 },
         "massKg": { "type": "number", "exclusiveMinimum": 0 },
-        "diameterM": { "type": "number", "exclusiveMinimum": 0 }
+        "diameterM": { "type": "number", "exclusiveMinimum": 0 },
+        "approval": { "$ref": "#/$defs/approval" }
       },
       "additionalProperties": false
     },
@@ -93,6 +115,16 @@
     }
   },
   "$defs": {
+    "approval": {
+      "type": "object",
+      "required": ["authority", "sourceUrl", "verifiedAt"],
+      "properties": {
+        "authority": { "const": "USA Pickleball" },
+        "sourceUrl": { "type": "string", "format": "uri" },
+        "verifiedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
     "kinematics": {
       "type": "object",
       "required": ["velocityMps", "angularVelocityRadS"],

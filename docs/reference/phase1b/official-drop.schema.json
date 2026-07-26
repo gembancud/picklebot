@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://picklebot.local/schemas/phase1b-official-drop-v0.json",
+  "title": "Picklebot Phase 1B official ball-drop procedure",
+  "type": "object",
+  "required": [
+    "procedureId",
+    "authority",
+    "source",
+    "publishedAt",
+    "retrievedAt",
+    "documentSha256",
+    "releaseDatum",
+    "releaseReferenceHeightM",
+    "ballDiameterM",
+    "initialBallCenterHeightM",
+    "reboundMeasurementDatum",
+    "minimumReboundTopHeightM",
+    "maximumReboundTopHeightM",
+    "minimumTemperatureC",
+    "maximumTemperatureC",
+    "datumEvidence"
+  ],
+  "properties": {
+    "procedureId": { "type": "string", "minLength": 1 },
+    "authority": { "const": "USA Pickleball" },
+    "source": { "type": "string", "format": "uri" },
+    "publishedAt": { "type": "string", "format": "date-time" },
+    "retrievedAt": { "type": "string", "format": "date-time" },
+    "documentSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "releaseDatum": {
+      "enum": ["ball-top", "ball-center", "ball-bottom"]
+    },
+    "releaseReferenceHeightM": { "const": 1.9812 },
+    "ballDiameterM": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "initialBallCenterHeightM": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "reboundMeasurementDatum": { "const": "ball-top" },
+    "minimumReboundTopHeightM": { "const": 0.762 },
+    "maximumReboundTopHeightM": { "const": 0.8636 },
+    "minimumTemperatureC": { "const": 18.3333333333 },
+    "maximumTemperatureC": { "const": 23.8888888889 },
+    "datumEvidence": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

@@ -2,7 +2,7 @@
 
 Status: **Active; not closed**
 
-Updated: `2026-07-26`
+Updated: `2026-07-27`
 
 Normative direction:
 [PHASE1B_PHYSICS_CALIBRATION_SPEC.md](PHASE1B_PHYSICS_CALIBRATION_SPEC.md).
@@ -32,6 +32,13 @@ replace any exit criterion.
   spin scale and new reserved seed partitions;
 - no API that can construct a Phase 1C final-evaluation request before
   checkpoint and experiment freeze.
+- strict empirical flight, acrylic-court, and official-drop input schemas;
+- a provenance validator that rejects simulator-generated calibration data;
+- an independent deterministic RK4 coefficient fitter with vacuum control and
+  bootstrap uncertainty;
+- an acrylic response-target summarizer;
+- a non-mutating close audit covering source, artifacts, hashes, tag, and
+  final-seed hygiene.
 
 Current source-exact checkpoint suites:
 
@@ -84,6 +91,11 @@ Phase 1B remains open until all of these are resolved:
 8. keep the new Phase 1C final-evaluation seeds untouched.
 
 No RL trainer installation or training is authorized before those gates close.
+
+The empirical tooling is covered by `scripts/phase1b-empirical-test.sh`.
+`scripts/phase1b-close-audit.sh` is intentionally red until the reference
+bundle, fitted configuration, closing evidence, clean source commit, and
+accepted `env-v1` tag all exist.
 
 ## Current external package target
 

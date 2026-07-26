@@ -5,6 +5,9 @@
   "type": "object",
   "required": [
     "traceId",
+    "spinClass",
+    "arcClass",
+    "coordinateFrame",
     "provenance",
     "ball",
     "environment",
@@ -14,6 +17,15 @@
   ],
   "properties": {
     "traceId": { "type": "string", "minLength": 1 },
+    "spinClass": {
+      "enum": ["zero", "topspin", "backspin"]
+    },
+    "arcClass": {
+      "enum": ["low", "medium", "high"]
+    },
+    "coordinateFrame": {
+      "const": "picklebot-world-v1"
+    },
     "provenance": {
       "type": "object",
       "required": [
@@ -22,7 +34,8 @@
         "capturedAt",
         "method",
         "positionUncertaintyMeters",
-        "rawArtifactSha256"
+        "rawArtifactSha256",
+        "coordinateArtifactSha256"
       ],
       "properties": {
         "kind": {
@@ -38,19 +51,31 @@
         "rawArtifactSha256": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
+        },
+        "coordinateArtifactSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
         }
       },
       "additionalProperties": false
     },
     "ball": {
       "type": "object",
-      "required": ["model", "sampleId", "holeCount", "massKg", "diameterM"],
+      "required": [
+        "model",
+        "sampleId",
+        "holeCount",
+        "massKg",
+        "diameterM",
+        "approval"
+      ],
       "properties": {
         "model": { "type": "string", "minLength": 1 },
         "sampleId": { "type": "string", "minLength": 1 },
         "holeCount": { "const": 40 },
         "massKg": { "type": "number", "exclusiveMinimum": 0 },
-        "diameterM": { "type": "number", "exclusiveMinimum": 0 }
+        "diameterM": { "type": "number", "exclusiveMinimum": 0 },
+        "approval": { "$ref": "#/$defs/approval" }
       },
       "additionalProperties": false
     },
@@ -101,7 +126,13 @@
       "type": "object",
       "required": ["classification", "flightTimeS", "landingPositionM"],
       "properties": {
-        "classification": { "type": "string", "minLength": 1 },
+        "classification": {
+          "enum": [
+            "NearCourtLanding",
+            "FarCourtLanding",
+            "OutOfBoundsLanding"
+          ]
+        },
         "flightTimeS": { "type": "number", "exclusiveMinimum": 0 },
         "landingPositionM": { "$ref": "#/$defs/vector3" }
       },
@@ -109,6 +140,16 @@
     }
   },
   "$defs": {
+    "approval": {
+      "type": "object",
+      "required": ["authority", "sourceUrl", "verifiedAt"],
+      "properties": {
+        "authority": { "const": "USA Pickleball" },
+        "sourceUrl": { "type": "string", "format": "uri" },
+        "verifiedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
     "vector3": {
       "type": "object",
       "required": ["x", "y", "z"],
