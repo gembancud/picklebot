@@ -31,6 +31,28 @@ namespace Picklebot.Core
             PaddleActionV0 action,
             SimulationConfigV0 configuration)
         {
+            return Process(
+                action,
+                configuration.MaxPaddleLinearSpeed,
+                configuration.MaxPaddleAngularSpeed);
+        }
+
+        public static ProcessedPaddleActionV0 Process(
+            PaddleActionV0 action,
+            SimulationConfigV1 configuration)
+        {
+            configuration.ValidateOrThrow();
+            return Process(
+                action,
+                configuration.MaxPaddleLinearSpeed,
+                configuration.MaxPaddleAngularSpeed);
+        }
+
+        private static ProcessedPaddleActionV0 Process(
+            PaddleActionV0 action,
+            float maximumLinearSpeed,
+            float maximumAngularSpeed)
+        {
             if (!FiniteMath.IsFinite(action.LinearVelocityLocal) ||
                 !FiniteMath.IsFinite(action.AngularVelocityLocal))
             {
@@ -49,8 +71,8 @@ namespace Picklebot.Core
 
             return new ProcessedPaddleActionV0(
                 new PaddleActionV0(clampedLinear, clampedAngular),
-                clampedLinear * configuration.MaxPaddleLinearSpeed,
-                clampedAngular * configuration.MaxPaddleAngularSpeed,
+                clampedLinear * maximumLinearSpeed,
+                clampedAngular * maximumAngularSpeed,
                 clamped,
                 true);
         }

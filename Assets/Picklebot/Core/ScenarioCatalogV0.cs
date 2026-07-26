@@ -64,19 +64,38 @@ namespace Picklebot.Core
             ResetRequestV0 request,
             SimulationConfigV0 configuration)
         {
+            ValidateScenarioId(request);
+            configuration.ValidateOrThrow();
+            return Generate(request, configuration.DefaultMaximumEpisodeSeconds);
+        }
+
+        public static ScenarioParametersV0 Generate(
+            ResetRequestV0 request,
+            SimulationConfigV1 configuration)
+        {
+            ValidateScenarioId(request);
+            configuration.ValidateOrThrow();
+            return Generate(request, configuration.DefaultMaximumEpisodeSeconds);
+        }
+
+        private static void ValidateScenarioId(ResetRequestV0 request)
+        {
             if (!StableIds.Contains(request.ScenarioId, StringComparer.Ordinal))
             {
                 throw new ArgumentException(
                     $"Unknown Phase 0 scenario '{request.ScenarioId}'.",
                     nameof(request));
             }
+        }
 
-            configuration.ValidateOrThrow();
-
+        private static ScenarioParametersV0 Generate(
+            ResetRequestV0 request,
+            float defaultMaximumEpisodeSeconds)
+        {
             var launcher = Stream(request.Seed, "launcher");
             var ballPhysics = Stream(request.Seed, "ball_physics");
             var paddleStart = Stream(request.Seed, "paddle_start");
-            var result = Defaults(request.ScenarioId, configuration.DefaultMaximumEpisodeSeconds);
+            var result = Defaults(request.ScenarioId, defaultMaximumEpisodeSeconds);
 
             if (request.ScenarioId is ContactFrontOn or StabilityHighSpeed)
             {

@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://picklebot.local/schemas/phase1b-flight-trace-v0.json",
+  "title": "Picklebot Phase 1B measured flight trace",
+  "type": "object",
+  "required": [
+    "traceId",
+    "provenance",
+    "ball",
+    "environment",
+    "initialState",
+    "samples",
+    "terminal"
+  ],
+  "properties": {
+    "traceId": { "type": "string", "minLength": 1 },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "kind",
+        "source",
+        "capturedAt",
+        "method",
+        "positionUncertaintyMeters",
+        "rawArtifactSha256"
+      ],
+      "properties": {
+        "kind": {
+          "enum": ["project-physical-capture", "published-raw-trace"]
+        },
+        "source": { "type": "string", "minLength": 1 },
+        "capturedAt": { "type": "string", "format": "date-time" },
+        "method": { "type": "string", "minLength": 1 },
+        "positionUncertaintyMeters": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rawArtifactSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ball": {
+      "type": "object",
+      "required": ["model", "sampleId", "holeCount", "massKg", "diameterM"],
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "sampleId": { "type": "string", "minLength": 1 },
+        "holeCount": { "const": 40 },
+        "massKg": { "type": "number", "exclusiveMinimum": 0 },
+        "diameterM": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "required": [
+        "temperatureC",
+        "airDensityKgM3",
+        "windVelocityMps"
+      ],
+      "properties": {
+        "temperatureC": { "type": "number" },
+        "airDensityKgM3": { "type": "number", "exclusiveMinimum": 0 },
+        "windVelocityMps": {
+          "$ref": "#/$defs/vector3"
+        }
+      },
+      "additionalProperties": false
+    },
+    "initialState": {
+      "type": "object",
+      "required": [
+        "positionM",
+        "velocityMps",
+        "angularVelocityRadS"
+      ],
+      "properties": {
+        "positionM": { "$ref": "#/$defs/vector3" },
+        "velocityMps": { "$ref": "#/$defs/vector3" },
+        "angularVelocityRadS": { "$ref": "#/$defs/vector3" }
+      },
+      "additionalProperties": false
+    },
+    "samples": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["timeS", "positionM"],
+        "properties": {
+          "timeS": { "type": "number", "minimum": 0 },
+          "positionM": { "$ref": "#/$defs/vector3" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "terminal": {
+      "type": "object",
+      "required": ["classification", "flightTimeS", "landingPositionM"],
+      "properties": {
+        "classification": { "type": "string", "minLength": 1 },
+        "flightTimeS": { "type": "number", "exclusiveMinimum": 0 },
+        "landingPositionM": { "$ref": "#/$defs/vector3" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "vector3": {
+      "type": "object",
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

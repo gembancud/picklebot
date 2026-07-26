@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://picklebot.local/schemas/phase1b-acrylic-impact-v0.json",
+  "title": "Picklebot Phase 1B acrylic-court impact",
+  "type": "object",
+  "required": [
+    "trialId",
+    "caseType",
+    "provenance",
+    "surface",
+    "ball",
+    "conditions",
+    "incoming",
+    "outgoing",
+    "samples"
+  ],
+  "properties": {
+    "trialId": { "type": "string", "minLength": 1 },
+    "caseType": { "enum": ["vertical", "shallow", "spun"] },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "source",
+        "capturedAt",
+        "method",
+        "velocityUncertaintyMps",
+        "rawArtifactSha256"
+      ],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "capturedAt": { "type": "string", "format": "date-time" },
+        "method": { "type": "string", "minLength": 1 },
+        "velocityUncertaintyMps": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rawArtifactSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "surface": {
+      "type": "object",
+      "required": ["system", "base", "location", "condition"],
+      "properties": {
+        "system": { "type": "string", "minLength": 1 },
+        "base": { "type": "string", "minLength": 1 },
+        "location": { "type": "string", "minLength": 1 },
+        "condition": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "ball": {
+      "type": "object",
+      "required": ["model", "sampleId", "massKg", "diameterM"],
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "sampleId": { "type": "string", "minLength": 1 },
+        "massKg": { "type": "number", "exclusiveMinimum": 0 },
+        "diameterM": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "conditions": {
+      "type": "object",
+      "required": ["temperatureC", "relativeHumidityPercent"],
+      "properties": {
+        "temperatureC": { "type": "number" },
+        "relativeHumidityPercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false
+    },
+    "incoming": { "$ref": "#/$defs/kinematics" },
+    "outgoing": { "$ref": "#/$defs/kinematics" },
+    "samples": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["timeS", "ballCenterM"],
+        "properties": {
+          "timeS": { "type": "number" },
+          "ballCenterM": { "$ref": "#/$defs/vector3" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "kinematics": {
+      "type": "object",
+      "required": ["velocityMps", "angularVelocityRadS"],
+      "properties": {
+        "velocityMps": { "$ref": "#/$defs/vector3" },
+        "angularVelocityRadS": { "$ref": "#/$defs/vector3" }
+      },
+      "additionalProperties": false
+    },
+    "vector3": {
+      "type": "object",
+      "required": ["x", "y", "z"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "z": { "type": "number" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
