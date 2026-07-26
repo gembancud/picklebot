@@ -97,11 +97,32 @@ Before installing a trainer or producing a checkpoint:
 The normative details and close gate are in
 [PHASE1A_SPEC.md](PHASE1A_SPEC.md).
 
-### Phase 1B — First learned return
+### Phase 1B — Pickleball physics calibration
+
+Before installing a trainer or optimizing a policy:
+
+- calibrate an outdoor 40-hole reference ball against measured drop and flight
+  traces;
+- replace generic damping with versioned quadratic drag and spin-lift behavior;
+- calibrate court rebound and a project PBCoR surrogate for paddle contact;
+- correct the representative paddle and regulation post-span net collision
+  geometry;
+- prove deterministic replay, stability, and readiness remain inside committed
+  limits;
+- freeze the calibrated simulator as `env-v1`;
+- prepare a replacement Phase 1C evaluation protocol with new untouched final
+  seeds.
+
+The normative fixtures, measurements, thresholds, evidence, and close gate are
+in
+[PHASE1B_PHYSICS_CALIBRATION_SPEC.md](PHASE1B_PHYSICS_CALIBRATION_SPEC.md).
+No reinforcement-learning training begins before this phase closes.
+
+### Phase 1C — First learned return
 
 #### Scope
 
-- Use the Phase 0 simplified paddle and numeric observations.
+- Use the `env-v1` calibrated kinematic paddle and numeric observations.
 - Train continuous paddle motion against seeded launch curricula.
 - Start with a large contact region and low launch variance, then narrow the
   region and expand speed, spin, and placement.
@@ -234,7 +255,7 @@ These are intentionally not promised until Phases 0–5 establish a credible
 baseline:
 
 - camera or multimodal observations;
-- higher-fidelity aerodynamics and paddle/ball materials;
+- hole-resolved aerodynamics, wind, and deformable ball/paddle/net models;
 - motion-capture style priors;
 - human demonstrations or offline reinforcement learning;
 - sim-to-real transfer;
@@ -397,3 +418,18 @@ Known limits:
 Phase 1B may now install the isolated trainer environment and adapter, then run
 a bounded learning smoke on training/validation seeds. The held-out seeds remain
 untouched until a checkpoint and experiment configuration are frozen.
+
+### 2026-07-26 — D-020 inserts physics calibration before training
+
+The Phase 1A milestone above is retained verbatim as historical evidence of
+what was accepted when it closed. D-020 supersedes only its next-phase
+scheduling statement:
+
+- Phase 1B is now the measured pickleball physics calibration gate and produces
+  `env-v1`;
+- trainer installation, adapter integration, and the first learned return move
+  to Phase 1C;
+- `env-v0`, `phase1a-protocol-v0`, and their recorded evidence remain
+  immutable;
+- Phase 1C receives a new `env-v1`-dependent protocol and untouched final
+  evaluation seeds before training.

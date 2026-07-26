@@ -9,6 +9,8 @@ This document is the short architectural map. The normative detail lives in:
   contract;
 - [PHASE1A_SPEC.md](PHASE1A_SPEC.md) for the first training and evaluation
   protocol;
+- [PHASE1B_PHYSICS_CALIBRATION_SPEC.md](PHASE1B_PHYSICS_CALIBRATION_SPEC.md)
+  for the measured physics fixtures, thresholds, and `env-v1` close gate;
 - [DECISIONS.md](DECISIONS.md) for accepted direction and change history.
 
 When documents appear to conflict, the newest accepted decision explains the
@@ -69,6 +71,24 @@ baselines, and reports while referencing only `Picklebot.Core`. The future
 trainer adapter may depend on the evaluation and simulation seams plus its SDK;
 none of those assemblies may depend back on the adapter.
 
+## Physics calibration boundary
+
+Phase 1B keeps calibration behavior explicit and testable:
+
+- `Picklebot.Core` owns immutable aerodynamic inputs, coefficient/configuration
+  records, and pure force calculations that do not depend on Unity scene
+  objects;
+- `Picklebot.Simulation` converts those calculations to Unity forces and owns
+  collision fixtures, while the fitted constants remain project configuration
+  rather than hidden material or prefab values;
+- calibration datasets, fitting provenance, reports, and closing artifacts live
+  outside the runtime assemblies under the documented evidence paths;
+- EditMode tests prove the pure model and serialized identity; PlayMode tests
+  prove the integrated trajectory and contact behavior.
+
+The calibration gate does not introduce a trainer SDK. The trainer adapter
+remains a Phase 1C boundary consumer after `env-v1` is frozen.
+
 ## Verification layers
 
 Phase 0 tests establish:
@@ -86,3 +106,8 @@ Phase 1A adds contract tests for the seed, observation, curriculum, reward, and
 assembly boundaries; PlayMode checks against the real scene; two held-out
 baselines; and a throughput/allocation readiness probe. Its normative gates are
 defined in the Phase 1A specification.
+
+Phase 1B adds source-backed geometry, ball-drop, trajectory, court, paddle, and
+net calibration fixtures plus a calibrated 10,000-episode stability run. Its
+normative thresholds and evidence requirements are defined in the Phase 1B
+physics calibration specification.

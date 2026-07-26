@@ -18,16 +18,19 @@ Start here before changing simulation, learning, or evaluation behavior:
    termination, and verification requirements.
 4. [Phase 1A specification](docs/PHASE1A_SPEC.md) — the frozen seed partitions,
    curriculum, observation/reward protocol, baselines, and readiness gates.
-5. [Decision record](docs/DECISIONS.md) — the accepted rationale and the only
+5. [Phase 1B physics calibration](docs/PHASE1B_PHYSICS_CALIBRATION_SPEC.md) —
+   the measured ball, flight, paddle, court, and net gate required before
+   training.
+6. [Decision record](docs/DECISIONS.md) — the accepted rationale and the only
    process for changing established direction.
-6. [Development setup](docs/DEVELOPMENT.md) — pinned Unity and editor-tooling
+7. [Development setup](docs/DEVELOPMENT.md) — pinned Unity and editor-tooling
    versions, local project setup, and verification entry points.
 
 Accepted decisions are never silently rewritten. A behavioral change needs a
 new decision entry, updated tests, and updates to every affected canonical
 document.
 
-## Current milestone: Phase 1A complete
+## Current milestone: Phase 1B physics calibration
 
 Phase 0 establishes:
 
@@ -45,10 +48,15 @@ tagged `env-v0`.
 Phase 1A adds the trainer-independent evaluation foundation: disjoint seed
 partitions, a staged curriculum, frozen observations and reward mapping,
 scripted baselines, metrics, and training-readiness checks. It prepares a
-repeatable Phase 1B training experiment; it does not claim that reinforcement
-learning has started or produced a checkpoint. Phase 1A closed on 2026-07-26
-from the source-exact clean-checkout evidence recorded in the roadmap. Phase 1B
-trainer installation and the first learning smoke are next.
+repeatable training experiment, now scheduled as Phase 1C; it does not claim
+that reinforcement learning has started or produced a checkpoint. Phase 1A
+closed on 2026-07-26 from the source-exact clean-checkout evidence recorded in
+the roadmap.
+
+Phase 1B now calibrates real pickleball ball flight, rebound, paddle contact,
+court contact, and net geometry before training. Phase 1C owns trainer
+installation and the first learning smoke. This inserted gate is recorded by
+D-020 so the earlier Phase 1A milestone remains historically accurate.
 
 ## Direction in one paragraph
 

@@ -9,6 +9,8 @@
 | CoplayDev MCP for Unity | `10.0.0` |
 | Phase 0 environment | `env-v0` |
 | Phase 1A protocol | `phase1a-protocol-v0` |
+| Phase 1B calibration spec | `physics-calibration-v0` |
+| Phase 1B output environment | `env-v1` (pending) |
 | Selected trainer adapter target | `com.unity.ml-agents@4.0.3` |
 
 Package versions and Git dependencies are pinned in `Packages/manifest.json`.
@@ -115,13 +117,26 @@ Phase 1A uses the same variable for baseline and readiness reports. Local NUnit
 XML and logs are written under `artifacts/phase1a/tests/`; versioned closing
 evidence belongs under `docs/evidence/phase1a/`.
 
+## Next gate: Phase 1B physics calibration
+
+Phase 1B is specified but not yet implemented. Its fixtures, acceptance
+measurements, provenance requirements, and artifact layout are normative in
+[PHASE1B_PHYSICS_CALIBRATION_SPEC.md](PHASE1B_PHYSICS_CALIBRATION_SPEC.md).
+Implementation must add real scripts and tests before documenting them here as
+runnable commands. Closing evidence will be versioned under
+`docs/evidence/phase1b/`, and the passing simulator will be frozen as `env-v1`.
+
+The phase changes simulator behavior, so `env-v0` and its Phase 1A evidence are
+not updated in place. Trainer installation, the Conda environment, adapter
+integration, and policy training remain deferred to Phase 1C.
+
 ## Trainer environment
 
 Phase 1A selects the ML-Agents 4.0 package line but does not install it. The
 project manifest therefore remains free of ML-Agents, and the machine's current
 Python environment is not treated as a trainer environment.
 
-Before Phase 1B:
+Before Phase 1C:
 
 1. prepare Python `3.10.12` in a dedicated environment;
 2. install and smoke-test ML-Agents Python `1.1.0` against the exact selected

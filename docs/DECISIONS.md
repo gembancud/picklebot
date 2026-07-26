@@ -276,7 +276,7 @@ environment specification sections 14–16, and development verification.
 ### D-017 — Freeze the Phase 1A evaluation protocol before training
 
 - Date: 2026-07-26
-- Status: Accepted
+- Status: Accepted; phase scheduling and future protocol use superseded by D-020
 
 Phase 1 is divided into Phase 1A evaluation/training readiness and Phase 1B
 learned returns. Phase 1A freezes disjoint seed partitions, a four-stage
@@ -303,7 +303,7 @@ and development verification.
 ### D-018 — Target ML-Agents 4.0 without installing it in Phase 1A
 
 - Date: 2026-07-26
-- Status: Accepted
+- Status: Accepted; installation schedule superseded by D-020
 
 The first trainer adapter targets `com.unity.ml-agents@4.0.3`, the exact package
 reported by the Unity 6 package registry during Phase 1A. Upstream Release 23
@@ -330,7 +330,7 @@ architecture, and development setup.
 ### D-019 — Close Phase 1A on source-exact baseline evidence
 
 - Date: 2026-07-26
-- Status: Accepted
+- Status: Accepted; next-phase scheduling superseded by D-020
 
 `phase1a-protocol-v0` with hash `4ae0928d344f1c3c` is frozen at implementation
 commit `48963c26d761b423e2ca124f11c576cd6880eea0`. Phase 1A is complete and
@@ -358,6 +358,54 @@ checkpoint, source commit, and this protocol hash.
 
 Affected roadmap/spec sections: Phase 1A close gate, milestone record, Phase 1B
 entry, and README milestone.
+
+### D-020 — Insert pickleball physics calibration before training
+
+- Date: 2026-07-26
+- Status: Accepted
+- Supersedes: the phase-label and scheduling portions of D-017, D-018, and
+  D-019
+
+Decision:
+
+Phase 1B is a measured pickleball physics calibration gate that converts
+`env-v0` into `env-v1`. The previously planned trainer installation, adapter
+integration, and first learned return move to Phase 1C. Phase 1B includes no
+reinforcement-learning optimization.
+
+Evidence:
+
+A repository audit found regulation-scale court and ball geometry, stable
+120 Hz collision handling, and deterministic tests, but it also found generic
+Unity material restitution, linear damping instead of a measured aerodynamic
+model, a rectangular paddle envelope larger than the selected legal
+representative, a net collider ending at the court sidelines, and no empirical
+drop, flight, spin, acrylic-court, or paddle-contact calibration. Current USA
+Pickleball equipment standards define measurable ball-drop, ball-dimension,
+paddle-size, and PBCoR constraints, while measured trajectory research supports
+quadratic drag and spin-dependent lift.
+
+Trade-offs:
+
+Training starts later, and calibrated behavior may invalidate the numerical
+meaning of the frozen `env-v0` baselines. The inserted gate requires reference
+data, fitting, new tests, source-exact evidence, and a new evaluation protocol.
+It avoids spending compute learning exploits of visibly stable but
+uncalibrated physics.
+
+Migration and compatibility:
+
+`env-v0`, `phase1a-protocol-v0`, and all Phase 0/1A evidence remain immutable.
+Phase 1B uses physical calibration fixtures and dedicated calibration seeds; it
+does not tune against the old held-out reward result. The passing simulator is
+frozen as `env-v1`. Phase 1C must use a new `env-v1`-dependent protocol, update
+observation scales where required, and allocate untouched final-evaluation
+seeds before training. The technical trainer target in D-018 remains accepted;
+only its scheduled phase changes.
+
+Affected roadmap/spec sections: Phase 1 ordering, Phase 1A direction note,
+Phase 1B physics calibration specification, Phase 1C entry, architecture,
+development setup, README milestone, and milestone history.
 
 ## Decision proposal template
 

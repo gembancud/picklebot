@@ -8,6 +8,12 @@ Protocol hash: `4ae0928d344f1c3c`
 
 Environment dependency: `env-v0`
 
+Direction note (2026-07-26): D-020 inserted pickleball physics calibration as
+Phase 1B. Historical references below to Phase 1B training record the plan at
+the time of this freeze; D-020 supersedes their scheduling and future-use
+requirements. Phase 1C must receive a new `env-v1`-dependent protocol. This
+note does not change the frozen values, evidence, or protocol hash below.
+
 Phase 1A freezes the measurement and training-readiness foundation for learned
 paddle returns. It does not claim that a neural policy has been trained.
 Phase 1B must use this protocol, or accept a new decision and protocol version,
