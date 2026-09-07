@@ -236,6 +236,28 @@ Acceptance:
 - friction/spin transfer is measured rather than inferred from a Unity
   coefficient.
 
+Until empirical paddle-face tangential-response traces are available, the
+pre-training implementation uses a conservative, explicitly provisional
+residual-slip surrogate after Unity resolves normal contact. It must:
+
+- project paddle-versus-ball surface slip onto the contact tangent;
+- transfer configurable fractions into ball-centre tangential velocity and
+  angular velocity;
+- use a deadband of `0.02 m/s`;
+- cap contact tangential velocity change at `3 m/s`, contact spin change at
+  `35 rad/s`, and total ball spin at `80 rad/s`;
+- produce nonzero and opposite spin for equal-and-opposite brush velocities;
+- remain finite, deterministic, source-hashed, and observable through
+  `ObservationV0.Ball.AngularVelocityWorld`;
+- keep Unity normal restitution authoritative rather than adding a second
+  normal impulse.
+
+The initial transfer fractions (`0.12` linear and `0.35` angular) are
+engineering priors, not measured pickleball coefficients. They may be fitted
+later without changing the contact-model structure, but any change alters the
+`env-v1` configuration hash and requires the Phase 1B evidence chain to be
+rerun.
+
 The simulator must not claim that this surrogate certifies a commercial paddle.
 
 ## 9. Court and net contacts
@@ -292,6 +314,8 @@ Before Phase 1C training:
 - create a new protocol whose environment dependency is `env-v1`;
 - raise observation spin scales if the calibrated envelope exceeds the current
   `50 rad/s` scale;
+- encode the selected envelope through the `phase1c-observation-v0` path rather
+  than reusing the frozen Phase 1A encoder;
 - allocate a new untouched final-evaluation seed range;
 - record the new reward mapping and baseline hashes;
 - do not evaluate the new final seed range until a checkpoint and experiment

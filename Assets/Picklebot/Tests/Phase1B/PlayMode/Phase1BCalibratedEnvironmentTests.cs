@@ -101,6 +101,27 @@ namespace Picklebot.Tests.Phase1B.PlayMode
         }
 
         [Test]
+        public void IntegratedPaddleBrushGeneratesObservableSymmetricSpin()
+        {
+            var upwardBrushSpin = RunIntegratedBrush(0.2f);
+            var downwardBrushSpin = RunIntegratedBrush(-0.2f);
+
+            Assert.That(upwardBrushSpin.magnitude, Is.GreaterThan(0.1f));
+            Assert.That(downwardBrushSpin.magnitude, Is.GreaterThan(0.1f));
+            Assert.That(
+                Vector3.Dot(upwardBrushSpin, downwardBrushSpin),
+                Is.LessThan(0f));
+            Assert.That(
+                upwardBrushSpin.magnitude,
+                Is.LessThanOrEqualTo(
+                    fixture.Configuration.MaximumBallAngularSpeed));
+            Assert.That(
+                downwardBrushSpin.magnitude,
+                Is.LessThanOrEqualTo(
+                    fixture.Configuration.MaximumBallAngularSpeed));
+        }
+
+        [Test]
         public void UnityFlightTracksIndependentRk4Reference()
         {
             var environment = fixture.Environment;
@@ -268,8 +289,20 @@ namespace Picklebot.Tests.Phase1B.PlayMode
                 new Vector2(0f, 0.04f),
                 3f,
                 Vector3.zero);
+            var reverseOblique = CalibrationFixturesV1.RunPaddleImpact(
+                fixture.Configuration,
+                10f,
+                0f,
+                new Vector2(0f, 0.04f),
+                -3f,
+                Vector3.zero);
 
-            Assert.That(left.Completed && right.Completed && oblique.Completed, Is.True);
+            Assert.That(
+                left.Completed &&
+                right.Completed &&
+                oblique.Completed &&
+                reverseOblique.Completed,
+                Is.True);
             Assert.That(
                 Vector3.Distance(left.OutgoingBallVelocity, right.OutgoingBallVelocity),
                 Is.LessThanOrEqualTo(0.001f));
@@ -294,6 +327,20 @@ namespace Picklebot.Tests.Phase1B.PlayMode
                 Is.EqualTo(Vector3.Distance(
                     oblique.OutgoingAngularVelocity,
                     oblique.IncomingAngularVelocity)));
+            Assert.That(oblique.AngularVelocityChange, Is.GreaterThan(0.1f));
+            Assert.That(
+                Vector3.Dot(
+                    oblique.OutgoingAngularVelocity,
+                    reverseOblique.OutgoingAngularVelocity),
+                Is.LessThan(0f));
+            Assert.That(
+                oblique.OutgoingAngularVelocity.magnitude,
+                Is.LessThanOrEqualTo(
+                    fixture.Configuration.MaximumBallAngularSpeed));
+            Assert.That(
+                reverseOblique.OutgoingAngularVelocity.magnitude,
+                Is.LessThanOrEqualTo(
+                    fixture.Configuration.MaximumBallAngularSpeed));
             Assert.That(oblique.EffectiveRestitution, Is.LessThanOrEqualTo(0.43f));
             Assert.That(oblique.BallKineticEnergyRatio, Is.LessThanOrEqualTo(1f));
         }
@@ -423,6 +470,43 @@ namespace Picklebot.Tests.Phase1B.PlayMode
 
             Assert.Fail("V1 replay did not terminate.");
             return default;
+        }
+
+        private Vector3 RunIntegratedBrush(float normalizedVerticalSpeed)
+        {
+            var environment = fixture.Environment;
+            environment.Reset(new ResetRequestV0(
+                104UL,
+                ScenarioCatalogV0.ContactFrontOn,
+                overrides: new[]
+                {
+                    new ResetOverrideV0("ball.angular_velocity.x", 0f),
+                    new ResetOverrideV0("ball.angular_velocity.y", 0f),
+                    new ResetOverrideV0("ball.angular_velocity.z", 0f),
+                    new ResetOverrideV0("paddle.position.z", 0f)
+                }));
+            var action = new PaddleActionV0(
+                new Vector3(0f, normalizedVerticalSpeed, 0f),
+                Vector3.zero);
+
+            for (var step = 0; step < 12; step++)
+            {
+                var result = environment.Step(action);
+                if (result.Events.Any(value =>
+                        value.Kind ==
+                        EnvironmentEventKindV0.BallPaddleContact))
+                {
+                    return result.Observation.Ball.AngularVelocityWorld;
+                }
+
+                if (result.IsTerminal)
+                {
+                    break;
+                }
+            }
+
+            Assert.Fail("Integrated brush fixture did not contact the paddle.");
+            return Vector3.zero;
         }
 
         private readonly struct ReplayResult

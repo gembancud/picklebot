@@ -1,0 +1,117 @@
+{
+  "reportPath": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/serve-return-20260907-131120.json",
+  "reportHash": "b26372929eb2e2b6c7bcb669265a68f837be002bd0d10282ed4aa8837ca3969e",
+  "actorHash": "61c59e110797290c46b30b91a9fa2d0d3665e92a40f3c998bf2e24ed168edc06",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "cases": 36,
+  "matchedOriginalControlCases": null,
+  "referenceReportHash": null,
+  "matchedPhysicalServeMaximumError": 0.0,
+  "actorDecisionsReplayed": 5164,
+  "actorLogProbabilityMaximumError": 1.430511474609375e-05,
+  "teacherDecisions": 2540,
+  "motorChecksPassed": true,
+  "groups": [
+    {
+      "mode": 0,
+      "cases": 12,
+      "serveLandings": 12,
+      "returnHits": 12,
+      "returnLandings": 7,
+      "faults": {
+        "None": 7,
+        "WrongSide": 5
+      },
+      "seats": [
+        {
+          "server": 0,
+          "hits": 3,
+          "landings": 3
+        },
+        {
+          "server": 1,
+          "hits": 3,
+          "landings": 1
+        },
+        {
+          "server": 2,
+          "hits": 3,
+          "landings": 3
+        },
+        {
+          "server": 3,
+          "hits": 3,
+          "landings": 0
+        }
+      ]
+    },
+    {
+      "mode": 1,
+      "cases": 12,
+      "serveLandings": 12,
+      "returnHits": 12,
+      "returnLandings": 9,
+      "faults": {
+        "None": 9,
+        "WrongSide": 3
+      },
+      "seats": [
+        {
+          "server": 0,
+          "hits": 3,
+          "landings": 3
+        },
+        {
+          "server": 1,
+          "hits": 3,
+          "landings": 1
+        },
+        {
+          "server": 2,
+          "hits": 3,
+          "landings": 3
+        },
+        {
+          "server": 3,
+          "hits": 3,
+          "landings": 2
+        }
+      ]
+    },
+    {
+      "mode": 2,
+      "cases": 12,
+      "serveLandings": 12,
+      "returnHits": 12,
+      "returnLandings": 11,
+      "faults": {
+        "None": 11,
+        "WrongSide": 1
+      },
+      "seats": [
+        {
+          "server": 0,
+          "hits": 3,
+          "landings": 3
+        },
+        {
+          "server": 1,
+          "hits": 3,
+          "landings": 2
+        },
+        {
+          "server": 2,
+          "hits": 3,
+          "landings": 3
+        },
+        {
+          "server": 3,
+          "hits": 3,
+          "landings": 3
+        }
+      ]
+    }
+  ],
+  "wallSeconds": 25.1192773,
+  "limitation": "One real scripted serve and its first return, not completed games. Four separate policy instances. Teacher mode is a privileged diagnostic control, never a deployed selector or training data. Service seat is set by recorded dead-ball rule transitions before simulation. No ball steering or contact override. Physics is provisional."
+}

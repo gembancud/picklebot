@@ -1,0 +1,46 @@
+{
+  "version": "serve-return-retention-v2",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "parentActor": "artifacts/player-agents/ppo-20260907-094032/actor.json",
+  "parentActorHash": "58a5a4ad51bf77ab4259a251ede4ddca69729ea717e7c0c74bfe2c95f286b93a",
+  "reason": "Three-bank corrective fit improved matched real-serve returns to 9/12 but full development games regressed to 0/8 wins, 10/114 rally wins and 212 legal returns. Selected training banks had no returnFlight rows. Restore the existing full-rally source while retaining real serves and short/deep lessons. This is a coverage hypothesis, not a proven sole cause.",
+  "collection": {
+    "trainingSeed": 1091000,
+    "developmentSeed": 1194000,
+    "trainingRallies": 128,
+    "developmentRallies": 32,
+    "teacherProbability": 1,
+    "fixedShot": -1,
+    "baselineOpponent": false,
+    "method": "Existing four-player teacher curriculum. Real scripted serves and legal physics; no injected ball or privileged labels in runtime inference. Separate data partitions."
+  },
+  "primarySubset": "Keep only phase.serveFlight observations, index 40, from the new training and development banks. Preserve all owned labels at those decision ticks. Hash the selected row indices. No diagnostic case or final seed enters fitting.",
+  "additionalTraining": [
+    "artifacts/player-agents/incoming-20260907-043315.json",
+    "artifacts/player-agents/incoming-20260907-051229.json",
+    "artifacts/player-agents/curriculum-20260907-043639.json"
+  ],
+  "additionalDevelopment": [
+    "artifacts/player-agents/incoming-20260907-043522.json",
+    "artifacts/player-agents/incoming-20260907-051343.json",
+    "artifacts/player-agents/curriculum-20260907-044309.json"
+  ],
+  "fit": {
+    "epochs": 60,
+    "batch": 1024,
+    "hidden": 256,
+    "learningRate": 0.0003,
+    "neutralPaddleProbability": 0.5,
+    "balanceTrainingSources": true,
+    "retentionWeight": 0
+  },
+  "checks": "Reuse validated saved banks; no new collection. Give four sources equal expected sampling mass. Keep the same parent, optimizer and 60 epochs as v1. Audit data ownership, all teacher motors, source phase coverage, lineage, selected loss and Unity parity. Repeat the same 36 serve cases, 64 short/deep controls and eight full development games at 1141000..1141007. Retain all failures; no automatic promotion.",
+  "scope": "Supervised source-coverage correction before more game-win RL. One complete player policy per player, no selector. No runtime, physics, reward, baseline, scene, final-seed or cloud changes.",
+  "trainingReport": "artifacts/player-agents/curriculum-20260907-095746.json",
+  "developmentReport": "artifacts/player-agents/curriculum-20260907-100726.json",
+  "requiredTrainingPhases": [
+    "serveFlight",
+    "returnFlight",
+    "rally"
+  ]
+}

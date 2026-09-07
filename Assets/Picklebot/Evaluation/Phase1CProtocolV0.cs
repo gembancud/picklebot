@@ -12,8 +12,8 @@ namespace Picklebot.Evaluation
         public const string EnvironmentDependency = "env-v1";
         public const string ObservationVersion = "phase1c-observation-v0";
         public const string ActionVersion = "paddle-action-v0";
-        public const string RewardVersion = "phase1c-reward-v0";
-        public const string UnityTrainerPackage = "com.unity.ml-agents@4.0.0";
+        public const string RewardVersion = Phase1CRewardV0.Version;
+        public const string UnityTrainerPackage = "com.unity.ml-agents@4.0.3";
         public const string PythonTrainerPackage = "mlagents==1.1.0";
         public const int MaximumActionSteps = 1500;
         public const float TargetRadius = 1f;
@@ -34,17 +34,8 @@ namespace Picklebot.Evaluation
         public static readonly SeedRangeV0 FinalEvaluationSeeds =
             new(Phase1ASeedPartitionV0.HeldOutEvaluation, 7000000UL, 1000);
 
-        public static readonly Phase1ARewardMappingV0 RewardMapping =
-            new(
-                paddleContact: 0.25f,
-                farCourtLanding: 1f,
-                nearCourtLanding: -0.25f,
-                outLanding: -0.5f,
-                netContact: -0.05f,
-                targetDistance: -0.05f,
-                actionClamp: -0.02f,
-                invalidState: -1f,
-                elapsedSecond: -0.002f);
+        public static Phase1ARewardMappingV0 RewardMapping =>
+            Phase1CRewardV0.BaseMapping;
 
         private static readonly CurriculumStageV0[] StableStages =
         {
@@ -88,8 +79,7 @@ namespace Picklebot.Evaluation
         public static IReadOnlyList<CurriculumStageV0> CurriculumStages =>
             ReadOnlyStages;
 
-        public static string RewardMappingHash => StableHashV0.Hex(
-            RewardVersion + "|" + RewardMapping.CanonicalText());
+        public static string RewardMappingHash => Phase1CRewardV0.Hash;
 
         public static ResetRequestV0 TrainingRequest(
             int stageIndex,

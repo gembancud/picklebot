@@ -487,6 +487,7 @@ namespace Picklebot.Simulation
                 switch (contact.Kind)
                 {
                     case CollisionEntityKindV0.ControlledPaddle:
+                        ApplyPaddleSpinTransfer(contact);
                         controlledPaddleContacts++;
                         stepFeatures.PaddleContactCount++;
                         lastTouch = LastTouchV0.ControlledPaddle;
@@ -515,6 +516,25 @@ namespace Picklebot.Simulation
                         break;
                 }
             }
+        }
+
+        private void ApplyPaddleSpinTransfer(RawContact contact)
+        {
+            var paddlePointVelocity =
+                paddleLinearVelocityWorld +
+                Vector3.Cross(
+                    paddleAngularVelocityWorld,
+                    contact.Position - paddle.position);
+            var transfer = PaddleSpinTransferV1.Evaluate(
+                ball.position,
+                ball.linearVelocity,
+                ball.angularVelocity,
+                paddlePointVelocity,
+                contact.Position,
+                contact.Normal,
+                configuration);
+            ball.linearVelocity = transfer.LinearVelocity;
+            ball.angularVelocity = transfer.AngularVelocity;
         }
 
         private void ProcessFloorContact(RawContact contact)

@@ -1,0 +1,32 @@
+{
+  "version": "single-policy-self-play-v1",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "initialActor": "artifacts/player-agents/ppo-20260907-091227/actor.json",
+  "initialActorHash": "8a8ee9b824d607f69f8e753944b01d5ec9603d67983e980e73b0f30b1986c6f2",
+  "initialCritic": "artifacts/player-agents/ppo-20260907-091227/critic.pt",
+  "initialCriticHash": "47f5cff4e75734657ac5adb0b4a92d3c478794509dbe45b3a7b6c1c6d586a133",
+  "opponents": [
+    {"path": "artifacts/player-agents/ppo-20260907-091227/actor.json", "sha256": "8a8ee9b824d607f69f8e753944b01d5ec9603d67983e980e73b0f30b1986c6f2"},
+    {"path": "artifacts/player-agents/ppo-20260907-032230/actor.json", "sha256": "69a113fba7ee6724e89a705dedcd3d930b099b73f45b1fab2ceca7560299d649"}
+  ],
+  "iterations": 2,
+  "ralliesPerCollection": 128,
+  "trainingSeedBases": [1088000, 1089000],
+  "developmentSeedBases": [1189000, 1190000],
+  "rewardMode": "game_win",
+  "creditAssignment": "full_episode",
+  "gamma": 1,
+  "gaeLambda": 1,
+  "trainHeads": "all",
+  "advantageNormalization": "none",
+  "entropyCoefficient": 0,
+  "epochsPerUpdate": 4,
+  "batch": 1024,
+  "learningRate": 0.00003,
+  "clip": 0.1,
+  "targetKL": 0.01,
+  "postUpdateKLRollback": true,
+  "training": "Four independent player policy instances. Candidate and opponent sample their own actions. One fixed opponent per collection. Alternate candidate court ends. Finish the current complete game after the rally target. Carry the training-only critic between iterations. Update only from candidate player trajectories.",
+  "checks": "Reject invalid provenance, unsafe candidate or saved-opponent motors, incomplete games, or zero advantage signal. After each update, verify Unity parity and run the existing 32-rally development check against the sampled frozen baseline. Stop on failure. If the loop completes, run the unchanged 64-case return probe and eight development games at 1141000..1141007.",
+  "scope": "Bounded local self-play and older-opponent trial, not a full adaptive league. No runtime selector, controller changes, shaped rewards, final seeds, scene replacement, automatic promotion, or cloud compute. Pre-update self-play win rate is not evidence of improvement."
+}

@@ -1,0 +1,45 @@
+{
+  "version": "near-contact-self-play-v1",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "initialActor": "artifacts/player-agents/contact-movement-fit-20260907-114743/actor.json",
+  "initialActorHash": "014a86a1608532ed72845813973e0e3448ef9591d6b79e1c96766561dd220615",
+  "initialCritic": "artifacts/player-agents/ppo-20260907-104524/critic.pt",
+  "initialCriticHash": "377d21179b7b33c6adf8d14debda1e0e0400d89a8336902bb0f82c67201ea8eb",
+  "opponents": [
+    {
+      "path": "artifacts/player-agents/contact-movement-fit-20260907-114743/actor.json",
+      "sha256": "014a86a1608532ed72845813973e0e3448ef9591d6b79e1c96766561dd220615"
+    },
+    {
+      "path": "artifacts/player-agents/ppo-20260907-094032/actor.json",
+      "sha256": "58a5a4ad51bf77ab4259a251ede4ddca69729ea717e7c0c74bfe2c95f286b93a"
+    }
+  ],
+  "iterations": 2,
+  "ralliesPerCollection": 256,
+  "trainingSeedBases": [
+    1075000,
+    1076000
+  ],
+  "developmentSeedBases": [
+    1175000,
+    1176000
+  ],
+  "rewardMode": "game_win",
+  "creditAssignment": "full_episode",
+  "gamma": 1,
+  "gaeLambda": 1,
+  "trainHeads": "all",
+  "advantageNormalization": "none",
+  "entropyCoefficient": 0,
+  "epochsPerUpdate": 4,
+  "batch": 1024,
+  "learningRate": 0.00003,
+  "clip": 0.1,
+  "targetKL": 0.01,
+  "postUpdateKLRollback": true,
+  "training": "Four independent player policy instances. Candidate and opponent sample their own actions. One fixed opponent per collection. Alternate candidate court ends. Finish the current complete game after the rally target. Carry the training-only critic between iterations. Update only from candidate player trajectories.",
+  "checks": "Reject invalid provenance, unsafe candidate or saved-opponent motors, incomplete games, or zero advantage signal. After each update, verify Unity parity and run the existing 32-rally development check against the sampled frozen baseline. Stop on failure. After the two updates, audit the full loop, repeat the unchanged 36 real-serve and 64 short/deep probes, then eight development games at 1141000..1141007. Compare with the experimental initial actor and original parent. Keep final seeds unused.",
+  "scope": "Bounded local self-play and older-opponent trial, not a full adaptive league. No runtime selector, controller changes, shaped rewards, final seeds, scene replacement, automatic promotion, or cloud compute. Pre-update self-play win rate is not evidence of improvement.",
+  "reason": "Near-contact weighted movement model retains 15/16 short landings, improves deep landings to 9/16 and deterministic serves to 7/12. Its full development run recorded 347 legal returns and 21/131 rally wins, compared with unweighted movement 259 and 13/118, and parent PPO 104524 285 and 16/124. All eight games still lost. Sampled serves regressed to 5/12 versus unweighted 7/12. This is an experimental self-play starting point, not an accepted stronger player. Test joint team-win updates after the improved movement curriculum while retaining all comparison failures."
+}

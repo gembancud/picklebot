@@ -407,6 +407,339 @@ Affected roadmap/spec sections: Phase 1 ordering, Phase 1A direction note,
 Phase 1B physics calibration specification, Phase 1C entry, architecture,
 development setup, README milestone, and milestone history.
 
+### D-021 — Adopt a bounded practical paddle-spin surrogate before training
+
+- Date: 2026-07-27
+- Status: Accepted
+
+Decision:
+
+Before Phase 1C, `env-v1` applies a deterministic residual-slip model at
+controlled-paddle contact. Unity remains authoritative for normal restitution.
+The project model transfers configured tangential surface slip into ball
+translation and rotation, with a `0.02 m/s` deadband, `3 m/s` tangential-delta
+cap, `35 rad/s` contact-spin-delta cap, and `80 rad/s` total ball-spin cap.
+Phase 1C receives a dedicated 37-value encoder using the same `80 rad/s` spin
+scale and rejecting observations not stamped `env-v1`.
+
+Evidence:
+
+The previous paddle fixture recorded incoming and outgoing angular velocity but
+accepted zero angular change. Source-exact tests now cover nonzero transfer,
+odd symmetry, finite extreme slip, deadband behavior, caps, oblique fixture
+response, and equal-and-opposite brush actions through the real environment
+step/contact path.
+
+Trade-offs:
+
+The model is useful for learning approximate topspin, backspin, and sidespin,
+but it does not model face compliance, dwell time, texture, edge response,
+hand/arm inertia, or a particular commercial paddle. Its initial transfer
+fractions are conservative engineering priors pending measured paddle-contact
+traces. Because every parameter is included in the configuration hash, later
+fitting intentionally changes the environment identity and invalidates older
+source-exact calibration evidence.
+
+### D-022 — Add a presentation-only Physics Museum before training
+
+- Date: 2026-07-27
+- Status: Accepted
+
+Decision:
+
+Before Phase 1C trainer integration, the project maintains an interactive
+Physics Museum with six fixed stations: ball drop/rebound, comparative spin
+flight, court bounce, paddle brush/spin transfer, net clearance/contact, and a
+free-hit regulation court. The museum runs the real `env-v1` environment and
+committed calibration fixtures. All input, camera, telemetry, trajectory, and
+visual-marker code lives in a separate `Picklebot.Museum` assembly.
+
+Evidence:
+
+Protocol tests freeze the six stations, requests, spin variants, and bounded Mac
+input mapping. PlayMode tests exercise every station through `env-v1`, verify
+control state does not change the simulator configuration, and retain all three
+spin-comparison trajectories. Direct Editor inspection remains part of the
+museum verification.
+
+Trade-offs:
+
+The museum adds presentation code and a human judgment step, but it makes scale,
+flight, spin, bounce, paddle, and net failures visible before compute is spent.
+Feel remains subjective, so museum approval cannot replace measured fixtures,
+tolerances, regression tests, or source-exact Phase 1B evidence.
+
+Migration and compatibility:
+
+The museum depends on `Picklebot.Core` and `Picklebot.Simulation`; neither
+authoritative assembly may depend on the museum. Physics changes continue
+through simulator versioning and calibration change control, never by tuning
+museum visuals or controls.
+
+Affected roadmap/spec sections: Phase 1B-to-1C interlude, development setup,
+physics museum guide, and simulator architecture.
+
+### D-023 — Authorize a provisional learned-return diagnostic probe
+
+- Date: 2026-07-27
+- Status: Accepted
+- Supersedes: only the no-training scheduling language in D-020 and the
+  Phase 1B specification; all Phase 1B empirical gates remain active
+
+Decision:
+
+Begin `phase1c0-learning-probe-v0` against the current
+`provisional-unfitted` `env-v1` implementation before Phase 1B closes. Install
+the live-verified ML-Agents compatible line
+(`com.unity.ml-agents@4.0.3`, PyPI `mlagents==1.1.0`) in a separate trainer
+adapter and isolated Python `3.10.12` Conda environment. On Apple Silicon,
+install the Python package's accepted `grpcio==1.48.2` dependency from Conda's
+native `osx-arm64` build. Train only on Phase 1C training seeds, select and
+promote only with Phase 1C validation seeds, and preserve the Phase 1C
+final-evaluation range untouched.
+
+The probe's finish line is a neural checkpoint, with no scripted action
+override, visibly controlling the kinematic paddle in Unity and recording
+contacts and legal returns across varied unseen validation launches. A
+successful probe proves the learning and replay path and supplies behavior for
+human physics feedback. It does not close Phase 1B or Phase 1C.
+
+Evidence:
+
+The Physics Museum gives the current simulator an acceptable human feel-check,
+while the remaining Phase 1B blockers require empirical datasets not presently
+available. The project already owns an `env-v1`-rejecting 37-value observation
+encoder, disjoint Phase 1C seed ranges, versioned curriculum stages, and named
+reward features. On 2026-07-27, the live Unity registry returned
+`com.unity.ml-agents@4.0.3`. Its installed changelog identifies the Unity
+6.3–6.5 `GetEntityId` fix, package metadata requires Unity 6000.0, and its
+Academy reports communicator `1.5.0`. PyPI `mlagents==1.1.0` requires Python
+`3.10.1` through `3.10.12` and `grpcio` through `1.48.2`; Conda's defaults
+channel supplies that exact gRPC version as a native `osx-arm64` package. The
+Git `release_23_tag` was rejected as the installation source because it builds
+with development version metadata (`1.2.0.dev0`) rather than the required
+published version.
+
+Trade-offs:
+
+Training now can reveal reward exploits, unreachable actions, poor
+observations, or implausible physics sooner, but any physics change can alter
+the task enough to invalidate the learned checkpoint. Therefore Phase 1C0
+artifacts are diagnostic and disposable, the run is locally bounded, and no
+result may be promoted into final Phase 1C evidence. The local machine had
+approximately `29 GiB` free at authorization time, so the probe avoids cloning
+the full upstream repository and caps retained generated artifacts.
+
+Migration and compatibility:
+
+Historical `env-v0`, Phase 1A, and D-020 evidence remain unchanged. Phase 1A's
+then-premature `4.0.3` selection remains historical; D-023 independently
+reverifies and authorizes that now-published registry version.
+Core, Simulation, and Evaluation retain no ML-Agents references. The adapter,
+training scene, YAML configuration, model replay, and provisional evidence
+follow [PHASE1C0_LEARNING_PROBE_SPEC.md](PHASE1C0_LEARNING_PROBE_SPEC.md).
+
+Affected roadmap/spec sections: Phase 1B scheduling, Phase 1C entry, architecture,
+development setup, Phase 1B status, and the Phase 1C0 probe specification.
+
+### D-024 — Continue the real museum ball after the terminal episode record
+
+- Date: 2026-08-29
+- Status: Accepted
+
+Decision:
+
+The Physics Museum drop and court-bounce stations continue the visible ball
+from the environment's terminal floor-contact state to the first rebound apex.
+The continuation uses the same Rigidbody, collider, Unity physics material,
+aerodynamic force model, gravity, and spin decay. It does not create a duplicate
+presentation ball or use a separate trajectory integrator. The recorded
+`env-v1` observation, event sequence, terminal reason, and training contract
+remain unchanged while the museum continues the real ball for inspection.
+
+Evidence:
+
+The environment classifies the first landing and enters `Terminal` after Unity
+resolves the contact. The previous museum stopped at that frame. It displayed a
+cyan apex marker but did not show the rebound motion that the station name asked
+the user to inspect. Focused tests prove that the same real ball rises to a
+finite apex while the episode record remains terminal.
+
+Trade-offs:
+
+The post-terminal Rigidbody position is museum state and must not be used as a
+new training observation or calibration measurement. The museum labels the
+continuation clearly and keeps the independent fixture marker and values visible
+for comparison.
+
+Migration and compatibility:
+
+No Core, Simulation, environment-contract, reward, seed, or trainer behavior
+changes. Existing Phase 0, Phase 1A, Phase 1B, and Phase 1C0 evidence remains
+valid.
+
+Affected roadmap/spec sections: Physics Museum interaction and verification.
+
+### D-025 — Build a separate learned 3D ping-pong rally prototype
+
+- Date: 2026-09-06
+- Status: Accepted by the user's active project goal
+
+Decision:
+
+Build a playable two-paddle prototype with simplified table-tennis bounce and
+point rules. Both paddles use trained neural actions. The initial milestone is
+ten consecutive legal returns on at least three validation launch seeds.
+This user-directed work can progress while the pickleball empirical calibration
+gates remain open. It does not close those gates or change their evidence.
+
+Implementation choice:
+
+Use local behavioral cloning of offline ballistic stroke examples for the
+first model. Share that trained policy between the two player coordinate
+frames. Use a separate Unity physics scene with explicitly provisional elastic
+materials. Permit scripted serves and resets, but no hidden analytical paddle
+controller or ball-velocity correction during rallies. Retain source and model
+hashes and compare against stationary paddles on the same validation serves.
+
+Trade-offs:
+
+This creates the requested visible AI rally quickly on the laptop. It is not
+training from scratch through reinforcement learning, a regulation sports
+simulation, competitive strategy, or a calibrated pickleball result. Refer to
+[AI_RALLY.md](AI_RALLY.md) for physics limits, controls, training, and verification.
+
+Affected roadmap/spec sections: the near-term project focus is this separate
+prototype. Existing Phase 1B and Phase 1C final-evaluation evidence is preserved.
+
+### D-026 — Compete for points with smaller paddles and energy loss
+
+- Date: 2026-09-06
+- Status: Accepted by the user's request
+- Supersedes: D-025 as the default visible prototype; retains its evidence
+
+Decision:
+
+Change the default demo from centre-directed cooperative returns to competing
+paddles. Reduce paddle faces from 0.40 by 0.40 metres to 0.18 by 0.20 metres.
+Use court restitution 0.86, paddle restitution 0.90, and quadratic air drag.
+Limit paddle travel to 2 metres per second. Train a goal-conditioned stroke
+model locally. Freeze that model, then train a shot-selection policy with PPO
+from real Unity terminal point rewards. Use a centre-directed opponent and
+shared-policy self-play. Do not reward rally length.
+
+Trade-offs:
+
+The model can choose five landing targets. It does not yet control continuous
+shot pace, recovery position, spin, or a humanoid. The physics still needs
+empirical calibration. This is not a regulation table-tennis or pickleball
+simulation. Training uses the laptop and requires no cloud service.
+
+Migration and compatibility:
+
+Retain the old cooperative scene as `CooperativeRallyV1.unity`. Use the new
+competition component in `AIRally.unity`. Keep the older model, runtime,
+validation reports, and existing pickleball work unchanged. Competition uses
+training seeds below 840000 and a separate validation partition starting at
+840000. A 30-second simulation cap awards no point and gives zero reward.
+
+Affected roadmap/spec sections: current prototype focus, architecture, demo
+controls, physics settings, training, and validation. See
+[COMPETITIVE_MATCH.md](COMPETITIVE_MATCH.md).
+
+### D-027 — Inspect full-size pickleball before further training
+
+- Date: 2026-09-06
+- Status: Accepted by the user's request
+- Supersedes: D-026 as the current focus; preserves its runtime and evidence
+
+Decision:
+
+Use an outdoor 40-hole ball on an acrylic court as the provisional reference.
+Reuse existing full-size geometry and V1 physical models in a separate
+inspection scene. Add bounded XYZ paddle motion, three-axis rotation, player
+ground markers, and visible drop, angled-bounce, flat-contact, brush-contact,
+serve, and granite-reference presets. Let physics continue after contacts and
+rule faults. Export trajectories and contacts for comparison with measurements.
+Do not start more training during this refinement step.
+
+Evidence and trade-offs:
+
+Court dimensions, ball size, and net-height targets use the existing sourced
+geometry. Acrylic rebound, air drag, friction, spin transfer, and motor limits
+remain provisional. A simulated rebound is not empirical validation. The
+ground-disc kitchen state is not full human footwork. The serve preset starts
+after a scripted strike; it does not validate the serving action. The contact
+presets use labelled fixed strokes, not a trained controller.
+
+Migration and compatibility:
+
+`PickleballInspection.unity` is a separate manual inspection scene. Keep
+`AIRally.unity`, `CooperativeRallyV1.unity`, their models, and earlier physics
+calibration evidence unchanged. Do not claim that this inspection contract
+freezes `env-v1` or closes Phase 1B.
+
+Affected roadmap/spec sections: README current focus, architecture, roadmap,
+and [PICKLEBALL_INSPECTION.md](PICKLEBALL_INSPECTION.md).
+
+### D-028 — Train provisional full-size competitive shot choice
+
+- Date: 2026-09-06
+- Status: Accepted scope: the user requests a trainable game with two competing AIs
+- Supersedes: D-027's pause on further prototype training only
+
+Decision:
+
+Create a separate full-size match on the unchanged inspection physics. Start
+with independent shot-selection policies and terminal win/loss rewards. Use
+explicit scripted contact assistance as the initial implementation choice.
+Keep this assistance labelled. Do not claim learned end-to-end paddle control.
+Use separate training and validation seed partitions and retain physical
+contact reports. Preserve the old table-scale scenes and trained models.
+
+Trade-offs:
+
+This produces a visible training experiment before empirical calibration is
+complete. It does not certify ball behaviour or replace the measured Phase 1B
+gate. The small shot policy learns target choice, not human footwork, swing
+mechanics, or complete pickleball strategy. A learned contact controller is
+a separate subsequent stage.
+
+Affected documents: README, architecture, roadmap, and
+[PICKLEBALL_MATCH.md](PICKLEBALL_MATCH.md).
+
+### D-029 — Develop full-body doubles in five stages
+
+- Date: 2026-09-06
+- Status: Accepted scope. The user asked for a persistent goal and implementation.
+- Supersedes: None. Preserve the earlier scenes and evidence.
+
+Decision:
+
+Build a separate full-size doubles scene. Add match rules, articulated bodies,
+bounded paddle contact, trained contact corrections, and competitive team play.
+Use standard side-out scoring to 11, with a two-point lead. Use the 2026 USA
+Pickleball rulebook for the implemented physical rules.
+
+Use procedural kinematic bodies and analytic arm and leg inverse kinematics.
+One constrained hand pose controls both the paddle and the visible arm. Keep
+scripted interception separate from learned contact corrections and shot choice.
+Topspin and slice must result from paddle motion at contact. Do not assign a
+desired ball trajectory or spin after a shot.
+
+Evidence and limits:
+
+The first contact trials exposed body interference and incorrect spin labels.
+Keep failed reports. A legal landing does not prove the requested spin skill.
+Use separate training, validation and interactive seed ranges. Do not award a
+point when a training rally reaches its time limit.
+
+The outdoor ball and acrylic contact profile remains provisional. Procedural
+body control is not learned human balance. Purchased character assets and paid
+compute are not part of the approved work.
+
+Track acceptance in [DOUBLES_PROGRESS.md](DOUBLES_PROGRESS.md).
+
 ## Decision proposal template
 
 Copy this section to the end of the file:

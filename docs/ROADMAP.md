@@ -7,7 +7,41 @@ deliberately gated: a later phase may be explored in a branch, but it does not
 become the project focus until the previous phase's exit criteria are recorded
 as passing.
 
+D-025 adds a user-directed exception: the current focus is a separate playable
+3D ping-pong rally prototype. Its learned paddle actions, simplified physics,
+and verification are documented in [AI_RALLY.md](AI_RALLY.md). Completion of
+that prototype does not close the pickleball calibration or Phase 1C gates.
+
+D-026 changes this prototype from cooperative returns to competitive points.
+The current work uses smaller paddles, energy loss, limited paddle speed, and
+point-winning shot selection. See [COMPETITIVE_MATCH.md](COMPETITIVE_MATCH.md).
+The earlier cooperative benchmark remains historical evidence, not a score for
+the new physics or model.
+
 ## North-star outcome
+
+D-029 added a five-stage doubles goal: match rules, articulated bodies,
+bounded contact, trained contact and shot choice, then validated 2v2 games.
+The base prototype passed its checks on 2026-09-06.
+See [DOUBLES_PROGRESS.md](DOUBLES_PROGRESS.md) for the acceptance evidence. This
+work uses provisional physics and does not close the empirical calibration gate.
+
+D-028 permits a provisional full-size competitive training experiment at the
+user's request. Its first stage learns shot choice with explicit scripted
+contact assistance. This exception does not close the empirical calibration
+gate or claim learned paddle contact. See [PICKLEBALL_MATCH.md](PICKLEBALL_MATCH.md).
+
+D-027 returns the current focus to full-size pickleball inspection before
+further training. The selected reference is an outdoor 40-hole ball on an
+acrylic court. The inspection scene adds manual six-axis paddle control,
+bounded player markers, free-running contact presets, and rally-rule checks.
+See [PICKLEBALL_INSPECTION.md](PICKLEBALL_INSPECTION.md).
+
+The next gates are measured court rebounds, angled contacts, flight decay,
+and paddle strokes. Fit and validate those parameters before freezing the new
+training environment. A plausible animation or a passing simulated drop test
+does not close the empirical calibration gate. Do not reuse the table-scale
+model as evidence for this full-size environment.
 
 Train a physics-based 3D agent that can acquire increasingly complete
 pickleball behavior while keeping each source of progress measurable:
@@ -105,6 +139,8 @@ Before installing a trainer or optimizing a policy:
   traces;
 - replace generic damping with versioned quadratic drag and spin-lift behavior;
 - calibrate court rebound and a project PBCoR surrogate for paddle contact;
+- use a bounded, versioned residual-slip surrogate so kinematic paddle brushes
+  create observable ball spin before trainer integration;
 - correct the representative paddle and regulation post-span net collision
   geometry;
 - prove deterministic replay, stability, and readiness remain inside committed
@@ -116,7 +152,49 @@ Before installing a trainer or optimizing a policy:
 The normative fixtures, measurements, thresholds, evidence, and close gate are
 in
 [PHASE1B_PHYSICS_CALIBRATION_SPEC.md](PHASE1B_PHYSICS_CALIBRATION_SPEC.md).
-No reinforcement-learning training begins before this phase closes.
+Phase 1B remains open until that specification's empirical close gate passes.
+D-023 permits only the separately versioned Phase 1C0 diagnostic probe below;
+it does not freeze `env-v1`, close Phase 1B, or authorize a final Phase 1C
+claim.
+
+### Physics Museum — interactive feel-check interlude
+
+Before Phase 1C trainer integration, inspect the frozen `env-v1` behavior in the
+interactive Physics Museum. Its six stations expose ball drop/rebound, spin
+flight, court bounce, paddle brush/spin transfer, net clearance/contact, and a
+free-hit regulation court through the same environment contract the agent will
+use.
+
+This is a human-sensemaking and regression aid, not a substitute for Phase 1B's
+numeric calibration evidence. Museum controls, camera work, telemetry, and
+trajectory rendering remain outside the authoritative simulator assemblies.
+See [PHYSICS_MUSEUM.md](PHYSICS_MUSEUM.md).
+
+### Phase 1C0 — Provisional learned-return probe
+
+Phase 1C0 deliberately trains against the current `provisional-unfitted`
+simulator so learned behavior can expose exploits and feel problems before the
+remaining empirical calibration work is available. Its normative contract is
+[PHASE1C0_LEARNING_PROBE_SPEC.md](PHASE1C0_LEARNING_PROBE_SPEC.md).
+
+This probe must:
+
+- use only the new Phase 1C training and validation seed partitions;
+- keep the final-evaluation partition inaccessible;
+- use a trainer adapter outside the core and simulation assemblies;
+- record the exact simulator/configuration hash, protocol hash, package pair,
+  Python environment, trainer configuration, training seed, checkpoint, and
+  per-episode metrics;
+- visibly replay a neural policy in Unity with no heuristic or scripted action
+  override;
+- label every model, metric, and trajectory provisional and disposable if the
+  physics configuration changes.
+
+Phase 1C0 is successful when one bounded local run produces a checkpoint that
+visibly tracks and strikes varied incoming balls and records legal returns on
+unseen validation launches. This is a learning-system integration and
+diagnostic milestone, not completion of Phase 1C and not evidence that Phase 1B
+is calibrated.
 
 ### Phase 1C — First learned return
 

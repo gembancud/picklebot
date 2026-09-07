@@ -1,0 +1,39 @@
+{
+  "version": "actor-state-movement-v1",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "parentActor": "artifacts/player-agents/ppo-20260907-104524/actor.json",
+  "parentActorHash": "4204bf92906ceed70f627e9371d62192de683e85fec92d40ab3df13dfd417833",
+  "reason": "Matched diagnostic: receiver-only teacher movement raised deterministic serve return landings from 3/12 to 12/12; shot-only replacement reached 8/12. Learn movement correction on actual four-actor visited states. No diagnostic observation or teacher runtime control enters the deployed model.",
+  "collection": {
+    "trainingSeed": 1097000,
+    "developmentSeed": 1197000,
+    "trainingRallies": 256,
+    "developmentRallies": 64,
+    "teacherProbability": 0,
+    "fixedShot": -1,
+    "baselineOpponent": false,
+    "method": "All four independent deterministic copies execute their own actions. Privileged teacher provides movement labels only. Use all phases. No teacher actions execute."
+  },
+  "additionalTraining": [
+    "artifacts/player-agents/curriculum-20260907-043639.json",
+    "artifacts/player-agents/incoming-20260907-043315.json",
+    "artifacts/player-agents/incoming-20260907-051229.json"
+  ],
+  "additionalDevelopment": [
+    "artifacts/player-agents/curriculum-20260907-044309.json",
+    "artifacts/player-agents/incoming-20260907-043522.json",
+    "artifacts/player-agents/incoming-20260907-051343.json"
+  ],
+  "fit": {
+    "epochs": 200,
+    "batch": 1024,
+    "learningRate": 0.001,
+    "seed": 1000000,
+    "sourceSampling": "equal source mass, with replacement",
+    "trainableParameters": "Only the two movement output rows and biases. Freeze both hidden layers, hit and shot outputs, and log standard deviation.",
+    "loss": "Mean squared bounded movement error weighted by 1 + 4 * teacher attempt + 2 * teacher movement norm. Select minimum equal-source development loss.",
+    "augmentation": "None. Preserve actual observed paddle state."
+  },
+  "checks": "Validate all source banks, seed partitions, all four motors and teacher execution counts. Preserve untrained parameters exactly. Check Unity parity, repeat 36 serve cases, 64 short/deep cases and eight development games at 1141000..1141007 against the unchanged baseline. Keep failed artifacts. No automatic promotion.",
+  "scope": "One complete saved player actor, no selector or runtime movement override. This is a supervised movement correction before further team-win RL. Existing final evaluation conditions remain frozen; final seeds remain unused. No runtime, physics, saved scene, baseline or cloud changes."
+}

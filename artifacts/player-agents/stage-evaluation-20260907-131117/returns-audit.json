@@ -1,0 +1,129 @@
+{
+  "reportPath": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/teacher-gap-20260907-131156.json",
+  "reportHash": "c7b4793c595b4e954d009026e483888f3628a95471a3d05d36431f1c5d2a85b7",
+  "referenceReportHash": "bca2df18ca98e0e6a6e53b3a251bf3c59a94d32bb148e33b34ac69504a155e9f",
+  "actorHash": "61c59e110797290c46b30b91a9fa2d0d3665e92a40f3c998bf2e24ed168edc06",
+  "cases": 64,
+  "exactTeacherControls": 32,
+  "verifiedActorDecisions": 2456,
+  "motorChecksPassed": true,
+  "groups": [
+    {
+      "profile": "deep",
+      "candidateTeam": 0,
+      "modes": [
+        {
+          "mode": 0,
+          "cases": 8,
+          "hits": 6,
+          "legalLandings": 6,
+          "outcomes": {
+            "legal landing": 6,
+            "no hit / Out": 2
+          }
+        },
+        {
+          "mode": 1,
+          "cases": 8,
+          "hits": 7,
+          "legalLandings": 6,
+          "outcomes": {
+            "legal landing": 6,
+            "fault after hit / WrongSide": 1,
+            "no hit / Out": 1
+          }
+        }
+      ],
+      "teacherSuccessActorFailure": [
+        10
+      ]
+    },
+    {
+      "profile": "deep",
+      "candidateTeam": 1,
+      "modes": [
+        {
+          "mode": 0,
+          "cases": 8,
+          "hits": 7,
+          "legalLandings": 6,
+          "outcomes": {
+            "no hit / Out": 1,
+            "fault after hit / Out": 1,
+            "legal landing": 6
+          }
+        },
+        {
+          "mode": 1,
+          "cases": 8,
+          "hits": 6,
+          "legalLandings": 4,
+          "outcomes": {
+            "no hit / Out": 2,
+            "fault after hit / Out": 2,
+            "legal landing": 4
+          }
+        }
+      ],
+      "teacherSuccessActorFailure": [
+        5,
+        13
+      ]
+    },
+    {
+      "profile": "kitchen",
+      "candidateTeam": 0,
+      "modes": [
+        {
+          "mode": 0,
+          "cases": 8,
+          "hits": 8,
+          "legalLandings": 8,
+          "outcomes": {
+            "legal landing": 8
+          }
+        },
+        {
+          "mode": 1,
+          "cases": 8,
+          "hits": 8,
+          "legalLandings": 8,
+          "outcomes": {
+            "legal landing": 8
+          }
+        }
+      ],
+      "teacherSuccessActorFailure": []
+    },
+    {
+      "profile": "kitchen",
+      "candidateTeam": 1,
+      "modes": [
+        {
+          "mode": 0,
+          "cases": 8,
+          "hits": 8,
+          "legalLandings": 8,
+          "outcomes": {
+            "legal landing": 8
+          }
+        },
+        {
+          "mode": 1,
+          "cases": 8,
+          "hits": 8,
+          "legalLandings": 7,
+          "outcomes": {
+            "legal landing": 7,
+            "fault after hit / BodyContact": 1
+          }
+        }
+      ],
+      "teacherSuccessActorFailure": [
+        31
+      ]
+    }
+  ],
+  "limitation": "Injected incoming fixtures, not completed games. All colliders stay enabled. Mode zero uses privileged teacher movement and hitter selection. Mode one uses four separate policy objects: saved actor instances for the candidate and constant leave actions for opponents. Diagnostic shadow teacher labels never replace actor actions and are development-only, not training data. This measures skill transfer on matched starts, not team-game-win strength.",
+  "verifiedTraceCount": 64
+}

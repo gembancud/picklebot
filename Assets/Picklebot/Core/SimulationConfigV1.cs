@@ -48,6 +48,14 @@ namespace Picklebot.Core
         [Range(0f, 1f)] public float PaddleDynamicFriction = 0.20f;
         [Range(0f, 1f)] public float NetDynamicFriction = 0.40f;
 
+        [Header("Practical paddle spin-transfer surrogate")]
+        [Range(0f, 1f)] public float PaddleTangentialVelocityTransfer = 0.12f;
+        [Range(0f, 1f)] public float PaddleSpinTransfer = 0.35f;
+        [Min(0f)] public float PaddleSpinTransferDeadband = 0.02f;
+        [Min(0f)] public float MaximumPaddleContactTangentialVelocityDelta = 3f;
+        [Min(0f)] public float MaximumPaddleContactSpinDelta = 35f;
+        [Min(0f)] public float MaximumBallAngularSpeed = 80f;
+
         [Header("Contacts and termination")]
         [Min(1)] public int ContactMinimumSeparationTicks = 2;
         [Range(0.25f, 20f)] public float DefaultMaximumEpisodeSeconds = 6f;
@@ -101,6 +109,18 @@ namespace Picklebot.Core
                 !UnitInterval(CourtDynamicFriction) ||
                 !UnitInterval(PaddleDynamicFriction) ||
                 !UnitInterval(NetDynamicFriction) ||
+                !UnitInterval(PaddleTangentialVelocityTransfer) ||
+                !UnitInterval(PaddleSpinTransfer) ||
+                !FiniteMath.IsFinite(PaddleSpinTransferDeadband) ||
+                PaddleSpinTransferDeadband < 0f ||
+                !FiniteMath.IsFinite(
+                    MaximumPaddleContactTangentialVelocityDelta) ||
+                MaximumPaddleContactTangentialVelocityDelta <= 0f ||
+                !FiniteMath.IsFinite(MaximumPaddleContactSpinDelta) ||
+                MaximumPaddleContactSpinDelta <= 0f ||
+                !FiniteMath.IsFinite(MaximumBallAngularSpeed) ||
+                MaximumBallAngularSpeed <= 0f ||
+                MaximumPaddleContactSpinDelta > MaximumBallAngularSpeed ||
                 ContactMinimumSeparationTicks < 1 ||
                 !FiniteMath.IsFinite(DefaultMaximumEpisodeSeconds) ||
                 DefaultMaximumEpisodeSeconds <= 0f ||
@@ -153,6 +173,13 @@ namespace Picklebot.Core
                 StableHashV0.Float(CourtDynamicFriction),
                 StableHashV0.Float(PaddleDynamicFriction),
                 StableHashV0.Float(NetDynamicFriction),
+                StableHashV0.Float(PaddleTangentialVelocityTransfer),
+                StableHashV0.Float(PaddleSpinTransfer),
+                StableHashV0.Float(PaddleSpinTransferDeadband),
+                StableHashV0.Float(
+                    MaximumPaddleContactTangentialVelocityDelta),
+                StableHashV0.Float(MaximumPaddleContactSpinDelta),
+                StableHashV0.Float(MaximumBallAngularSpeed),
                 ContactMinimumSeparationTicks,
                 StableHashV0.Float(DefaultMaximumEpisodeSeconds),
                 StableHashV0.Float(PlayableHorizontalMargin),

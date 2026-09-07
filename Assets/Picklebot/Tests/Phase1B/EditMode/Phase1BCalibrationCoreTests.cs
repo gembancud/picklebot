@@ -81,6 +81,106 @@ namespace Picklebot.Tests.Phase1B.EditMode
         }
 
         [Test]
+        public void ConfigurationHashIncludesPracticalSpinTransferParameters()
+        {
+            var original = configuration.ConfigurationHash;
+            configuration.PaddleSpinTransfer += 0.01f;
+
+            Assert.That(configuration.ConfigurationHash, Is.Not.EqualTo(original));
+            Assert.That(
+                configuration.MaximumBallAngularSpeed,
+                Is.EqualTo(Phase1CProtocolV0.MaximumBallAngularSpeed));
+        }
+
+        [Test]
+        public void PaddleSpinTransferIsNonzeroAndOddSymmetric()
+        {
+            var radius = configuration.BallDiameter / 2f;
+            var contactPoint = new Vector3(0f, 0f, -radius);
+            var positive = PaddleSpinTransferV1.Evaluate(
+                Vector3.zero,
+                Vector3.zero,
+                Vector3.zero,
+                new Vector3(3f, 0f, 0f),
+                contactPoint,
+                Vector3.forward,
+                configuration);
+            var negative = PaddleSpinTransferV1.Evaluate(
+                Vector3.zero,
+                Vector3.zero,
+                Vector3.zero,
+                new Vector3(-3f, 0f, 0f),
+                contactPoint,
+                Vector3.forward,
+                configuration);
+
+            Assert.That(positive.WasApplied, Is.True);
+            Assert.That(negative.WasApplied, Is.True);
+            Assert.That(positive.LinearVelocityDelta.x, Is.GreaterThan(0f));
+            Assert.That(positive.AngularVelocityDelta.sqrMagnitude, Is.GreaterThan(0f));
+            Assert.That(
+                Vector3.Distance(
+                    positive.LinearVelocityDelta,
+                    -negative.LinearVelocityDelta),
+                Is.LessThan(0.000001f));
+            Assert.That(
+                Vector3.Distance(
+                    positive.AngularVelocityDelta,
+                    -negative.AngularVelocityDelta),
+                Is.LessThan(0.000001f));
+        }
+
+        [Test]
+        public void PaddleSpinTransferIsFiniteAndBoundedAtExtremeSlip()
+        {
+            var radius = configuration.BallDiameter / 2f;
+            var result = PaddleSpinTransferV1.Evaluate(
+                Vector3.zero,
+                Vector3.zero,
+                new Vector3(0f, 0f, 70f),
+                new Vector3(1000f, -1000f, 0f),
+                new Vector3(0f, 0f, -radius),
+                Vector3.forward,
+                configuration);
+
+            Assert.That(result.WasApplied, Is.True);
+            Assert.That(result.WasClamped, Is.True);
+            Assert.That(FiniteMath.IsFinite(result.LinearVelocity), Is.True);
+            Assert.That(FiniteMath.IsFinite(result.AngularVelocity), Is.True);
+            Assert.That(
+                result.LinearVelocityDelta.magnitude,
+                Is.LessThanOrEqualTo(
+                    configuration.MaximumPaddleContactTangentialVelocityDelta));
+            Assert.That(
+                result.AngularVelocityDelta.magnitude,
+                Is.LessThanOrEqualTo(configuration.MaximumPaddleContactSpinDelta));
+            Assert.That(
+                result.AngularVelocity.magnitude,
+                Is.LessThanOrEqualTo(configuration.MaximumBallAngularSpeed));
+        }
+
+        [Test]
+        public void PaddleSpinTransferDeadbandLeavesRestingContactUnchanged()
+        {
+            var radius = configuration.BallDiameter / 2f;
+            var result = PaddleSpinTransferV1.Evaluate(
+                Vector3.zero,
+                Vector3.zero,
+                Vector3.zero,
+                new Vector3(
+                    configuration.PaddleSpinTransferDeadband / 2f,
+                    0f,
+                    0f),
+                new Vector3(0f, 0f, -radius),
+                Vector3.forward,
+                configuration);
+
+            Assert.That(result.WasApplied, Is.False);
+            Assert.That(result.LinearVelocity, Is.EqualTo(Vector3.zero));
+            Assert.That(result.AngularVelocity, Is.EqualTo(Vector3.zero));
+        }
+
+        [Test]
         public void ZeroRelativeSpeedProducesNoAerodynamicForce()
         {
             configuration.WindVelocity = new Vector3(2f, 0f, -1f);
@@ -262,6 +362,76 @@ namespace Picklebot.Tests.Phase1B.EditMode
             Assert.That(
                 Phase1CProtocolV0.UnityTrainerPackage,
                 Is.EqualTo("com.unity.ml-agents@4.0.0"));
+        }
+
+        [Test]
+        public void Phase1CObservationEncoderUsesTheDeclaredSpinScale()
+        {
+            var observation = ExamplePhase1CObservation();
+            observation.Ball.AngularVelocityWorld =
+                new Vector3(40f, -80f, 160f);
+            var encoded = new float[Phase1CObservationEncoderV0.Size];
+
+            Phase1CObservationEncoderV0.Encode(observation, encoded);
+
+            Assert.That(Phase1CObservationEncoderV0.Size, Is.EqualTo(37));
+            Assert.That(encoded[6], Is.EqualTo(0.5f));
+            Assert.That(encoded[7], Is.EqualTo(-1f));
+            Assert.That(encoded[8], Is.EqualTo(1f));
+            Assert.That(
+                encoded.All(value =>
+                    FiniteMath.IsFinite(value) &&
+                    value >= -1f &&
+                    value <= 1f),
+                Is.True);
+        }
+
+        [Test]
+        public void Phase1CObservationEncoderRejectsLegacyEnvironmentState()
+        {
+            var observation = ExamplePhase1CObservation();
+            observation.EnvironmentVersion = EnvironmentVersion.Current;
+
+            Assert.Throws<System.ArgumentException>(() =>
+                Phase1CObservationEncoderV0.Encode(
+                    observation,
+                    new float[Phase1CObservationEncoderV0.Size]));
+        }
+
+        private static ObservationV0 ExamplePhase1CObservation()
+        {
+            return new ObservationV0
+            {
+                EnvironmentVersion = SimulationConfigV1.EnvironmentVersion,
+                EpisodeId = 1UL,
+                Seed = 5000000UL,
+                ScenarioId = ScenarioCatalogV0.LaunchRally,
+                PhysicsTick = 12UL,
+                ElapsedTime = 0.1f,
+                Ball = new KinematicSnapshotV0
+                {
+                    PositionWorld = new Vector3(0.2f, 1.2f, 2f),
+                    RotationWorld = Quaternion.identity,
+                    LinearVelocityWorld = new Vector3(-0.1f, 1f, -7f),
+                    AngularVelocityWorld = new Vector3(1f, 2f, 3f)
+                },
+                Paddle = new KinematicSnapshotV0
+                {
+                    PositionWorld = new Vector3(0f, 1.05f, -1.35f),
+                    RotationWorld = Quaternion.identity,
+                    LinearVelocityWorld = new Vector3(0.2f, 0f, 0f),
+                    AngularVelocityWorld = Vector3.zero
+                },
+                BallPositionFromPaddle = new Vector3(0.2f, 0.15f, 3.35f),
+                BallVelocityFromPaddle = new Vector3(-0.3f, 1f, -7f),
+                Episode = new EpisodeSnapshotV0
+                {
+                    State = EpisodeStateV0.Running,
+                    LastTouch = LastTouchV0.ControlledPaddle,
+                    ControlledPaddleContacts = 1,
+                    BallFloorContacts = 0
+                }
+            };
         }
     }
 }

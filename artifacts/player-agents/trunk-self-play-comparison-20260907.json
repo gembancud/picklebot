@@ -1,0 +1,1018 @@
+{
+  "stageFolder": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/stage-evaluation-20260907-131117",
+  "planHash": "ac50bdd201aff7cd2d2c390d395d79f3d5098f23abc7ccdf54c4087a155c570b",
+  "progressHash": "62eaac59c32950e94525670df53dc640eb45daa0fc1dd3886389aeedc8c772e2",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "actorHash": "61c59e110797290c46b30b91a9fa2d0d3665e92a40f3c998bf2e24ed168edc06",
+  "serves": {
+    "reportPath": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/serve-return-20260907-131120.json",
+    "reportHash": "b26372929eb2e2b6c7bcb669265a68f837be002bd0d10282ed4aa8837ca3969e",
+    "actorHash": "61c59e110797290c46b30b91a9fa2d0d3665e92a40f3c998bf2e24ed168edc06",
+    "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+    "cases": 36,
+    "matchedOriginalControlCases": null,
+    "referenceReportHash": null,
+    "matchedPhysicalServeMaximumError": 0,
+    "actorDecisionsReplayed": 5164,
+    "actorLogProbabilityMaximumError": 0.00001430511474609375,
+    "teacherDecisions": 2540,
+    "motorChecksPassed": true,
+    "groups": [
+      {
+        "mode": 0,
+        "cases": 12,
+        "serveLandings": 12,
+        "returnHits": 12,
+        "returnLandings": 7,
+        "faults": {
+          "None": 7,
+          "WrongSide": 5
+        },
+        "seats": [
+          {
+            "server": 0,
+            "hits": 3,
+            "landings": 3
+          },
+          {
+            "server": 1,
+            "hits": 3,
+            "landings": 1
+          },
+          {
+            "server": 2,
+            "hits": 3,
+            "landings": 3
+          },
+          {
+            "server": 3,
+            "hits": 3,
+            "landings": 0
+          }
+        ]
+      },
+      {
+        "mode": 1,
+        "cases": 12,
+        "serveLandings": 12,
+        "returnHits": 12,
+        "returnLandings": 9,
+        "faults": {
+          "None": 9,
+          "WrongSide": 3
+        },
+        "seats": [
+          {
+            "server": 0,
+            "hits": 3,
+            "landings": 3
+          },
+          {
+            "server": 1,
+            "hits": 3,
+            "landings": 1
+          },
+          {
+            "server": 2,
+            "hits": 3,
+            "landings": 3
+          },
+          {
+            "server": 3,
+            "hits": 3,
+            "landings": 2
+          }
+        ]
+      },
+      {
+        "mode": 2,
+        "cases": 12,
+        "serveLandings": 12,
+        "returnHits": 12,
+        "returnLandings": 11,
+        "faults": {
+          "None": 11,
+          "WrongSide": 1
+        },
+        "seats": [
+          {
+            "server": 0,
+            "hits": 3,
+            "landings": 3
+          },
+          {
+            "server": 1,
+            "hits": 3,
+            "landings": 2
+          },
+          {
+            "server": 2,
+            "hits": 3,
+            "landings": 3
+          },
+          {
+            "server": 3,
+            "hits": 3,
+            "landings": 3
+          }
+        ]
+      }
+    ],
+    "wallSeconds": 25.1192773,
+    "limitation": "One real scripted serve and its first return, not completed games. Four separate policy instances. Teacher mode is a privileged diagnostic control, never a deployed selector or training data. Service seat is set by recorded dead-ball rule transitions before simulation. No ball steering or contact override. Physics is provisional."
+  },
+  "returns": {
+    "reportPath": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/teacher-gap-20260907-131156.json",
+    "reportHash": "c7b4793c595b4e954d009026e483888f3628a95471a3d05d36431f1c5d2a85b7",
+    "referenceReportHash": "bca2df18ca98e0e6a6e53b3a251bf3c59a94d32bb148e33b34ac69504a155e9f",
+    "actorHash": "61c59e110797290c46b30b91a9fa2d0d3665e92a40f3c998bf2e24ed168edc06",
+    "cases": 64,
+    "exactTeacherControls": 32,
+    "verifiedActorDecisions": 2456,
+    "motorChecksPassed": true,
+    "groups": [
+      {
+        "profile": "deep",
+        "candidateTeam": 0,
+        "modes": [
+          {
+            "mode": 0,
+            "cases": 8,
+            "hits": 6,
+            "legalLandings": 6,
+            "outcomes": {
+              "legal landing": 6,
+              "no hit / Out": 2
+            }
+          },
+          {
+            "mode": 1,
+            "cases": 8,
+            "hits": 7,
+            "legalLandings": 6,
+            "outcomes": {
+              "legal landing": 6,
+              "fault after hit / WrongSide": 1,
+              "no hit / Out": 1
+            }
+          }
+        ],
+        "teacherSuccessActorFailure": [
+          10
+        ]
+      },
+      {
+        "profile": "deep",
+        "candidateTeam": 1,
+        "modes": [
+          {
+            "mode": 0,
+            "cases": 8,
+            "hits": 7,
+            "legalLandings": 6,
+            "outcomes": {
+              "no hit / Out": 1,
+              "fault after hit / Out": 1,
+              "legal landing": 6
+            }
+          },
+          {
+            "mode": 1,
+            "cases": 8,
+            "hits": 6,
+            "legalLandings": 4,
+            "outcomes": {
+              "no hit / Out": 2,
+              "fault after hit / Out": 2,
+              "legal landing": 4
+            }
+          }
+        ],
+        "teacherSuccessActorFailure": [
+          5,
+          13
+        ]
+      },
+      {
+        "profile": "kitchen",
+        "candidateTeam": 0,
+        "modes": [
+          {
+            "mode": 0,
+            "cases": 8,
+            "hits": 8,
+            "legalLandings": 8,
+            "outcomes": {
+              "legal landing": 8
+            }
+          },
+          {
+            "mode": 1,
+            "cases": 8,
+            "hits": 8,
+            "legalLandings": 8,
+            "outcomes": {
+              "legal landing": 8
+            }
+          }
+        ],
+        "teacherSuccessActorFailure": []
+      },
+      {
+        "profile": "kitchen",
+        "candidateTeam": 1,
+        "modes": [
+          {
+            "mode": 0,
+            "cases": 8,
+            "hits": 8,
+            "legalLandings": 8,
+            "outcomes": {
+              "legal landing": 8
+            }
+          },
+          {
+            "mode": 1,
+            "cases": 8,
+            "hits": 8,
+            "legalLandings": 7,
+            "outcomes": {
+              "legal landing": 7,
+              "fault after hit / BodyContact": 1
+            }
+          }
+        ],
+        "teacherSuccessActorFailure": [
+          31
+        ]
+      }
+    ],
+    "limitation": "Injected incoming fixtures, not completed games. All colliders stay enabled. Mode zero uses privileged teacher movement and hitter selection. Mode one uses four separate policy objects: saved actor instances for the candidate and constant leave actions for opponents. Diagnostic shadow teacher labels never replace actor actions and are development-only, not training data. This measures skill transfer on matched starts, not team-game-win strength.",
+    "verifiedTraceCount": 64
+  },
+  "comparisons": [
+    {
+      "sampledActor": false,
+      "starting": {
+        "folder": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/development-evaluation-20260907-123009",
+        "actorHash": "e21be494d4b93557178849f990bd2acd0b72b81f9896d822ab4f3d3fec29e291",
+        "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+        "sampledActor": false,
+        "trainingSourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+        "historicalCandidate": false,
+        "completionHash": "24104cf7bb72069d5a6fd0ff100f6e717acc1aa5276d7755dc929141c2d9b8d8",
+        "games": [
+          {
+            "group": 0,
+            "seed": 1141000,
+            "candidateTeam": 0,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              2,
+              11
+            ],
+            "rallies": 27,
+            "rallyWins": 4,
+            "legalReturns": 181
+          },
+          {
+            "group": 1,
+            "seed": 1141001,
+            "candidateTeam": 0,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              1,
+              11
+            ],
+            "rallies": 33,
+            "rallyWins": 5,
+            "legalReturns": 228
+          },
+          {
+            "group": 2,
+            "seed": 1141002,
+            "candidateTeam": 1,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              11,
+              3
+            ],
+            "rallies": 28,
+            "rallyWins": 8,
+            "legalReturns": 71
+          },
+          {
+            "group": 3,
+            "seed": 1141003,
+            "candidateTeam": 1,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              11,
+              0
+            ],
+            "rallies": 18,
+            "rallyWins": 2,
+            "legalReturns": 74
+          },
+          {
+            "group": 4,
+            "seed": 1141004,
+            "candidateTeam": 0,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              3,
+              11
+            ],
+            "rallies": 21,
+            "rallyWins": 6,
+            "legalReturns": 61
+          },
+          {
+            "group": 5,
+            "seed": 1141005,
+            "candidateTeam": 0,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              3,
+              11
+            ],
+            "rallies": 26,
+            "rallyWins": 7,
+            "legalReturns": 87
+          },
+          {
+            "group": 6,
+            "seed": 1141006,
+            "candidateTeam": 1,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              11,
+              0
+            ],
+            "rallies": 27,
+            "rallyWins": 5,
+            "legalReturns": 125
+          },
+          {
+            "group": 7,
+            "seed": 1141007,
+            "candidateTeam": 1,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              11,
+              3
+            ],
+            "rallies": 26,
+            "rallyWins": 8,
+            "legalReturns": 77
+          }
+        ],
+        "wins": 0,
+        "rallies": 206,
+        "rallyWins": 45,
+        "legalReturns": 904,
+        "wallSeconds": 459.90018,
+        "evidenceChecksPassed": true,
+        "truncatedRallies": 37,
+        "truncatedFraction": 0.1796116504854369,
+        "rallyWinFraction": 0.21844660194174756,
+        "rallyOutcomeCounts": [
+          {
+            "outcome": "lost",
+            "fault": "BodyContact",
+            "count": 41
+          },
+          {
+            "outcome": "lost",
+            "fault": "DoubleHit",
+            "count": 3
+          },
+          {
+            "outcome": "lost",
+            "fault": "KitchenMomentum",
+            "count": 2
+          },
+          {
+            "outcome": "lost",
+            "fault": "Out",
+            "count": 15
+          },
+          {
+            "outcome": "lost",
+            "fault": "SecondBounce",
+            "count": 26
+          },
+          {
+            "outcome": "lost",
+            "fault": "WrongSide",
+            "count": 37
+          },
+          {
+            "outcome": "truncated",
+            "fault": "None",
+            "count": 37
+          },
+          {
+            "outcome": "won",
+            "fault": "BodyContact",
+            "count": 13
+          },
+          {
+            "outcome": "won",
+            "fault": "Out",
+            "count": 3
+          },
+          {
+            "outcome": "won",
+            "fault": "SecondBounce",
+            "count": 11
+          },
+          {
+            "outcome": "won",
+            "fault": "WrongSide",
+            "count": 18
+          }
+        ]
+      },
+      "updated": {
+        "folder": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/development-evaluation-20260907-131311",
+        "actorHash": "61c59e110797290c46b30b91a9fa2d0d3665e92a40f3c998bf2e24ed168edc06",
+        "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+        "sampledActor": false,
+        "trainingSourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+        "historicalCandidate": false,
+        "completionHash": "c2b4a68e4931d082e73cbd013e2895872f33258f47358ec661a3c35bbc21b1c3",
+        "games": [
+          {
+            "group": 0,
+            "seed": 1141000,
+            "candidateTeam": 0,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              3,
+              11
+            ],
+            "rallies": 32,
+            "rallyWins": 9,
+            "legalReturns": 147
+          },
+          {
+            "group": 1,
+            "seed": 1141001,
+            "candidateTeam": 0,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              6,
+              11
+            ],
+            "rallies": 37,
+            "rallyWins": 14,
+            "legalReturns": 119
+          },
+          {
+            "group": 2,
+            "seed": 1141002,
+            "candidateTeam": 1,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              11,
+              3
+            ],
+            "rallies": 19,
+            "rallyWins": 5,
+            "legalReturns": 30
+          },
+          {
+            "group": 3,
+            "seed": 1141003,
+            "candidateTeam": 1,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              13,
+              11
+            ],
+            "rallies": 50,
+            "rallyWins": 22,
+            "legalReturns": 104
+          },
+          {
+            "group": 4,
+            "seed": 1141004,
+            "candidateTeam": 0,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              3,
+              11
+            ],
+            "rallies": 16,
+            "rallyWins": 4,
+            "legalReturns": 29
+          },
+          {
+            "group": 5,
+            "seed": 1141005,
+            "candidateTeam": 0,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              3,
+              11
+            ],
+            "rallies": 19,
+            "rallyWins": 5,
+            "legalReturns": 36
+          },
+          {
+            "group": 6,
+            "seed": 1141006,
+            "candidateTeam": 1,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              11,
+              3
+            ],
+            "rallies": 21,
+            "rallyWins": 6,
+            "legalReturns": 41
+          },
+          {
+            "group": 7,
+            "seed": 1141007,
+            "candidateTeam": 1,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              11,
+              0
+            ],
+            "rallies": 17,
+            "rallyWins": 2,
+            "legalReturns": 77
+          }
+        ],
+        "wins": 0,
+        "rallies": 211,
+        "rallyWins": 67,
+        "legalReturns": 583,
+        "wallSeconds": 394.0075472,
+        "evidenceChecksPassed": true,
+        "truncatedRallies": 14,
+        "truncatedFraction": 0.06635071090047394,
+        "rallyWinFraction": 0.3175355450236967,
+        "rallyOutcomeCounts": [
+          {
+            "outcome": "lost",
+            "fault": "BodyContact",
+            "count": 35
+          },
+          {
+            "outcome": "lost",
+            "fault": "KitchenMomentum",
+            "count": 1
+          },
+          {
+            "outcome": "lost",
+            "fault": "Lost",
+            "count": 14
+          },
+          {
+            "outcome": "lost",
+            "fault": "Out",
+            "count": 13
+          },
+          {
+            "outcome": "lost",
+            "fault": "SecondBounce",
+            "count": 35
+          },
+          {
+            "outcome": "lost",
+            "fault": "WrongSide",
+            "count": 32
+          },
+          {
+            "outcome": "truncated",
+            "fault": "None",
+            "count": 14
+          },
+          {
+            "outcome": "won",
+            "fault": "BodyContact",
+            "count": 20
+          },
+          {
+            "outcome": "won",
+            "fault": "Out",
+            "count": 7
+          },
+          {
+            "outcome": "won",
+            "fault": "SecondBounce",
+            "count": 18
+          },
+          {
+            "outcome": "won",
+            "fault": "WrongSide",
+            "count": 22
+          }
+        ]
+      }
+    },
+    {
+      "sampledActor": true,
+      "starting": {
+        "folder": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/development-evaluation-20260907-124449",
+        "actorHash": "e21be494d4b93557178849f990bd2acd0b72b81f9896d822ab4f3d3fec29e291",
+        "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+        "sampledActor": true,
+        "trainingSourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+        "historicalCandidate": false,
+        "completionHash": "0845347fdba927bffd141d830c39522a0d1060c0c3399966f8dcc7ef9f7403f7",
+        "games": [
+          {
+            "group": 0,
+            "seed": 1141000,
+            "candidateTeam": 0,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              0,
+              11
+            ],
+            "rallies": 13,
+            "rallyWins": 1,
+            "legalReturns": 24
+          },
+          {
+            "group": 1,
+            "seed": 1141001,
+            "candidateTeam": 0,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              4,
+              11
+            ],
+            "rallies": 24,
+            "rallyWins": 8,
+            "legalReturns": 40
+          },
+          {
+            "group": 2,
+            "seed": 1141002,
+            "candidateTeam": 1,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              11,
+              5
+            ],
+            "rallies": 27,
+            "rallyWins": 9,
+            "legalReturns": 64
+          },
+          {
+            "group": 3,
+            "seed": 1141003,
+            "candidateTeam": 1,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              11,
+              3
+            ],
+            "rallies": 32,
+            "rallyWins": 10,
+            "legalReturns": 70
+          },
+          {
+            "group": 4,
+            "seed": 1141004,
+            "candidateTeam": 0,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              3,
+              11
+            ],
+            "rallies": 16,
+            "rallyWins": 4,
+            "legalReturns": 24
+          },
+          {
+            "group": 5,
+            "seed": 1141005,
+            "candidateTeam": 0,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              0,
+              11
+            ],
+            "rallies": 16,
+            "rallyWins": 2,
+            "legalReturns": 42
+          },
+          {
+            "group": 6,
+            "seed": 1141006,
+            "candidateTeam": 1,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              11,
+              3
+            ],
+            "rallies": 23,
+            "rallyWins": 6,
+            "legalReturns": 54
+          },
+          {
+            "group": 7,
+            "seed": 1141007,
+            "candidateTeam": 1,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              11,
+              7
+            ],
+            "rallies": 26,
+            "rallyWins": 10,
+            "legalReturns": 65
+          }
+        ],
+        "wins": 0,
+        "rallies": 177,
+        "rallyWins": 50,
+        "legalReturns": 383,
+        "wallSeconds": 237.06395129999999,
+        "evidenceChecksPassed": true,
+        "truncatedRallies": 9,
+        "truncatedFraction": 0.05084745762711865,
+        "rallyWinFraction": 0.2824858757062147,
+        "rallyOutcomeCounts": [
+          {
+            "outcome": "lost",
+            "fault": "BodyContact",
+            "count": 41
+          },
+          {
+            "outcome": "lost",
+            "fault": "Lost",
+            "count": 4
+          },
+          {
+            "outcome": "lost",
+            "fault": "Out",
+            "count": 14
+          },
+          {
+            "outcome": "lost",
+            "fault": "SecondBounce",
+            "count": 19
+          },
+          {
+            "outcome": "lost",
+            "fault": "WrongSide",
+            "count": 40
+          },
+          {
+            "outcome": "truncated",
+            "fault": "None",
+            "count": 9
+          },
+          {
+            "outcome": "won",
+            "fault": "BodyContact",
+            "count": 12
+          },
+          {
+            "outcome": "won",
+            "fault": "DoubleHit",
+            "count": 1
+          },
+          {
+            "outcome": "won",
+            "fault": "Out",
+            "count": 6
+          },
+          {
+            "outcome": "won",
+            "fault": "SecondBounce",
+            "count": 13
+          },
+          {
+            "outcome": "won",
+            "fault": "WrongSide",
+            "count": 18
+          }
+        ]
+      },
+      "updated": {
+        "folder": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/development-evaluation-20260907-132000",
+        "actorHash": "61c59e110797290c46b30b91a9fa2d0d3665e92a40f3c998bf2e24ed168edc06",
+        "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+        "sampledActor": true,
+        "trainingSourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+        "historicalCandidate": false,
+        "completionHash": "9a39bce13ab404c8def8e75fc3b1475aca4d9c2b421446916aee72dde98471fc",
+        "games": [
+          {
+            "group": 0,
+            "seed": 1141000,
+            "candidateTeam": 0,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              1,
+              11
+            ],
+            "rallies": 18,
+            "rallyWins": 3,
+            "legalReturns": 52
+          },
+          {
+            "group": 1,
+            "seed": 1141001,
+            "candidateTeam": 0,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              2,
+              11
+            ],
+            "rallies": 18,
+            "rallyWins": 4,
+            "legalReturns": 42
+          },
+          {
+            "group": 2,
+            "seed": 1141002,
+            "candidateTeam": 1,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              11,
+              3
+            ],
+            "rallies": 30,
+            "rallyWins": 8,
+            "legalReturns": 93
+          },
+          {
+            "group": 3,
+            "seed": 1141003,
+            "candidateTeam": 1,
+            "sampledBaseline": false,
+            "won": false,
+            "score": [
+              11,
+              3
+            ],
+            "rallies": 21,
+            "rallyWins": 6,
+            "legalReturns": 36
+          },
+          {
+            "group": 4,
+            "seed": 1141004,
+            "candidateTeam": 0,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              2,
+              11
+            ],
+            "rallies": 24,
+            "rallyWins": 7,
+            "legalReturns": 88
+          },
+          {
+            "group": 5,
+            "seed": 1141005,
+            "candidateTeam": 0,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              0,
+              11
+            ],
+            "rallies": 13,
+            "rallyWins": 1,
+            "legalReturns": 34
+          },
+          {
+            "group": 6,
+            "seed": 1141006,
+            "candidateTeam": 1,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              11,
+              3
+            ],
+            "rallies": 22,
+            "rallyWins": 6,
+            "legalReturns": 60
+          },
+          {
+            "group": 7,
+            "seed": 1141007,
+            "candidateTeam": 1,
+            "sampledBaseline": true,
+            "won": false,
+            "score": [
+              11,
+              8
+            ],
+            "rallies": 31,
+            "rallyWins": 13,
+            "legalReturns": 79
+          }
+        ],
+        "wins": 0,
+        "rallies": 177,
+        "rallyWins": 48,
+        "legalReturns": 484,
+        "wallSeconds": 315.08026029999996,
+        "evidenceChecksPassed": true,
+        "truncatedRallies": 9,
+        "truncatedFraction": 0.05084745762711865,
+        "rallyWinFraction": 0.2711864406779661,
+        "rallyOutcomeCounts": [
+          {
+            "outcome": "lost",
+            "fault": "BodyContact",
+            "count": 36
+          },
+          {
+            "outcome": "lost",
+            "fault": "DoubleHit",
+            "count": 4
+          },
+          {
+            "outcome": "lost",
+            "fault": "Lost",
+            "count": 4
+          },
+          {
+            "outcome": "lost",
+            "fault": "Out",
+            "count": 11
+          },
+          {
+            "outcome": "lost",
+            "fault": "SecondBounce",
+            "count": 21
+          },
+          {
+            "outcome": "lost",
+            "fault": "WrongSide",
+            "count": 44
+          },
+          {
+            "outcome": "truncated",
+            "fault": "None",
+            "count": 9
+          },
+          {
+            "outcome": "won",
+            "fault": "BodyContact",
+            "count": 7
+          },
+          {
+            "outcome": "won",
+            "fault": "Out",
+            "count": 9
+          },
+          {
+            "outcome": "won",
+            "fault": "SecondBounce",
+            "count": 18
+          },
+          {
+            "outcome": "won",
+            "fault": "WrongSide",
+            "count": 14
+          }
+        ]
+      }
+    }
+  ],
+  "limitation": "Paired development evidence only. No final acceptance, no scene promotion, and no claim of calibrated ball physics."
+}

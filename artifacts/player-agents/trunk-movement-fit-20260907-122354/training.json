@@ -1,0 +1,4302 @@
+{
+  "status": "complete",
+  "actorHash": "e21be494d4b93557178849f990bd2acd0b72b81f9896d822ab4f3d3fec29e291",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "parentActorHash": "014a86a1608532ed72845813973e0e3448ef9591d6b79e1c96766561dd220615",
+  "planHash": "a0a3c4c673e2f6f4418e241466896ab2708bdf05a4b28214f6d50247569ddbc3",
+  "frozen": {
+    "config/player-agents/trunk-movement-v1.json": "a0a3c4c673e2f6f4418e241466896ab2708bdf05a4b28214f6d50247569ddbc3",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/contact-movement-fit-20260907-114743/actor.json": "014a86a1608532ed72845813973e0e3448ef9591d6b79e1c96766561dd220615",
+    "/Users/gem/git/jsts/picklebot/config/player-agents/near-contact-movement-v1.json": "037dafe7ebdca6090f9552278deb1162e79d5d8d502273d4edd3a6040e136a1c",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-111706.json": "d2b2aae797b4ffdeb28f1bc95c5ab695e56b3feb6449319609a755ba77b6ae40",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-111706.jsonl": "02862f34058951b518a73e7679c1b114f37f70dafba354a9e371e26004811dbb",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-043639.json": "e90d50cffa6b9c1e4deb97c9b68f902beefb717014f8276420f031f76f3682ac",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-043639.jsonl": "0f15e531056eae977109f53a46de211d5bd1cc4efaa018d903099175d396fda6",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043315.json": "8721ef313c2f72cca6d47b16a6f76f8560a8b3effca09e4a145072a1dd79e570",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043315.jsonl": "fc960f4b4122693ef4251ccc1a4608b65eaae863f3f41ee70412bc76eb4bafdf",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051229.json": "1e39306d6538194ce56492f3ec63c58c8d6f2aadae62865b426aa14a1ff064dc",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051229.jsonl": "b25967ff9ee0f345dfd361873cd30e8e32454f01a2cc4b4c4ed9efbde86a9c69",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-112139.json": "976f7acfe7edc68165066f2675a3ebdade53c9d0e68115b469c26fcd4a25a5c0",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-112139.jsonl": "14909015e0a46fdc590d98e2c884d61744ae25de6ebc9903aef157484b444ed3",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-044309.json": "6b72573aed604823fe09a1bac4bd29a68b0283c0aca79fa8936f06cd8b60a1a4",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-044309.jsonl": "53f9c74b9b1971410279cba01b92b3cf086156d833bc77163eedbc495f4e9253",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043522.json": "59aad1c2a6440f6c1370661f026bff4a83117184ff8426a8fba3f6c02a40e592",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043522.jsonl": "d501c7a6562eb0e7ce2007b0c21b7e8d4755af8fc00072ed5e8bc0305f7c91e5",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051343.json": "30fd09fe0052a5f475657798a78e663fea133b026f8f28c0796ef63999594dc9",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051343.jsonl": "a1055d9b9ea9410c1d9ac8e971cfb3bc69e21f530a26cfb0fe40c8be0922627d",
+    "/Users/gem/git/jsts/picklebot/scripts/player-agents-fit-trunk-movement.py": "26cc19570a39eb87c58fe2bcb1e6391717470277165c116967dea4d15757b7df",
+    "/Users/gem/git/jsts/picklebot/scripts/player-agents-fit-contact-movement.py": "09c50f6b8a4e81987b60a526a6b7d2d7e4f47e00ecc9a9a7abc898ed8f8b286b",
+    "/Users/gem/git/jsts/picklebot/scripts/player_actor.py": "b0580eca6df105f7c76c57dfef74a8d0779d8926802d2c445b139a9e7b331423",
+    "/Users/gem/git/jsts/picklebot/scripts/player_ppo.py": "95f661a88803ef3b0875d3d4c67e1b2d7271f0ab6f18c2047d6fc3a1ebfe6f90"
+  },
+  "trainingSources": [
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-111706.json",
+      "reportHash": "d2b2aae797b4ffdeb28f1bc95c5ab695e56b3feb6449319609a755ba77b6ae40",
+      "dataPath": "artifacts/player-agents/curriculum-20260907-111706.jsonl",
+      "dataHash": "02862f34058951b518a73e7679c1b114f37f70dafba354a9e371e26004811dbb",
+      "rows": 68416,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 32532,
+        "returnFlight": 21424,
+        "rally": 14460,
+        "dead": 0
+      },
+      "criticalRows": 2187,
+      "criticalIndicesHash": "fed4033c174aff0f46463469a0ef90a39df0e3d443a7422a78df50a4e28e3709"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-043639.json",
+      "reportHash": "e90d50cffa6b9c1e4deb97c9b68f902beefb717014f8276420f031f76f3682ac",
+      "dataPath": "artifacts/player-agents/curriculum-20260907-043639.jsonl",
+      "dataHash": "0f15e531056eae977109f53a46de211d5bd1cc4efaa018d903099175d396fda6",
+      "rows": 59876,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 8154,
+        "returnFlight": 7414,
+        "rally": 44308,
+        "dead": 0
+      },
+      "criticalRows": 2239,
+      "criticalIndicesHash": "5ef87287ac23b9ed77f00b47cb8605abb9985854a18863fb4d9bd6cf6779d7fd"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043315.json",
+      "reportHash": "8721ef313c2f72cca6d47b16a6f76f8560a8b3effca09e4a145072a1dd79e570",
+      "dataPath": "artifacts/player-agents/incoming-20260907-043315.jsonl",
+      "dataHash": "fc960f4b4122693ef4251ccc1a4608b65eaae863f3f41ee70412bc76eb4bafdf",
+      "rows": 13406,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 0,
+        "returnFlight": 0,
+        "rally": 13406,
+        "dead": 0
+      },
+      "criticalRows": 1095,
+      "criticalIndicesHash": "9d0e3c616da9faf5ec7657eba6d518f08fa442e7f4d8f1499d8c894f7d58ffe2"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051229.json",
+      "reportHash": "1e39306d6538194ce56492f3ec63c58c8d6f2aadae62865b426aa14a1ff064dc",
+      "dataPath": "artifacts/player-agents/incoming-20260907-051229.jsonl",
+      "dataHash": "b25967ff9ee0f345dfd361873cd30e8e32454f01a2cc4b4c4ed9efbde86a9c69",
+      "rows": 10656,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 0,
+        "returnFlight": 0,
+        "rally": 10656,
+        "dead": 0
+      },
+      "criticalRows": 485,
+      "criticalIndicesHash": "a4dee1bcfef377934ea63f0b21f67e44654accac6b8cd13ffe85174517f49b38"
+    }
+  ],
+  "developmentSources": [
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-112139.json",
+      "reportHash": "976f7acfe7edc68165066f2675a3ebdade53c9d0e68115b469c26fcd4a25a5c0",
+      "dataPath": "artifacts/player-agents/curriculum-20260907-112139.jsonl",
+      "dataHash": "14909015e0a46fdc590d98e2c884d61744ae25de6ebc9903aef157484b444ed3",
+      "rows": 18768,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 8116,
+        "returnFlight": 6300,
+        "rally": 4352,
+        "dead": 0
+      },
+      "criticalRows": 702,
+      "criticalIndicesHash": "7981e30bf873c5ed124ec67df04f6369c8d3e83ef7b0d7a4bb0a99560f7d7a68"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-044309.json",
+      "reportHash": "6b72573aed604823fe09a1bac4bd29a68b0283c0aca79fa8936f06cd8b60a1a4",
+      "dataPath": "artifacts/player-agents/curriculum-20260907-044309.jsonl",
+      "dataHash": "53f9c74b9b1971410279cba01b92b3cf086156d833bc77163eedbc495f4e9253",
+      "rows": 31374,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 4112,
+        "returnFlight": 3670,
+        "rally": 23592,
+        "dead": 0
+      },
+      "criticalRows": 1103,
+      "criticalIndicesHash": "f4efe1759fb3ecad948508afe22dd77c018b67aafa9fbf39f629843324d060ad"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043522.json",
+      "reportHash": "59aad1c2a6440f6c1370661f026bff4a83117184ff8426a8fba3f6c02a40e592",
+      "dataPath": "artifacts/player-agents/incoming-20260907-043522.jsonl",
+      "dataHash": "d501c7a6562eb0e7ce2007b0c21b7e8d4755af8fc00072ed5e8bc0305f7c91e5",
+      "rows": 3364,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 0,
+        "returnFlight": 0,
+        "rally": 3364,
+        "dead": 0
+      },
+      "criticalRows": 275,
+      "criticalIndicesHash": "07f27916a8907efa970bc441d2e45c484ba00c2c287e52218eea153b76b3c6f8"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051343.json",
+      "reportHash": "30fd09fe0052a5f475657798a78e663fea133b026f8f28c0796ef63999594dc9",
+      "dataPath": "artifacts/player-agents/incoming-20260907-051343.jsonl",
+      "dataHash": "a1055d9b9ea9410c1d9ac8e971cfb3bc69e21f530a26cfb0fe40c8be0922627d",
+      "rows": 2582,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 0,
+        "returnFlight": 0,
+        "rally": 2582,
+        "dead": 0
+      },
+      "criticalRows": 96,
+      "criticalIndicesHash": "bf9d6efe4d6a41da15258f9068af5b39902fbfbbce347063c0236ebd46af8b88"
+    }
+  ],
+  "parentDevelopmentMetrics": [
+    {
+      "objective": 0.7869662046432495,
+      "movementLoss": 0.7869662046432495,
+      "nonMovementLogitMSE": 0.0,
+      "hitFlipRate": 0.0,
+      "shotFlipRate": 0.0
+    },
+    {
+      "objective": 0.14829950034618378,
+      "movementLoss": 0.14829950034618378,
+      "nonMovementLogitMSE": 0.0,
+      "hitFlipRate": 0.0,
+      "shotFlipRate": 0.0
+    },
+    {
+      "objective": 0.04628034308552742,
+      "movementLoss": 0.04628034308552742,
+      "nonMovementLogitMSE": 0.0,
+      "hitFlipRate": 0.0,
+      "shotFlipRate": 0.0
+    },
+    {
+      "objective": 0.09968435764312744,
+      "movementLoss": 0.09968435764312744,
+      "nonMovementLogitMSE": 0.0,
+      "hitFlipRate": 0.0,
+      "shotFlipRate": 0.0
+    }
+  ],
+  "selectedUpdates": 14602,
+  "optimizerUpdates": 14900,
+  "bestSelectionLoss": 0.18718635197728872,
+  "history": [
+    {
+      "epoch": 1,
+      "updates": 149,
+      "developmentMetrics": [
+        {
+          "objective": 0.7430413961410522,
+          "movementLoss": 0.7396695613861084,
+          "nonMovementLogitMSE": 0.003371858038008213,
+          "hitFlipRate": 0.0002664109051693231,
+          "shotFlipRate": 0.0208866149187088
+        },
+        {
+          "objective": 0.1474241316318512,
+          "movementLoss": 0.14439737796783447,
+          "nonMovementLogitMSE": 0.00302675343118608,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.01969783939421177
+        },
+        {
+          "objective": 0.051437679678201675,
+          "movementLoss": 0.05041874945163727,
+          "nonMovementLogitMSE": 0.0010189310414716601,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.003864447120577097
+        },
+        {
+          "objective": 0.09186244755983353,
+          "movementLoss": 0.09058807045221329,
+          "nonMovementLogitMSE": 0.0012743740808218718,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.004647559951990843
+        }
+      ],
+      "selectionLoss": 0.25844141375273466,
+      "sampledRowsPerSource": [
+        37844,
+        38336,
+        37872,
+        38302
+      ]
+    },
+    {
+      "epoch": 2,
+      "updates": 298,
+      "developmentMetrics": [
+        {
+          "objective": 0.7125853896141052,
+          "movementLoss": 0.7073691487312317,
+          "nonMovementLogitMSE": 0.005216261371970177,
+          "hitFlipRate": 0.0003196930920239538,
+          "shotFlipRate": 0.025202471762895584
+        },
+        {
+          "objective": 0.14888891577720642,
+          "movementLoss": 0.14448675513267517,
+          "nonMovementLogitMSE": 0.004402153193950653,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.024096384644508362
+        },
+        {
+          "objective": 0.0436631515622139,
+          "movementLoss": 0.04219388589262962,
+          "nonMovementLogitMSE": 0.0014692670665681362,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.0050535076297819614
+        },
+        {
+          "objective": 0.0860903412103653,
+          "movementLoss": 0.08416838943958282,
+          "nonMovementLogitMSE": 0.0019219550304114819,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.005422153510153294
+        }
+      ],
+      "selectionLoss": 0.2478069495409727,
+      "sampledRowsPerSource": [
+        38070,
+        38381,
+        38010,
+        37893
+      ]
+    },
+    {
+      "epoch": 3,
+      "updates": 447,
+      "developmentMetrics": [
+        {
+          "objective": 0.7043903470039368,
+          "movementLoss": 0.6984474062919617,
+          "nonMovementLogitMSE": 0.00594294723123312,
+          "hitFlipRate": 0.0003196930920239538,
+          "shotFlipRate": 0.027493605390191078
+        },
+        {
+          "objective": 0.14661431312561035,
+          "movementLoss": 0.14160865545272827,
+          "nonMovementLogitMSE": 0.005005659535527229,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.027379358187317848
+        },
+        {
+          "objective": 0.039965659379959106,
+          "movementLoss": 0.038334187120199203,
+          "nonMovementLogitMSE": 0.0016314705135300756,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.006242568138986826
+        },
+        {
+          "objective": 0.09185926616191864,
+          "movementLoss": 0.08947629481554031,
+          "nonMovementLogitMSE": 0.002382967621088028,
+          "hitFlipRate": 0.00038729666266590357,
+          "shotFlipRate": 0.003485670080408454
+        }
+      ],
+      "selectionLoss": 0.24570739641785622,
+      "sampledRowsPerSource": [
+        38209,
+        37986,
+        37923,
+        38236
+      ]
+    },
+    {
+      "epoch": 4,
+      "updates": 596,
+      "developmentMetrics": [
+        {
+          "objective": 0.6892567873001099,
+          "movementLoss": 0.6822962164878845,
+          "nonMovementLogitMSE": 0.006960561498999596,
+          "hitFlipRate": 0.0004795396525878459,
+          "shotFlipRate": 0.031489770859479904
+        },
+        {
+          "objective": 0.146794855594635,
+          "movementLoss": 0.14091943204402924,
+          "nonMovementLogitMSE": 0.005875426344573498,
+          "hitFlipRate": 0.0001274941023439169,
+          "shotFlipRate": 0.029323643073439598
+        },
+        {
+          "objective": 0.039867814630270004,
+          "movementLoss": 0.0377441942691803,
+          "nonMovementLogitMSE": 0.002123621990904212,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.007728894241154194
+        },
+        {
+          "objective": 0.08520984649658203,
+          "movementLoss": 0.08229314535856247,
+          "nonMovementLogitMSE": 0.0029166985768824816,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.00735863670706749
+        }
+      ],
+      "selectionLoss": 0.24028232600539923,
+      "sampledRowsPerSource": [
+        37797,
+        38210,
+        38177,
+        38170
+      ]
+    },
+    {
+      "epoch": 5,
+      "updates": 745,
+      "developmentMetrics": [
+        {
+          "objective": 0.6827254891395569,
+          "movementLoss": 0.6748679876327515,
+          "nonMovementLogitMSE": 0.007857481017708778,
+          "hitFlipRate": 0.0005328218103386462,
+          "shotFlipRate": 0.030956948176026344
+        },
+        {
+          "objective": 0.14003057777881622,
+          "movementLoss": 0.13339929282665253,
+          "nonMovementLogitMSE": 0.006631288677453995,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.0314272977411747
+        },
+        {
+          "objective": 0.041371021419763565,
+          "movementLoss": 0.039311401546001434,
+          "nonMovementLogitMSE": 0.0020596215035766363,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.008620689623057842
+        },
+        {
+          "objective": 0.07892128080129623,
+          "movementLoss": 0.07583466917276382,
+          "nonMovementLogitMSE": 0.003086614655330777,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.007745933253318071
+        }
+      ],
+      "selectionLoss": 0.23576209228485823,
+      "sampledRowsPerSource": [
+        38291,
+        37838,
+        38172,
+        38053
+      ]
+    },
+    {
+      "epoch": 6,
+      "updates": 894,
+      "developmentMetrics": [
+        {
+          "objective": 0.6617355346679688,
+          "movementLoss": 0.6532691717147827,
+          "nonMovementLogitMSE": 0.008466372266411781,
+          "hitFlipRate": 0.0004795396525878459,
+          "shotFlipRate": 0.03388746827840805
+        },
+        {
+          "objective": 0.13943108916282654,
+          "movementLoss": 0.1322757452726364,
+          "nonMovementLogitMSE": 0.0071553499437868595,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.03394530341029167
+        },
+        {
+          "objective": 0.03908359631896019,
+          "movementLoss": 0.036707282066345215,
+          "nonMovementLogitMSE": 0.0023763151839375496,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.00951248500496149
+        },
+        {
+          "objective": 0.0850101038813591,
+          "movementLoss": 0.0816408097743988,
+          "nonMovementLogitMSE": 0.003369290614500642,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.006196746602654457
+        }
+      ],
+      "selectionLoss": 0.23131508100777864,
+      "sampledRowsPerSource": [
+        37800,
+        38124,
+        38321,
+        38109
+      ]
+    },
+    {
+      "epoch": 7,
+      "updates": 1043,
+      "developmentMetrics": [
+        {
+          "objective": 0.6558921337127686,
+          "movementLoss": 0.6469712257385254,
+          "nonMovementLogitMSE": 0.00892091728746891,
+          "hitFlipRate": 0.0005328218103386462,
+          "shotFlipRate": 0.03276854380965233
+        },
+        {
+          "objective": 0.13939759135246277,
+          "movementLoss": 0.13198155164718628,
+          "nonMovementLogitMSE": 0.007416037376970053,
+          "hitFlipRate": 0.0001274941023439169,
+          "shotFlipRate": 0.03420029208064079
+        },
+        {
+          "objective": 0.03783498704433441,
+          "movementLoss": 0.03553057461977005,
+          "nonMovementLogitMSE": 0.0023044126573950052,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.008323424495756626
+        },
+        {
+          "objective": 0.07785257697105408,
+          "movementLoss": 0.07458748668432236,
+          "nonMovementLogitMSE": 0.0032650872599333525,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.22774432227015495,
+      "sampledRowsPerSource": [
+        37852,
+        38344,
+        38040,
+        38118
+      ]
+    },
+    {
+      "epoch": 8,
+      "updates": 1192,
+      "developmentMetrics": [
+        {
+          "objective": 0.6473846435546875,
+          "movementLoss": 0.6378875374794006,
+          "nonMovementLogitMSE": 0.009497097693383694,
+          "hitFlipRate": 0.0005861039971932769,
+          "shotFlipRate": 0.033514492213726044
+        },
+        {
+          "objective": 0.13926689326763153,
+          "movementLoss": 0.13139432668685913,
+          "nonMovementLogitMSE": 0.007872560061514378,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.034997131675481796
+        },
+        {
+          "objective": 0.03840639814734459,
+          "movementLoss": 0.03597240522503853,
+          "nonMovementLogitMSE": 0.002433991292491555,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010107015259563923
+        },
+        {
+          "objective": 0.07585274428129196,
+          "movementLoss": 0.07243111729621887,
+          "nonMovementLogitMSE": 0.0034216297790408134,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.006584043148905039
+        }
+      ],
+      "selectionLoss": 0.2252276698127389,
+      "sampledRowsPerSource": [
+        38067,
+        38265,
+        38147,
+        37875
+      ]
+    },
+    {
+      "epoch": 9,
+      "updates": 1341,
+      "developmentMetrics": [
+        {
+          "objective": 0.6385429501533508,
+          "movementLoss": 0.6284005045890808,
+          "nonMovementLogitMSE": 0.010142441838979721,
+          "hitFlipRate": 0.0007992327446117997,
+          "shotFlipRate": 0.036231882870197296
+        },
+        {
+          "objective": 0.13954709470272064,
+          "movementLoss": 0.13134604692459106,
+          "nonMovementLogitMSE": 0.00820105243474245,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.034710269421339035
+        },
+        {
+          "objective": 0.042142871767282486,
+          "movementLoss": 0.03951982408761978,
+          "nonMovementLogitMSE": 0.002623047446832061,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012782402336597443
+        },
+        {
+          "objective": 0.08465909957885742,
+          "movementLoss": 0.08065827190876007,
+          "nonMovementLogitMSE": 0.004000827204436064,
+          "hitFlipRate": 0.00038729666266590357,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.22622300405055285,
+      "sampledRowsPerSource": [
+        38006,
+        37928,
+        38084,
+        38336
+      ]
+    },
+    {
+      "epoch": 10,
+      "updates": 1490,
+      "developmentMetrics": [
+        {
+          "objective": 0.6257440447807312,
+          "movementLoss": 0.6153560876846313,
+          "nonMovementLogitMSE": 0.010387965478003025,
+          "hitFlipRate": 0.000745950557757169,
+          "shotFlipRate": 0.035699062049388885
+        },
+        {
+          "objective": 0.14024849236011505,
+          "movementLoss": 0.1317228078842163,
+          "nonMovementLogitMSE": 0.008525685407221317,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.036399565637111664
+        },
+        {
+          "objective": 0.036756061017513275,
+          "movementLoss": 0.034121427685022354,
+          "nonMovementLogitMSE": 0.002634634729474783,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.00951248500496149
+        },
+        {
+          "objective": 0.07715600728988647,
+          "movementLoss": 0.07348288595676422,
+          "nonMovementLogitMSE": 0.003673122962936759,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.006971340160816908
+        }
+      ],
+      "selectionLoss": 0.2199761513620615,
+      "sampledRowsPerSource": [
+        38245,
+        38054,
+        38029,
+        38026
+      ]
+    },
+    {
+      "epoch": 11,
+      "updates": 1639,
+      "developmentMetrics": [
+        {
+          "objective": 0.6301537156105042,
+          "movementLoss": 0.6192402839660645,
+          "nonMovementLogitMSE": 0.010913403704762459,
+          "hitFlipRate": 0.000745950557757169,
+          "shotFlipRate": 0.037777066230773926
+        },
+        {
+          "objective": 0.1414114087820053,
+          "movementLoss": 0.13279156386852264,
+          "nonMovementLogitMSE": 0.008619844913482666,
+          "hitFlipRate": 0.0001274941023439169,
+          "shotFlipRate": 0.03397717699408531
+        },
+        {
+          "objective": 0.03608279302716255,
+          "movementLoss": 0.03331178054213524,
+          "nonMovementLogitMSE": 0.0027710124850273132,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.008620689623057842
+        },
+        {
+          "objective": 0.07359091192483902,
+          "movementLoss": 0.06948559731245041,
+          "nonMovementLogitMSE": 0.0041053141467273235,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.00735863670706749
+        }
+      ],
+      "selectionLoss": 0.22030970733612776,
+      "sampledRowsPerSource": [
+        38030,
+        38044,
+        38032,
+        38248
+      ]
+    },
+    {
+      "epoch": 12,
+      "updates": 1788,
+      "developmentMetrics": [
+        {
+          "objective": 0.6249663829803467,
+          "movementLoss": 0.613754153251648,
+          "nonMovementLogitMSE": 0.011212199926376343,
+          "hitFlipRate": 0.0007992327446117997,
+          "shotFlipRate": 0.03761722147464752
+        },
+        {
+          "objective": 0.1465868204832077,
+          "movementLoss": 0.13760916888713837,
+          "nonMovementLogitMSE": 0.00897765439003706,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.034901510924100876
+        },
+        {
+          "objective": 0.04092394560575485,
+          "movementLoss": 0.0381927452981472,
+          "nonMovementLogitMSE": 0.0027312017045915127,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010404280386865139
+        },
+        {
+          "objective": 0.07497278600931168,
+          "movementLoss": 0.07084451615810394,
+          "nonMovementLogitMSE": 0.004128267057240009,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.010069712996482849
+        }
+      ],
+      "selectionLoss": 0.22186248376965523,
+      "sampledRowsPerSource": [
+        37830,
+        38267,
+        38224,
+        38033
+      ]
+    },
+    {
+      "epoch": 13,
+      "updates": 1937,
+      "developmentMetrics": [
+        {
+          "objective": 0.6199832558631897,
+          "movementLoss": 0.6085121035575867,
+          "nonMovementLogitMSE": 0.011471142992377281,
+          "hitFlipRate": 0.0008525149314664304,
+          "shotFlipRate": 0.039268966764211655
+        },
+        {
+          "objective": 0.13799817860126495,
+          "movementLoss": 0.12854765355587006,
+          "nonMovementLogitMSE": 0.00945052970200777,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.036973290145397186
+        },
+        {
+          "objective": 0.0402698889374733,
+          "movementLoss": 0.03733144700527191,
+          "nonMovementLogitMSE": 0.002938441699370742,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010404280386865139
+        },
+        {
+          "objective": 0.07631570100784302,
+          "movementLoss": 0.0720817968249321,
+          "nonMovementLogitMSE": 0.004233905114233494,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.009682416915893555
+        }
+      ],
+      "selectionLoss": 0.21864175610244274,
+      "sampledRowsPerSource": [
+        38219,
+        37935,
+        38370,
+        37830
+      ]
+    },
+    {
+      "epoch": 14,
+      "updates": 2086,
+      "developmentMetrics": [
+        {
+          "objective": 0.6168737411499023,
+          "movementLoss": 0.6046795845031738,
+          "nonMovementLogitMSE": 0.012194186449050903,
+          "hitFlipRate": 0.0009057971183210611,
+          "shotFlipRate": 0.038736145943403244
+        },
+        {
+          "objective": 0.14118990302085876,
+          "movementLoss": 0.1313711553812027,
+          "nonMovementLogitMSE": 0.009818741120398045,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.03569835051894188
+        },
+        {
+          "objective": 0.03723029047250748,
+          "movementLoss": 0.03426677733659744,
+          "nonMovementLogitMSE": 0.0029635122045874596,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.00951248500496149
+        },
+        {
+          "objective": 0.07176285982131958,
+          "movementLoss": 0.06748935580253601,
+          "nonMovementLogitMSE": 0.004273504484444857,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.21676419861614704,
+      "sampledRowsPerSource": [
+        38095,
+        38008,
+        38308,
+        37943
+      ]
+    },
+    {
+      "epoch": 15,
+      "updates": 2235,
+      "developmentMetrics": [
+        {
+          "objective": 0.6146839261054993,
+          "movementLoss": 0.6022095084190369,
+          "nonMovementLogitMSE": 0.012474394403398037,
+          "hitFlipRate": 0.0009590793051756918,
+          "shotFlipRate": 0.03857630118727684
+        },
+        {
+          "objective": 0.14068427681922913,
+          "movementLoss": 0.13079635798931122,
+          "nonMovementLogitMSE": 0.009887924417853355,
+          "hitFlipRate": 0.0001274941023439169,
+          "shotFlipRate": 0.03789762407541275
+        },
+        {
+          "objective": 0.035004664212465286,
+          "movementLoss": 0.03193183243274689,
+          "nonMovementLogitMSE": 0.0030728313140571117,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.00951248500496149
+        },
+        {
+          "objective": 0.07410451769828796,
+          "movementLoss": 0.06958762556314468,
+          "nonMovementLogitMSE": 0.004516891669481993,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008520526811480522
+        }
+      ],
+      "selectionLoss": 0.2161193462088704,
+      "sampledRowsPerSource": [
+        38478,
+        37618,
+        38148,
+        38110
+      ]
+    },
+    {
+      "epoch": 16,
+      "updates": 2384,
+      "developmentMetrics": [
+        {
+          "objective": 0.6074120402336121,
+          "movementLoss": 0.5948373675346375,
+          "nonMovementLogitMSE": 0.012574694119393826,
+          "hitFlipRate": 0.0009057971183210611,
+          "shotFlipRate": 0.03953538089990616
+        },
+        {
+          "objective": 0.13765323162078857,
+          "movementLoss": 0.12782931327819824,
+          "nonMovementLogitMSE": 0.009823920205235481,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.036558933556079865
+        },
+        {
+          "objective": 0.03606996685266495,
+          "movementLoss": 0.03287338837981224,
+          "nonMovementLogitMSE": 0.003196578472852707,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010107015259563923
+        },
+        {
+          "objective": 0.07246418297290802,
+          "movementLoss": 0.0679411068558693,
+          "nonMovementLogitMSE": 0.004523079842329025,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.007745933253318071
+        }
+      ],
+      "selectionLoss": 0.2133998554199934,
+      "sampledRowsPerSource": [
+        38092,
+        38304,
+        38016,
+        37942
+      ]
+    },
+    {
+      "epoch": 17,
+      "updates": 2533,
+      "developmentMetrics": [
+        {
+          "objective": 0.6012247204780579,
+          "movementLoss": 0.5882062315940857,
+          "nonMovementLogitMSE": 0.013018484227359295,
+          "hitFlipRate": 0.0007992327446117997,
+          "shotFlipRate": 0.038895994424819946
+        },
+        {
+          "objective": 0.13818198442459106,
+          "movementLoss": 0.1280958205461502,
+          "nonMovementLogitMSE": 0.01008616853505373,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.038758207112550735
+        },
+        {
+          "objective": 0.03589821606874466,
+          "movementLoss": 0.03266264498233795,
+          "nonMovementLogitMSE": 0.003235570853576064,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.07376903295516968,
+          "movementLoss": 0.0691450759768486,
+          "nonMovementLogitMSE": 0.0046239569783210754,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.21226848848164082,
+      "sampledRowsPerSource": [
+        38328,
+        38107,
+        38132,
+        37787
+      ]
+    },
+    {
+      "epoch": 18,
+      "updates": 2682,
+      "developmentMetrics": [
+        {
+          "objective": 0.6022366285324097,
+          "movementLoss": 0.5893401503562927,
+          "nonMovementLogitMSE": 0.012896486558020115,
+          "hitFlipRate": 0.001118925865739584,
+          "shotFlipRate": 0.040387894958257675
+        },
+        {
+          "objective": 0.14135299623012543,
+          "movementLoss": 0.13092626631259918,
+          "nonMovementLogitMSE": 0.010426727123558521,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.036941416561603546
+        },
+        {
+          "objective": 0.03708575665950775,
+          "movementLoss": 0.03371782228350639,
+          "nonMovementLogitMSE": 0.0033679355401545763,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010404280386865139
+        },
+        {
+          "objective": 0.07097894698381424,
+          "movementLoss": 0.06631318479776382,
+          "nonMovementLogitMSE": 0.004665764048695564,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.007745933253318071
+        }
+      ],
+      "selectionLoss": 0.21291358210146427,
+      "sampledRowsPerSource": [
+        38300,
+        37988,
+        37978,
+        38088
+      ]
+    },
+    {
+      "epoch": 19,
+      "updates": 2831,
+      "developmentMetrics": [
+        {
+          "objective": 0.5952928066253662,
+          "movementLoss": 0.58174067735672,
+          "nonMovementLogitMSE": 0.013552159070968628,
+          "hitFlipRate": 0.0010123614920303226,
+          "shotFlipRate": 0.03974850848317146
+        },
+        {
+          "objective": 0.13372965157032013,
+          "movementLoss": 0.12321940809488297,
+          "nonMovementLogitMSE": 0.010510237887501717,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.03716453164815903
+        },
+        {
+          "objective": 0.036881785839796066,
+          "movementLoss": 0.03380896896123886,
+          "nonMovementLogitMSE": 0.0030728152487426996,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010998810641467571
+        },
+        {
+          "objective": 0.07414145767688751,
+          "movementLoss": 0.06946864724159241,
+          "nonMovementLogitMSE": 0.004672813229262829,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010844307020306587
+        }
+      ],
+      "selectionLoss": 0.21001142542809248,
+      "sampledRowsPerSource": [
+        38376,
+        37673,
+        38081,
+        38224
+      ]
+    },
+    {
+      "epoch": 20,
+      "updates": 2980,
+      "developmentMetrics": [
+        {
+          "objective": 0.5954217910766602,
+          "movementLoss": 0.5818585753440857,
+          "nonMovementLogitMSE": 0.01356322132050991,
+          "hitFlipRate": 0.0010123614920303226,
+          "shotFlipRate": 0.03969522565603256
+        },
+        {
+          "objective": 0.13683152198791504,
+          "movementLoss": 0.12618696689605713,
+          "nonMovementLogitMSE": 0.010644561611115932,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.03588958829641342
+        },
+        {
+          "objective": 0.03776538744568825,
+          "movementLoss": 0.03432891145348549,
+          "nonMovementLogitMSE": 0.003436475992202759,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010998810641467571
+        },
+        {
+          "objective": 0.07492135465145111,
+          "movementLoss": 0.06997065246105194,
+          "nonMovementLogitMSE": 0.00495070219039917,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010069712996482849
+        }
+      ],
+      "selectionLoss": 0.21123501379042864,
+      "sampledRowsPerSource": [
+        38528,
+        38121,
+        37958,
+        37747
+      ]
+    },
+    {
+      "epoch": 21,
+      "updates": 3129,
+      "developmentMetrics": [
+        {
+          "objective": 0.5944125652313232,
+          "movementLoss": 0.5810696482658386,
+          "nonMovementLogitMSE": 0.013342909514904022,
+          "hitFlipRate": 0.0007992327446117997,
+          "shotFlipRate": 0.03916240483522415
+        },
+        {
+          "objective": 0.1346852332353592,
+          "movementLoss": 0.12419718503952026,
+          "nonMovementLogitMSE": 0.010488043539226055,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.03598520904779434
+        },
+        {
+          "objective": 0.038853734731674194,
+          "movementLoss": 0.03566434979438782,
+          "nonMovementLogitMSE": 0.0031893844716250896,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010107015259563923
+        },
+        {
+          "objective": 0.07293468713760376,
+          "movementLoss": 0.06812328100204468,
+          "nonMovementLogitMSE": 0.004811404272913933,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.2102215550839901,
+      "sampledRowsPerSource": [
+        38066,
+        38258,
+        37917,
+        38113
+      ]
+    },
+    {
+      "epoch": 22,
+      "updates": 3278,
+      "developmentMetrics": [
+        {
+          "objective": 0.5954682230949402,
+          "movementLoss": 0.5817586183547974,
+          "nonMovementLogitMSE": 0.013709580525755882,
+          "hitFlipRate": 0.0009590793051756918,
+          "shotFlipRate": 0.04113384336233139
+        },
+        {
+          "objective": 0.13221988081932068,
+          "movementLoss": 0.12164616584777832,
+          "nonMovementLogitMSE": 0.010573710314929485,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.036590807139873505
+        },
+        {
+          "objective": 0.03629452362656593,
+          "movementLoss": 0.033001817762851715,
+          "nonMovementLogitMSE": 0.0032927049323916435,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010107015259563923
+        },
+        {
+          "objective": 0.07153380662202835,
+          "movementLoss": 0.06664986163377762,
+          "nonMovementLogitMSE": 0.00488394545391202,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.010069712996482849
+        }
+      ],
+      "selectionLoss": 0.2088791085407138,
+      "sampledRowsPerSource": [
+        38229,
+        37902,
+        37913,
+        38310
+      ]
+    },
+    {
+      "epoch": 23,
+      "updates": 3427,
+      "developmentMetrics": [
+        {
+          "objective": 0.5902198553085327,
+          "movementLoss": 0.5765620470046997,
+          "nonMovementLogitMSE": 0.013657835312187672,
+          "hitFlipRate": 0.0010123614920303226,
+          "shotFlipRate": 0.04070758819580078
+        },
+        {
+          "objective": 0.1320091336965561,
+          "movementLoss": 0.12114614993333817,
+          "nonMovementLogitMSE": 0.010862982831895351,
+          "hitFlipRate": 0.0001274941023439169,
+          "shotFlipRate": 0.03726015239953995
+        },
+        {
+          "objective": 0.03419893980026245,
+          "movementLoss": 0.030880814418196678,
+          "nonMovementLogitMSE": 0.003318124683573842,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010998810641467571
+        },
+        {
+          "objective": 0.07068900763988495,
+          "movementLoss": 0.0657787173986435,
+          "nonMovementLogitMSE": 0.004910289775580168,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.008520526811480522
+        }
+      ],
+      "selectionLoss": 0.20677923411130905,
+      "sampledRowsPerSource": [
+        38275,
+        38134,
+        38063,
+        37882
+      ]
+    },
+    {
+      "epoch": 24,
+      "updates": 3576,
+      "developmentMetrics": [
+        {
+          "objective": 0.5900627970695496,
+          "movementLoss": 0.57616126537323,
+          "nonMovementLogitMSE": 0.013901542872190475,
+          "hitFlipRate": 0.0009590793051756918,
+          "shotFlipRate": 0.04054773971438408
+        },
+        {
+          "objective": 0.1295982003211975,
+          "movementLoss": 0.11880537867546082,
+          "nonMovementLogitMSE": 0.010792829096317291,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.03713265806436539
+        },
+        {
+          "objective": 0.0375681146979332,
+          "movementLoss": 0.03423171117901802,
+          "nonMovementLogitMSE": 0.0033364035189151764,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010107015259563923
+        },
+        {
+          "objective": 0.07052287459373474,
+          "movementLoss": 0.06582243740558624,
+          "nonMovementLogitMSE": 0.004700437653809786,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.20693799667060375,
+      "sampledRowsPerSource": [
+        37910,
+        37970,
+        38051,
+        38423
+      ]
+    },
+    {
+      "epoch": 25,
+      "updates": 3725,
+      "developmentMetrics": [
+        {
+          "objective": 0.5837942957878113,
+          "movementLoss": 0.5694664120674133,
+          "nonMovementLogitMSE": 0.014327854849398136,
+          "hitFlipRate": 0.0009590793051756918,
+          "shotFlipRate": 0.04006820172071457
+        },
+        {
+          "objective": 0.13085509836673737,
+          "movementLoss": 0.11962610483169556,
+          "nonMovementLogitMSE": 0.011228987947106361,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.036590807139873505
+        },
+        {
+          "objective": 0.034754589200019836,
+          "movementLoss": 0.031172096729278564,
+          "nonMovementLogitMSE": 0.0035824927035719156,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.009215219877660275
+        },
+        {
+          "objective": 0.07226794958114624,
+          "movementLoss": 0.06729676574468613,
+          "nonMovementLogitMSE": 0.004971181508153677,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.20541798323392868,
+      "sampledRowsPerSource": [
+        38218,
+        37925,
+        38206,
+        38005
+      ]
+    },
+    {
+      "epoch": 26,
+      "updates": 3874,
+      "developmentMetrics": [
+        {
+          "objective": 0.581238329410553,
+          "movementLoss": 0.5669221878051758,
+          "nonMovementLogitMSE": 0.014316163957118988,
+          "hitFlipRate": 0.0010123614920303226,
+          "shotFlipRate": 0.04060102254152298
+        },
+        {
+          "objective": 0.13278475403785706,
+          "movementLoss": 0.12182053923606873,
+          "nonMovementLogitMSE": 0.010964221321046352,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.03812073543667793
+        },
+        {
+          "objective": 0.03404533490538597,
+          "movementLoss": 0.03075435943901539,
+          "nonMovementLogitMSE": 0.0032909743022173643,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.07515504211187363,
+          "movementLoss": 0.07037888467311859,
+          "nonMovementLogitMSE": 0.004776154179126024,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.2058058651164174,
+      "sampledRowsPerSource": [
+        37909,
+        38135,
+        38094,
+        38216
+      ]
+    },
+    {
+      "epoch": 27,
+      "updates": 4023,
+      "developmentMetrics": [
+        {
+          "objective": 0.5854225158691406,
+          "movementLoss": 0.5709498524665833,
+          "nonMovementLogitMSE": 0.014472650364041328,
+          "hitFlipRate": 0.0009590793051756918,
+          "shotFlipRate": 0.04054773971438408
+        },
+        {
+          "objective": 0.13315437734127045,
+          "movementLoss": 0.12203095108270645,
+          "nonMovementLogitMSE": 0.011123432777822018,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.03805698826909065
+        },
+        {
+          "objective": 0.034023646265268326,
+          "movementLoss": 0.03077702783048153,
+          "nonMovementLogitMSE": 0.003246619598940015,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010701545514166355
+        },
+        {
+          "objective": 0.07373381406068802,
+          "movementLoss": 0.06894606351852417,
+          "nonMovementLogitMSE": 0.004787747748196125,
+          "hitFlipRate": 0.0019364833133295178,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.20658358838409185,
+      "sampledRowsPerSource": [
+        37920,
+        37970,
+        38001,
+        38463
+      ]
+    },
+    {
+      "epoch": 28,
+      "updates": 4172,
+      "developmentMetrics": [
+        {
+          "objective": 0.5826640129089355,
+          "movementLoss": 0.56814044713974,
+          "nonMovementLogitMSE": 0.014523543417453766,
+          "hitFlipRate": 0.0010656436206772923,
+          "shotFlipRate": 0.0415068194270134
+        },
+        {
+          "objective": 0.13595664501190186,
+          "movementLoss": 0.12465452402830124,
+          "nonMovementLogitMSE": 0.01130212564021349,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.03732389956712723
+        },
+        {
+          "objective": 0.03337438032031059,
+          "movementLoss": 0.030089756473898888,
+          "nonMovementLogitMSE": 0.0032846229150891304,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010107015259563923
+        },
+        {
+          "objective": 0.07077900320291519,
+          "movementLoss": 0.06581937521696091,
+          "nonMovementLogitMSE": 0.004959628917276859,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010457010008394718
+        }
+      ],
+      "selectionLoss": 0.2056935103610158,
+      "sampledRowsPerSource": [
+        38094,
+        38150,
+        38294,
+        37816
+      ]
+    },
+    {
+      "epoch": 29,
+      "updates": 4321,
+      "developmentMetrics": [
+        {
+          "objective": 0.5757474899291992,
+          "movementLoss": 0.5610429644584656,
+          "nonMovementLogitMSE": 0.014704521745443344,
+          "hitFlipRate": 0.001118925865739584,
+          "shotFlipRate": 0.04076087102293968
+        },
+        {
+          "objective": 0.13137373328208923,
+          "movementLoss": 0.11999297887086868,
+          "nonMovementLogitMSE": 0.011380761861801147,
+          "hitFlipRate": 0.0001274941023439169,
+          "shotFlipRate": 0.038662586361169815
+        },
+        {
+          "objective": 0.03334123268723488,
+          "movementLoss": 0.029955817386507988,
+          "nonMovementLogitMSE": 0.003385416930541396,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.07235188782215118,
+          "movementLoss": 0.06720452010631561,
+          "nonMovementLogitMSE": 0.005147367715835571,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.20320358593016863,
+      "sampledRowsPerSource": [
+        38031,
+        37896,
+        38067,
+        38360
+      ]
+    },
+    {
+      "epoch": 30,
+      "updates": 4470,
+      "developmentMetrics": [
+        {
+          "objective": 0.5774059891700745,
+          "movementLoss": 0.562483549118042,
+          "nonMovementLogitMSE": 0.014922424219548702,
+          "hitFlipRate": 0.0012254902394488454,
+          "shotFlipRate": 0.04129369184374809
+        },
+        {
+          "objective": 0.12941965460777283,
+          "movementLoss": 0.11795622110366821,
+          "nonMovementLogitMSE": 0.011463436298072338,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.03971441462635994
+        },
+        {
+          "objective": 0.033562399446964264,
+          "movementLoss": 0.0302260871976614,
+          "nonMovementLogitMSE": 0.0033363141119480133,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.07103576511144638,
+          "movementLoss": 0.0659390389919281,
+          "nonMovementLogitMSE": 0.005096728447824717,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.009682416915893555
+        }
+      ],
+      "selectionLoss": 0.20285595208406448,
+      "sampledRowsPerSource": [
+        38339,
+        37974,
+        38167,
+        37874
+      ]
+    },
+    {
+      "epoch": 31,
+      "updates": 4619,
+      "developmentMetrics": [
+        {
+          "objective": 0.5787051320075989,
+          "movementLoss": 0.563849925994873,
+          "nonMovementLogitMSE": 0.0148552181199193,
+          "hitFlipRate": 0.0012254902394488454,
+          "shotFlipRate": 0.0417732298374176
+        },
+        {
+          "objective": 0.13152053952217102,
+          "movementLoss": 0.11995543539524078,
+          "nonMovementLogitMSE": 0.011565103195607662,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.038758207112550735
+        },
+        {
+          "objective": 0.03670458495616913,
+          "movementLoss": 0.03315330296754837,
+          "nonMovementLogitMSE": 0.0035512836184352636,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.0699404627084732,
+          "movementLoss": 0.06478908658027649,
+          "nonMovementLogitMSE": 0.005151372868567705,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.20421767979860306,
+      "sampledRowsPerSource": [
+        38530,
+        37804,
+        38136,
+        37884
+      ]
+    },
+    {
+      "epoch": 32,
+      "updates": 4768,
+      "developmentMetrics": [
+        {
+          "objective": 0.5690403580665588,
+          "movementLoss": 0.5543206930160522,
+          "nonMovementLogitMSE": 0.014719675295054913,
+          "hitFlipRate": 0.0013320546131581068,
+          "shotFlipRate": 0.04203964024782181
+        },
+        {
+          "objective": 0.13227257132530212,
+          "movementLoss": 0.12081320583820343,
+          "nonMovementLogitMSE": 0.011459363624453545,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.03923631086945534
+        },
+        {
+          "objective": 0.03378448635339737,
+          "movementLoss": 0.030347393825650215,
+          "nonMovementLogitMSE": 0.0034370943903923035,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.06883600354194641,
+          "movementLoss": 0.06370330601930618,
+          "nonMovementLogitMSE": 0.005132696125656366,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.20098335482180119,
+      "sampledRowsPerSource": [
+        38168,
+        38296,
+        38128,
+        37762
+      ]
+    },
+    {
+      "epoch": 33,
+      "updates": 4917,
+      "developmentMetrics": [
+        {
+          "objective": 0.5752143859863281,
+          "movementLoss": 0.5604827404022217,
+          "nonMovementLogitMSE": 0.01473165675997734,
+          "hitFlipRate": 0.0014386188704520464,
+          "shotFlipRate": 0.0415068194270134
+        },
+        {
+          "objective": 0.1268026977777481,
+          "movementLoss": 0.1154538094997406,
+          "nonMovementLogitMSE": 0.01134889293462038,
+          "hitFlipRate": 0.0001274941023439169,
+          "shotFlipRate": 0.03901319578289986
+        },
+        {
+          "objective": 0.036089226603507996,
+          "movementLoss": 0.0328264981508255,
+          "nonMovementLogitMSE": 0.0032627275213599205,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.013376932591199875
+        },
+        {
+          "objective": 0.07216987013816833,
+          "movementLoss": 0.06713806092739105,
+          "nonMovementLogitMSE": 0.0050318120047450066,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010457010008394718
+        }
+      ],
+      "selectionLoss": 0.20256904512643814,
+      "sampledRowsPerSource": [
+        37843,
+        38148,
+        38127,
+        38236
+      ]
+    },
+    {
+      "epoch": 34,
+      "updates": 5066,
+      "developmentMetrics": [
+        {
+          "objective": 0.5710992813110352,
+          "movementLoss": 0.5561074614524841,
+          "nonMovementLogitMSE": 0.014991790056228638,
+          "hitFlipRate": 0.0011722079943865538,
+          "shotFlipRate": 0.04054773971438408
+        },
+        {
+          "objective": 0.12645351886749268,
+          "movementLoss": 0.11488139629364014,
+          "nonMovementLogitMSE": 0.011572130024433136,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.038885701447725296
+        },
+        {
+          "objective": 0.033885493874549866,
+          "movementLoss": 0.03046654909849167,
+          "nonMovementLogitMSE": 0.0034189438447356224,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.06868159025907516,
+          "movementLoss": 0.06332659721374512,
+          "nonMovementLogitMSE": 0.005354991648346186,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.01161890011280775
+        }
+      ],
+      "selectionLoss": 0.20002997107803822,
+      "sampledRowsPerSource": [
+        38148,
+        38270,
+        37995,
+        37941
+      ]
+    },
+    {
+      "epoch": 35,
+      "updates": 5215,
+      "developmentMetrics": [
+        {
+          "objective": 0.5683633089065552,
+          "movementLoss": 0.5530629754066467,
+          "nonMovementLogitMSE": 0.015300318598747253,
+          "hitFlipRate": 0.0012787723680958152,
+          "shotFlipRate": 0.041933078318834305
+        },
+        {
+          "objective": 0.1281021684408188,
+          "movementLoss": 0.11641544848680496,
+          "nonMovementLogitMSE": 0.011686720885336399,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.038566965609788895
+        },
+        {
+          "objective": 0.03350706771016121,
+          "movementLoss": 0.030122414231300354,
+          "nonMovementLogitMSE": 0.003384654177352786,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.07056371122598648,
+          "movementLoss": 0.06533217430114746,
+          "nonMovementLogitMSE": 0.005231535993516445,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.2001340640708804,
+      "sampledRowsPerSource": [
+        37974,
+        38201,
+        38041,
+        38138
+      ]
+    },
+    {
+      "epoch": 36,
+      "updates": 5364,
+      "developmentMetrics": [
+        {
+          "objective": 0.5689151287078857,
+          "movementLoss": 0.5535207390785217,
+          "nonMovementLogitMSE": 0.015394370071589947,
+          "hitFlipRate": 0.0010656436206772923,
+          "shotFlipRate": 0.04203964024782181
+        },
+        {
+          "objective": 0.12757214903831482,
+          "movementLoss": 0.11579537391662598,
+          "nonMovementLogitMSE": 0.011776778846979141,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.03828010335564613
+        },
+        {
+          "objective": 0.033244211226701736,
+          "movementLoss": 0.02975211851298809,
+          "nonMovementLogitMSE": 0.003492091316729784,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012187871150672436
+        },
+        {
+          "objective": 0.07156112790107727,
+          "movementLoss": 0.06646513193845749,
+          "nonMovementLogitMSE": 0.005095998290926218,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.009682416915893555
+        }
+      ],
+      "selectionLoss": 0.2003231542184949,
+      "sampledRowsPerSource": [
+        37914,
+        38325,
+        38107,
+        38008
+      ]
+    },
+    {
+      "epoch": 37,
+      "updates": 5513,
+      "developmentMetrics": [
+        {
+          "objective": 0.5678951740264893,
+          "movementLoss": 0.5521450638771057,
+          "nonMovementLogitMSE": 0.01575011946260929,
+          "hitFlipRate": 0.0012787723680958152,
+          "shotFlipRate": 0.042998719960451126
+        },
+        {
+          "objective": 0.1301455944776535,
+          "movementLoss": 0.11836344003677368,
+          "nonMovementLogitMSE": 0.011782154440879822,
+          "hitFlipRate": 0.0001274941023439169,
+          "shotFlipRate": 0.03930005803704262
+        },
+        {
+          "objective": 0.03312661498785019,
+          "movementLoss": 0.029767869040369987,
+          "nonMovementLogitMSE": 0.0033587454818189144,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.07130080461502075,
+          "movementLoss": 0.06623567640781403,
+          "nonMovementLogitMSE": 0.005065124481916428,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.20061704702675343,
+      "sampledRowsPerSource": [
+        37938,
+        38038,
+        38259,
+        38119
+      ]
+    },
+    {
+      "epoch": 38,
+      "updates": 5662,
+      "developmentMetrics": [
+        {
+          "objective": 0.5654503107070923,
+          "movementLoss": 0.5497334003448486,
+          "nonMovementLogitMSE": 0.01571693830192089,
+          "hitFlipRate": 0.0012254902394488454,
+          "shotFlipRate": 0.04230605438351631
+        },
+        {
+          "objective": 0.12858796119689941,
+          "movementLoss": 0.11689750850200653,
+          "nonMovementLogitMSE": 0.01169046014547348,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.03993752971291542
+        },
+        {
+          "objective": 0.0341724157333374,
+          "movementLoss": 0.030715778470039368,
+          "nonMovementLogitMSE": 0.0034566358663141727,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.07034777104854584,
+          "movementLoss": 0.06524650752544403,
+          "nonMovementLogitMSE": 0.005101262126117945,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.010457010008394718
+        }
+      ],
+      "selectionLoss": 0.19963961467146873,
+      "sampledRowsPerSource": [
+        38154,
+        38252,
+        37902,
+        38046
+      ]
+    },
+    {
+      "epoch": 39,
+      "updates": 5811,
+      "developmentMetrics": [
+        {
+          "objective": 0.5668848752975464,
+          "movementLoss": 0.5511256456375122,
+          "nonMovementLogitMSE": 0.015759212896227837,
+          "hitFlipRate": 0.0013320546131581068,
+          "shotFlipRate": 0.0415601022541523
+        },
+        {
+          "objective": 0.1288713961839676,
+          "movementLoss": 0.11689436435699463,
+          "nonMovementLogitMSE": 0.011977029964327812,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.04012876749038696
+        },
+        {
+          "objective": 0.034995127469301224,
+          "movementLoss": 0.031662892550230026,
+          "nonMovementLogitMSE": 0.003332235850393772,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.0697060078382492,
+          "movementLoss": 0.06457889825105667,
+          "nonMovementLogitMSE": 0.0051271081902086735,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.009682416915893555
+        }
+      ],
+      "selectionLoss": 0.2001143516972661,
+      "sampledRowsPerSource": [
+        38338,
+        38168,
+        38036,
+        37812
+      ]
+    },
+    {
+      "epoch": 40,
+      "updates": 5960,
+      "developmentMetrics": [
+        {
+          "objective": 0.5658979415893555,
+          "movementLoss": 0.5500458478927612,
+          "nonMovementLogitMSE": 0.0158520694822073,
+          "hitFlipRate": 0.0012254902394488454,
+          "shotFlipRate": 0.04369138926267624
+        },
+        {
+          "objective": 0.12902994453907013,
+          "movementLoss": 0.11671101301908493,
+          "nonMovementLogitMSE": 0.012318928726017475,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.040606871247291565
+        },
+        {
+          "objective": 0.03467618301510811,
+          "movementLoss": 0.03113010711967945,
+          "nonMovementLogitMSE": 0.0035460758954286575,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06969498842954636,
+          "movementLoss": 0.0645708292722702,
+          "nonMovementLogitMSE": 0.005124160088598728,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.011231603100895882
+        }
+      ],
+      "selectionLoss": 0.19982476439327002,
+      "sampledRowsPerSource": [
+        37998,
+        38047,
+        38124,
+        38185
+      ]
+    },
+    {
+      "epoch": 41,
+      "updates": 6109,
+      "developmentMetrics": [
+        {
+          "objective": 0.5714678764343262,
+          "movementLoss": 0.5555533170700073,
+          "nonMovementLogitMSE": 0.015914538875222206,
+          "hitFlipRate": 0.0012254902394488454,
+          "shotFlipRate": 0.041879795491695404
+        },
+        {
+          "objective": 0.1299096792936325,
+          "movementLoss": 0.11781289428472519,
+          "nonMovementLogitMSE": 0.012096780352294445,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.040383756160736084
+        },
+        {
+          "objective": 0.03492629528045654,
+          "movementLoss": 0.03150906786322594,
+          "nonMovementLogitMSE": 0.0034172269515693188,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012485136277973652
+        },
+        {
+          "objective": 0.06759634613990784,
+          "movementLoss": 0.06233815848827362,
+          "nonMovementLogitMSE": 0.00525818532332778,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008133229799568653
+        }
+      ],
+      "selectionLoss": 0.20097504928708076,
+      "sampledRowsPerSource": [
+        37913,
+        38143,
+        38444,
+        37854
+      ]
+    },
+    {
+      "epoch": 42,
+      "updates": 6258,
+      "developmentMetrics": [
+        {
+          "objective": 0.5587788224220276,
+          "movementLoss": 0.5426170825958252,
+          "nonMovementLogitMSE": 0.0161617249250412,
+          "hitFlipRate": 0.0012254902394488454,
+          "shotFlipRate": 0.04331841319799423
+        },
+        {
+          "objective": 0.1271502673625946,
+          "movementLoss": 0.11468098312616348,
+          "nonMovementLogitMSE": 0.012469288893043995,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.04025626182556152
+        },
+        {
+          "objective": 0.034698572009801865,
+          "movementLoss": 0.03099219501018524,
+          "nonMovementLogitMSE": 0.003706376999616623,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06932087987661362,
+          "movementLoss": 0.06396275758743286,
+          "nonMovementLogitMSE": 0.0053581250831484795,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010457010008394718
+        }
+      ],
+      "selectionLoss": 0.19748713541775942,
+      "sampledRowsPerSource": [
+        38197,
+        37850,
+        38405,
+        37902
+      ]
+    },
+    {
+      "epoch": 43,
+      "updates": 6407,
+      "developmentMetrics": [
+        {
+          "objective": 0.5606154799461365,
+          "movementLoss": 0.5447558164596558,
+          "nonMovementLogitMSE": 0.01585965044796467,
+          "hitFlipRate": 0.0014386188704520464,
+          "shotFlipRate": 0.042519181966781616
+        },
+        {
+          "objective": 0.1280977725982666,
+          "movementLoss": 0.11567254364490509,
+          "nonMovementLogitMSE": 0.012425223365426064,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.03996939957141876
+        },
+        {
+          "objective": 0.03461811691522598,
+          "movementLoss": 0.03123265877366066,
+          "nonMovementLogitMSE": 0.003385459538549185,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010998810641467571
+        },
+        {
+          "objective": 0.06674038618803024,
+          "movementLoss": 0.061412446200847626,
+          "nonMovementLogitMSE": 0.005327941384166479,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010069712996482849
+        }
+      ],
+      "selectionLoss": 0.19751793891191483,
+      "sampledRowsPerSource": [
+        38431,
+        38056,
+        37827,
+        38040
+      ]
+    },
+    {
+      "epoch": 44,
+      "updates": 6556,
+      "developmentMetrics": [
+        {
+          "objective": 0.5582148432731628,
+          "movementLoss": 0.541999101638794,
+          "nonMovementLogitMSE": 0.016215763986110687,
+          "hitFlipRate": 0.0012787723680958152,
+          "shotFlipRate": 0.04427749291062355
+        },
+        {
+          "objective": 0.1270337849855423,
+          "movementLoss": 0.11473046243190765,
+          "nonMovementLogitMSE": 0.012303324416279793,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.03958692029118538
+        },
+        {
+          "objective": 0.03390262648463249,
+          "movementLoss": 0.030454158782958984,
+          "nonMovementLogitMSE": 0.003448468865826726,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010404280386865139
+        },
+        {
+          "objective": 0.06909537315368652,
+          "movementLoss": 0.0638778954744339,
+          "nonMovementLogitMSE": 0.005217473953962326,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.010457010008394718
+        }
+      ],
+      "selectionLoss": 0.19706165697425604,
+      "sampledRowsPerSource": [
+        38078,
+        37985,
+        38216,
+        38075
+      ]
+    },
+    {
+      "epoch": 45,
+      "updates": 6705,
+      "developmentMetrics": [
+        {
+          "objective": 0.5564972758293152,
+          "movementLoss": 0.5403698682785034,
+          "nonMovementLogitMSE": 0.016127388924360275,
+          "hitFlipRate": 0.0015984654892235994,
+          "shotFlipRate": 0.042519181966781616
+        },
+        {
+          "objective": 0.12527401745319366,
+          "movementLoss": 0.11288221925497055,
+          "nonMovementLogitMSE": 0.012391798198223114,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.040320008993148804
+        },
+        {
+          "objective": 0.03268958255648613,
+          "movementLoss": 0.029234999790787697,
+          "nonMovementLogitMSE": 0.0034545832313597202,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.06865185499191284,
+          "movementLoss": 0.06328824907541275,
+          "nonMovementLogitMSE": 0.005363604985177517,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.008133229799568653
+        }
+      ],
+      "selectionLoss": 0.19577818270772696,
+      "sampledRowsPerSource": [
+        38179,
+        38223,
+        37917,
+        38035
+      ]
+    },
+    {
+      "epoch": 46,
+      "updates": 6854,
+      "developmentMetrics": [
+        {
+          "objective": 0.5559456944465637,
+          "movementLoss": 0.5396132469177246,
+          "nonMovementLogitMSE": 0.01633244752883911,
+          "hitFlipRate": 0.0012787723680958152,
+          "shotFlipRate": 0.04369138926267624
+        },
+        {
+          "objective": 0.1299295425415039,
+          "movementLoss": 0.1174456849694252,
+          "nonMovementLogitMSE": 0.012483863160014153,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.03974628821015358
+        },
+        {
+          "objective": 0.03280048072338104,
+          "movementLoss": 0.02929595485329628,
+          "nonMovementLogitMSE": 0.003504527499899268,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012187871150672436
+        },
+        {
+          "objective": 0.06980492919683456,
+          "movementLoss": 0.0644393265247345,
+          "nonMovementLogitMSE": 0.005365599412471056,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.013555383309721947
+        }
+      ],
+      "selectionLoss": 0.1971201617270708,
+      "sampledRowsPerSource": [
+        38221,
+        38039,
+        38116,
+        37978
+      ]
+    },
+    {
+      "epoch": 47,
+      "updates": 7003,
+      "developmentMetrics": [
+        {
+          "objective": 0.5514259338378906,
+          "movementLoss": 0.5350388884544373,
+          "nonMovementLogitMSE": 0.016387032344937325,
+          "hitFlipRate": 0.0013853367418050766,
+          "shotFlipRate": 0.04417093098163605
+        },
+        {
+          "objective": 0.12836918234825134,
+          "movementLoss": 0.11577444523572922,
+          "nonMovementLogitMSE": 0.012594739906489849,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.040447503328323364
+        },
+        {
+          "objective": 0.03273673728108406,
+          "movementLoss": 0.029244594275951385,
+          "nonMovementLogitMSE": 0.003492141840979457,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.013376932591199875
+        },
+        {
+          "objective": 0.06768938153982162,
+          "movementLoss": 0.0623055174946785,
+          "nonMovementLogitMSE": 0.00538386357948184,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008520526811480522
+        }
+      ],
+      "selectionLoss": 0.1950553087517619,
+      "sampledRowsPerSource": [
+        37965,
+        38120,
+        38007,
+        38262
+      ]
+    },
+    {
+      "epoch": 48,
+      "updates": 7152,
+      "developmentMetrics": [
+        {
+          "objective": 0.5556427836418152,
+          "movementLoss": 0.5389159321784973,
+          "nonMovementLogitMSE": 0.01672682724893093,
+          "hitFlipRate": 0.0012787723680958152,
+          "shotFlipRate": 0.04379795491695404
+        },
+        {
+          "objective": 0.1284964680671692,
+          "movementLoss": 0.11563295125961304,
+          "nonMovementLogitMSE": 0.01286352425813675,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.04098935425281525
+        },
+        {
+          "objective": 0.0350341796875,
+          "movementLoss": 0.03141587972640991,
+          "nonMovementLogitMSE": 0.003618299961090088,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.01189060602337122
+        },
+        {
+          "objective": 0.06730251014232635,
+          "movementLoss": 0.06179580092430115,
+          "nonMovementLogitMSE": 0.005506710149347782,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.009682416915893555
+        }
+      ],
+      "selectionLoss": 0.19661898538470268,
+      "sampledRowsPerSource": [
+        38116,
+        38053,
+        37995,
+        38190
+      ]
+    },
+    {
+      "epoch": 49,
+      "updates": 7301,
+      "developmentMetrics": [
+        {
+          "objective": 0.5524711608886719,
+          "movementLoss": 0.5357608795166016,
+          "nonMovementLogitMSE": 0.016710251569747925,
+          "hitFlipRate": 0.0013853367418050766,
+          "shotFlipRate": 0.04491687938570976
+        },
+        {
+          "objective": 0.12976360321044922,
+          "movementLoss": 0.11674655973911285,
+          "nonMovementLogitMSE": 0.013017043471336365,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04178619384765625
+        },
+        {
+          "objective": 0.034363675862550735,
+          "movementLoss": 0.030688663944602013,
+          "nonMovementLogitMSE": 0.003675011917948723,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010701545514166355
+        },
+        {
+          "objective": 0.06725936383008957,
+          "movementLoss": 0.06176040321588516,
+          "nonMovementLogitMSE": 0.005498959217220545,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.19596445094794035,
+      "sampledRowsPerSource": [
+        38188,
+        38011,
+        38212,
+        37943
+      ]
+    },
+    {
+      "epoch": 50,
+      "updates": 7450,
+      "developmentMetrics": [
+        {
+          "objective": 0.5524469017982483,
+          "movementLoss": 0.5354803800582886,
+          "nonMovementLogitMSE": 0.016966547816991806,
+          "hitFlipRate": 0.0013320546131581068,
+          "shotFlipRate": 0.04470375180244446
+        },
+        {
+          "objective": 0.12791486084461212,
+          "movementLoss": 0.11524838209152222,
+          "nonMovementLogitMSE": 0.012666472233831882,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.04098935425281525
+        },
+        {
+          "objective": 0.03302923962473869,
+          "movementLoss": 0.02955607697367668,
+          "nonMovementLogitMSE": 0.00347316381521523,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.06732874363660812,
+          "movementLoss": 0.061894163489341736,
+          "nonMovementLogitMSE": 0.005434577353298664,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.01200619712471962
+        }
+      ],
+      "selectionLoss": 0.1951799364760518,
+      "sampledRowsPerSource": [
+        38298,
+        38116,
+        38196,
+        37744
+      ]
+    },
+    {
+      "epoch": 51,
+      "updates": 7599,
+      "developmentMetrics": [
+        {
+          "objective": 0.5541777610778809,
+          "movementLoss": 0.5373371243476868,
+          "nonMovementLogitMSE": 0.01684061996638775,
+          "hitFlipRate": 0.001491901115514338,
+          "shotFlipRate": 0.04513000696897507
+        },
+        {
+          "objective": 0.1288941204547882,
+          "movementLoss": 0.11597484350204468,
+          "nonMovementLogitMSE": 0.012919270433485508,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04156307876110077
+        },
+        {
+          "objective": 0.034057069569826126,
+          "movementLoss": 0.030431510880589485,
+          "nonMovementLogitMSE": 0.0036255570594221354,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.01189060602337122
+        },
+        {
+          "objective": 0.06995074450969696,
+          "movementLoss": 0.06438858807086945,
+          "nonMovementLogitMSE": 0.005562157835811377,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.009682416915893555
+        }
+      ],
+      "selectionLoss": 0.19676992390304804,
+      "sampledRowsPerSource": [
+        38275,
+        38279,
+        37969,
+        37831
+      ]
+    },
+    {
+      "epoch": 52,
+      "updates": 7748,
+      "developmentMetrics": [
+        {
+          "objective": 0.5509185791015625,
+          "movementLoss": 0.534182608127594,
+          "nonMovementLogitMSE": 0.016735954210162163,
+          "hitFlipRate": 0.0015451832441613078,
+          "shotFlipRate": 0.044011082500219345
+        },
+        {
+          "objective": 0.12710829079151154,
+          "movementLoss": 0.11430563777685165,
+          "nonMovementLogitMSE": 0.01280265673995018,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.040925607085227966
+        },
+        {
+          "objective": 0.03519630432128906,
+          "movementLoss": 0.031529203057289124,
+          "nonMovementLogitMSE": 0.003667102660983801,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.06854057312011719,
+          "movementLoss": 0.06313617527484894,
+          "nonMovementLogitMSE": 0.005404396448284388,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.008520526811480522
+        }
+      ],
+      "selectionLoss": 0.19544093683362007,
+      "sampledRowsPerSource": [
+        38165,
+        37732,
+        38425,
+        38032
+      ]
+    },
+    {
+      "epoch": 53,
+      "updates": 7897,
+      "developmentMetrics": [
+        {
+          "objective": 0.5497656464576721,
+          "movementLoss": 0.5327901244163513,
+          "nonMovementLogitMSE": 0.0169755220413208,
+          "hitFlipRate": 0.0016517476178705692,
+          "shotFlipRate": 0.04576939344406128
+        },
+        {
+          "objective": 0.1285274624824524,
+          "movementLoss": 0.11543992161750793,
+          "nonMovementLogitMSE": 0.013087539002299309,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.040447503328323364
+        },
+        {
+          "objective": 0.03219965472817421,
+          "movementLoss": 0.02852451056241989,
+          "nonMovementLogitMSE": 0.0036751432344317436,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06616094708442688,
+          "movementLoss": 0.06074763834476471,
+          "nonMovementLogitMSE": 0.005413310136646032,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.01161890011280775
+        }
+      ],
+      "selectionLoss": 0.1941634276881814,
+      "sampledRowsPerSource": [
+        38188,
+        37948,
+        38094,
+        38124
+      ]
+    },
+    {
+      "epoch": 54,
+      "updates": 8046,
+      "developmentMetrics": [
+        {
+          "objective": 0.5497714281082153,
+          "movementLoss": 0.5328912138938904,
+          "nonMovementLogitMSE": 0.016880206763744354,
+          "hitFlipRate": 0.0015451832441613078,
+          "shotFlipRate": 0.04587595909833908
+        },
+        {
+          "objective": 0.12580838799476624,
+          "movementLoss": 0.11311237514019012,
+          "nonMovementLogitMSE": 0.012696009129285812,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04169057309627533
+        },
+        {
+          "objective": 0.034568045288324356,
+          "movementLoss": 0.031068822368979454,
+          "nonMovementLogitMSE": 0.0034992219880223274,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010998810641467571
+        },
+        {
+          "objective": 0.06677868217229843,
+          "movementLoss": 0.06136317178606987,
+          "nonMovementLogitMSE": 0.005415512248873711,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010069712996482849
+        }
+      ],
+      "selectionLoss": 0.1942316358909011,
+      "sampledRowsPerSource": [
+        38566,
+        37870,
+        37890,
+        38028
+      ]
+    },
+    {
+      "epoch": 55,
+      "updates": 8195,
+      "developmentMetrics": [
+        {
+          "objective": 0.549626350402832,
+          "movementLoss": 0.5324901342391968,
+          "nonMovementLogitMSE": 0.01713619753718376,
+          "hitFlipRate": 0.0015984654892235994,
+          "shotFlipRate": 0.04534313827753067
+        },
+        {
+          "objective": 0.12680119276046753,
+          "movementLoss": 0.11361696571111679,
+          "nonMovementLogitMSE": 0.013184228911995888,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04105310142040253
+        },
+        {
+          "objective": 0.03421695530414581,
+          "movementLoss": 0.030683545395731926,
+          "nonMovementLogitMSE": 0.0035334087442606688,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06714917719364166,
+          "movementLoss": 0.06168144941329956,
+          "nonMovementLogitMSE": 0.005467724520713091,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.008520526811480522
+        }
+      ],
+      "selectionLoss": 0.19444841891527176,
+      "sampledRowsPerSource": [
+        37959,
+        38174,
+        38031,
+        38190
+      ]
+    },
+    {
+      "epoch": 56,
+      "updates": 8344,
+      "developmentMetrics": [
+        {
+          "objective": 0.5482267737388611,
+          "movementLoss": 0.5310931205749512,
+          "nonMovementLogitMSE": 0.017133677378296852,
+          "hitFlipRate": 0.0017050298629328609,
+          "shotFlipRate": 0.04534313827753067
+        },
+        {
+          "objective": 0.12683844566345215,
+          "movementLoss": 0.11376719921827316,
+          "nonMovementLogitMSE": 0.013071242719888687,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.040798112750053406
+        },
+        {
+          "objective": 0.03290170803666115,
+          "movementLoss": 0.02915641851723194,
+          "nonMovementLogitMSE": 0.0037452909164130688,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.0673467218875885,
+          "movementLoss": 0.06170447915792465,
+          "nonMovementLogitMSE": 0.005642241798341274,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008520526811480522
+        }
+      ],
+      "selectionLoss": 0.19382841233164072,
+      "sampledRowsPerSource": [
+        38402,
+        37690,
+        38041,
+        38221
+      ]
+    },
+    {
+      "epoch": 57,
+      "updates": 8493,
+      "developmentMetrics": [
+        {
+          "objective": 0.5457499027252197,
+          "movementLoss": 0.5283989906311035,
+          "nonMovementLogitMSE": 0.01735089346766472,
+          "hitFlipRate": 0.0013320546131581068,
+          "shotFlipRate": 0.045556265860795975
+        },
+        {
+          "objective": 0.1266328990459442,
+          "movementLoss": 0.11322295665740967,
+          "nonMovementLogitMSE": 0.013409947045147419,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04121246933937073
+        },
+        {
+          "objective": 0.033452488481998444,
+          "movementLoss": 0.029834119603037834,
+          "nonMovementLogitMSE": 0.0036183707416057587,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.01189060602337122
+        },
+        {
+          "objective": 0.06853796541690826,
+          "movementLoss": 0.06294660270214081,
+          "nonMovementLogitMSE": 0.005591364577412605,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010069712996482849
+        }
+      ],
+      "selectionLoss": 0.19359331391751766,
+      "sampledRowsPerSource": [
+        38316,
+        38014,
+        37990,
+        38034
+      ]
+    },
+    {
+      "epoch": 58,
+      "updates": 8642,
+      "developmentMetrics": [
+        {
+          "objective": 0.5417363047599792,
+          "movementLoss": 0.5244062542915344,
+          "nonMovementLogitMSE": 0.017330022528767586,
+          "hitFlipRate": 0.0013320546131581068,
+          "shotFlipRate": 0.045502983033657074
+        },
+        {
+          "objective": 0.1272166222333908,
+          "movementLoss": 0.11410118639469147,
+          "nonMovementLogitMSE": 0.01311543956398964,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.04220054671168327
+        },
+        {
+          "objective": 0.03271615132689476,
+          "movementLoss": 0.02907676249742508,
+          "nonMovementLogitMSE": 0.0036393904592841864,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06829645484685898,
+          "movementLoss": 0.06279841810464859,
+          "nonMovementLogitMSE": 0.005498035345226526,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.19249138329178095,
+      "sampledRowsPerSource": [
+        38212,
+        38051,
+        38055,
+        38036
+      ]
+    },
+    {
+      "epoch": 59,
+      "updates": 8791,
+      "developmentMetrics": [
+        {
+          "objective": 0.5418156981468201,
+          "movementLoss": 0.5243093371391296,
+          "nonMovementLogitMSE": 0.017506347969174385,
+          "hitFlipRate": 0.0016517476178705692,
+          "shotFlipRate": 0.046142369508743286
+        },
+        {
+          "objective": 0.12512119114398956,
+          "movementLoss": 0.11186013370752335,
+          "nonMovementLogitMSE": 0.01326105184853077,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.04140371084213257
+        },
+        {
+          "objective": 0.03262372314929962,
+          "movementLoss": 0.02908029966056347,
+          "nonMovementLogitMSE": 0.00354342395439744,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.01189060602337122
+        },
+        {
+          "objective": 0.0672333836555481,
+          "movementLoss": 0.06170494854450226,
+          "nonMovementLogitMSE": 0.005528434179723263,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008520526811480522
+        }
+      ],
+      "selectionLoss": 0.19169849902391434,
+      "sampledRowsPerSource": [
+        37985,
+        38174,
+        37867,
+        38328
+      ]
+    },
+    {
+      "epoch": 60,
+      "updates": 8940,
+      "developmentMetrics": [
+        {
+          "objective": 0.5425063967704773,
+          "movementLoss": 0.5251420140266418,
+          "nonMovementLogitMSE": 0.017364397644996643,
+          "hitFlipRate": 0.0013320546131581068,
+          "shotFlipRate": 0.045502983033657074
+        },
+        {
+          "objective": 0.1249532476067543,
+          "movementLoss": 0.11179762333631516,
+          "nonMovementLogitMSE": 0.013155621476471424,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04114872217178345
+        },
+        {
+          "objective": 0.03372340649366379,
+          "movementLoss": 0.030170463025569916,
+          "nonMovementLogitMSE": 0.0035529450979083776,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.06807315349578857,
+          "movementLoss": 0.06257381290197372,
+          "nonMovementLogitMSE": 0.005499343853443861,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.192314051091671,
+      "sampledRowsPerSource": [
+        38269,
+        38075,
+        38066,
+        37944
+      ]
+    },
+    {
+      "epoch": 61,
+      "updates": 9089,
+      "developmentMetrics": [
+        {
+          "objective": 0.5459450483322144,
+          "movementLoss": 0.5284969806671143,
+          "nonMovementLogitMSE": 0.017448043450713158,
+          "hitFlipRate": 0.0016517476178705692,
+          "shotFlipRate": 0.04571611434221268
+        },
+        {
+          "objective": 0.1306110918521881,
+          "movementLoss": 0.11732807755470276,
+          "nonMovementLogitMSE": 0.013283013366162777,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.040766239166259766
+        },
+        {
+          "objective": 0.033166565001010895,
+          "movementLoss": 0.029512252658605576,
+          "nonMovementLogitMSE": 0.0036543121095746756,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012485136277973652
+        },
+        {
+          "objective": 0.06890717893838882,
+          "movementLoss": 0.06329502910375595,
+          "nonMovementLogitMSE": 0.0056121512316167355,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.010069712996482849
+        }
+      ],
+      "selectionLoss": 0.19465747103095055,
+      "sampledRowsPerSource": [
+        37948,
+        38039,
+        38112,
+        38255
+      ]
+    },
+    {
+      "epoch": 62,
+      "updates": 9238,
+      "developmentMetrics": [
+        {
+          "objective": 0.5486610531806946,
+          "movementLoss": 0.5311487913131714,
+          "nonMovementLogitMSE": 0.017512274906039238,
+          "hitFlipRate": 0.0013320546131581068,
+          "shotFlipRate": 0.045076727867126465
+        },
+        {
+          "objective": 0.1278415322303772,
+          "movementLoss": 0.11453452706336975,
+          "nonMovementLogitMSE": 0.013307011686265469,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.04149933159351349
+        },
+        {
+          "objective": 0.03410009667277336,
+          "movementLoss": 0.030570371076464653,
+          "nonMovementLogitMSE": 0.0035297267604619265,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.01189060602337122
+        },
+        {
+          "objective": 0.06830322742462158,
+          "movementLoss": 0.06270301342010498,
+          "nonMovementLogitMSE": 0.005600212141871452,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010844307020306587
+        }
+      ],
+      "selectionLoss": 0.19472647737711668,
+      "sampledRowsPerSource": [
+        38097,
+        37936,
+        38452,
+        37869
+      ]
+    },
+    {
+      "epoch": 63,
+      "updates": 9387,
+      "developmentMetrics": [
+        {
+          "objective": 0.5420829653739929,
+          "movementLoss": 0.5245950222015381,
+          "nonMovementLogitMSE": 0.01748792827129364,
+          "hitFlipRate": 0.0015984654892235994,
+          "shotFlipRate": 0.04513000696897507
+        },
+        {
+          "objective": 0.12180940806865692,
+          "movementLoss": 0.10823153704404831,
+          "nonMovementLogitMSE": 0.013577872887253761,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04172244668006897
+        },
+        {
+          "objective": 0.03342343866825104,
+          "movementLoss": 0.029655886813998222,
+          "nonMovementLogitMSE": 0.0037675502244383097,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.06858094036579132,
+          "movementLoss": 0.06267677992582321,
+          "nonMovementLogitMSE": 0.0059041595086455345,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.19147418811917305,
+      "sampledRowsPerSource": [
+        38402,
+        38010,
+        37995,
+        37947
+      ]
+    },
+    {
+      "epoch": 64,
+      "updates": 9536,
+      "developmentMetrics": [
+        {
+          "objective": 0.5438820123672485,
+          "movementLoss": 0.526193380355835,
+          "nonMovementLogitMSE": 0.017688613384962082,
+          "hitFlipRate": 0.0013853367418050766,
+          "shotFlipRate": 0.046142369508743286
+        },
+        {
+          "objective": 0.12621432542800903,
+          "movementLoss": 0.11257471144199371,
+          "nonMovementLogitMSE": 0.01363961398601532,
+          "hitFlipRate": 0.00022311467910185456,
+          "shotFlipRate": 0.040925607085227966
+        },
+        {
+          "objective": 0.03315315023064613,
+          "movementLoss": 0.02945956401526928,
+          "nonMovementLogitMSE": 0.0036935878451913595,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.07034560292959213,
+          "movementLoss": 0.06486500799655914,
+          "nonMovementLogitMSE": 0.005480593536049128,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.19339877273887396,
+      "sampledRowsPerSource": [
+        38192,
+        38214,
+        37991,
+        37957
+      ]
+    },
+    {
+      "epoch": 65,
+      "updates": 9685,
+      "developmentMetrics": [
+        {
+          "objective": 0.5429421663284302,
+          "movementLoss": 0.5251872539520264,
+          "nonMovementLogitMSE": 0.017754891887307167,
+          "hitFlipRate": 0.001491901115514338,
+          "shotFlipRate": 0.04518328979611397
+        },
+        {
+          "objective": 0.12579289078712463,
+          "movementLoss": 0.11194751411676407,
+          "nonMovementLogitMSE": 0.013845373876392841,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.042455535382032394
+        },
+        {
+          "objective": 0.03410851210355759,
+          "movementLoss": 0.03044169396162033,
+          "nonMovementLogitMSE": 0.0036668169777840376,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012187871150672436
+        },
+        {
+          "objective": 0.06940880417823792,
+          "movementLoss": 0.06388038396835327,
+          "nonMovementLogitMSE": 0.005528416950255632,
+          "hitFlipRate": 0.00038729666266590357,
+          "shotFlipRate": 0.008520526811480522
+        }
+      ],
+      "selectionLoss": 0.19306309334933758,
+      "sampledRowsPerSource": [
+        38324,
+        37712,
+        37909,
+        38409
+      ]
+    },
+    {
+      "epoch": 66,
+      "updates": 9834,
+      "developmentMetrics": [
+        {
+          "objective": 0.5433415174484253,
+          "movementLoss": 0.5258373022079468,
+          "nonMovementLogitMSE": 0.017504209652543068,
+          "hitFlipRate": 0.0013853367418050766,
+          "shotFlipRate": 0.046142369508743286
+        },
+        {
+          "objective": 0.12570372223854065,
+          "movementLoss": 0.11231325566768646,
+          "nonMovementLogitMSE": 0.01339047309011221,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.04105310142040253
+        },
+        {
+          "objective": 0.037246376276016235,
+          "movementLoss": 0.03359558433294296,
+          "nonMovementLogitMSE": 0.00365079240873456,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010998810641467571
+        },
+        {
+          "objective": 0.06806313246488571,
+          "movementLoss": 0.06257282197475433,
+          "nonMovementLogitMSE": 0.005490311421453953,
+          "hitFlipRate": 0.00038729666266590357,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.19358868710696697,
+      "sampledRowsPerSource": [
+        38038,
+        38082,
+        38218,
+        38016
+      ]
+    },
+    {
+      "epoch": 67,
+      "updates": 9983,
+      "developmentMetrics": [
+        {
+          "objective": 0.5395103693008423,
+          "movementLoss": 0.5218390226364136,
+          "nonMovementLogitMSE": 0.01767137087881565,
+          "hitFlipRate": 0.001491901115514338,
+          "shotFlipRate": 0.0468883216381073
+        },
+        {
+          "objective": 0.12248224020004272,
+          "movementLoss": 0.10892359167337418,
+          "nonMovementLogitMSE": 0.013558652251958847,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04159495234489441
+        },
+        {
+          "objective": 0.0362926684319973,
+          "movementLoss": 0.032640159130096436,
+          "nonMovementLogitMSE": 0.0036525106988847256,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.01189060602337122
+        },
+        {
+          "objective": 0.06734615564346313,
+          "movementLoss": 0.06182609125971794,
+          "nonMovementLogitMSE": 0.005520060658454895,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.19140785839408636,
+      "sampledRowsPerSource": [
+        38136,
+        38163,
+        38149,
+        37906
+      ]
+    },
+    {
+      "epoch": 68,
+      "updates": 10132,
+      "developmentMetrics": [
+        {
+          "objective": 0.5387198328971863,
+          "movementLoss": 0.5210114121437073,
+          "nonMovementLogitMSE": 0.01770840585231781,
+          "hitFlipRate": 0.0015984654892235994,
+          "shotFlipRate": 0.047634270042181015
+        },
+        {
+          "objective": 0.12354534864425659,
+          "movementLoss": 0.11009325087070465,
+          "nonMovementLogitMSE": 0.013452094048261642,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04184994101524353
+        },
+        {
+          "objective": 0.03395931422710419,
+          "movementLoss": 0.03044518455862999,
+          "nonMovementLogitMSE": 0.0035141289699822664,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.06619918346405029,
+          "movementLoss": 0.06081324815750122,
+          "nonMovementLogitMSE": 0.0053859371691942215,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.19060591980814934,
+      "sampledRowsPerSource": [
+        38189,
+        37936,
+        38099,
+        38130
+      ]
+    },
+    {
+      "epoch": 69,
+      "updates": 10281,
+      "developmentMetrics": [
+        {
+          "objective": 0.5433825254440308,
+          "movementLoss": 0.5255114436149597,
+          "nonMovementLogitMSE": 0.0178710725158453,
+          "hitFlipRate": 0.0017583119915798306,
+          "shotFlipRate": 0.04854006692767143
+        },
+        {
+          "objective": 0.13073283433914185,
+          "movementLoss": 0.11712157726287842,
+          "nonMovementLogitMSE": 0.013611262664198875,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04137183725833893
+        },
+        {
+          "objective": 0.03245213255286217,
+          "movementLoss": 0.02881786786019802,
+          "nonMovementLogitMSE": 0.0036342646926641464,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012782402336597443
+        },
+        {
+          "objective": 0.06886578351259232,
+          "movementLoss": 0.0634433701634407,
+          "nonMovementLogitMSE": 0.005422411020845175,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.007745933253318071
+        }
+      ],
+      "selectionLoss": 0.19385831896215677,
+      "sampledRowsPerSource": [
+        38015,
+        38095,
+        38326,
+        37918
+      ]
+    },
+    {
+      "epoch": 70,
+      "updates": 10430,
+      "developmentMetrics": [
+        {
+          "objective": 0.5407257080078125,
+          "movementLoss": 0.5229504108428955,
+          "nonMovementLogitMSE": 0.017775297164916992,
+          "hitFlipRate": 0.0017583119915798306,
+          "shotFlipRate": 0.04726129397749901
+        },
+        {
+          "objective": 0.12305107712745667,
+          "movementLoss": 0.10954278707504272,
+          "nonMovementLogitMSE": 0.01350829005241394,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.04111684858798981
+        },
+        {
+          "objective": 0.03391428664326668,
+          "movementLoss": 0.030317142605781555,
+          "nonMovementLogitMSE": 0.003597145201638341,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06931039690971375,
+          "movementLoss": 0.06377677619457245,
+          "nonMovementLogitMSE": 0.005533616989850998,
+          "hitFlipRate": 0.00038729666266590357,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.1917503671720624,
+      "sampledRowsPerSource": [
+        38244,
+        38094,
+        37796,
+        38220
+      ]
+    },
+    {
+      "epoch": 71,
+      "updates": 10579,
+      "developmentMetrics": [
+        {
+          "objective": 0.5378934741020203,
+          "movementLoss": 0.5199223160743713,
+          "nonMovementLogitMSE": 0.017971130087971687,
+          "hitFlipRate": 0.0017583119915798306,
+          "shotFlipRate": 0.047101449221372604
+        },
+        {
+          "objective": 0.12475919723510742,
+          "movementLoss": 0.11121854931116104,
+          "nonMovementLogitMSE": 0.013540648855268955,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04172244668006897
+        },
+        {
+          "objective": 0.034372687339782715,
+          "movementLoss": 0.030742695555090904,
+          "nonMovementLogitMSE": 0.003629992948845029,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06795958429574966,
+          "movementLoss": 0.06246796250343323,
+          "nonMovementLogitMSE": 0.005491623189300299,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.009682416915893555
+        }
+      ],
+      "selectionLoss": 0.19124623574316502,
+      "sampledRowsPerSource": [
+        38114,
+        37972,
+        38268,
+        38000
+      ]
+    },
+    {
+      "epoch": 72,
+      "updates": 10728,
+      "developmentMetrics": [
+        {
+          "objective": 0.5374026894569397,
+          "movementLoss": 0.5196313858032227,
+          "nonMovementLogitMSE": 0.017771298065781593,
+          "hitFlipRate": 0.0017050298629328609,
+          "shotFlipRate": 0.04523657262325287
+        },
+        {
+          "objective": 0.12504427134990692,
+          "movementLoss": 0.11141501367092133,
+          "nonMovementLogitMSE": 0.013629259541630745,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04130809009075165
+        },
+        {
+          "objective": 0.03225339949131012,
+          "movementLoss": 0.028718069195747375,
+          "nonMovementLogitMSE": 0.0035353321582078934,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.00951248500496149
+        },
+        {
+          "objective": 0.0700356662273407,
+          "movementLoss": 0.06444182246923447,
+          "nonMovementLogitMSE": 0.005593845620751381,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010069712996482849
+        }
+      ],
+      "selectionLoss": 0.19118400663137436,
+      "sampledRowsPerSource": [
+        37936,
+        38049,
+        38212,
+        38157
+      ]
+    },
+    {
+      "epoch": 73,
+      "updates": 10877,
+      "developmentMetrics": [
+        {
+          "objective": 0.5376591086387634,
+          "movementLoss": 0.519802451133728,
+          "nonMovementLogitMSE": 0.017856638878583908,
+          "hitFlipRate": 0.0017583119915798306,
+          "shotFlipRate": 0.047208014875650406
+        },
+        {
+          "objective": 0.1225983053445816,
+          "movementLoss": 0.10912950336933136,
+          "nonMovementLogitMSE": 0.013468805700540543,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04178619384765625
+        },
+        {
+          "objective": 0.03324917331337929,
+          "movementLoss": 0.029603051021695137,
+          "nonMovementLogitMSE": 0.0036461218260228634,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010404280386865139
+        },
+        {
+          "objective": 0.06731785088777542,
+          "movementLoss": 0.06180501729249954,
+          "nonMovementLogitMSE": 0.0055128345265984535,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008520526811480522
+        }
+      ],
+      "selectionLoss": 0.19020610954612494,
+      "sampledRowsPerSource": [
+        38180,
+        38318,
+        37895,
+        37961
+      ]
+    },
+    {
+      "epoch": 74,
+      "updates": 11026,
+      "developmentMetrics": [
+        {
+          "objective": 0.5368337631225586,
+          "movementLoss": 0.5189878940582275,
+          "nonMovementLogitMSE": 0.01784585230052471,
+          "hitFlipRate": 0.0017583119915798306,
+          "shotFlipRate": 0.047154732048511505
+        },
+        {
+          "objective": 0.12436310201883316,
+          "movementLoss": 0.1108025312423706,
+          "nonMovementLogitMSE": 0.013560567982494831,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04111684858798981
+        },
+        {
+          "objective": 0.03273952379822731,
+          "movementLoss": 0.028888795524835587,
+          "nonMovementLogitMSE": 0.0038507296703755856,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06908640265464783,
+          "movementLoss": 0.06346887350082397,
+          "nonMovementLogitMSE": 0.005617525428533554,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.010844307020306587
+        }
+      ],
+      "selectionLoss": 0.19075569789856672,
+      "sampledRowsPerSource": [
+        38067,
+        38516,
+        37880,
+        37891
+      ]
+    },
+    {
+      "epoch": 75,
+      "updates": 11175,
+      "developmentMetrics": [
+        {
+          "objective": 0.541184663772583,
+          "movementLoss": 0.5230841636657715,
+          "nonMovementLogitMSE": 0.018100470304489136,
+          "hitFlipRate": 0.0017050298629328609,
+          "shotFlipRate": 0.04790068045258522
+        },
+        {
+          "objective": 0.12309087812900543,
+          "movementLoss": 0.10939370840787888,
+          "nonMovementLogitMSE": 0.013697171583771706,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.040734365582466125
+        },
+        {
+          "objective": 0.033898286521434784,
+          "movementLoss": 0.030214112251996994,
+          "nonMovementLogitMSE": 0.0036841724067926407,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.013376932591199875
+        },
+        {
+          "objective": 0.06833487749099731,
+          "movementLoss": 0.06255324184894562,
+          "nonMovementLogitMSE": 0.00578163331374526,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.009682416915893555
+        }
+      ],
+      "selectionLoss": 0.19162717647850513,
+      "sampledRowsPerSource": [
+        38137,
+        38067,
+        38295,
+        37855
+      ]
+    },
+    {
+      "epoch": 76,
+      "updates": 11324,
+      "developmentMetrics": [
+        {
+          "objective": 0.5374744534492493,
+          "movementLoss": 0.5194903612136841,
+          "nonMovementLogitMSE": 0.017984095960855484,
+          "hitFlipRate": 0.001491901115514338,
+          "shotFlipRate": 0.047740835696458817
+        },
+        {
+          "objective": 0.1223149523139,
+          "movementLoss": 0.10860243439674377,
+          "nonMovementLogitMSE": 0.013712515123188496,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04149933159351349
+        },
+        {
+          "objective": 0.03336583077907562,
+          "movementLoss": 0.02974828891456127,
+          "nonMovementLogitMSE": 0.003617542563006282,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012187871150672436
+        },
+        {
+          "objective": 0.06748152524232864,
+          "movementLoss": 0.061922311782836914,
+          "nonMovementLogitMSE": 0.0055592115968465805,
+          "hitFlipRate": 0.00038729666266590357,
+          "shotFlipRate": 0.009682416915893555
+        }
+      ],
+      "selectionLoss": 0.19015919044613838,
+      "sampledRowsPerSource": [
+        38083,
+        38377,
+        37982,
+        37912
+      ]
+    },
+    {
+      "epoch": 77,
+      "updates": 11473,
+      "developmentMetrics": [
+        {
+          "objective": 0.5362154841423035,
+          "movementLoss": 0.5182586908340454,
+          "nonMovementLogitMSE": 0.0179568100720644,
+          "hitFlipRate": 0.0016517476178705692,
+          "shotFlipRate": 0.04742114245891571
+        },
+        {
+          "objective": 0.12554484605789185,
+          "movementLoss": 0.11198882013559341,
+          "nonMovementLogitMSE": 0.013556019403040409,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.040893733501434326
+        },
+        {
+          "objective": 0.03320954740047455,
+          "movementLoss": 0.029663030058145523,
+          "nonMovementLogitMSE": 0.003546516876667738,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012187871150672436
+        },
+        {
+          "objective": 0.068460613489151,
+          "movementLoss": 0.06279067695140839,
+          "nonMovementLogitMSE": 0.005669932812452316,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.19085762277245522,
+      "sampledRowsPerSource": [
+        38235,
+        38111,
+        37995,
+        38013
+      ]
+    },
+    {
+      "epoch": 78,
+      "updates": 11622,
+      "developmentMetrics": [
+        {
+          "objective": 0.5365338325500488,
+          "movementLoss": 0.518439531326294,
+          "nonMovementLogitMSE": 0.018094275146722794,
+          "hitFlipRate": 0.0017050298629328609,
+          "shotFlipRate": 0.04838022217154503
+        },
+        {
+          "objective": 0.12427116185426712,
+          "movementLoss": 0.11058063805103302,
+          "nonMovementLogitMSE": 0.013690524734556675,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04105310142040253
+        },
+        {
+          "objective": 0.03250660002231598,
+          "movementLoss": 0.028867511078715324,
+          "nonMovementLogitMSE": 0.0036390877794474363,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06610313802957535,
+          "movementLoss": 0.06044718995690346,
+          "nonMovementLogitMSE": 0.00565594807267189,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.18985368311405182,
+      "sampledRowsPerSource": [
+        38036,
+        37828,
+        38210,
+        38280
+      ]
+    },
+    {
+      "epoch": 79,
+      "updates": 11771,
+      "developmentMetrics": [
+        {
+          "objective": 0.5379112958908081,
+          "movementLoss": 0.5198599696159363,
+          "nonMovementLogitMSE": 0.018051330000162125,
+          "hitFlipRate": 0.0017050298629328609,
+          "shotFlipRate": 0.04779411852359772
+        },
+        {
+          "objective": 0.12424303591251373,
+          "movementLoss": 0.11041170358657837,
+          "nonMovementLogitMSE": 0.01383132953196764,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.042359914630651474
+        },
+        {
+          "objective": 0.0339946486055851,
+          "movementLoss": 0.03045431151986122,
+          "nonMovementLogitMSE": 0.0035403380170464516,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010701545514166355
+        },
+        {
+          "objective": 0.06930368393659592,
+          "movementLoss": 0.06376928091049194,
+          "nonMovementLogitMSE": 0.005534400697797537,
+          "hitFlipRate": 0.00038729666266590357,
+          "shotFlipRate": 0.008133229799568653
+        }
+      ],
+      "selectionLoss": 0.1913631660863757,
+      "sampledRowsPerSource": [
+        38095,
+        37984,
+        38162,
+        38113
+      ]
+    },
+    {
+      "epoch": 80,
+      "updates": 11920,
+      "developmentMetrics": [
+        {
+          "objective": 0.5363985896110535,
+          "movementLoss": 0.5181580781936646,
+          "nonMovementLogitMSE": 0.018240489065647125,
+          "hitFlipRate": 0.0017583119915798306,
+          "shotFlipRate": 0.04731457680463791
+        },
+        {
+          "objective": 0.1234041377902031,
+          "movementLoss": 0.10964162647724152,
+          "nonMovementLogitMSE": 0.013762512244284153,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04181806743144989
+        },
+        {
+          "objective": 0.032982613891363144,
+          "movementLoss": 0.029382217675447464,
+          "nonMovementLogitMSE": 0.0036003952845931053,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010701545514166355
+        },
+        {
+          "objective": 0.06710705906152725,
+          "movementLoss": 0.06152716651558876,
+          "nonMovementLogitMSE": 0.005579889286309481,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008133229799568653
+        }
+      ],
+      "selectionLoss": 0.18997310008853674,
+      "sampledRowsPerSource": [
+        38139,
+        38049,
+        38268,
+        37898
+      ]
+    },
+    {
+      "epoch": 81,
+      "updates": 12069,
+      "developmentMetrics": [
+        {
+          "objective": 0.5375367999076843,
+          "movementLoss": 0.5189535617828369,
+          "nonMovementLogitMSE": 0.018583223223686218,
+          "hitFlipRate": 0.0015984654892235994,
+          "shotFlipRate": 0.047687552869319916
+        },
+        {
+          "objective": 0.12220799177885056,
+          "movementLoss": 0.10822432488203049,
+          "nonMovementLogitMSE": 0.013983665965497494,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04153120517730713
+        },
+        {
+          "objective": 0.032479364424943924,
+          "movementLoss": 0.028840769082307816,
+          "nonMovementLogitMSE": 0.00363859417848289,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010998810641467571
+        },
+        {
+          "objective": 0.0655570849776268,
+          "movementLoss": 0.05979171767830849,
+          "nonMovementLogitMSE": 0.005765367299318314,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.1894453102722764,
+      "sampledRowsPerSource": [
+        37891,
+        38374,
+        38067,
+        38022
+      ]
+    },
+    {
+      "epoch": 82,
+      "updates": 12218,
+      "developmentMetrics": [
+        {
+          "objective": 0.5363771915435791,
+          "movementLoss": 0.5182651281356812,
+          "nonMovementLogitMSE": 0.018112052232027054,
+          "hitFlipRate": 0.0018115942366421223,
+          "shotFlipRate": 0.047687552869319916
+        },
+        {
+          "objective": 0.12405767291784286,
+          "movementLoss": 0.1102946326136589,
+          "nonMovementLogitMSE": 0.01376303844153881,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04146745800971985
+        },
+        {
+          "objective": 0.03185395523905754,
+          "movementLoss": 0.028176451101899147,
+          "nonMovementLogitMSE": 0.0036775043699890375,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010998810641467571
+        },
+        {
+          "objective": 0.06710698455572128,
+          "movementLoss": 0.061439793556928635,
+          "nonMovementLogitMSE": 0.005667191464453936,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.007745933253318071
+        }
+      ],
+      "selectionLoss": 0.1898489510640502,
+      "sampledRowsPerSource": [
+        37764,
+        38133,
+        38245,
+        38212
+      ]
+    },
+    {
+      "epoch": 83,
+      "updates": 12367,
+      "developmentMetrics": [
+        {
+          "objective": 0.5375014543533325,
+          "movementLoss": 0.5192445516586304,
+          "nonMovementLogitMSE": 0.01825692690908909,
+          "hitFlipRate": 0.002024722984060645,
+          "shotFlipRate": 0.048646632581949234
+        },
+        {
+          "objective": 0.12238466739654541,
+          "movementLoss": 0.10860704630613327,
+          "nonMovementLogitMSE": 0.013777618296444416,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04133996367454529
+        },
+        {
+          "objective": 0.03325015679001808,
+          "movementLoss": 0.029603878036141396,
+          "nonMovementLogitMSE": 0.0036462785210460424,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010998810641467571
+        },
+        {
+          "objective": 0.06601288169622421,
+          "movementLoss": 0.06036275252699852,
+          "nonMovementLogitMSE": 0.005650126840919256,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.009682416915893555
+        }
+      ],
+      "selectionLoss": 0.18978729005903006,
+      "sampledRowsPerSource": [
+        38053,
+        38150,
+        38064,
+        38087
+      ]
+    },
+    {
+      "epoch": 84,
+      "updates": 12516,
+      "developmentMetrics": [
+        {
+          "objective": 0.5349140763282776,
+          "movementLoss": 0.5165079832077026,
+          "nonMovementLogitMSE": 0.01840607449412346,
+          "hitFlipRate": 0.0017583119915798306,
+          "shotFlipRate": 0.04800724610686302
+        },
+        {
+          "objective": 0.1229490116238594,
+          "movementLoss": 0.10896956920623779,
+          "nonMovementLogitMSE": 0.013979442417621613,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04140371084213257
+        },
+        {
+          "objective": 0.032841041684150696,
+          "movementLoss": 0.0292159765958786,
+          "nonMovementLogitMSE": 0.003625066950917244,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011593340896070004
+        },
+        {
+          "objective": 0.06801293045282364,
+          "movementLoss": 0.06229597330093384,
+          "nonMovementLogitMSE": 0.0057169594801962376,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.18967926502227783,
+      "sampledRowsPerSource": [
+        38069,
+        38360,
+        37986,
+        37939
+      ]
+    },
+    {
+      "epoch": 85,
+      "updates": 12665,
+      "developmentMetrics": [
+        {
+          "objective": 0.5359952449798584,
+          "movementLoss": 0.5176072120666504,
+          "nonMovementLogitMSE": 0.018388044089078903,
+          "hitFlipRate": 0.0019181586103513837,
+          "shotFlipRate": 0.04811381176114082
+        },
+        {
+          "objective": 0.12432073801755905,
+          "movementLoss": 0.1102907732129097,
+          "nonMovementLogitMSE": 0.014029966667294502,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04098935425281525
+        },
+        {
+          "objective": 0.03221965581178665,
+          "movementLoss": 0.02863466739654541,
+          "nonMovementLogitMSE": 0.0035849895793944597,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010998810641467571
+        },
+        {
+          "objective": 0.06685447692871094,
+          "movementLoss": 0.06127398833632469,
+          "nonMovementLogitMSE": 0.00558049138635397,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.006584043148905039
+        }
+      ],
+      "selectionLoss": 0.18984752893447876,
+      "sampledRowsPerSource": [
+        37810,
+        38324,
+        38082,
+        38138
+      ]
+    },
+    {
+      "epoch": 86,
+      "updates": 12814,
+      "developmentMetrics": [
+        {
+          "objective": 0.5330810546875,
+          "movementLoss": 0.5144947171211243,
+          "nonMovementLogitMSE": 0.01858634501695633,
+          "hitFlipRate": 0.001864876365289092,
+          "shotFlipRate": 0.047154732048511505
+        },
+        {
+          "objective": 0.12428591400384903,
+          "movementLoss": 0.11020633578300476,
+          "nonMovementLogitMSE": 0.014079579152166843,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04146745800971985
+        },
+        {
+          "objective": 0.03690158948302269,
+          "movementLoss": 0.033133383840322495,
+          "nonMovementLogitMSE": 0.0037682070396840572,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.01189060602337122
+        },
+        {
+          "objective": 0.06972726434469223,
+          "movementLoss": 0.06395051628351212,
+          "nonMovementLogitMSE": 0.005776748061180115,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.008133229799568653
+        }
+      ],
+      "selectionLoss": 0.190998955629766,
+      "sampledRowsPerSource": [
+        38528,
+        37887,
+        37907,
+        38032
+      ]
+    },
+    {
+      "epoch": 87,
+      "updates": 12963,
+      "developmentMetrics": [
+        {
+          "objective": 0.5352927446365356,
+          "movementLoss": 0.5165829062461853,
+          "nonMovementLogitMSE": 0.018709808588027954,
+          "hitFlipRate": 0.001864876365289092,
+          "shotFlipRate": 0.04838022217154503
+        },
+        {
+          "objective": 0.12469601631164551,
+          "movementLoss": 0.11049766093492508,
+          "nonMovementLogitMSE": 0.01419835165143013,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.042487408965826035
+        },
+        {
+          "objective": 0.03193162754178047,
+          "movementLoss": 0.02834775485098362,
+          "nonMovementLogitMSE": 0.003583871526643634,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012187871150672436
+        },
+        {
+          "objective": 0.0658164769411087,
+          "movementLoss": 0.06015484035015106,
+          "nonMovementLogitMSE": 0.00566164031624794,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.008520526811480522
+        }
+      ],
+      "selectionLoss": 0.18943421635776758,
+      "sampledRowsPerSource": [
+        38196,
+        37931,
+        38113,
+        38114
+      ]
+    },
+    {
+      "epoch": 88,
+      "updates": 13112,
+      "developmentMetrics": [
+        {
+          "objective": 0.5330976247787476,
+          "movementLoss": 0.5144001245498657,
+          "nonMovementLogitMSE": 0.018697524443268776,
+          "hitFlipRate": 0.0019181586103513837,
+          "shotFlipRate": 0.048753198236227036
+        },
+        {
+          "objective": 0.12111225724220276,
+          "movementLoss": 0.10683667659759521,
+          "nonMovementLogitMSE": 0.014275580644607544,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04188181459903717
+        },
+        {
+          "objective": 0.03306489437818527,
+          "movementLoss": 0.0293591171503067,
+          "nonMovementLogitMSE": 0.003705778159201145,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012485136277973652
+        },
+        {
+          "objective": 0.07189655303955078,
+          "movementLoss": 0.06606526672840118,
+          "nonMovementLogitMSE": 0.00583128584548831,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.010069712996482849
+        }
+      ],
+      "selectionLoss": 0.1897928323596716,
+      "sampledRowsPerSource": [
+        38254,
+        38158,
+        37968,
+        37974
+      ]
+    },
+    {
+      "epoch": 89,
+      "updates": 13261,
+      "developmentMetrics": [
+        {
+          "objective": 0.5307807326316833,
+          "movementLoss": 0.5121526718139648,
+          "nonMovementLogitMSE": 0.018628055229783058,
+          "hitFlipRate": 0.0018115942366421223,
+          "shotFlipRate": 0.04832693934440613
+        },
+        {
+          "objective": 0.12604273855686188,
+          "movementLoss": 0.11183678358793259,
+          "nonMovementLogitMSE": 0.01420595869421959,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.042423661798238754
+        },
+        {
+          "objective": 0.03256084769964218,
+          "movementLoss": 0.028877412900328636,
+          "nonMovementLogitMSE": 0.0036834341008216143,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012782402336597443
+        },
+        {
+          "objective": 0.06877663731575012,
+          "movementLoss": 0.06297080963850021,
+          "nonMovementLogitMSE": 0.005805827211588621,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010457010008394718
+        }
+      ],
+      "selectionLoss": 0.18954023905098438,
+      "sampledRowsPerSource": [
+        38097,
+        38029,
+        38275,
+        37953
+      ]
+    },
+    {
+      "epoch": 90,
+      "updates": 13410,
+      "developmentMetrics": [
+        {
+          "objective": 0.5326972007751465,
+          "movementLoss": 0.5141488909721375,
+          "nonMovementLogitMSE": 0.01854831911623478,
+          "hitFlipRate": 0.001864876365289092,
+          "shotFlipRate": 0.048646632581949234
+        },
+        {
+          "objective": 0.12217285484075546,
+          "movementLoss": 0.10793574154376984,
+          "nonMovementLogitMSE": 0.01423711609095335,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.042519282549619675
+        },
+        {
+          "objective": 0.03249184042215347,
+          "movementLoss": 0.02894352748990059,
+          "nonMovementLogitMSE": 0.003548313630744815,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.01189060602337122
+        },
+        {
+          "objective": 0.06753786653280258,
+          "movementLoss": 0.06197965145111084,
+          "nonMovementLogitMSE": 0.005558213219046593,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.1887249406427145,
+      "sampledRowsPerSource": [
+        38376,
+        38026,
+        37986,
+        37966
+      ]
+    },
+    {
+      "epoch": 91,
+      "updates": 13559,
+      "developmentMetrics": [
+        {
+          "objective": 0.5312243700027466,
+          "movementLoss": 0.5124740600585938,
+          "nonMovementLogitMSE": 0.018750322982668877,
+          "hitFlipRate": 0.0021845693700015545,
+          "shotFlipRate": 0.049232736229896545
+        },
+        {
+          "objective": 0.12174082547426224,
+          "movementLoss": 0.10736122727394104,
+          "nonMovementLogitMSE": 0.014379600994288921,
+          "hitFlipRate": 0.00015936762792989612,
+          "shotFlipRate": 0.042583029717206955
+        },
+        {
+          "objective": 0.03295542299747467,
+          "movementLoss": 0.02936857007443905,
+          "nonMovementLogitMSE": 0.003586853388696909,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06575605273246765,
+          "movementLoss": 0.06015685573220253,
+          "nonMovementLogitMSE": 0.005599193274974823,
+          "hitFlipRate": 0.00038729666266590357,
+          "shotFlipRate": 0.011231603100895882
+        }
+      ],
+      "selectionLoss": 0.18791916780173779,
+      "sampledRowsPerSource": [
+        37884,
+        38286,
+        38085,
+        38099
+      ]
+    },
+    {
+      "epoch": 92,
+      "updates": 13708,
+      "developmentMetrics": [
+        {
+          "objective": 0.5314959287643433,
+          "movementLoss": 0.5130571722984314,
+          "nonMovementLogitMSE": 0.018438734114170074,
+          "hitFlipRate": 0.0019181586103513837,
+          "shotFlipRate": 0.04854006692767143
+        },
+        {
+          "objective": 0.12296892702579498,
+          "movementLoss": 0.10870284587144852,
+          "nonMovementLogitMSE": 0.014266079291701317,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.042710524052381516
+        },
+        {
+          "objective": 0.03226597234606743,
+          "movementLoss": 0.028655899688601494,
+          "nonMovementLogitMSE": 0.0036100728902965784,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06585052609443665,
+          "movementLoss": 0.06014670804142952,
+          "nonMovementLogitMSE": 0.005703815724700689,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.009682416915893555
+        }
+      ],
+      "selectionLoss": 0.18814533855766058,
+      "sampledRowsPerSource": [
+        37893,
+        38223,
+        37997,
+        38241
+      ]
+    },
+    {
+      "epoch": 93,
+      "updates": 13857,
+      "developmentMetrics": [
+        {
+          "objective": 0.5302008986473083,
+          "movementLoss": 0.5115470290184021,
+          "nonMovementLogitMSE": 0.018653854727745056,
+          "hitFlipRate": 0.0017583119915798306,
+          "shotFlipRate": 0.048699915409088135
+        },
+        {
+          "objective": 0.12468212097883224,
+          "movementLoss": 0.11020991951227188,
+          "nonMovementLogitMSE": 0.014472199603915215,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.042614903301000595
+        },
+        {
+          "objective": 0.03237401321530342,
+          "movementLoss": 0.02873910777270794,
+          "nonMovementLogitMSE": 0.003634906839579344,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012485136277973652
+        },
+        {
+          "objective": 0.06745986640453339,
+          "movementLoss": 0.06186601519584656,
+          "nonMovementLogitMSE": 0.005593851208686829,
+          "hitFlipRate": 0.0015491866506636143,
+          "shotFlipRate": 0.00735863670706749
+        }
+      ],
+      "selectionLoss": 0.18867922481149435,
+      "sampledRowsPerSource": [
+        37982,
+        38034,
+        37990,
+        38348
+      ]
+    },
+    {
+      "epoch": 94,
+      "updates": 14006,
+      "developmentMetrics": [
+        {
+          "objective": 0.5323381423950195,
+          "movementLoss": 0.5132445693016052,
+          "nonMovementLogitMSE": 0.019093552604317665,
+          "hitFlipRate": 0.001864876365289092,
+          "shotFlipRate": 0.048753198236227036
+        },
+        {
+          "objective": 0.12792208790779114,
+          "movementLoss": 0.11326168477535248,
+          "nonMovementLogitMSE": 0.01466040126979351,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.042328041046857834
+        },
+        {
+          "objective": 0.0350206233561039,
+          "movementLoss": 0.03130117803812027,
+          "nonMovementLogitMSE": 0.0037194446194916964,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.012485136277973652
+        },
+        {
+          "objective": 0.066586934030056,
+          "movementLoss": 0.06083676964044571,
+          "nonMovementLogitMSE": 0.005750164855271578,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010844307020306587
+        }
+      ],
+      "selectionLoss": 0.19046694692224264,
+      "sampledRowsPerSource": [
+        38255,
+        37960,
+        38013,
+        38126
+      ]
+    },
+    {
+      "epoch": 95,
+      "updates": 14155,
+      "developmentMetrics": [
+        {
+          "objective": 0.5280125737190247,
+          "movementLoss": 0.5091410279273987,
+          "nonMovementLogitMSE": 0.01887156069278717,
+          "hitFlipRate": 0.0018115942366421223,
+          "shotFlipRate": 0.049712277948856354
+        },
+        {
+          "objective": 0.1267528086900711,
+          "movementLoss": 0.11231764405965805,
+          "nonMovementLogitMSE": 0.014435171149671078,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04306113347411156
+        },
+        {
+          "objective": 0.033403780311346054,
+          "movementLoss": 0.029735641553997993,
+          "nonMovementLogitMSE": 0.0036681396886706352,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06751250475645065,
+          "movementLoss": 0.06180598586797714,
+          "nonMovementLogitMSE": 0.005706517491489649,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008907823823392391
+        }
+      ],
+      "selectionLoss": 0.18892041686922312,
+      "sampledRowsPerSource": [
+        38047,
+        38472,
+        37651,
+        38184
+      ]
+    },
+    {
+      "epoch": 96,
+      "updates": 14304,
+      "developmentMetrics": [
+        {
+          "objective": 0.5265008211135864,
+          "movementLoss": 0.5075617432594299,
+          "nonMovementLogitMSE": 0.018939083442091942,
+          "hitFlipRate": 0.001864876365289092,
+          "shotFlipRate": 0.05003196746110916
+        },
+        {
+          "objective": 0.1257273256778717,
+          "movementLoss": 0.11138176918029785,
+          "nonMovementLogitMSE": 0.014345556497573853,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.042869891971349716
+        },
+        {
+          "objective": 0.0323704369366169,
+          "movementLoss": 0.02874503657221794,
+          "nonMovementLogitMSE": 0.0036254003643989563,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.01189060602337122
+        },
+        {
+          "objective": 0.06584972143173218,
+          "movementLoss": 0.06010645627975464,
+          "nonMovementLogitMSE": 0.005743264686316252,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.010844307020306587
+        }
+      ],
+      "selectionLoss": 0.1876120762899518,
+      "sampledRowsPerSource": [
+        38180,
+        38148,
+        37867,
+        38159
+      ]
+    },
+    {
+      "epoch": 97,
+      "updates": 14453,
+      "developmentMetrics": [
+        {
+          "objective": 0.5291149020195007,
+          "movementLoss": 0.5103288888931274,
+          "nonMovementLogitMSE": 0.018786020576953888,
+          "hitFlipRate": 0.0018115942366421223,
+          "shotFlipRate": 0.04965899512171745
+        },
+        {
+          "objective": 0.1245216429233551,
+          "movementLoss": 0.11013991385698318,
+          "nonMovementLogitMSE": 0.014381727203726768,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.042614903301000595
+        },
+        {
+          "objective": 0.03218824788928032,
+          "movementLoss": 0.028519950807094574,
+          "nonMovementLogitMSE": 0.003668298712000251,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.06706461310386658,
+          "movementLoss": 0.0613199844956398,
+          "nonMovementLogitMSE": 0.005744629073888063,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.18822235148400068,
+      "sampledRowsPerSource": [
+        37941,
+        38146,
+        38059,
+        38208
+      ]
+    },
+    {
+      "epoch": 98,
+      "updates": 14602,
+      "developmentMetrics": [
+        {
+          "objective": 0.5279085636138916,
+          "movementLoss": 0.5090723037719727,
+          "nonMovementLogitMSE": 0.018836287781596184,
+          "hitFlipRate": 0.0019181586103513837,
+          "shotFlipRate": 0.05013853311538696
+        },
+        {
+          "objective": 0.12248977273702621,
+          "movementLoss": 0.1081739217042923,
+          "nonMovementLogitMSE": 0.014315852895379066,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.0432523749768734
+        },
+        {
+          "objective": 0.03320633992552757,
+          "movementLoss": 0.0295997466892004,
+          "nonMovementLogitMSE": 0.0036065946333110332,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.011296075768768787
+        },
+        {
+          "objective": 0.0651407316327095,
+          "movementLoss": 0.05937941372394562,
+          "nonMovementLogitMSE": 0.0057613179087638855,
+          "hitFlipRate": 0.0007745933253318071,
+          "shotFlipRate": 0.008133229799568653
+        }
+      ],
+      "selectionLoss": 0.18718635197728872,
+      "sampledRowsPerSource": [
+        38078,
+        38344,
+        37870,
+        38062
+      ]
+    },
+    {
+      "epoch": 99,
+      "updates": 14751,
+      "developmentMetrics": [
+        {
+          "objective": 0.5318540930747986,
+          "movementLoss": 0.5127218961715698,
+          "nonMovementLogitMSE": 0.019132213667035103,
+          "hitFlipRate": 0.0017583119915798306,
+          "shotFlipRate": 0.04997868835926056
+        },
+        {
+          "objective": 0.12789897620677948,
+          "movementLoss": 0.11339347809553146,
+          "nonMovementLogitMSE": 0.014505495317280293,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04296551272273064
+        },
+        {
+          "objective": 0.03516122326254845,
+          "movementLoss": 0.03140430152416229,
+          "nonMovementLogitMSE": 0.003756922669708729,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.01189060602337122
+        },
+        {
+          "objective": 0.06721173226833344,
+          "movementLoss": 0.06128625199198723,
+          "nonMovementLogitMSE": 0.005925481673330069,
+          "hitFlipRate": 0.00038729666266590357,
+          "shotFlipRate": 0.009295119903981686
+        }
+      ],
+      "selectionLoss": 0.190531506203115,
+      "sampledRowsPerSource": [
+        38226,
+        37896,
+        38171,
+        38061
+      ]
+    },
+    {
+      "epoch": 100,
+      "updates": 14900,
+      "developmentMetrics": [
+        {
+          "objective": 0.5354763269424438,
+          "movementLoss": 0.516421377658844,
+          "nonMovementLogitMSE": 0.019054941833019257,
+          "hitFlipRate": 0.0016517476178705692,
+          "shotFlipRate": 0.04859334975481033
+        },
+        {
+          "objective": 0.12445145845413208,
+          "movementLoss": 0.1099170371890068,
+          "nonMovementLogitMSE": 0.014534421265125275,
+          "hitFlipRate": 0.00019124115351587534,
+          "shotFlipRate": 0.04194556176662445
+        },
+        {
+          "objective": 0.03364306688308716,
+          "movementLoss": 0.03000260330736637,
+          "nonMovementLogitMSE": 0.003640461713075638,
+          "hitFlipRate": 0.0,
+          "shotFlipRate": 0.010701545514166355
+        },
+        {
+          "objective": 0.06517746299505234,
+          "movementLoss": 0.059467460960149765,
+          "nonMovementLogitMSE": 0.005710002034902573,
+          "hitFlipRate": 0.0011618899879977107,
+          "shotFlipRate": 0.010069712996482849
+        }
+      ],
+      "selectionLoss": 0.18968707881867886,
+      "sampledRowsPerSource": [
+        37940,
+        38494,
+        37977,
+        37943
+      ]
+    }
+  ],
+  "elapsedSeconds": 107.60533049999503,
+  "frozenOutputHeadParametersVerified": true,
+  "limitation": "A supervised movement trial. Frozen output parameters do not imply unchanged outputs when hidden features change. No runtime, match or final acceptance claim."
+}

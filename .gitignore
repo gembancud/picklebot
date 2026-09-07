@@ -10,6 +10,9 @@
 [Rr]ecordings/
 Assets/InitTestScene*.unity
 Assets/InitTestScene*.unity.meta
+/Assets/ML-Agents/Timers/
+/Assets/ML-Agents/Timers.meta
+/Assets/ML-Agents.meta
 
 # IDE and editor files
 .idea/
@@ -41,8 +44,31 @@ runs/
 checkpoints/
 
 # Phase 0 generated verification artifacts
-artifacts/
+artifacts/*
+# Selected continuation checkpoints and frozen baseline evidence only.
+# Keep raw recorded games and drill datasets local.
+!artifacts/doubles/
+artifacts/doubles/*
+!artifacts/doubles/contact-validation.json
+!artifacts/doubles/teams-random.json
+!artifacts/doubles/teams-trained.json
+!artifacts/player-agents/
+artifacts/player-agents/*
+!artifacts/player-agents/baseline-manifest.json
+!artifacts/player-agents/ppo-20260907-130353/
+!artifacts/player-agents/trunk-movement-fit-20260907-122354/
+!artifacts/player-agents/contact-movement-fit-20260907-114743/
+!artifacts/player-agents/trunk-self-play-audit-20260907.json
+!artifacts/player-agents/trunk-self-play-comparison-20260907.json
+!artifacts/player-agents/stage-evaluation-20260907-131117/
 TestResults/
+
+# Local tool connections and credentials do not belong in a source transfer.
+/.codex/
+/.agents/
+.env
+.env.*
+!.env.example
 
 # Unity crash and profiling artifacts
 sysinfo.txt

@@ -10,8 +10,10 @@
 | Phase 0 environment | `env-v0` |
 | Phase 1A protocol | `phase1a-protocol-v0` |
 | Phase 1B calibration spec | `physics-calibration-v0` |
-| Phase 1B output environment | `env-v1` (pending) |
+| Phase 1B output environment | `env-v1` |
+| Physics feel-check tool | `physics-museum-v1` |
 | Selected trainer adapter target | `com.unity.ml-agents@4.0.3` |
+| Python trainer | `mlagents==1.1.0`, PyTorch `2.1.2`, Python `3.10.12` |
 
 Package versions and Git dependencies are pinned in `Packages/manifest.json`.
 Do not change a pinned version without a decision entry and a passing
@@ -27,6 +29,17 @@ Open the repository root as the Unity project:
 
 Unity-generated `Library`, `Temp`, `Logs`, and `UserSettings` directories are
 ignored by Git.
+
+## Inspect the calibrated physics interactively
+
+Open `Assets/Picklebot/Scenes/PhysicsMuseum.unity` and enter Play Mode. The six
+stations exercise the real `env-v1` environment while keeping all museum input,
+telemetry, camera, and trajectory presentation in the separate
+`Picklebot.Museum` assembly.
+
+Mac keyboard and mouse/trackpad controls, station behavior, visual legends, and
+the boundary between intuitive feel checks and empirical calibration are
+documented in [PHYSICS_MUSEUM.md](PHYSICS_MUSEUM.md).
 
 ## MCP for Unity
 
@@ -127,24 +140,57 @@ runnable commands. Closing evidence will be versioned under
 `docs/evidence/phase1b/`, and the passing simulator will be frozen as `env-v1`.
 
 The phase changes simulator behavior, so `env-v0` and its Phase 1A evidence are
-not updated in place. Trainer installation, the Conda environment, adapter
-integration, and policy training remain deferred to Phase 1C.
+not updated in place. D-023 permits the bounded Phase 1C0 diagnostic probe
+defined in
+[PHASE1C0_LEARNING_PROBE_SPEC.md](PHASE1C0_LEARNING_PROBE_SPEC.md) without
+claiming this calibration phase is closed.
 
 ## Trainer environment
 
-Phase 1A selects the ML-Agents 4.0 package line but does not install it. The
-project manifest therefore remains free of ML-Agents, and the machine's current
-Python environment is not treated as a trainer environment.
+Phase 1A selected the ML-Agents 4.0 package line without installing it. D-023
+authorizes installation for Phase 1C0 after the release pair is reverified.
+The global/base Python environment is never treated as the trainer environment.
 
-Before Phase 1C:
+For Phase 1C0:
 
-1. prepare Python `3.10.12` in a dedicated environment;
-2. install and smoke-test ML-Agents Python `1.1.0` against the exact selected
-   Unity package;
-3. place Python, PyTorch, run artifacts, and checkpoints on a volume with
-   sufficient free space;
-4. run a short adapter handshake and inference/training smoke before a long
-   experiment.
+1. create the project-isolated Conda environment from
+   `config/phase1c0/environment.yml`;
+2. install and smoke-test Python `3.10.12` plus PyPI ML-Agents Python `1.1.0`
+   against Unity package `com.unity.ml-agents@4.0.3`; on Apple Silicon the
+   Conda environment supplies the package's required native
+   `grpcio==1.48.2`, while PyTorch remains pinned to `2.1.2` so checkpoint
+   export stays compatible with ML-Agents' ONNX `1.15.0` and protobuf
+   `3.20.3` constraints;
+3. keep generated runs, checkpoints, summaries, and trajectories below
+   `artifacts/phase1c0/` and enforce the storage budget in the probe spec;
+4. pass a Unity-Python handshake before beginning optimization;
+5. use `Phase1CObservationEncoderV0`; the frozen Phase 1A encoder has a
+   different ball-spin scale and must not be reused for `env-v1` training.
+6. never construct a request from `Phase1CProtocolV0.FinalEvaluationSeeds`
+   during Phase 1C0.
+
+Create or repair the environment with:
+
+```bash
+./scripts/phase1c0-env-create.sh
+```
+
+Start a new bounded run:
+
+```bash
+./scripts/phase1c0-train.sh phase1c0-local-001
+```
+
+Resume that exact run after a recoverable interruption:
+
+```bash
+./scripts/phase1c0-train.sh phase1c0-local-001 --resume
+```
+
+Then open `Assets/Picklebot/Scenes/Phase1CTraining.unity` and enter Play Mode
+only after the trainer reports that it is listening. Native model selection
+and unseen-seed replay use
+`Assets/Picklebot/Scenes/Phase1CValidation.unity`.
 
 The version guidance is from the upstream
 [ML-Agents installation guide](https://github.com/Unity-Technologies/ml-agents/blob/develop/docs/Installation.md)

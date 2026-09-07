@@ -1,0 +1,43 @@
+{
+  "version": "trunk-self-play-v1",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "initialActor": "artifacts/player-agents/trunk-movement-fit-20260907-122354/actor.json",
+  "initialActorHash": "e21be494d4b93557178849f990bd2acd0b72b81f9896d822ab4f3d3fec29e291",
+  "initialCritic": "artifacts/player-agents/ppo-20260907-121049/critic.pt",
+  "initialCriticHash": "2654079c86e12297dcbf0286055052a190ee9fec2abcbfc40ddbbde00cddc552",
+  "opponents": [
+    {
+      "path": "artifacts/player-agents/trunk-movement-fit-20260907-122354/actor.json",
+      "sha256": "e21be494d4b93557178849f990bd2acd0b72b81f9896d822ab4f3d3fec29e291"
+    },
+    {
+      "path": "artifacts/player-agents/contact-movement-fit-20260907-114743/actor.json",
+      "sha256": "014a86a1608532ed72845813973e0e3448ef9591d6b79e1c96766561dd220615"
+    }
+  ],
+  "iterations": 2,
+  "ralliesPerCollection": 256,
+  "trainingSeedBases": [1077100, 1078100],
+  "developmentSeedBases": [1177100, 1178100],
+  "rewardMode": "game_win",
+  "creditAssignment": "full_episode",
+  "gamma": 1,
+  "gaeLambda": 1,
+  "trainHeads": "all",
+  "advantageNormalization": "none",
+  "entropyCoefficient": 0,
+  "epochsPerUpdate": 4,
+  "batch": 1024,
+  "learningRate": 0.00003,
+  "clip": 0.1,
+  "targetKL": 0.01,
+  "postUpdateKLRollback": true,
+  "training": "Four independent player policy instances. Both candidate and saved opponent sample their own actions. Use one frozen opponent per collection. Alternate candidate court ends. Finish the current complete game after the rally target. Carry the training-only critic. Update only candidate trajectories from full-game team-win rewards. No shaped reward or runtime selector.",
+  "checks": "Audit complete-game rewards, carried critic values, actor likelihoods, snapshots, hashes, seed partitions and all player motors with player_self_play_audit.py. Verify 32 Unity parity cases and the unchanged 32-rally fixed-action development check after each update. After both updates, repeat the same 36 real serves, 64 short/deep cases, and eight fixed plus eight sampled development games at 1141000..1141007. Compare each mode with its own initial-actor reference. Keep final seeds unused. Reject failed provenance or physical checks; retain all match failures. No automatic promotion.",
+  "fixedActionReference": "artifacts/player-agents/development-evaluation-20260907-123009",
+  "fixedActionCompletionHash": "24104cf7bb72069d5a6fd0ff100f6e717acc1aa5276d7755dc929141c2d9b8d8",
+  "sampledActionReference": "artifacts/player-agents/development-evaluation-20260907-124449",
+  "sampledActionCompletionHash": "0845347fdba927bffd141d830c39522a0d1060c0c3399966f8dcc7ef9f7403f7",
+  "reason": "The hidden-layer correction improves sampled serve landings from 5/12 to 9/12. In paired sampled full games, it produced 50/177 rally wins and 383 returns versus its parent's 31/147 and 247. Its sampled time-limit fraction is 9/177, below 10%. All models still lost all eight games. Its fixed-action run has excessive time limits, 37/206. Test whether team-win training now improves competition from the better sampled movement policy. Pre-update self-play wins are not evidence of an update gain.",
+  "scope": "Bounded local team-win trial. No final conditions or thresholds change. No physics, controller, saved scene or baseline replacement. No central hitter selection, actor switching or scripted court recovery. Retain bounded swing and IK. No cloud, publication, purchases or cleanup."
+}

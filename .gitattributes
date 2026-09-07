@@ -1,0 +1,7 @@
+# Evidence hashes identify exact file bytes. Keep checkout bytes unchanged,
+# including on machines whose global Git setting enables autocrlf.
+* -text
+# Unity writes trailing spaces for empty serialized fields. Preserve those bytes.
+*.meta whitespace=-blank-at-eol
+*.unity whitespace=-blank-at-eol
+*.asset whitespace=-blank-at-eol

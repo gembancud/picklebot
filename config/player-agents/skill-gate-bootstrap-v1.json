@@ -1,0 +1,69 @@
+{
+  "version": "player-skill-gate-bootstrap-v1",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "seed": 1000000,
+  "epochs": 30,
+  "batch": 1024,
+  "learningRate": 0.001,
+  "sampling": "equal expected mass for each of three sources",
+  "selection": "lowest mean development BCE across three sources",
+  "scope": "supervised experiment only; no promotion; no final seeds; no diagnostic fixture training",
+  "experts": [
+    {
+      "role": "older",
+      "path": "artifacts/player-agents/ppo-20260907-032230/actor.json",
+      "sha256": "69a113fba7ee6724e89a705dedcd3d930b099b73f45b1fab2ceca7560299d649",
+      "trainingSourceHash": "85da5a215dfe47d48e1ab3cf1af4efc30a0fcbd1890e1a973b349bd4eb3bc6cf"
+    },
+    {
+      "role": "short-return",
+      "path": "artifacts/player-agents/imitation-20260907-051422/actor.json",
+      "sha256": "80986c037192063d5d90030f2341bb4c7f3239958c55f433988694745bb19826",
+      "trainingSourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845"
+    }
+  ],
+  "configurationHash": "b0e21687f3c2838c",
+  "contactModelHash": "6698221451858f044e26a28c58a39447d391c4f1aba58a68f11370926df9cba4",
+  "protocolHash": "714da75bf7443b05570ed0bab59196907a5d5aed83394548396ea700e7ce67a1",
+  "baselineManifestHash": "ef1d90fe63490d9f95e284e9a7056a79e2959eca313b7dd31b546628713fc043",
+  "training": [
+    {
+      "report": "artifacts/player-agents/curriculum-20260907-043639.json",
+      "dataHash": "0f15e531056eae977109f53a46de211d5bd1cc4efaa018d903099175d396fda6",
+      "seed": 1061000,
+      "label": 0
+    },
+    {
+      "report": "artifacts/player-agents/incoming-20260907-043315.json",
+      "dataHash": "fc960f4b4122693ef4251ccc1a4608b65eaae863f3f41ee70412bc76eb4bafdf",
+      "seed": 1060000,
+      "label": 1
+    },
+    {
+      "report": "artifacts/player-agents/incoming-20260907-051229.json",
+      "dataHash": "b25967ff9ee0f345dfd361873cd30e8e32454f01a2cc4b4c4ed9efbde86a9c69",
+      "seed": 1062000,
+      "label": 0
+    }
+  ],
+  "development": [
+    {
+      "report": "artifacts/player-agents/curriculum-20260907-044309.json",
+      "dataHash": "53f9c74b9b1971410279cba01b92b3cf086156d833bc77163eedbc495f4e9253",
+      "seed": 1193000,
+      "label": 0
+    },
+    {
+      "report": "artifacts/player-agents/incoming-20260907-043522.json",
+      "dataHash": "d501c7a6562eb0e7ce2007b0c21b7e8d4755af8fc00072ed5e8bc0305f7c91e5",
+      "seed": 1192000,
+      "label": 1
+    },
+    {
+      "report": "artifacts/player-agents/incoming-20260907-051343.json",
+      "dataHash": "a1055d9b9ea9410c1d9ac8e971cfb3bc69e21f530a26cfb0fe40c8be0922627d",
+      "seed": 1196000,
+      "label": 0
+    }
+  ]
+}

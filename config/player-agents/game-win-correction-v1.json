@@ -1,0 +1,22 @@
+{
+  "version": "player-game-win-correction-v1",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "rollout": "artifacts/player-agents/competition-20260907-090342.json",
+  "rolloutHash": "1a5712c25a2a437dc22605b1656f0fb02c77a4e71257e576526040ad26ecbee3",
+  "parentActor": "artifacts/player-agents/policy-distillation-20260907-085007/actor.json",
+  "parentActorHash": "bb958efac86a58764185b49444a8e8c5ff038c93fd5add010251cd090a90f745",
+  "rewardMode": "game_win",
+  "epochs": 4,
+  "batch": 1024,
+  "learningRate": 0.00003,
+  "clip": 0.1,
+  "targetKL": 0.01,
+  "entropyCoefficient": 0,
+  "advantageNormalization": "none",
+  "initialCritic": "new zero-output critic",
+  "creditAssignment": "full_episode",
+  "trainHeads": "all",
+  "postUpdateKLRollback": true,
+  "scope": "One alternative update from the original on-policy parent and unchanged seven-game rollout. Retain rejected entropy-only checkpoint. No new collection, shaped rewards, selector, controller change, final seeds, or promotion. All-loss returns are a high-variance training estimate, not evidence of improvement.",
+  "development": "Matched 32 return situations with 32 teacher controls, followed by the same eight development games at seeds 1141000..1141007 if the physical motor checks pass."
+}

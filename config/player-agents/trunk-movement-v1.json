@@ -1,0 +1,22 @@
+{
+  "version": "trunk-movement-v1",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "dataPlan": "config/player-agents/near-contact-movement-v1.json",
+  "dataPlanHash": "037dafe7ebdca6090f9552278deb1162e79d5d8d502273d4edd3a6040e136a1c",
+  "parentActor": "artifacts/player-agents/contact-movement-fit-20260907-114743/actor.json",
+  "parentActorHash": "014a86a1608532ed72845813973e0e3448ef9591d6b79e1c96766561dd220615",
+  "fit": {
+    "epochs": 100,
+    "batch": 1024,
+    "learningRate": 0.0001,
+    "seed": 1000000,
+    "retentionWeight": 1,
+    "sourceSampling": "equal source mass, with replacement",
+    "trainableParameters": "Both hidden layers and the two movement output rows and biases. Freeze the final hit and shot rows and biases, and log standard deviation.",
+    "loss": "Existing near-contact-weighted movement loss plus mean squared change in the ten non-movement output logits on the same original observations. Select minimum equal-source development objective.",
+    "augmentation": "None"
+  },
+  "reason": "The output-only movement correction returned 7/12 deterministic serves and won 0/8 full games. Two subsequent full-game self-play updates kept 7/12 serve landings, won 0/8 games, and reduced legal returns from 347 to 273. Test whether trainable hidden features improve the movement approximation on the existing actor-state and normal/short/deep banks. This is a hypothesis, not an established cause. Use the stronger recent pre-self-play actor as the parent.",
+  "checks": "Reuse exactly the eight data banks in the frozen data plan. Validate provenance, seed partitions, own-player labels and all four collection motors. No new data collection. Retain source and model hashes and all failed trials. Verify non-movement output parameters and exploration are exact; measure actual output drift because hidden layers change. Verify Unity parity. Repeat the same 36 real serves, 64 short/deep cases and eight full games at development seeds 1141000..1141007. Retain final seeds unused.",
+  "scope": "One saved shared player actor with four independent runtime instances. No selector, model switching, physics changes, runtime changes, scene replacement or promotion. This is a supervised correction before further team-win training, not a competitive RL result. The soft output penalty is not a guarantee that hit/shot actions or match strength are retained. No cloud, publication or cleanup."
+}

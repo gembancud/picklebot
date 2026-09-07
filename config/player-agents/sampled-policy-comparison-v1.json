@@ -1,0 +1,33 @@
+{
+  "version": "sampled-policy-comparison-v1",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "protocolHash": "714da75bf7443b05570ed0bab59196907a5d5aed83394548396ea700e7ce67a1",
+  "actors": [
+    {
+      "path": "artifacts/player-agents/contact-movement-fit-20260907-114743/actor.json",
+      "sha256": "014a86a1608532ed72845813973e0e3448ef9591d6b79e1c96766561dd220615",
+      "role": "parent",
+      "fixedActionReference": "artifacts/player-agents/development-evaluation-20260907-115632",
+      "fixedActionCompletionHash": "006f506de4285d739f2b7398c9051d82404f7b7dfccf7025f81262f0fe728b8f"
+    },
+    {
+      "path": "artifacts/player-agents/trunk-movement-fit-20260907-122354/actor.json",
+      "sha256": "e21be494d4b93557178849f990bd2acd0b72b81f9896d822ab4f3d3fec29e291",
+      "role": "hidden-layer movement candidate",
+      "fixedActionReference": "artifacts/player-agents/development-evaluation-20260907-123009",
+      "fixedActionCompletionHash": "24104cf7bb72069d5a6fd0ff100f6e717acc1aa5276d7755dc929141c2d9b8d8"
+    }
+  ],
+  "sampledActor": true,
+  "split": "development",
+  "seedBase": 1141000,
+  "gamesPerActor": 8,
+  "gamesPerGroup": 1,
+  "sampleBaselineGroups": [4, 5, 6, 7],
+  "candidateTeams": [0, 0, 1, 1, 0, 0, 1, 1],
+  "swapPartnerIdentities": [false, true, false, true, false, true, false, true],
+  "flatPitchOffsetDegrees": 0,
+  "reason": "The hidden-layer correction retained 7/12 deterministic serve landings but increased sampled landings from 5/12 to 9/12. Its fixed-action full games produced 904 returns and 45/206 rally wins, but zero game wins and 37 time-limit rallies. Test seeded sampling in full games for both parent and candidate. Do not attribute a sampling-mode change to training.",
+  "checks": "Preserve both model hashes and the runtime, protocol, baseline and contact model. Use the same seeds, both court ends, both baseline modes, identity swaps, rule and time limits as the completed fixed-action comparisons. Verify all eight groups for each actor, their sampling mode and complete-game outcomes. Compare parent versus candidate within each sampling mode. Retain failures and source snapshots. The first sampled actor has not run when this plan is frozen.",
+  "scope": "Development-only action-selection comparison. No training, model switching, central hitter selector, physics change, scene install, final seeds, automatic promotion or cloud use. Both sampling modes already exist in PlayerActor. The default comparison mode stays deterministic. The frozen final protocol and its acceptance thresholds are unchanged."
+}

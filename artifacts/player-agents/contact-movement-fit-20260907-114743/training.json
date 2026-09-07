@@ -1,0 +1,3576 @@
+{
+  "status": "complete",
+  "actorHash": "014a86a1608532ed72845813973e0e3448ef9591d6b79e1c96766561dd220615",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "parentActorHash": "4204bf92906ceed70f627e9371d62192de683e85fec92d40ab3df13dfd417833",
+  "planHash": "037dafe7ebdca6090f9552278deb1162e79d5d8d502273d4edd3a6040e136a1c",
+  "frozen": {
+    "/Users/gem/git/jsts/picklebot/config/player-agents/near-contact-movement-v1.json": "037dafe7ebdca6090f9552278deb1162e79d5d8d502273d4edd3a6040e136a1c",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/ppo-20260907-104524/actor.json": "4204bf92906ceed70f627e9371d62192de683e85fec92d40ab3df13dfd417833",
+    "artifacts/player-agents/curriculum-20260907-111706.json": "d2b2aae797b4ffdeb28f1bc95c5ab695e56b3feb6449319609a755ba77b6ae40",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-111706.jsonl": "02862f34058951b518a73e7679c1b114f37f70dafba354a9e371e26004811dbb",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-043639.json": "e90d50cffa6b9c1e4deb97c9b68f902beefb717014f8276420f031f76f3682ac",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-043639.jsonl": "0f15e531056eae977109f53a46de211d5bd1cc4efaa018d903099175d396fda6",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043315.json": "8721ef313c2f72cca6d47b16a6f76f8560a8b3effca09e4a145072a1dd79e570",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043315.jsonl": "fc960f4b4122693ef4251ccc1a4608b65eaae863f3f41ee70412bc76eb4bafdf",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051229.json": "1e39306d6538194ce56492f3ec63c58c8d6f2aadae62865b426aa14a1ff064dc",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051229.jsonl": "b25967ff9ee0f345dfd361873cd30e8e32454f01a2cc4b4c4ed9efbde86a9c69",
+    "artifacts/player-agents/curriculum-20260907-112139.json": "976f7acfe7edc68165066f2675a3ebdade53c9d0e68115b469c26fcd4a25a5c0",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-112139.jsonl": "14909015e0a46fdc590d98e2c884d61744ae25de6ebc9903aef157484b444ed3",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-044309.json": "6b72573aed604823fe09a1bac4bd29a68b0283c0aca79fa8936f06cd8b60a1a4",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-044309.jsonl": "53f9c74b9b1971410279cba01b92b3cf086156d833bc77163eedbc495f4e9253",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043522.json": "59aad1c2a6440f6c1370661f026bff4a83117184ff8426a8fba3f6c02a40e592",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043522.jsonl": "d501c7a6562eb0e7ce2007b0c21b7e8d4755af8fc00072ed5e8bc0305f7c91e5",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051343.json": "30fd09fe0052a5f475657798a78e663fea133b026f8f28c0796ef63999594dc9",
+    "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051343.jsonl": "a1055d9b9ea9410c1d9ac8e971cfb3bc69e21f530a26cfb0fe40c8be0922627d",
+    "/Users/gem/git/jsts/picklebot/scripts/player-agents-fit-contact-movement.py": "09c50f6b8a4e81987b60a526a6b7d2d7e4f47e00ecc9a9a7abc898ed8f8b286b",
+    "/Users/gem/git/jsts/picklebot/scripts/player_actor.py": "b0580eca6df105f7c76c57dfef74a8d0779d8926802d2c445b139a9e7b331423",
+    "/Users/gem/git/jsts/picklebot/scripts/player_ppo.py": "95f661a88803ef3b0875d3d4c67e1b2d7271f0ab6f18c2047d6fc3a1ebfe6f90"
+  },
+  "trainingSources": [
+    {
+      "report": "artifacts/player-agents/curriculum-20260907-111706.json",
+      "reportHash": "d2b2aae797b4ffdeb28f1bc95c5ab695e56b3feb6449319609a755ba77b6ae40",
+      "dataPath": "artifacts/player-agents/curriculum-20260907-111706.jsonl",
+      "dataHash": "02862f34058951b518a73e7679c1b114f37f70dafba354a9e371e26004811dbb",
+      "rows": 68416,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 32532,
+        "returnFlight": 21424,
+        "rally": 14460,
+        "dead": 0
+      },
+      "criticalRows": 2187,
+      "criticalIndicesHash": "fed4033c174aff0f46463469a0ef90a39df0e3d443a7422a78df50a4e28e3709"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-043639.json",
+      "reportHash": "e90d50cffa6b9c1e4deb97c9b68f902beefb717014f8276420f031f76f3682ac",
+      "dataPath": "artifacts/player-agents/curriculum-20260907-043639.jsonl",
+      "dataHash": "0f15e531056eae977109f53a46de211d5bd1cc4efaa018d903099175d396fda6",
+      "rows": 59876,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 8154,
+        "returnFlight": 7414,
+        "rally": 44308,
+        "dead": 0
+      },
+      "criticalRows": 2239,
+      "criticalIndicesHash": "5ef87287ac23b9ed77f00b47cb8605abb9985854a18863fb4d9bd6cf6779d7fd"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043315.json",
+      "reportHash": "8721ef313c2f72cca6d47b16a6f76f8560a8b3effca09e4a145072a1dd79e570",
+      "dataPath": "artifacts/player-agents/incoming-20260907-043315.jsonl",
+      "dataHash": "fc960f4b4122693ef4251ccc1a4608b65eaae863f3f41ee70412bc76eb4bafdf",
+      "rows": 13406,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 0,
+        "returnFlight": 0,
+        "rally": 13406,
+        "dead": 0
+      },
+      "criticalRows": 1095,
+      "criticalIndicesHash": "9d0e3c616da9faf5ec7657eba6d518f08fa442e7f4d8f1499d8c894f7d58ffe2"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051229.json",
+      "reportHash": "1e39306d6538194ce56492f3ec63c58c8d6f2aadae62865b426aa14a1ff064dc",
+      "dataPath": "artifacts/player-agents/incoming-20260907-051229.jsonl",
+      "dataHash": "b25967ff9ee0f345dfd361873cd30e8e32454f01a2cc4b4c4ed9efbde86a9c69",
+      "rows": 10656,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 0,
+        "returnFlight": 0,
+        "rally": 10656,
+        "dead": 0
+      },
+      "criticalRows": 485,
+      "criticalIndicesHash": "a4dee1bcfef377934ea63f0b21f67e44654accac6b8cd13ffe85174517f49b38"
+    }
+  ],
+  "developmentSources": [
+    {
+      "report": "artifacts/player-agents/curriculum-20260907-112139.json",
+      "reportHash": "976f7acfe7edc68165066f2675a3ebdade53c9d0e68115b469c26fcd4a25a5c0",
+      "dataPath": "artifacts/player-agents/curriculum-20260907-112139.jsonl",
+      "dataHash": "14909015e0a46fdc590d98e2c884d61744ae25de6ebc9903aef157484b444ed3",
+      "rows": 18768,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 8116,
+        "returnFlight": 6300,
+        "rally": 4352,
+        "dead": 0
+      },
+      "criticalRows": 702,
+      "criticalIndicesHash": "7981e30bf873c5ed124ec67df04f6369c8d3e83ef7b0d7a4bb0a99560f7d7a68"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/curriculum-20260907-044309.json",
+      "reportHash": "6b72573aed604823fe09a1bac4bd29a68b0283c0aca79fa8936f06cd8b60a1a4",
+      "dataPath": "artifacts/player-agents/curriculum-20260907-044309.jsonl",
+      "dataHash": "53f9c74b9b1971410279cba01b92b3cf086156d833bc77163eedbc495f4e9253",
+      "rows": 31374,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 4112,
+        "returnFlight": 3670,
+        "rally": 23592,
+        "dead": 0
+      },
+      "criticalRows": 1103,
+      "criticalIndicesHash": "f4efe1759fb3ecad948508afe22dd77c018b67aafa9fbf39f629843324d060ad"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-043522.json",
+      "reportHash": "59aad1c2a6440f6c1370661f026bff4a83117184ff8426a8fba3f6c02a40e592",
+      "dataPath": "artifacts/player-agents/incoming-20260907-043522.jsonl",
+      "dataHash": "d501c7a6562eb0e7ce2007b0c21b7e8d4755af8fc00072ed5e8bc0305f7c91e5",
+      "rows": 3364,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 0,
+        "returnFlight": 0,
+        "rally": 3364,
+        "dead": 0
+      },
+      "criticalRows": 275,
+      "criticalIndicesHash": "07f27916a8907efa970bc441d2e45c484ba00c2c287e52218eea153b76b3c6f8"
+    },
+    {
+      "report": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/incoming-20260907-051343.json",
+      "reportHash": "30fd09fe0052a5f475657798a78e663fea133b026f8f28c0796ef63999594dc9",
+      "dataPath": "artifacts/player-agents/incoming-20260907-051343.jsonl",
+      "dataHash": "a1055d9b9ea9410c1d9ac8e971cfb3bc69e21f530a26cfb0fe40c8be0922627d",
+      "rows": 2582,
+      "phases": {
+        "serveSetup": 0,
+        "serveFlight": 0,
+        "returnFlight": 0,
+        "rally": 2582,
+        "dead": 0
+      },
+      "criticalRows": 96,
+      "criticalIndicesHash": "bf9d6efe4d6a41da15258f9068af5b39902fbfbbce347063c0236ebd46af8b88"
+    }
+  ],
+  "parentDevelopmentLosses": [
+    1.2379848957061768,
+    0.07888508588075638,
+    0.038778237998485565,
+    0.09899599850177765
+  ],
+  "bestSelectionLoss": 0.27030760142952204,
+  "selectedUpdates": 22350,
+  "optimizerUpdates": 29800,
+  "elapsedSeconds": 114.35365025000647,
+  "history": [
+    {
+      "epoch": 1,
+      "updates": 149,
+      "developmentLosses": [
+        1.0326348543167114,
+        0.10293196886777878,
+        0.04243262857198715,
+        0.11014270037412643
+      ],
+      "selectionLoss": 0.32203553803265095,
+      "sampledRowsPerSource": [
+        37850,
+        38334,
+        37879,
+        38291
+      ]
+    },
+    {
+      "epoch": 2,
+      "updates": 298,
+      "developmentLosses": [
+        0.987323522567749,
+        0.11020295321941376,
+        0.07259584963321686,
+        0.10832617431879044
+      ],
+      "selectionLoss": 0.3196121249347925,
+      "sampledRowsPerSource": [
+        38057,
+        38386,
+        38014,
+        37897
+      ]
+    },
+    {
+      "epoch": 3,
+      "updates": 447,
+      "developmentLosses": [
+        0.9707438945770264,
+        0.11390760540962219,
+        0.04313194751739502,
+        0.11183805763721466
+      ],
+      "selectionLoss": 0.30990537628531456,
+      "sampledRowsPerSource": [
+        38218,
+        37968,
+        37917,
+        38251
+      ]
+    },
+    {
+      "epoch": 4,
+      "updates": 596,
+      "developmentLosses": [
+        0.9398131966590881,
+        0.11984854936599731,
+        0.05370136350393295,
+        0.11141525954008102
+      ],
+      "selectionLoss": 0.30619459226727486,
+      "sampledRowsPerSource": [
+        37791,
+        38225,
+        38173,
+        38165
+      ]
+    },
+    {
+      "epoch": 5,
+      "updates": 745,
+      "developmentLosses": [
+        0.9234998226165771,
+        0.11150523275136948,
+        0.04340612143278122,
+        0.10424590855836868
+      ],
+      "selectionLoss": 0.29566427133977413,
+      "sampledRowsPerSource": [
+        38307,
+        37832,
+        38168,
+        38047
+      ]
+    },
+    {
+      "epoch": 6,
+      "updates": 894,
+      "developmentLosses": [
+        0.8907342553138733,
+        0.12437104433774948,
+        0.04745766520500183,
+        0.11073266714811325
+      ],
+      "selectionLoss": 0.29332390800118446,
+      "sampledRowsPerSource": [
+        37786,
+        38133,
+        38327,
+        38108
+      ]
+    },
+    {
+      "epoch": 7,
+      "updates": 1043,
+      "developmentLosses": [
+        0.8844348192214966,
+        0.12340892851352692,
+        0.043307386338710785,
+        0.10897420346736908
+      ],
+      "selectionLoss": 0.29003133438527584,
+      "sampledRowsPerSource": [
+        37857,
+        38350,
+        38037,
+        38110
+      ]
+    },
+    {
+      "epoch": 8,
+      "updates": 1192,
+      "developmentLosses": [
+        0.869194746017456,
+        0.13316860795021057,
+        0.0586591474711895,
+        0.10554084926843643
+      ],
+      "selectionLoss": 0.29164083767682314,
+      "sampledRowsPerSource": [
+        38077,
+        38248,
+        38153,
+        37876
+      ]
+    },
+    {
+      "epoch": 9,
+      "updates": 1341,
+      "developmentLosses": [
+        0.8560197949409485,
+        0.12883655726909637,
+        0.042834505438804626,
+        0.10968337953090668
+      ],
+      "selectionLoss": 0.28434355929493904,
+      "sampledRowsPerSource": [
+        37997,
+        37941,
+        38085,
+        38331
+      ]
+    },
+    {
+      "epoch": 10,
+      "updates": 1490,
+      "developmentLosses": [
+        0.8448196053504944,
+        0.1514662206172943,
+        0.05426160618662834,
+        0.12076585739850998
+      ],
+      "selectionLoss": 0.29282832238823175,
+      "sampledRowsPerSource": [
+        38251,
+        38042,
+        38026,
+        38035
+      ]
+    },
+    {
+      "epoch": 11,
+      "updates": 1639,
+      "developmentLosses": [
+        0.8417215347290039,
+        0.14631108939647675,
+        0.045926470309495926,
+        0.10874506086111069
+      ],
+      "selectionLoss": 0.2856760388240218,
+      "sampledRowsPerSource": [
+        38035,
+        38042,
+        38035,
+        38242
+      ]
+    },
+    {
+      "epoch": 12,
+      "updates": 1788,
+      "developmentLosses": [
+        0.8319354057312012,
+        0.13587825000286102,
+        0.05050284415483475,
+        0.10884849727153778
+      ],
+      "selectionLoss": 0.2817912492901087,
+      "sampledRowsPerSource": [
+        37817,
+        38265,
+        38206,
+        38066
+      ]
+    },
+    {
+      "epoch": 13,
+      "updates": 1937,
+      "developmentLosses": [
+        0.8372734785079956,
+        0.13590162992477417,
+        0.05183916911482811,
+        0.11182916164398193
+      ],
+      "selectionLoss": 0.28421085979789495,
+      "sampledRowsPerSource": [
+        38222,
+        37951,
+        38370,
+        37811
+      ]
+    },
+    {
+      "epoch": 14,
+      "updates": 2086,
+      "developmentLosses": [
+        0.8223053812980652,
+        0.145792156457901,
+        0.06125925853848457,
+        0.11430756002664566
+      ],
+      "selectionLoss": 0.2859160890802741,
+      "sampledRowsPerSource": [
+        38098,
+        37998,
+        38317,
+        37941
+      ]
+    },
+    {
+      "epoch": 15,
+      "updates": 2235,
+      "developmentLosses": [
+        0.8527616858482361,
+        0.15407425165176392,
+        0.04538708180189133,
+        0.11504397541284561
+      ],
+      "selectionLoss": 0.29181674867868423,
+      "sampledRowsPerSource": [
+        38465,
+        37622,
+        38157,
+        38110
+      ]
+    },
+    {
+      "epoch": 16,
+      "updates": 2384,
+      "developmentLosses": [
+        0.824271023273468,
+        0.14823918044567108,
+        0.05505016818642616,
+        0.11704295873641968
+      ],
+      "selectionLoss": 0.28615083266049623,
+      "sampledRowsPerSource": [
+        38093,
+        38307,
+        38020,
+        37934
+      ]
+    },
+    {
+      "epoch": 17,
+      "updates": 2533,
+      "developmentLosses": [
+        0.8184975981712341,
+        0.14108969271183014,
+        0.04817768558859825,
+        0.11055900156497955
+      ],
+      "selectionLoss": 0.2795809945091605,
+      "sampledRowsPerSource": [
+        38332,
+        38112,
+        38121,
+        37789
+      ]
+    },
+    {
+      "epoch": 18,
+      "updates": 2682,
+      "developmentLosses": [
+        0.8197540044784546,
+        0.1573602259159088,
+        0.07470569759607315,
+        0.10349366813898087
+      ],
+      "selectionLoss": 0.28882839903235435,
+      "sampledRowsPerSource": [
+        38301,
+        37970,
+        37991,
+        38092
+      ]
+    },
+    {
+      "epoch": 19,
+      "updates": 2831,
+      "developmentLosses": [
+        0.8114396333694458,
+        0.16089805960655212,
+        0.08079057931900024,
+        0.1027447059750557
+      ],
+      "selectionLoss": 0.28896824456751347,
+      "sampledRowsPerSource": [
+        38382,
+        37684,
+        38070,
+        38218
+      ]
+    },
+    {
+      "epoch": 20,
+      "updates": 2980,
+      "developmentLosses": [
+        0.8081962466239929,
+        0.14326457679271698,
+        0.052019909024238586,
+        0.11600092053413391
+      ],
+      "selectionLoss": 0.2798704132437706,
+      "sampledRowsPerSource": [
+        38527,
+        38115,
+        37956,
+        37756
+      ]
+    },
+    {
+      "epoch": 21,
+      "updates": 3129,
+      "developmentLosses": [
+        0.8388429284095764,
+        0.15820066630840302,
+        0.06456567347049713,
+        0.10392168909311295
+      ],
+      "selectionLoss": 0.2913827393203974,
+      "sampledRowsPerSource": [
+        38050,
+        38277,
+        37930,
+        38097
+      ]
+    },
+    {
+      "epoch": 22,
+      "updates": 3278,
+      "developmentLosses": [
+        0.8180812001228333,
+        0.14510546624660492,
+        0.056443069130182266,
+        0.11168840527534485
+      ],
+      "selectionLoss": 0.2828295351937413,
+      "sampledRowsPerSource": [
+        38244,
+        37899,
+        37905,
+        38306
+      ]
+    },
+    {
+      "epoch": 23,
+      "updates": 3427,
+      "developmentLosses": [
+        0.8091194033622742,
+        0.1406804621219635,
+        0.056538745760917664,
+        0.10830749571323395
+      ],
+      "selectionLoss": 0.2786615267395973,
+      "sampledRowsPerSource": [
+        38273,
+        38120,
+        38061,
+        37900
+      ]
+    },
+    {
+      "epoch": 24,
+      "updates": 3576,
+      "developmentLosses": [
+        0.8100301027297974,
+        0.14529238641262054,
+        0.04929821565747261,
+        0.11304395645856857
+      ],
+      "selectionLoss": 0.2794161653146148,
+      "sampledRowsPerSource": [
+        37911,
+        37977,
+        38043,
+        38423
+      ]
+    },
+    {
+      "epoch": 25,
+      "updates": 3725,
+      "developmentLosses": [
+        0.8079485297203064,
+        0.15378981828689575,
+        0.048094287514686584,
+        0.11017686873674393
+      ],
+      "selectionLoss": 0.28000237606465816,
+      "sampledRowsPerSource": [
+        38218,
+        37919,
+        38219,
+        37998
+      ]
+    },
+    {
+      "epoch": 26,
+      "updates": 3874,
+      "developmentLosses": [
+        0.804722785949707,
+        0.15033558011054993,
+        0.049347709864377975,
+        0.10814306885004044
+      ],
+      "selectionLoss": 0.27813728619366884,
+      "sampledRowsPerSource": [
+        37896,
+        38147,
+        38094,
+        38217
+      ]
+    },
+    {
+      "epoch": 27,
+      "updates": 4023,
+      "developmentLosses": [
+        0.796920895576477,
+        0.15583105385303497,
+        0.04725029319524765,
+        0.11307389289140701
+      ],
+      "selectionLoss": 0.27826903387904167,
+      "sampledRowsPerSource": [
+        37925,
+        37957,
+        37995,
+        38477
+      ]
+    },
+    {
+      "epoch": 28,
+      "updates": 4172,
+      "developmentLosses": [
+        0.8080162405967712,
+        0.1480623483657837,
+        0.053724564611911774,
+        0.11017266660928726
+      ],
+      "selectionLoss": 0.2799939550459385,
+      "sampledRowsPerSource": [
+        38112,
+        38148,
+        38292,
+        37802
+      ]
+    },
+    {
+      "epoch": 29,
+      "updates": 4321,
+      "developmentLosses": [
+        0.807533860206604,
+        0.14913079142570496,
+        0.05351182445883751,
+        0.10561123490333557
+      ],
+      "selectionLoss": 0.2789469277486205,
+      "sampledRowsPerSource": [
+        38013,
+        37899,
+        38084,
+        38358
+      ]
+    },
+    {
+      "epoch": 30,
+      "updates": 4470,
+      "developmentLosses": [
+        0.7948821783065796,
+        0.14636044204235077,
+        0.04770759120583534,
+        0.10170720517635345
+      ],
+      "selectionLoss": 0.2726643541827798,
+      "sampledRowsPerSource": [
+        38354,
+        37987,
+        38153,
+        37860
+      ]
+    },
+    {
+      "epoch": 31,
+      "updates": 4619,
+      "developmentLosses": [
+        0.8021942973136902,
+        0.14761357009410858,
+        0.056334905326366425,
+        0.10373783111572266
+      ],
+      "selectionLoss": 0.27747015096247196,
+      "sampledRowsPerSource": [
+        38531,
+        37787,
+        38134,
+        37902
+      ]
+    },
+    {
+      "epoch": 32,
+      "updates": 4768,
+      "developmentLosses": [
+        0.8007546663284302,
+        0.14667564630508423,
+        0.04720018059015274,
+        0.10233939439058304
+      ],
+      "selectionLoss": 0.27424247190356255,
+      "sampledRowsPerSource": [
+        38164,
+        38300,
+        38128,
+        37762
+      ]
+    },
+    {
+      "epoch": 33,
+      "updates": 4917,
+      "developmentLosses": [
+        0.8186899423599243,
+        0.14894960820674896,
+        0.05949529632925987,
+        0.10767164081335068
+      ],
+      "selectionLoss": 0.28370162192732096,
+      "sampledRowsPerSource": [
+        37834,
+        38151,
+        38138,
+        38231
+      ]
+    },
+    {
+      "epoch": 34,
+      "updates": 5066,
+      "developmentLosses": [
+        0.8103340864181519,
+        0.15277472138404846,
+        0.06380865722894669,
+        0.10663285851478577
+      ],
+      "selectionLoss": 0.2833875808864832,
+      "sampledRowsPerSource": [
+        38158,
+        38256,
+        37987,
+        37953
+      ]
+    },
+    {
+      "epoch": 35,
+      "updates": 5215,
+      "developmentLosses": [
+        0.8016093373298645,
+        0.14267362654209137,
+        0.047132495790719986,
+        0.10201456397771835
+      ],
+      "selectionLoss": 0.27335750591009855,
+      "sampledRowsPerSource": [
+        37971,
+        38210,
+        38037,
+        38136
+      ]
+    },
+    {
+      "epoch": 36,
+      "updates": 5364,
+      "developmentLosses": [
+        0.8095682263374329,
+        0.14602996408939362,
+        0.052602797746658325,
+        0.10964254289865494
+      ],
+      "selectionLoss": 0.27946088276803493,
+      "sampledRowsPerSource": [
+        37900,
+        38332,
+        38110,
+        38012
+      ]
+    },
+    {
+      "epoch": 37,
+      "updates": 5513,
+      "developmentLosses": [
+        0.8101513385772705,
+        0.15611228346824646,
+        0.050093576312065125,
+        0.11590584367513657
+      ],
+      "selectionLoss": 0.28306576050817966,
+      "sampledRowsPerSource": [
+        37949,
+        38053,
+        38250,
+        38102
+      ]
+    },
+    {
+      "epoch": 38,
+      "updates": 5662,
+      "developmentLosses": [
+        0.8049502372741699,
+        0.1443464308977127,
+        0.05601158365607262,
+        0.11407678574323654
+      ],
+      "selectionLoss": 0.27984625939279795,
+      "sampledRowsPerSource": [
+        38153,
+        38247,
+        37905,
+        38049
+      ]
+    },
+    {
+      "epoch": 39,
+      "updates": 5811,
+      "developmentLosses": [
+        0.8001596331596375,
+        0.1540345400571823,
+        0.0582212470471859,
+        0.10262645781040192
+      ],
+      "selectionLoss": 0.2787604695186019,
+      "sampledRowsPerSource": [
+        38330,
+        38160,
+        38039,
+        37825
+      ]
+    },
+    {
+      "epoch": 40,
+      "updates": 5960,
+      "developmentLosses": [
+        0.8041527271270752,
+        0.14378555119037628,
+        0.055204689502716064,
+        0.10920359939336777
+      ],
+      "selectionLoss": 0.2780866418033838,
+      "sampledRowsPerSource": [
+        38021,
+        38041,
+        38122,
+        38170
+      ]
+    },
+    {
+      "epoch": 41,
+      "updates": 6109,
+      "developmentLosses": [
+        0.7992779612541199,
+        0.1492217630147934,
+        0.04874381795525551,
+        0.10146808624267578
+      ],
+      "selectionLoss": 0.27467790711671114,
+      "sampledRowsPerSource": [
+        37897,
+        38151,
+        38437,
+        37869
+      ]
+    },
+    {
+      "epoch": 42,
+      "updates": 6258,
+      "developmentLosses": [
+        0.8135594129562378,
+        0.1568542867898941,
+        0.04778150096535683,
+        0.10369733721017838
+      ],
+      "selectionLoss": 0.2804731344804168,
+      "sampledRowsPerSource": [
+        38197,
+        37840,
+        38423,
+        37894
+      ]
+    },
+    {
+      "epoch": 43,
+      "updates": 6407,
+      "developmentLosses": [
+        0.794667661190033,
+        0.1522015929222107,
+        0.047788288444280624,
+        0.10103859752416611
+      ],
+      "selectionLoss": 0.2739240350201726,
+      "sampledRowsPerSource": [
+        38417,
+        38067,
+        37818,
+        38052
+      ]
+    },
+    {
+      "epoch": 44,
+      "updates": 6556,
+      "developmentLosses": [
+        0.8001644611358643,
+        0.14899036288261414,
+        0.045821577310562134,
+        0.1055382564663887
+      ],
+      "selectionLoss": 0.2751286644488573,
+      "sampledRowsPerSource": [
+        38086,
+        37979,
+        38224,
+        38065
+      ]
+    },
+    {
+      "epoch": 45,
+      "updates": 6705,
+      "developmentLosses": [
+        0.7890424132347107,
+        0.14954207837581635,
+        0.05381610617041588,
+        0.10272706300020218
+      ],
+      "selectionLoss": 0.2737819151952863,
+      "sampledRowsPerSource": [
+        38184,
+        38220,
+        37908,
+        38042
+      ]
+    },
+    {
+      "epoch": 46,
+      "updates": 6854,
+      "developmentLosses": [
+        0.7927833199501038,
+        0.15043964982032776,
+        0.04324257746338844,
+        0.10674804449081421
+      ],
+      "selectionLoss": 0.27330339793115854,
+      "sampledRowsPerSource": [
+        38227,
+        38031,
+        38127,
+        37969
+      ]
+    },
+    {
+      "epoch": 47,
+      "updates": 7003,
+      "developmentLosses": [
+        0.7941479086875916,
+        0.1581818014383316,
+        0.05428045243024826,
+        0.09890294820070267
+      ],
+      "selectionLoss": 0.2763782776892185,
+      "sampledRowsPerSource": [
+        37958,
+        38142,
+        37990,
+        38264
+      ]
+    },
+    {
+      "epoch": 48,
+      "updates": 7152,
+      "developmentLosses": [
+        0.7964125871658325,
+        0.15112349390983582,
+        0.06343282759189606,
+        0.10181032866239548
+      ],
+      "selectionLoss": 0.27819480933248997,
+      "sampledRowsPerSource": [
+        38126,
+        38046,
+        37989,
+        38193
+      ]
+    },
+    {
+      "epoch": 49,
+      "updates": 7301,
+      "developmentLosses": [
+        0.7919578552246094,
+        0.16139958798885345,
+        0.05093443766236305,
+        0.10394665598869324
+      ],
+      "selectionLoss": 0.2770596342161298,
+      "sampledRowsPerSource": [
+        38176,
+        38011,
+        38224,
+        37943
+      ]
+    },
+    {
+      "epoch": 50,
+      "updates": 7450,
+      "developmentLosses": [
+        0.7857567071914673,
+        0.153824120759964,
+        0.04805608093738556,
+        0.10826302319765091
+      ],
+      "selectionLoss": 0.27397498302161694,
+      "sampledRowsPerSource": [
+        38298,
+        38109,
+        38192,
+        37755
+      ]
+    },
+    {
+      "epoch": 51,
+      "updates": 7599,
+      "developmentLosses": [
+        0.8136305212974548,
+        0.17021219432353973,
+        0.07449740171432495,
+        0.1085498183965683
+      ],
+      "selectionLoss": 0.29172248393297195,
+      "sampledRowsPerSource": [
+        38283,
+        38281,
+        37976,
+        37814
+      ]
+    },
+    {
+      "epoch": 52,
+      "updates": 7748,
+      "developmentLosses": [
+        0.7990983724594116,
+        0.1515302211046219,
+        0.0604386106133461,
+        0.10422901809215546
+      ],
+      "selectionLoss": 0.27882405556738377,
+      "sampledRowsPerSource": [
+        38167,
+        37722,
+        38427,
+        38038
+      ]
+    },
+    {
+      "epoch": 53,
+      "updates": 7897,
+      "developmentLosses": [
+        0.7941129803657532,
+        0.15039260685443878,
+        0.04746869206428528,
+        0.10282047837972641
+      ],
+      "selectionLoss": 0.2736986894160509,
+      "sampledRowsPerSource": [
+        38176,
+        37953,
+        38102,
+        38123
+      ]
+    },
+    {
+      "epoch": 54,
+      "updates": 8046,
+      "developmentLosses": [
+        0.7949798107147217,
+        0.15292106568813324,
+        0.04561968520283699,
+        0.10568097978830338
+      ],
+      "selectionLoss": 0.2748003853484988,
+      "sampledRowsPerSource": [
+        38563,
+        37877,
+        37871,
+        38043
+      ]
+    },
+    {
+      "epoch": 55,
+      "updates": 8195,
+      "developmentLosses": [
+        0.7976952791213989,
+        0.14857694506645203,
+        0.047200825065374374,
+        0.10639747977256775
+      ],
+      "selectionLoss": 0.27496763225644827,
+      "sampledRowsPerSource": [
+        37964,
+        38173,
+        38040,
+        38177
+      ]
+    },
+    {
+      "epoch": 56,
+      "updates": 8344,
+      "developmentLosses": [
+        0.8042842745780945,
+        0.16335178911685944,
+        0.0579451285302639,
+        0.10933578014373779
+      ],
+      "selectionLoss": 0.2837292430922389,
+      "sampledRowsPerSource": [
+        38400,
+        37693,
+        38042,
+        38219
+      ]
+    },
+    {
+      "epoch": 57,
+      "updates": 8493,
+      "developmentLosses": [
+        0.7875556349754333,
+        0.15473046898841858,
+        0.05191143602132797,
+        0.12229480594396591
+      ],
+      "selectionLoss": 0.27912308648228645,
+      "sampledRowsPerSource": [
+        38317,
+        38009,
+        37996,
+        38032
+      ]
+    },
+    {
+      "epoch": 58,
+      "updates": 8642,
+      "developmentLosses": [
+        0.7894516587257385,
+        0.1537216603755951,
+        0.05733577907085419,
+        0.10695324838161469
+      ],
+      "selectionLoss": 0.2768655866384506,
+      "sampledRowsPerSource": [
+        38213,
+        38056,
+        38049,
+        38036
+      ]
+    },
+    {
+      "epoch": 59,
+      "updates": 8791,
+      "developmentLosses": [
+        0.7889145612716675,
+        0.15064731240272522,
+        0.046419236809015274,
+        0.10615263879299164
+      ],
+      "selectionLoss": 0.2730334373190999,
+      "sampledRowsPerSource": [
+        37989,
+        38162,
+        37874,
+        38329
+      ]
+    },
+    {
+      "epoch": 60,
+      "updates": 8940,
+      "developmentLosses": [
+        0.7961729168891907,
+        0.1500500738620758,
+        0.06023475155234337,
+        0.10653212666511536
+      ],
+      "selectionLoss": 0.2782474672421813,
+      "sampledRowsPerSource": [
+        38268,
+        38076,
+        38072,
+        37938
+      ]
+    },
+    {
+      "epoch": 61,
+      "updates": 9089,
+      "developmentLosses": [
+        0.8119767308235168,
+        0.17101378738880157,
+        0.05264872685074806,
+        0.10971173644065857
+      ],
+      "selectionLoss": 0.28633774537593126,
+      "sampledRowsPerSource": [
+        37953,
+        38039,
+        38099,
+        38263
+      ]
+    },
+    {
+      "epoch": 62,
+      "updates": 9238,
+      "developmentLosses": [
+        0.7970677018165588,
+        0.14591504633426666,
+        0.06207246333360672,
+        0.10048622637987137
+      ],
+      "selectionLoss": 0.2763853594660759,
+      "sampledRowsPerSource": [
+        38085,
+        37944,
+        38455,
+        37870
+      ]
+    },
+    {
+      "epoch": 63,
+      "updates": 9387,
+      "developmentLosses": [
+        0.7986305952072144,
+        0.15437528491020203,
+        0.049343809485435486,
+        0.10232868045568466
+      ],
+      "selectionLoss": 0.27616959251463413,
+      "sampledRowsPerSource": [
+        38415,
+        38009,
+        37982,
+        37948
+      ]
+    },
+    {
+      "epoch": 64,
+      "updates": 9536,
+      "developmentLosses": [
+        0.7952179312705994,
+        0.15996955335140228,
+        0.04750176519155502,
+        0.09998423606157303
+      ],
+      "selectionLoss": 0.2756683714687824,
+      "sampledRowsPerSource": [
+        38194,
+        38219,
+        37989,
+        37952
+      ]
+    },
+    {
+      "epoch": 65,
+      "updates": 9685,
+      "developmentLosses": [
+        0.7920999526977539,
+        0.15819846093654633,
+        0.051673438400030136,
+        0.10078198462724686
+      ],
+      "selectionLoss": 0.2756884591653943,
+      "sampledRowsPerSource": [
+        38311,
+        37699,
+        37937,
+        38407
+      ]
+    },
+    {
+      "epoch": 66,
+      "updates": 9834,
+      "developmentLosses": [
+        0.7947017550468445,
+        0.15681102871894836,
+        0.07801157236099243,
+        0.09829030185937881
+      ],
+      "selectionLoss": 0.281953664496541,
+      "sampledRowsPerSource": [
+        38047,
+        38099,
+        38185,
+        38023
+      ]
+    },
+    {
+      "epoch": 67,
+      "updates": 9983,
+      "developmentLosses": [
+        0.7987998127937317,
+        0.15946169197559357,
+        0.07303903251886368,
+        0.10873830318450928
+      ],
+      "selectionLoss": 0.28500971011817455,
+      "sampledRowsPerSource": [
+        38128,
+        38156,
+        38172,
+        37898
+      ]
+    },
+    {
+      "epoch": 68,
+      "updates": 10132,
+      "developmentLosses": [
+        0.796319305896759,
+        0.15024223923683167,
+        0.044734738767147064,
+        0.1029449999332428
+      ],
+      "selectionLoss": 0.27356032095849514,
+      "sampledRowsPerSource": [
+        38215,
+        37933,
+        38080,
+        38126
+      ]
+    },
+    {
+      "epoch": 69,
+      "updates": 10281,
+      "developmentLosses": [
+        0.7860864996910095,
+        0.14825919270515442,
+        0.04977693408727646,
+        0.11080458760261536
+      ],
+      "selectionLoss": 0.27373180352151394,
+      "sampledRowsPerSource": [
+        37999,
+        38083,
+        38348,
+        37924
+      ]
+    },
+    {
+      "epoch": 70,
+      "updates": 10430,
+      "developmentLosses": [
+        0.7853218913078308,
+        0.153560608625412,
+        0.04962887614965439,
+        0.10518351197242737
+      ],
+      "selectionLoss": 0.27342372201383114,
+      "sampledRowsPerSource": [
+        38242,
+        38116,
+        37782,
+        38214
+      ]
+    },
+    {
+      "epoch": 71,
+      "updates": 10579,
+      "developmentLosses": [
+        0.7971503138542175,
+        0.16759026050567627,
+        0.06022162362933159,
+        0.09861300140619278
+      ],
+      "selectionLoss": 0.28089379984885454,
+      "sampledRowsPerSource": [
+        38118,
+        37964,
+        38275,
+        37997
+      ]
+    },
+    {
+      "epoch": 72,
+      "updates": 10728,
+      "developmentLosses": [
+        0.8002106547355652,
+        0.1536157876253128,
+        0.0560152567923069,
+        0.0987401083111763
+      ],
+      "selectionLoss": 0.2771454518660903,
+      "sampledRowsPerSource": [
+        37924,
+        38047,
+        38203,
+        38180
+      ]
+    },
+    {
+      "epoch": 73,
+      "updates": 10877,
+      "developmentLosses": [
+        0.7945384979248047,
+        0.15197744965553284,
+        0.050958119332790375,
+        0.10631828010082245
+      ],
+      "selectionLoss": 0.2759480867534876,
+      "sampledRowsPerSource": [
+        38188,
+        38328,
+        37891,
+        37947
+      ]
+    },
+    {
+      "epoch": 74,
+      "updates": 11026,
+      "developmentLosses": [
+        0.7926134467124939,
+        0.14970271289348602,
+        0.05562625080347061,
+        0.09646676480770111
+      ],
+      "selectionLoss": 0.2736022938042879,
+      "sampledRowsPerSource": [
+        38081,
+        38501,
+        37882,
+        37890
+      ]
+    },
+    {
+      "epoch": 75,
+      "updates": 11175,
+      "developmentLosses": [
+        0.7921549677848816,
+        0.14683109521865845,
+        0.06336620450019836,
+        0.103240966796875
+      ],
+      "selectionLoss": 0.27639830857515335,
+      "sampledRowsPerSource": [
+        38124,
+        38062,
+        38312,
+        37856
+      ]
+    },
+    {
+      "epoch": 76,
+      "updates": 11324,
+      "developmentLosses": [
+        0.7984760403633118,
+        0.15032365918159485,
+        0.0473741851747036,
+        0.10977289825677872
+      ],
+      "selectionLoss": 0.27648669574409723,
+      "sampledRowsPerSource": [
+        38082,
+        38391,
+        37967,
+        37914
+      ]
+    },
+    {
+      "epoch": 77,
+      "updates": 11473,
+      "developmentLosses": [
+        0.8125708103179932,
+        0.15620672702789307,
+        0.08345620334148407,
+        0.11978234350681305
+      ],
+      "selectionLoss": 0.29300402104854584,
+      "sampledRowsPerSource": [
+        38227,
+        38096,
+        38004,
+        38027
+      ]
+    },
+    {
+      "epoch": 78,
+      "updates": 11622,
+      "developmentLosses": [
+        0.7897421717643738,
+        0.15375684201717377,
+        0.05833609774708748,
+        0.10139289498329163
+      ],
+      "selectionLoss": 0.27580700162798166,
+      "sampledRowsPerSource": [
+        38047,
+        37842,
+        38204,
+        38261
+      ]
+    },
+    {
+      "epoch": 79,
+      "updates": 11771,
+      "developmentLosses": [
+        0.7992123365402222,
+        0.15691719949245453,
+        0.04712046682834625,
+        0.0977090522646904
+      ],
+      "selectionLoss": 0.27523976378142834,
+      "sampledRowsPerSource": [
+        38092,
+        37981,
+        38171,
+        38110
+      ]
+    },
+    {
+      "epoch": 80,
+      "updates": 11920,
+      "developmentLosses": [
+        0.8019629120826721,
+        0.15074369311332703,
+        0.05085698142647743,
+        0.1122901514172554
+      ],
+      "selectionLoss": 0.278963434509933,
+      "sampledRowsPerSource": [
+        38130,
+        38049,
+        38268,
+        37907
+      ]
+    },
+    {
+      "epoch": 81,
+      "updates": 12069,
+      "developmentLosses": [
+        0.7954034805297852,
+        0.15601590275764465,
+        0.06578083336353302,
+        0.09990034252405167
+      ],
+      "selectionLoss": 0.2792751397937536,
+      "sampledRowsPerSource": [
+        37890,
+        38377,
+        38071,
+        38016
+      ]
+    },
+    {
+      "epoch": 82,
+      "updates": 12218,
+      "developmentLosses": [
+        0.7877060174942017,
+        0.15536744892597198,
+        0.0578765794634819,
+        0.10592800378799438
+      ],
+      "selectionLoss": 0.2767195124179125,
+      "sampledRowsPerSource": [
+        37774,
+        38120,
+        38233,
+        38227
+      ]
+    },
+    {
+      "epoch": 83,
+      "updates": 12367,
+      "developmentLosses": [
+        0.7942564487457275,
+        0.15570856630802155,
+        0.04609621316194534,
+        0.1019793301820755
+      ],
+      "selectionLoss": 0.2745101395994425,
+      "sampledRowsPerSource": [
+        38052,
+        38156,
+        38066,
+        38080
+      ]
+    },
+    {
+      "epoch": 84,
+      "updates": 12516,
+      "developmentLosses": [
+        0.8090158700942993,
+        0.15498213469982147,
+        0.0670369416475296,
+        0.10826564580202103
+      ],
+      "selectionLoss": 0.28482514806091785,
+      "sampledRowsPerSource": [
+        38075,
+        38364,
+        37990,
+        37925
+      ]
+    },
+    {
+      "epoch": 85,
+      "updates": 12665,
+      "developmentLosses": [
+        0.8046372532844543,
+        0.15064813196659088,
+        0.046245601028203964,
+        0.10515724122524261
+      ],
+      "selectionLoss": 0.27667205687612295,
+      "sampledRowsPerSource": [
+        37806,
+        38312,
+        38084,
+        38152
+      ]
+    },
+    {
+      "epoch": 86,
+      "updates": 12814,
+      "developmentLosses": [
+        0.8024901151657104,
+        0.15717390179634094,
+        0.08121128380298615,
+        0.11587828397750854
+      ],
+      "selectionLoss": 0.2891883961856365,
+      "sampledRowsPerSource": [
+        38538,
+        37896,
+        37892,
+        38028
+      ]
+    },
+    {
+      "epoch": 87,
+      "updates": 12963,
+      "developmentLosses": [
+        0.7917730212211609,
+        0.1540779322385788,
+        0.04798634350299835,
+        0.10448808968067169
+      ],
+      "selectionLoss": 0.27458134666085243,
+      "sampledRowsPerSource": [
+        38188,
+        37941,
+        38104,
+        38121
+      ]
+    },
+    {
+      "epoch": 88,
+      "updates": 13112,
+      "developmentLosses": [
+        0.7936083674430847,
+        0.15092012286186218,
+        0.0505850575864315,
+        0.10057605803012848
+      ],
+      "selectionLoss": 0.2739224014803767,
+      "sampledRowsPerSource": [
+        38240,
+        38151,
+        38002,
+        37961
+      ]
+    },
+    {
+      "epoch": 89,
+      "updates": 13261,
+      "developmentLosses": [
+        0.7877964973449707,
+        0.15210425853729248,
+        0.047351907938718796,
+        0.10593733936548233
+      ],
+      "selectionLoss": 0.2732975007966161,
+      "sampledRowsPerSource": [
+        38111,
+        38032,
+        38251,
+        37960
+      ]
+    },
+    {
+      "epoch": 90,
+      "updates": 13410,
+      "developmentLosses": [
+        0.800791323184967,
+        0.16253282129764557,
+        0.056117571890354156,
+        0.10211434215307236
+      ],
+      "selectionLoss": 0.2803890146315098,
+      "sampledRowsPerSource": [
+        38363,
+        38030,
+        37985,
+        37976
+      ]
+    },
+    {
+      "epoch": 91,
+      "updates": 13559,
+      "developmentLosses": [
+        0.7955617308616638,
+        0.14646966755390167,
+        0.06341242045164108,
+        0.10764206945896149
+      ],
+      "selectionLoss": 0.278271472081542,
+      "sampledRowsPerSource": [
+        37888,
+        38275,
+        38105,
+        38086
+      ]
+    },
+    {
+      "epoch": 92,
+      "updates": 13708,
+      "developmentLosses": [
+        0.7944934964179993,
+        0.16460740566253662,
+        0.06406742334365845,
+        0.09884898364543915
+      ],
+      "selectionLoss": 0.28050432726740837,
+      "sampledRowsPerSource": [
+        37883,
+        38233,
+        37979,
+        38259
+      ]
+    },
+    {
+      "epoch": 93,
+      "updates": 13857,
+      "developmentLosses": [
+        0.7930071353912354,
+        0.1539590060710907,
+        0.04959191754460335,
+        0.10019892454147339
+      ],
+      "selectionLoss": 0.2741892458871007,
+      "sampledRowsPerSource": [
+        37993,
+        38041,
+        37989,
+        38331
+      ]
+    },
+    {
+      "epoch": 94,
+      "updates": 14006,
+      "developmentLosses": [
+        0.7993215918540955,
+        0.15763232111930847,
+        0.05178755149245262,
+        0.10139161348342896
+      ],
+      "selectionLoss": 0.2775332694873214,
+      "sampledRowsPerSource": [
+        38257,
+        37950,
+        38013,
+        38134
+      ]
+    },
+    {
+      "epoch": 95,
+      "updates": 14155,
+      "developmentLosses": [
+        0.7879964113235474,
+        0.16058029234409332,
+        0.050984326750040054,
+        0.09711998701095581
+      ],
+      "selectionLoss": 0.27417025435715914,
+      "sampledRowsPerSource": [
+        38055,
+        38474,
+        37645,
+        38180
+      ]
+    },
+    {
+      "epoch": 96,
+      "updates": 14304,
+      "developmentLosses": [
+        0.7861554026603699,
+        0.1551225781440735,
+        0.04829644784331322,
+        0.11296176165342331
+      ],
+      "selectionLoss": 0.27563404757529497,
+      "sampledRowsPerSource": [
+        38173,
+        38142,
+        37874,
+        38165
+      ]
+    },
+    {
+      "epoch": 97,
+      "updates": 14453,
+      "developmentLosses": [
+        0.7911515831947327,
+        0.16343851387500763,
+        0.049366019666194916,
+        0.11481136083602905
+      ],
+      "selectionLoss": 0.27969186939299107,
+      "sampledRowsPerSource": [
+        37942,
+        38144,
+        38062,
+        38206
+      ]
+    },
+    {
+      "epoch": 98,
+      "updates": 14602,
+      "developmentLosses": [
+        0.7974657416343689,
+        0.16650596261024475,
+        0.06360408663749695,
+        0.09726905822753906
+      ],
+      "selectionLoss": 0.2812112122774124,
+      "sampledRowsPerSource": [
+        38062,
+        38352,
+        37879,
+        38061
+      ]
+    },
+    {
+      "epoch": 99,
+      "updates": 14751,
+      "developmentLosses": [
+        0.809185266494751,
+        0.16600559651851654,
+        0.07321541756391525,
+        0.11501947790384293
+      ],
+      "selectionLoss": 0.2908564396202564,
+      "sampledRowsPerSource": [
+        38231,
+        37895,
+        38177,
+        38051
+      ]
+    },
+    {
+      "epoch": 100,
+      "updates": 14900,
+      "developmentLosses": [
+        0.7931314706802368,
+        0.14827950298786163,
+        0.046098705381155014,
+        0.10139907151460648
+      ],
+      "selectionLoss": 0.272227187640965,
+      "sampledRowsPerSource": [
+        37948,
+        38496,
+        37971,
+        37939
+      ]
+    },
+    {
+      "epoch": 101,
+      "updates": 15049,
+      "developmentLosses": [
+        0.8105506896972656,
+        0.1642806977033615,
+        0.04863809421658516,
+        0.10512404143810272
+      ],
+      "selectionLoss": 0.28214838076382875,
+      "sampledRowsPerSource": [
+        38134,
+        38083,
+        37970,
+        38167
+      ]
+    },
+    {
+      "epoch": 102,
+      "updates": 15198,
+      "developmentLosses": [
+        0.7992900609970093,
+        0.15306882560253143,
+        0.05972638353705406,
+        0.09943080693483353
+      ],
+      "selectionLoss": 0.2778790192678571,
+      "sampledRowsPerSource": [
+        37926,
+        38119,
+        38010,
+        38299
+      ]
+    },
+    {
+      "epoch": 103,
+      "updates": 15347,
+      "developmentLosses": [
+        0.8041486144065857,
+        0.16282600164413452,
+        0.05692536383867264,
+        0.1081189215183258
+      ],
+      "selectionLoss": 0.28300472535192966,
+      "sampledRowsPerSource": [
+        38256,
+        37931,
+        37951,
+        38216
+      ]
+    },
+    {
+      "epoch": 104,
+      "updates": 15496,
+      "developmentLosses": [
+        0.7958241105079651,
+        0.16180652379989624,
+        0.06458375602960587,
+        0.10109157860279083
+      ],
+      "selectionLoss": 0.2808264922350645,
+      "sampledRowsPerSource": [
+        38136,
+        38063,
+        38226,
+        37929
+      ]
+    },
+    {
+      "epoch": 105,
+      "updates": 15645,
+      "developmentLosses": [
+        0.7969620823860168,
+        0.15952087938785553,
+        0.05189651995897293,
+        0.10258328169584274
+      ],
+      "selectionLoss": 0.277740690857172,
+      "sampledRowsPerSource": [
+        38243,
+        37802,
+        38075,
+        38234
+      ]
+    },
+    {
+      "epoch": 106,
+      "updates": 15794,
+      "developmentLosses": [
+        0.8089102506637573,
+        0.16500134766101837,
+        0.0568409338593483,
+        0.10392710566520691
+      ],
+      "selectionLoss": 0.2836699094623327,
+      "sampledRowsPerSource": [
+        38154,
+        38038,
+        37988,
+        38174
+      ]
+    },
+    {
+      "epoch": 107,
+      "updates": 15943,
+      "developmentLosses": [
+        0.801034688949585,
+        0.1618209034204483,
+        0.053618788719177246,
+        0.09728299081325531
+      ],
+      "selectionLoss": 0.27843934297561646,
+      "sampledRowsPerSource": [
+        38207,
+        37875,
+        38250,
+        38022
+      ]
+    },
+    {
+      "epoch": 108,
+      "updates": 16092,
+      "developmentLosses": [
+        0.7916920185089111,
+        0.15866319835186005,
+        0.04805273935198784,
+        0.11099948734045029
+      ],
+      "selectionLoss": 0.2773518608883023,
+      "sampledRowsPerSource": [
+        38412,
+        37921,
+        38034,
+        37987
+      ]
+    },
+    {
+      "epoch": 109,
+      "updates": 16241,
+      "developmentLosses": [
+        0.7931504249572754,
+        0.16899806261062622,
+        0.05183623731136322,
+        0.11356741935014725
+      ],
+      "selectionLoss": 0.281888036057353,
+      "sampledRowsPerSource": [
+        38327,
+        37899,
+        37960,
+        38168
+      ]
+    },
+    {
+      "epoch": 110,
+      "updates": 16390,
+      "developmentLosses": [
+        0.7956503033638,
+        0.1594913750886917,
+        0.05844174325466156,
+        0.09733688831329346
+      ],
+      "selectionLoss": 0.2777300775051117,
+      "sampledRowsPerSource": [
+        38067,
+        38000,
+        38216,
+        38071
+      ]
+    },
+    {
+      "epoch": 111,
+      "updates": 16539,
+      "developmentLosses": [
+        0.7838125228881836,
+        0.1539914309978485,
+        0.051875628530979156,
+        0.10782602429389954
+      ],
+      "selectionLoss": 0.2743764016777277,
+      "sampledRowsPerSource": [
+        37957,
+        38378,
+        38323,
+        37696
+      ]
+    },
+    {
+      "epoch": 112,
+      "updates": 16688,
+      "developmentLosses": [
+        0.7921858429908752,
+        0.15584084391593933,
+        0.05036270245909691,
+        0.1025899350643158
+      ],
+      "selectionLoss": 0.2752448311075568,
+      "sampledRowsPerSource": [
+        37904,
+        38071,
+        38322,
+        38057
+      ]
+    },
+    {
+      "epoch": 113,
+      "updates": 16837,
+      "developmentLosses": [
+        0.7949303984642029,
+        0.15898945927619934,
+        0.06687167286872864,
+        0.0988771915435791
+      ],
+      "selectionLoss": 0.2799171805381775,
+      "sampledRowsPerSource": [
+        37976,
+        38030,
+        38284,
+        38064
+      ]
+    },
+    {
+      "epoch": 114,
+      "updates": 16986,
+      "developmentLosses": [
+        0.7886784672737122,
+        0.15430350601673126,
+        0.048189401626586914,
+        0.10661600530147552
+      ],
+      "selectionLoss": 0.27444684505462646,
+      "sampledRowsPerSource": [
+        38020,
+        38201,
+        38329,
+        37804
+      ]
+    },
+    {
+      "epoch": 115,
+      "updates": 17135,
+      "developmentLosses": [
+        0.8023278117179871,
+        0.15808187425136566,
+        0.04534699767827988,
+        0.10129102319478989
+      ],
+      "selectionLoss": 0.2767619267106056,
+      "sampledRowsPerSource": [
+        37979,
+        38293,
+        38027,
+        38055
+      ]
+    },
+    {
+      "epoch": 116,
+      "updates": 17284,
+      "developmentLosses": [
+        0.7981297969818115,
+        0.15408112108707428,
+        0.04828668013215065,
+        0.1113331988453865
+      ],
+      "selectionLoss": 0.27795769926160574,
+      "sampledRowsPerSource": [
+        37771,
+        37946,
+        38315,
+        38322
+      ]
+    },
+    {
+      "epoch": 117,
+      "updates": 17433,
+      "developmentLosses": [
+        0.7926433682441711,
+        0.17435479164123535,
+        0.049696195870637894,
+        0.10103548318147659
+      ],
+      "selectionLoss": 0.27943245973438025,
+      "sampledRowsPerSource": [
+        38142,
+        37876,
+        38232,
+        38104
+      ]
+    },
+    {
+      "epoch": 118,
+      "updates": 17582,
+      "developmentLosses": [
+        0.7864438891410828,
+        0.16100768744945526,
+        0.048196133226156235,
+        0.10888924449682236
+      ],
+      "selectionLoss": 0.27613423857837915,
+      "sampledRowsPerSource": [
+        38103,
+        38155,
+        37983,
+        38113
+      ]
+    },
+    {
+      "epoch": 119,
+      "updates": 17731,
+      "developmentLosses": [
+        0.8057171106338501,
+        0.1693863421678543,
+        0.05501183867454529,
+        0.10185868293046951
+      ],
+      "selectionLoss": 0.2829934936016798,
+      "sampledRowsPerSource": [
+        38111,
+        37998,
+        38217,
+        38028
+      ]
+    },
+    {
+      "epoch": 120,
+      "updates": 17880,
+      "developmentLosses": [
+        0.792914867401123,
+        0.16825753450393677,
+        0.05645041540265083,
+        0.11451398581266403
+      ],
+      "selectionLoss": 0.28303420078009367,
+      "sampledRowsPerSource": [
+        38271,
+        38079,
+        38062,
+        37942
+      ]
+    },
+    {
+      "epoch": 121,
+      "updates": 18029,
+      "developmentLosses": [
+        0.7890779972076416,
+        0.15665662288665771,
+        0.04862350970506668,
+        0.10220492631196976
+      ],
+      "selectionLoss": 0.27414076402783394,
+      "sampledRowsPerSource": [
+        38125,
+        38161,
+        37864,
+        38204
+      ]
+    },
+    {
+      "epoch": 122,
+      "updates": 18178,
+      "developmentLosses": [
+        0.7941254377365112,
+        0.1686093956232071,
+        0.06904768198728561,
+        0.0973660945892334
+      ],
+      "selectionLoss": 0.28228715248405933,
+      "sampledRowsPerSource": [
+        38030,
+        38202,
+        38010,
+        38112
+      ]
+    },
+    {
+      "epoch": 123,
+      "updates": 18327,
+      "developmentLosses": [
+        0.8071776032447815,
+        0.16824442148208618,
+        0.0696895644068718,
+        0.11080764979124069
+      ],
+      "selectionLoss": 0.28897980973124504,
+      "sampledRowsPerSource": [
+        37906,
+        38268,
+        37942,
+        38238
+      ]
+    },
+    {
+      "epoch": 124,
+      "updates": 18476,
+      "developmentLosses": [
+        0.793813169002533,
+        0.15667754411697388,
+        0.060029853135347366,
+        0.10341887176036835
+      ],
+      "selectionLoss": 0.27848485950380564,
+      "sampledRowsPerSource": [
+        38535,
+        38066,
+        37880,
+        37873
+      ]
+    },
+    {
+      "epoch": 125,
+      "updates": 18625,
+      "developmentLosses": [
+        0.7983465194702148,
+        0.1572035849094391,
+        0.0554250106215477,
+        0.10185251384973526
+      ],
+      "selectionLoss": 0.2782069072127342,
+      "sampledRowsPerSource": [
+        38287,
+        38138,
+        37787,
+        38142
+      ]
+    },
+    {
+      "epoch": 126,
+      "updates": 18774,
+      "developmentLosses": [
+        0.785312294960022,
+        0.15897813439369202,
+        0.04707995802164078,
+        0.10506325215101242
+      ],
+      "selectionLoss": 0.2741084098815918,
+      "sampledRowsPerSource": [
+        37900,
+        38105,
+        38450,
+        37899
+      ]
+    },
+    {
+      "epoch": 127,
+      "updates": 18923,
+      "developmentLosses": [
+        0.7846360206604004,
+        0.15898220241069794,
+        0.052093505859375,
+        0.09880692511796951
+      ],
+      "selectionLoss": 0.2736296635121107,
+      "sampledRowsPerSource": [
+        38052,
+        38239,
+        38090,
+        37973
+      ]
+    },
+    {
+      "epoch": 128,
+      "updates": 19072,
+      "developmentLosses": [
+        0.7963570356369019,
+        0.1622089296579361,
+        0.05340994894504547,
+        0.10118032991886139
+      ],
+      "selectionLoss": 0.2782890610396862,
+      "sampledRowsPerSource": [
+        38443,
+        38156,
+        37807,
+        37948
+      ]
+    },
+    {
+      "epoch": 129,
+      "updates": 19221,
+      "developmentLosses": [
+        0.7989612817764282,
+        0.16164915263652802,
+        0.052489589899778366,
+        0.09938664734363556
+      ],
+      "selectionLoss": 0.27812166791409254,
+      "sampledRowsPerSource": [
+        38396,
+        38095,
+        38232,
+        37631
+      ]
+    },
+    {
+      "epoch": 130,
+      "updates": 19370,
+      "developmentLosses": [
+        0.7834610939025879,
+        0.15977665781974792,
+        0.04647890105843544,
+        0.10854175686836243
+      ],
+      "selectionLoss": 0.2745646024122834,
+      "sampledRowsPerSource": [
+        37775,
+        38187,
+        37862,
+        38530
+      ]
+    },
+    {
+      "epoch": 131,
+      "updates": 19519,
+      "developmentLosses": [
+        0.7973809838294983,
+        0.16085921227931976,
+        0.04792993515729904,
+        0.10891033709049225
+      ],
+      "selectionLoss": 0.27877011708915234,
+      "sampledRowsPerSource": [
+        38127,
+        38082,
+        38056,
+        38089
+      ]
+    },
+    {
+      "epoch": 132,
+      "updates": 19668,
+      "developmentLosses": [
+        0.7948801517486572,
+        0.14910568296909332,
+        0.06214207038283348,
+        0.10312291234731674
+      ],
+      "selectionLoss": 0.2773127043619752,
+      "sampledRowsPerSource": [
+        37993,
+        38123,
+        38240,
+        37998
+      ]
+    },
+    {
+      "epoch": 133,
+      "updates": 19817,
+      "developmentLosses": [
+        0.7961809635162354,
+        0.15607017278671265,
+        0.05386177450418472,
+        0.09901003539562225
+      ],
+      "selectionLoss": 0.27628073655068874,
+      "sampledRowsPerSource": [
+        38088,
+        38275,
+        38228,
+        37763
+      ]
+    },
+    {
+      "epoch": 134,
+      "updates": 19966,
+      "developmentLosses": [
+        0.7942538857460022,
+        0.1560041606426239,
+        0.051893290132284164,
+        0.1046554371714592
+      ],
+      "selectionLoss": 0.27670169342309237,
+      "sampledRowsPerSource": [
+        38328,
+        38106,
+        37771,
+        38149
+      ]
+    },
+    {
+      "epoch": 135,
+      "updates": 20115,
+      "developmentLosses": [
+        0.8208987712860107,
+        0.16360798478126526,
+        0.08708233386278152,
+        0.128336101770401
+      ],
+      "selectionLoss": 0.29998129792511463,
+      "sampledRowsPerSource": [
+        38011,
+        38065,
+        38323,
+        37955
+      ]
+    },
+    {
+      "epoch": 136,
+      "updates": 20264,
+      "developmentLosses": [
+        0.7809271812438965,
+        0.1602126657962799,
+        0.05768473446369171,
+        0.11177170276641846
+      ],
+      "selectionLoss": 0.27764907106757164,
+      "sampledRowsPerSource": [
+        38361,
+        38120,
+        38033,
+        37840
+      ]
+    },
+    {
+      "epoch": 137,
+      "updates": 20413,
+      "developmentLosses": [
+        0.7846269607543945,
+        0.15053589642047882,
+        0.05330607295036316,
+        0.10705233365297318
+      ],
+      "selectionLoss": 0.2738803159445524,
+      "sampledRowsPerSource": [
+        38130,
+        38145,
+        37905,
+        38174
+      ]
+    },
+    {
+      "epoch": 138,
+      "updates": 20562,
+      "developmentLosses": [
+        0.7893955111503601,
+        0.15661463141441345,
+        0.05318491905927658,
+        0.10022902488708496
+      ],
+      "selectionLoss": 0.2748560216277838,
+      "sampledRowsPerSource": [
+        38201,
+        38287,
+        37787,
+        38079
+      ]
+    },
+    {
+      "epoch": 139,
+      "updates": 20711,
+      "developmentLosses": [
+        0.7945564389228821,
+        0.15904344618320465,
+        0.06651755422353745,
+        0.10317431390285492
+      ],
+      "selectionLoss": 0.2808229383081198,
+      "sampledRowsPerSource": [
+        37631,
+        38289,
+        38016,
+        38418
+      ]
+    },
+    {
+      "epoch": 140,
+      "updates": 20860,
+      "developmentLosses": [
+        0.7854382991790771,
+        0.1513175666332245,
+        0.05273991823196411,
+        0.10591944307088852
+      ],
+      "selectionLoss": 0.27385380677878857,
+      "sampledRowsPerSource": [
+        38357,
+        37933,
+        37827,
+        38237
+      ]
+    },
+    {
+      "epoch": 141,
+      "updates": 21009,
+      "developmentLosses": [
+        0.7827279567718506,
+        0.14840839803218842,
+        0.04684634506702423,
+        0.10725031793117523
+      ],
+      "selectionLoss": 0.2713082544505596,
+      "sampledRowsPerSource": [
+        37935,
+        37905,
+        38417,
+        38097
+      ]
+    },
+    {
+      "epoch": 142,
+      "updates": 21158,
+      "developmentLosses": [
+        0.7905608415603638,
+        0.16101036965847015,
+        0.0743817538022995,
+        0.10326872766017914
+      ],
+      "selectionLoss": 0.28230542317032814,
+      "sampledRowsPerSource": [
+        38421,
+        37791,
+        38385,
+        37757
+      ]
+    },
+    {
+      "epoch": 143,
+      "updates": 21307,
+      "developmentLosses": [
+        0.8086805939674377,
+        0.17478148639202118,
+        0.06312510371208191,
+        0.10238472372293472
+      ],
+      "selectionLoss": 0.2872429769486189,
+      "sampledRowsPerSource": [
+        37819,
+        38045,
+        38171,
+        38319
+      ]
+    },
+    {
+      "epoch": 144,
+      "updates": 21456,
+      "developmentLosses": [
+        0.789191722869873,
+        0.15503059327602386,
+        0.05224313586950302,
+        0.09955476969480515
+      ],
+      "selectionLoss": 0.27400505542755127,
+      "sampledRowsPerSource": [
+        37821,
+        38185,
+        37834,
+        38514
+      ]
+    },
+    {
+      "epoch": 145,
+      "updates": 21605,
+      "developmentLosses": [
+        0.8087766766548157,
+        0.16166678071022034,
+        0.0571085587143898,
+        0.11037702113389969
+      ],
+      "selectionLoss": 0.2844822593033314,
+      "sampledRowsPerSource": [
+        38275,
+        37999,
+        37924,
+        38156
+      ]
+    },
+    {
+      "epoch": 146,
+      "updates": 21754,
+      "developmentLosses": [
+        0.7929039597511292,
+        0.15811264514923096,
+        0.05127298831939697,
+        0.10289477556943893
+      ],
+      "selectionLoss": 0.276296092197299,
+      "sampledRowsPerSource": [
+        38143,
+        38206,
+        38037,
+        37968
+      ]
+    },
+    {
+      "epoch": 147,
+      "updates": 21903,
+      "developmentLosses": [
+        0.7973106503486633,
+        0.1461934894323349,
+        0.04457398131489754,
+        0.10757759213447571
+      ],
+      "selectionLoss": 0.27391392830759287,
+      "sampledRowsPerSource": [
+        38193,
+        37981,
+        37990,
+        38190
+      ]
+    },
+    {
+      "epoch": 148,
+      "updates": 22052,
+      "developmentLosses": [
+        0.7960570454597473,
+        0.15179817378520966,
+        0.04670361429452896,
+        0.0995122641324997
+      ],
+      "selectionLoss": 0.2735177744179964,
+      "sampledRowsPerSource": [
+        38052,
+        38270,
+        37928,
+        38104
+      ]
+    },
+    {
+      "epoch": 149,
+      "updates": 22201,
+      "developmentLosses": [
+        0.7926921248435974,
+        0.15255558490753174,
+        0.05932334065437317,
+        0.10325596481561661
+      ],
+      "selectionLoss": 0.27695675380527973,
+      "sampledRowsPerSource": [
+        38001,
+        38284,
+        38005,
+        38064
+      ]
+    },
+    {
+      "epoch": 150,
+      "updates": 22350,
+      "developmentLosses": [
+        0.7869662046432495,
+        0.14829950034618378,
+        0.04628034308552742,
+        0.09968435764312744
+      ],
+      "selectionLoss": 0.27030760142952204,
+      "sampledRowsPerSource": [
+        38083,
+        38508,
+        37795,
+        37968
+      ]
+    },
+    {
+      "epoch": 151,
+      "updates": 22499,
+      "developmentLosses": [
+        0.7977354526519775,
+        0.1551952213048935,
+        0.05004968121647835,
+        0.0997467041015625
+      ],
+      "selectionLoss": 0.27568176481872797,
+      "sampledRowsPerSource": [
+        38235,
+        37986,
+        38145,
+        37988
+      ]
+    },
+    {
+      "epoch": 152,
+      "updates": 22648,
+      "developmentLosses": [
+        0.8083812594413757,
+        0.16021019220352173,
+        0.05403299629688263,
+        0.10175596922636032
+      ],
+      "selectionLoss": 0.2810951042920351,
+      "sampledRowsPerSource": [
+        38223,
+        37836,
+        38376,
+        37919
+      ]
+    },
+    {
+      "epoch": 153,
+      "updates": 22797,
+      "developmentLosses": [
+        0.7894278764724731,
+        0.1569831371307373,
+        0.05385434627532959,
+        0.09784916788339615
+      ],
+      "selectionLoss": 0.27452863194048405,
+      "sampledRowsPerSource": [
+        37924,
+        38055,
+        38395,
+        37980
+      ]
+    },
+    {
+      "epoch": 154,
+      "updates": 22946,
+      "developmentLosses": [
+        0.7918994426727295,
+        0.15867838263511658,
+        0.06019892916083336,
+        0.1076541617512703
+      ],
+      "selectionLoss": 0.27960772905498743,
+      "sampledRowsPerSource": [
+        37991,
+        37968,
+        38244,
+        38151
+      ]
+    },
+    {
+      "epoch": 155,
+      "updates": 23095,
+      "developmentLosses": [
+        0.7982499003410339,
+        0.15756788849830627,
+        0.050184693187475204,
+        0.10224591940641403
+      ],
+      "selectionLoss": 0.27706210035830736,
+      "sampledRowsPerSource": [
+        38425,
+        37878,
+        37936,
+        38115
+      ]
+    },
+    {
+      "epoch": 156,
+      "updates": 23244,
+      "developmentLosses": [
+        0.7967986464500427,
+        0.15249551832675934,
+        0.0664377212524414,
+        0.10198210924863815
+      ],
+      "selectionLoss": 0.2794284988194704,
+      "sampledRowsPerSource": [
+        37906,
+        38232,
+        38170,
+        38046
+      ]
+    },
+    {
+      "epoch": 157,
+      "updates": 23393,
+      "developmentLosses": [
+        0.7886177897453308,
+        0.15350781381130219,
+        0.05020172521471977,
+        0.1001320481300354
+      ],
+      "selectionLoss": 0.27311484422534704,
+      "sampledRowsPerSource": [
+        38222,
+        38058,
+        38221,
+        37853
+      ]
+    },
+    {
+      "epoch": 158,
+      "updates": 23542,
+      "developmentLosses": [
+        0.7979081869125366,
+        0.15302862226963043,
+        0.045527324080467224,
+        0.10280442982912064
+      ],
+      "selectionLoss": 0.27481714077293873,
+      "sampledRowsPerSource": [
+        37791,
+        37917,
+        38250,
+        38396
+      ]
+    },
+    {
+      "epoch": 159,
+      "updates": 23691,
+      "developmentLosses": [
+        0.8004521131515503,
+        0.16107513010501862,
+        0.04922318831086159,
+        0.10617057979106903
+      ],
+      "selectionLoss": 0.2792302528396249,
+      "sampledRowsPerSource": [
+        38306,
+        37833,
+        38119,
+        38096
+      ]
+    },
+    {
+      "epoch": 160,
+      "updates": 23840,
+      "developmentLosses": [
+        0.7920244336128235,
+        0.15438957512378693,
+        0.05584108084440231,
+        0.10532811284065247
+      ],
+      "selectionLoss": 0.2768958006054163,
+      "sampledRowsPerSource": [
+        37858,
+        37864,
+        38285,
+        38347
+      ]
+    },
+    {
+      "epoch": 161,
+      "updates": 23989,
+      "developmentLosses": [
+        0.7981823086738586,
+        0.1526547372341156,
+        0.05150249972939491,
+        0.10663793236017227
+      ],
+      "selectionLoss": 0.27724436949938536,
+      "sampledRowsPerSource": [
+        38255,
+        37976,
+        38167,
+        37956
+      ]
+    },
+    {
+      "epoch": 162,
+      "updates": 24138,
+      "developmentLosses": [
+        0.7892204523086548,
+        0.1530975103378296,
+        0.0449802428483963,
+        0.10108667612075806
+      ],
+      "selectionLoss": 0.2720962204039097,
+      "sampledRowsPerSource": [
+        38441,
+        37818,
+        38218,
+        37877
+      ]
+    },
+    {
+      "epoch": 163,
+      "updates": 24287,
+      "developmentLosses": [
+        0.7946233153343201,
+        0.15482161939144135,
+        0.05022908374667168,
+        0.11127061396837234
+      ],
+      "selectionLoss": 0.27773615811020136,
+      "sampledRowsPerSource": [
+        38068,
+        38125,
+        38086,
+        38075
+      ]
+    },
+    {
+      "epoch": 164,
+      "updates": 24436,
+      "developmentLosses": [
+        0.7889209985733032,
+        0.15220245718955994,
+        0.05893460661172867,
+        0.10277880728244781
+      ],
+      "selectionLoss": 0.2757092174142599,
+      "sampledRowsPerSource": [
+        37862,
+        38198,
+        38215,
+        38079
+      ]
+    },
+    {
+      "epoch": 165,
+      "updates": 24585,
+      "developmentLosses": [
+        0.7939355373382568,
+        0.15541972219944,
+        0.04540185630321503,
+        0.1043555811047554
+      ],
+      "selectionLoss": 0.2747781742364168,
+      "sampledRowsPerSource": [
+        38006,
+        37964,
+        38312,
+        38072
+      ]
+    },
+    {
+      "epoch": 166,
+      "updates": 24734,
+      "developmentLosses": [
+        0.7979910373687744,
+        0.15870635211467743,
+        0.1022673174738884,
+        0.11140915751457214
+      ],
+      "selectionLoss": 0.2925934661179781,
+      "sampledRowsPerSource": [
+        38134,
+        38215,
+        37890,
+        38115
+      ]
+    },
+    {
+      "epoch": 167,
+      "updates": 24883,
+      "developmentLosses": [
+        0.798305094242096,
+        0.1601012796163559,
+        0.04726575314998627,
+        0.10437741875648499
+      ],
+      "selectionLoss": 0.2775123864412308,
+      "sampledRowsPerSource": [
+        38209,
+        37823,
+        38126,
+        38196
+      ]
+    },
+    {
+      "epoch": 168,
+      "updates": 25032,
+      "developmentLosses": [
+        0.7999712228775024,
+        0.15728187561035156,
+        0.059448741376399994,
+        0.09923584759235382
+      ],
+      "selectionLoss": 0.27898442186415195,
+      "sampledRowsPerSource": [
+        37994,
+        37975,
+        38301,
+        38084
+      ]
+    },
+    {
+      "epoch": 169,
+      "updates": 25181,
+      "developmentLosses": [
+        0.7938297390937805,
+        0.15781298279762268,
+        0.05166321620345116,
+        0.10728935897350311
+      ],
+      "selectionLoss": 0.27764882426708937,
+      "sampledRowsPerSource": [
+        37952,
+        37840,
+        38291,
+        38271
+      ]
+    },
+    {
+      "epoch": 170,
+      "updates": 25330,
+      "developmentLosses": [
+        0.7971689105033875,
+        0.1510065346956253,
+        0.05846426635980606,
+        0.10353846102952957
+      ],
+      "selectionLoss": 0.2775445431470871,
+      "sampledRowsPerSource": [
+        37919,
+        38222,
+        38110,
+        38103
+      ]
+    },
+    {
+      "epoch": 171,
+      "updates": 25479,
+      "developmentLosses": [
+        0.789986252784729,
+        0.1467425376176834,
+        0.07628143578767776,
+        0.10849746316671371
+      ],
+      "selectionLoss": 0.280376922339201,
+      "sampledRowsPerSource": [
+        38257,
+        37840,
+        38097,
+        38160
+      ]
+    },
+    {
+      "epoch": 172,
+      "updates": 25628,
+      "developmentLosses": [
+        0.7972006797790527,
+        0.1539330631494522,
+        0.046729542315006256,
+        0.10534998774528503
+      ],
+      "selectionLoss": 0.27580331824719906,
+      "sampledRowsPerSource": [
+        38106,
+        38248,
+        37954,
+        38046
+      ]
+    },
+    {
+      "epoch": 173,
+      "updates": 25777,
+      "developmentLosses": [
+        0.807982861995697,
+        0.16102345287799835,
+        0.06985556334257126,
+        0.1066814512014389
+      ],
+      "selectionLoss": 0.2863858323544264,
+      "sampledRowsPerSource": [
+        38081,
+        37954,
+        38039,
+        38280
+      ]
+    },
+    {
+      "epoch": 174,
+      "updates": 25926,
+      "developmentLosses": [
+        0.7977299690246582,
+        0.16007624566555023,
+        0.07914584875106812,
+        0.10544998198747635
+      ],
+      "selectionLoss": 0.2856005113571882,
+      "sampledRowsPerSource": [
+        38149,
+        37904,
+        38290,
+        38011
+      ]
+    },
+    {
+      "epoch": 175,
+      "updates": 26075,
+      "developmentLosses": [
+        0.7956807017326355,
+        0.15918418765068054,
+        0.07204830646514893,
+        0.09650398790836334
+      ],
+      "selectionLoss": 0.2808542959392071,
+      "sampledRowsPerSource": [
+        38294,
+        38024,
+        37981,
+        38055
+      ]
+    },
+    {
+      "epoch": 176,
+      "updates": 26224,
+      "developmentLosses": [
+        0.8047593832015991,
+        0.1565166562795639,
+        0.05186304450035095,
+        0.11195823550224304
+      ],
+      "selectionLoss": 0.28127432987093925,
+      "sampledRowsPerSource": [
+        38038,
+        38043,
+        38107,
+        38166
+      ]
+    },
+    {
+      "epoch": 177,
+      "updates": 26373,
+      "developmentLosses": [
+        0.7952894568443298,
+        0.16293661296367645,
+        0.04818740487098694,
+        0.10498697310686111
+      ],
+      "selectionLoss": 0.2778501119464636,
+      "sampledRowsPerSource": [
+        37978,
+        38321,
+        37983,
+        38072
+      ]
+    },
+    {
+      "epoch": 178,
+      "updates": 26522,
+      "developmentLosses": [
+        0.7955946922302246,
+        0.1554141789674759,
+        0.04937557876110077,
+        0.10145274549722672
+      ],
+      "selectionLoss": 0.275459298864007,
+      "sampledRowsPerSource": [
+        37777,
+        38071,
+        38194,
+        38312
+      ]
+    },
+    {
+      "epoch": 179,
+      "updates": 26671,
+      "developmentLosses": [
+        0.790861189365387,
+        0.1588413566350937,
+        0.059588365256786346,
+        0.11441361159086227
+      ],
+      "selectionLoss": 0.2809261307120323,
+      "sampledRowsPerSource": [
+        38334,
+        37645,
+        38233,
+        38142
+      ]
+    },
+    {
+      "epoch": 180,
+      "updates": 26820,
+      "developmentLosses": [
+        0.7893638610839844,
+        0.152923583984375,
+        0.04593566805124283,
+        0.09660769253969193
+      ],
+      "selectionLoss": 0.27120770141482353,
+      "sampledRowsPerSource": [
+        37968,
+        38080,
+        38558,
+        37748
+      ]
+    },
+    {
+      "epoch": 181,
+      "updates": 26969,
+      "developmentLosses": [
+        0.7859871983528137,
+        0.16161763668060303,
+        0.04961753264069557,
+        0.10338559001684189
+      ],
+      "selectionLoss": 0.27515198942273855,
+      "sampledRowsPerSource": [
+        38338,
+        37836,
+        37814,
+        38366
+      ]
+    },
+    {
+      "epoch": 182,
+      "updates": 27118,
+      "developmentLosses": [
+        0.7974265217781067,
+        0.15685413777828217,
+        0.047166626900434494,
+        0.10034935176372528
+      ],
+      "selectionLoss": 0.27544915955513716,
+      "sampledRowsPerSource": [
+        37729,
+        38305,
+        38296,
+        38024
+      ]
+    },
+    {
+      "epoch": 183,
+      "updates": 27267,
+      "developmentLosses": [
+        0.7962865233421326,
+        0.1522253155708313,
+        0.046825677156448364,
+        0.10378341376781464
+      ],
+      "selectionLoss": 0.2747802324593067,
+      "sampledRowsPerSource": [
+        38224,
+        37938,
+        38074,
+        38118
+      ]
+    },
+    {
+      "epoch": 184,
+      "updates": 27416,
+      "developmentLosses": [
+        0.7897444367408752,
+        0.15463878214359283,
+        0.04784853383898735,
+        0.10001543164253235
+      ],
+      "selectionLoss": 0.27306179609149694,
+      "sampledRowsPerSource": [
+        38277,
+        38314,
+        37847,
+        37916
+      ]
+    },
+    {
+      "epoch": 185,
+      "updates": 27565,
+      "developmentLosses": [
+        0.7925727367401123,
+        0.15225981175899506,
+        0.0613953173160553,
+        0.10868476331233978
+      ],
+      "selectionLoss": 0.2787281572818756,
+      "sampledRowsPerSource": [
+        37834,
+        38101,
+        38116,
+        38303
+      ]
+    },
+    {
+      "epoch": 186,
+      "updates": 27714,
+      "developmentLosses": [
+        0.8070323467254639,
+        0.16071349382400513,
+        0.06662292033433914,
+        0.1021222174167633
+      ],
+      "selectionLoss": 0.28412274457514286,
+      "sampledRowsPerSource": [
+        38280,
+        37879,
+        38233,
+        37962
+      ]
+    },
+    {
+      "epoch": 187,
+      "updates": 27863,
+      "developmentLosses": [
+        0.7984570860862732,
+        0.1512535810470581,
+        0.052795033901929855,
+        0.12049972265958786
+      ],
+      "selectionLoss": 0.28075135592371225,
+      "sampledRowsPerSource": [
+        37949,
+        38021,
+        38280,
+        38104
+      ]
+    },
+    {
+      "epoch": 188,
+      "updates": 28012,
+      "developmentLosses": [
+        0.7965558767318726,
+        0.15583667159080505,
+        0.05573934316635132,
+        0.12326007336378098
+      ],
+      "selectionLoss": 0.2828479912132025,
+      "sampledRowsPerSource": [
+        38060,
+        37961,
+        38218,
+        38115
+      ]
+    },
+    {
+      "epoch": 189,
+      "updates": 28161,
+      "developmentLosses": [
+        0.7940950393676758,
+        0.15702421963214874,
+        0.05158320814371109,
+        0.103143610060215
+      ],
+      "selectionLoss": 0.27646151930093765,
+      "sampledRowsPerSource": [
+        37807,
+        38069,
+        38280,
+        38198
+      ]
+    },
+    {
+      "epoch": 190,
+      "updates": 28310,
+      "developmentLosses": [
+        0.7971603870391846,
+        0.15566624701023102,
+        0.07034331560134888,
+        0.11993011087179184
+      ],
+      "selectionLoss": 0.2857750151306391,
+      "sampledRowsPerSource": [
+        38205,
+        38460,
+        37784,
+        37905
+      ]
+    },
+    {
+      "epoch": 191,
+      "updates": 28459,
+      "developmentLosses": [
+        0.7979855537414551,
+        0.16088730096817017,
+        0.048026252537965775,
+        0.1028340607881546
+      ],
+      "selectionLoss": 0.2774332920089364,
+      "sampledRowsPerSource": [
+        38122,
+        37916,
+        38395,
+        37921
+      ]
+    },
+    {
+      "epoch": 192,
+      "updates": 28608,
+      "developmentLosses": [
+        0.79045569896698,
+        0.15785737335681915,
+        0.052123188972473145,
+        0.10157187283039093
+      ],
+      "selectionLoss": 0.2755020335316658,
+      "sampledRowsPerSource": [
+        38023,
+        38070,
+        38194,
+        38067
+      ]
+    },
+    {
+      "epoch": 193,
+      "updates": 28757,
+      "developmentLosses": [
+        0.8019015789031982,
+        0.15499408543109894,
+        0.0603318065404892,
+        0.10451652109622955
+      ],
+      "selectionLoss": 0.280435997992754,
+      "sampledRowsPerSource": [
+        38334,
+        38281,
+        37636,
+        38103
+      ]
+    },
+    {
+      "epoch": 194,
+      "updates": 28906,
+      "developmentLosses": [
+        0.8231410384178162,
+        0.16563984751701355,
+        0.052367500960826874,
+        0.09726420044898987
+      ],
+      "selectionLoss": 0.2846031468361616,
+      "sampledRowsPerSource": [
+        37766,
+        38232,
+        38242,
+        38114
+      ]
+    },
+    {
+      "epoch": 195,
+      "updates": 29055,
+      "developmentLosses": [
+        0.8078144788742065,
+        0.1553897261619568,
+        0.04981255903840065,
+        0.10788790881633759
+      ],
+      "selectionLoss": 0.2802261682227254,
+      "sampledRowsPerSource": [
+        38021,
+        38114,
+        37979,
+        38240
+      ]
+    },
+    {
+      "epoch": 196,
+      "updates": 29204,
+      "developmentLosses": [
+        0.8025980591773987,
+        0.15984183549880981,
+        0.07684693485498428,
+        0.10202194005250931
+      ],
+      "selectionLoss": 0.2853271923959255,
+      "sampledRowsPerSource": [
+        37889,
+        38187,
+        38214,
+        38064
+      ]
+    },
+    {
+      "epoch": 197,
+      "updates": 29353,
+      "developmentLosses": [
+        0.8085343837738037,
+        0.15776729583740234,
+        0.048241931945085526,
+        0.09805551916360855
+      ],
+      "selectionLoss": 0.27814978267997503,
+      "sampledRowsPerSource": [
+        37879,
+        38190,
+        38158,
+        38127
+      ]
+    },
+    {
+      "epoch": 198,
+      "updates": 29502,
+      "developmentLosses": [
+        0.8081770539283752,
+        0.15836945176124573,
+        0.05680377408862114,
+        0.10790715366601944
+      ],
+      "selectionLoss": 0.2828143583610654,
+      "sampledRowsPerSource": [
+        38137,
+        37931,
+        38046,
+        38240
+      ]
+    },
+    {
+      "epoch": 199,
+      "updates": 29651,
+      "developmentLosses": [
+        0.8038003444671631,
+        0.15700562298297882,
+        0.04866136983036995,
+        0.10689708590507507
+      ],
+      "selectionLoss": 0.27909110579639673,
+      "sampledRowsPerSource": [
+        37923,
+        38163,
+        38254,
+        38014
+      ]
+    },
+    {
+      "epoch": 200,
+      "updates": 29800,
+      "developmentLosses": [
+        0.8023503422737122,
+        0.15989811718463898,
+        0.07095719873905182,
+        0.1077851802110672
+      ],
+      "selectionLoss": 0.28524770960211754,
+      "sampledRowsPerSource": [
+        38261,
+        38051,
+        37963,
+        38079
+      ]
+    }
+  ],
+  "frozenNonMovementParametersVerified": true,
+  "limits": "Prediction loss only. No proof of contact success, useful coverage or match improvement."
+}

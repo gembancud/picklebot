@@ -1,0 +1,82 @@
+{
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "configurationHash": "b0e21687f3c2838c",
+  "protocolHash": "714da75bf7443b05570ed0bab59196907a5d5aed83394548396ea700e7ce67a1",
+  "contactModelHash": "6698221451858f044e26a28c58a39447d391c4f1aba58a68f11370926df9cba4",
+  "baselineManifestHash": "ef1d90fe63490d9f95e284e9a7056a79e2959eca313b7dd31b546628713fc043",
+  "trainerHash": "9d8b96b7a2a4d41ddc7e08f7ec8ac563a0e70d44d0514dd5f34d8af56db45c58",
+  "dataHash": "db3abeb818be6f6da90885a58877a63f1f0f65022dcb9d7633a5c91255dfab6b",
+  "createdUtc": "2026-09-07T13:03:53.233643+00:00",
+  "parentActorHash": "f00c5b319e825d085f924305e4da697e0ca49db63bd049f7e0aaa3d444e050a2",
+  "parentTrainingSourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "method": "shared independent actor PPO / centralized training-only critic / game_win / all heads / full_episode credit",
+  "trainingSteps": 37360,
+  "advantageNormalization": "none",
+  "postUpdateKLRollback": true,
+  "initialCriticPath": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/ppo-20260907-125820/critic.pt",
+  "initialCriticHash": "b0f390f50fb568e54cd278b2266030bfe61ed3dc903ae71032f2d2926ca5352b",
+  "trainerSources": {
+    "player-agents-ppo.py": "2be07ffc60d437f3eba21c673c0057335808ac71b48f924b38df4c482d380a66",
+    "player_ppo.py": "95f661a88803ef3b0875d3d4c67e1b2d7271f0ab6f18c2047d6fc3a1ebfe6f90",
+    "player_actor.py": "b0580eca6df105f7c76c57dfef74a8d0779d8926802d2c445b139a9e7b331423"
+  },
+  "actorHash": "61c59e110797290c46b30b91a9fa2d0d3665e92a40f3c998bf2e24ed168edc06",
+  "criticHash": "e48e067adfe4c5cd31ea9df79ab31a1b262e55edd9ee043b35e02f4ddea9a34b",
+  "rolloutReport": "/Users/gem/git/jsts/picklebot/artifacts/player-agents/competition-20260907-125939.json",
+  "rolloutReportHash": "ca77d6065d74fe52710346d132ac2c467e8bdda8bf89ae357a8faff6e647e473",
+  "rows": 42634,
+  "rewardMode": "game_win",
+  "creditAssignment": "full_episode",
+  "gamma": 1.0,
+  "gaeLambda": 1.0,
+  "epochs": 4,
+  "updates": 168,
+  "batch": 1024,
+  "optimizerSeed": 1000000,
+  "trainHeads": "all",
+  "protectedParameterMaximumChange": 0.00440216064453125,
+  "learningRate": 3e-05,
+  "entropyCoefficient": 0.0,
+  "clip": 0.1,
+  "targetKL": 0.01,
+  "stoppedForKL": false,
+  "sampledLogProbabilityMaximumError": 2.86102294921875e-05,
+  "history": [
+    {
+      "epoch": 1,
+      "kl": 0.001952942693606019,
+      "entropy": 0.2655094265937805,
+      "valueMSE": 0.13089844584465027,
+      "updates": 42
+    },
+    {
+      "epoch": 2,
+      "kl": 0.0020917567890137434,
+      "entropy": 0.26210060715675354,
+      "valueMSE": 0.1402730792760849,
+      "updates": 84
+    },
+    {
+      "epoch": 3,
+      "kl": 0.002148926956579089,
+      "entropy": 0.2628842890262604,
+      "valueMSE": 0.14257366955280304,
+      "updates": 126
+    },
+    {
+      "epoch": 4,
+      "kl": 0.0025653692428022623,
+      "entropy": 0.2590791881084442,
+      "valueMSE": 0.14023266732692719,
+      "updates": 168
+    }
+  ],
+  "rejectedUpdates": [],
+  "advantageMinimum": -0.053953856229782104,
+  "advantageMaximum": 1.464399814605713,
+  "positiveAdvantageRows": 42553,
+  "negativeAdvantageRows": 81,
+  "entropyOnlyUpdate": false,
+  "elapsedSeconds": 21.384325874969363,
+  "limit": "Optimizer update evidence only; evaluate playing strength separately."
+}

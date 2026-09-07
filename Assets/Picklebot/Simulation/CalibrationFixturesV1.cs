@@ -522,6 +522,20 @@ namespace Picklebot.Simulation
                         ball.linearVelocity.z - paddleSpeed;
                     if (priorRelativeSpeed < 0f && currentRelativeSpeed > 0f)
                     {
+                        var contactPoint =
+                            paddleCollider.ClosestPoint(ball.position);
+                        var transfer = PaddleSpinTransferV1.Evaluate(
+                            ball.position,
+                            ball.linearVelocity,
+                            ball.angularVelocity,
+                            new Vector3(0f, 0f, paddleSpeed),
+                            contactPoint,
+                            ball.position - contactPoint,
+                            configuration);
+                        ball.linearVelocity = transfer.LinearVelocity;
+                        ball.angularVelocity = transfer.AngularVelocity;
+                        currentRelativeSpeed =
+                            ball.linearVelocity.z - paddleSpeed;
                         var incomingRelativeNormalSpeed = -priorRelativeSpeed;
                         var outgoingRelativeNormalSpeed = currentRelativeSpeed;
                         var effectiveRestitution =

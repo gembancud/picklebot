@@ -1,0 +1,24 @@
+{
+  "version": "serve-return-curriculum-v1",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "parentActor": "artifacts/player-agents/ppo-20260907-094032/actor.json",
+  "parentActorHash": "58a5a4ad51bf77ab4259a251ede4ddca69729ea717e7c0c74bfe2c95f286b93a",
+  "reason": "Matched own-controller serves were all legal. The deterministic actor returned 0/12, sampled actor 2/12, and privileged teacher 11/12 legally. Existing normal imitation bank used frozen-baseline serves, not four independent-controller serves.",
+  "collection": {
+    "trainingSeed": 1091000,
+    "developmentSeed": 1194000,
+    "trainingRallies": 128,
+    "developmentRallies": 32,
+    "teacherProbability": 1,
+    "fixedShot": -1,
+    "baselineOpponent": false,
+    "method": "Existing four-player teacher curriculum. Real scripted serves and legal physics; no injected ball or privileged labels in runtime inference. Separate data partitions."
+  },
+  "primarySubset": "Keep only phase.serveFlight observations, index 40, from the new training and development banks. Preserve all owned labels at those decision ticks. Hash the selected row indices. No diagnostic case or final seed enters fitting.",
+  "additionalTraining": ["artifacts/player-agents/incoming-20260907-043315.json", "artifacts/player-agents/incoming-20260907-051229.json"],
+  "additionalDevelopment": ["artifacts/player-agents/incoming-20260907-043522.json", "artifacts/player-agents/incoming-20260907-051343.json"],
+  "fit": {"epochs": 60, "batch": 1024, "hidden": 256, "learningRate": 0.0003, "neutralPaddleProbability": 0.5, "balanceTrainingSources": true, "retentionWeight": 0},
+  "smallDevelopmentCheckSeed": 1191000,
+  "checks": "Validate all four teacher motors and full source data before phase selection. Check selected row identities and provenance. Verify Unity export and use the existing refresh driver's 32-rally sampled-baseline check at seed 1191000. Then repeat 36 matched serve-return cases and 64 short/deep controls, followed by the unchanged eight development games if motors pass.",
+  "scope": "One supervised corrective drill before more game-win RL. No selector at runtime, controller or reward change, baseline overwrite, final seeds, automatic promotion, or cloud compute. Label drill fitting separately from competitive reinforcement learning."
+}

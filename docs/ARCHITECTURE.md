@@ -1,5 +1,76 @@
 # Picklebot architecture
 
+## Full-body doubles prototype
+
+D-029 adds `Picklebot.Doubles`, with dependencies on Core and Simulation.
+It does not change the earlier rally, inspection or singles assemblies.
+
+- `DoublesWorld` owns one local 240 Hz physics scene, a dynamic ball, four
+  kinematic paddles, body colliders, a level apron and net contact checks.
+- `DoublesRules` owns service order, side-out scoring and rally faults. It
+  retains volley momentum obligations until the player regains control.
+- `PlayerBody` constrains the paddle grip to arm reach. Analytic two-bone IK
+  places the arms and legs. A procedural step controller supplies foot state.
+- `StrokeController` supplies scripted interception and inverse flight planning.
+  It moves the paddle. It does not assign ball velocity or spin.
+- `ContactModel` supplies fitted pitch, timing, speed and brush corrections
+  for three shot styles. These are learned parameters, not a joint-torque network.
+- Two `TeamPolicy` objects select targets and contact styles from ball state
+  and teammate/opponent positions. Terminal rewards are opposing win/loss values.
+- `DoublesTraining` runs bounded Editor jobs. Reports preserve source, model,
+  configuration and seed evidence. Test samples and interactive play use
+  separate seed ranges.
+
+The ball uses the existing provisional V1 contact and aerodynamic models.
+The four-body environment has its own versioned source evidence. It does not
+close measured physics calibration. See [PICKLEBALL_DOUBLES.md](PICKLEBALL_DOUBLES.md).
+
+## Full-size inspection environment
+
+D-027 adds `Picklebot.Inspection`. It depends on Core and Simulation, but not
+on a trainer. It reuses the existing V1 geometry factory, configuration,
+aerodynamic model, and provisional paddle spin-transfer model. It replaces
+the training episode lifecycle with a local physics scene at 240 Hz.
+Collisions and rule faults do not stop that scene. A 20-second inspection
+limit bounds each run.
+
+Two bounded kinematic paddle motors accept independent XYZ translation and
+three-axis rotation. Player ground markers supply a limited kitchen-rule
+proxy. The ball remains a dynamic rigid body. The contact model does not
+select a landing target. Optional fixed strokes demonstrate contact without
+an AI model. Recorded trajectories and contacts support later measurements.
+See [PICKLEBALL_INSPECTION.md](PICKLEBALL_INSPECTION.md) for the provisional
+contract and its limits. This addition does not replace the frozen Phase 0
+contract or close Phase 1B.
+
+## Separate AI rally prototype
+
+D-028 adds `Picklebot.Match` above Inspection. It reuses the same local physics
+world and bounded motors. `ScriptedStrokeMotor` provides explicit contact
+assistance. Two independent `ShotPolicy` objects learn shot choice from
+terminal zero-sum rewards. The editor runs bounded training and validation
+jobs, while `MatchDemo` displays independent points. The model asset records
+source and configuration hashes. There is no dependency from Inspection back
+to Match. See [PICKLEBALL_MATCH.md](PICKLEBALL_MATCH.md).
+
+D-025 introduces `Picklebot.Rally` as an independent prototype assembly. It
+contains its own local Unity physics scene, bounce/point state, trained dense
+neural policy, and demo controls. It has no dependency on the existing Core,
+Simulation, Evaluation, or Training assemblies. An Editor-only assembly creates
+the scene and records validation results. `scripts/rally-train.py` generates
+offline imitation examples and exports model weights; no teacher code runs in
+the game. See [AI_RALLY.md](AI_RALLY.md) for the provisional physics contract.
+
+D-026 adds `Picklebot.Competition`. It reuses the rally rule state and model
+serialization types. It has its own physics scene, smaller paddle geometry,
+materials, bounded motor, and demo. A frozen goal-conditioned neural stroke
+model controls contact. A second neural policy chooses one of five landing
+targets from ball state and both paddle positions. Python trains that policy
+with PPO and actual Unity point results. Each side acts in its own coordinate
+frame. The two sides share weights, but receive opposite point rewards.
+The old cooperative scene and evidence remain separate. See
+[COMPETITIVE_MATCH.md](COMPETITIVE_MATCH.md) for the current contract.
+
 Status: **Accepted overview**
 
 This document is the short architectural map. The normative detail lives in:
@@ -11,6 +82,8 @@ This document is the short architectural map. The normative detail lives in:
   protocol;
 - [PHASE1B_PHYSICS_CALIBRATION_SPEC.md](PHASE1B_PHYSICS_CALIBRATION_SPEC.md)
   for the measured physics fixtures, thresholds, and `env-v1` close gate;
+- [PHASE1C0_LEARNING_PROBE_SPEC.md](PHASE1C0_LEARNING_PROBE_SPEC.md) for the
+  provisional trainer, artifact, seed-hygiene, and visible-replay contract;
 - [DECISIONS.md](DECISIONS.md) for accepted direction and change history.
 
 When documents appear to conflict, the newest accepted decision explains the
@@ -63,7 +136,7 @@ Picklebot.Core
 Picklebot.Evaluation       Picklebot.Simulation
       ^                         ^
       |                         |
-      +------ future trainer adapter
+      +------ Phase 1C0 trainer adapter
 ```
 
 `Picklebot.Evaluation` owns protocol data, observation encoding, reward mapping,
@@ -86,8 +159,10 @@ Phase 1B keeps calibration behavior explicit and testable:
 - EditMode tests prove the pure model and serialized identity; PlayMode tests
   prove the integrated trajectory and contact behavior.
 
-The calibration gate does not introduce a trainer SDK. The trainer adapter
-remains a Phase 1C boundary consumer after `env-v1` is frozen.
+The calibration assemblies do not introduce a trainer SDK. D-023 permits the
+separate Phase 1C0 adapter to consume the provisional `env-v1` contract while
+Phase 1B remains open; no dependency points back from Core, Simulation, or
+Evaluation to that adapter.
 
 ## Verification layers
 

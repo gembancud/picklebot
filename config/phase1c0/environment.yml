@@ -1,0 +1,18 @@
+name: picklebot-phase1c0
+channels:
+  - defaults
+dependencies:
+  - python=3.10.12
+  # ML-Agents 1.1.0 imports pkg_resources, removed from newer setuptools.
+  - setuptools<81
+  # PyPI mlagents 1.1.0 requires grpcio <=1.48.2. Defaults supplies a native
+  # osx-arm64 build, avoiding a slow and fragile local source compilation.
+  - grpcio=1.48.2
+  - pip
+  - pip:
+      # ML-Agents 1.1.0 pins ONNX 1.15 and protobuf <3.21. Newer PyTorch
+      # releases default to the dynamo exporter, which requires onnxscript
+      # and a newer, incompatible ONNX/protobuf chain. The 2.1 patch line
+      # uses the compatible legacy exporter and satisfies ML-Agents >=2.1.1.
+      - torch==2.1.2
+      - mlagents==1.1.0

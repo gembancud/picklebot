@@ -1,0 +1,45 @@
+{
+  "version": "serve-retention-self-play-v2",
+  "sourceHash": "7a998e12dc7353359861a12f5197842cf24a0f62dc61baa5dc22858cd9fad845",
+  "initialActor": "artifacts/player-agents/imitation-20260907-102622/actor.json",
+  "initialActorHash": "ba0050b42363519eecc41af196a8e416dad1b673046455b0a23833a18656824a",
+  "initialCritic": "artifacts/player-agents/ppo-20260907-094032/critic.pt",
+  "initialCriticHash": "33c6227506d454e628442d3bc27bc052489ada03bf51c4cc97b6a4af8422a2f8",
+  "opponents": [
+    {
+      "path": "artifacts/player-agents/imitation-20260907-102622/actor.json",
+      "sha256": "ba0050b42363519eecc41af196a8e416dad1b673046455b0a23833a18656824a"
+    },
+    {
+      "path": "artifacts/player-agents/ppo-20260907-094032/actor.json",
+      "sha256": "58a5a4ad51bf77ab4259a251ede4ddca69729ea717e7c0c74bfe2c95f286b93a"
+    }
+  ],
+  "iterations": 2,
+  "ralliesPerCollection": 256,
+  "trainingSeedBases": [
+    1095000,
+    1096000
+  ],
+  "developmentSeedBases": [
+    1186000,
+    1187000
+  ],
+  "rewardMode": "game_win",
+  "creditAssignment": "full_episode",
+  "gamma": 1,
+  "gaeLambda": 1,
+  "trainHeads": "all",
+  "advantageNormalization": "none",
+  "entropyCoefficient": 0,
+  "epochsPerUpdate": 4,
+  "batch": 1024,
+  "learningRate": 0.00003,
+  "clip": 0.1,
+  "targetKL": 0.01,
+  "postUpdateKLRollback": true,
+  "training": "Four independent player policy instances. Candidate and opponent sample their own actions. One fixed opponent per collection. Alternate candidate court ends. Finish the current complete game after the rally target. Carry the training-only critic between iterations. Update only from candidate player trajectories.",
+  "checks": "Reject invalid provenance, unsafe candidate or saved-opponent motors, incomplete games, or zero advantage signal. After each update, verify Unity parity and run the existing 32-rally development check against the sampled frozen baseline. Stop on failure. After the two updates, audit the full loop, repeat the unchanged 36 real-serve and 64 short/deep probes, then eight development games at 1141000..1141007. Compare with the experimental initial actor and original parent. Keep final seeds unused.",
+  "scope": "Bounded local self-play and older-opponent trial, not a full adaptive league. No runtime selector, controller changes, shaped rewards, final seeds, scene replacement, automatic promotion, or cloud compute. Pre-update self-play win rate is not evidence of improvement.",
+  "reason": "Four-source actor retains parent short/deep landing counts and improves own-controller serve returns from 0/12 to 4/12 deterministic and 2/12 to 6/12 sampled. Baseline development remains 0/8 wins with 320 returns versus parent 497. Use as an experimental self-play starting point, not a promoted stronger model. This trial tests team-win learning after the new serve curriculum with twice the previous collection size."
+}
