@@ -1,3 +1,12 @@
+# Execution-goal stage implemented
+
+12 September 2026, branch `feat/hierarchical-control`. The executor now accepts movement and shot goals. The initial shot-goal training check completed (32,776 experiences); its 64-attempt development screen changed from 53 to 54 legal landings and 20 to 21 target hits. This is an integration result, not a demonstrated aiming breakthrough. No new model is promoted.
+
+The strategy actor and movement/recover/cover/yield training remain unimplemented. [Design](HIERARCHICAL_CONTROL.md) · [Tests and measurements](research/execution-v1-integration.md)
+
+The previous published baseline follows for comparison.
+
+---
 # Checkpoint before hierarchical control
 
 Snapshot: **11 September 2026**. Current implementation: one actor per player instance, shared player weights, ML-Agents PPO. The proposed strategy/execution hierarchy has not been implemented.
@@ -6,7 +15,7 @@ Snapshot: **11 September 2026**. Current implementation: one actor per player in
 
 - Learned fixed-ball serves, easy opening receives, central airborne and bounced returns.
 - Constrained grip, wrist, elbow, shoulder and body control; no authored V3 stroke sequence.
-- Up to 128 independent practice courts in the last comparison (8 workers × 16 courts).
+- Up to 128 independent practice courts in the last comparison (8 workers Ã— 16 courts).
 - Paired practice and competitive self-play infrastructure, model exports, recordings and outcome-based evaluation.
 
 ## Latest measurement

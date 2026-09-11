@@ -56,6 +56,7 @@ namespace Picklebot.PlayerControlsIntegration
         public bool Done {get;private set;}
         public string Outcome {get;private set;}
         public float Reward {get;private set;}
+        public float FaceContactTime => faceTime;
         private float distance;
         private PlayerReturnProgressV3 returnProgress;
         private PlayerDropApproachV3 dropApproach;

@@ -72,6 +72,7 @@ namespace Picklebot.PlayerLearning
 
     public sealed class PlayerMlDrillsV3 : MonoBehaviour
     {
+        public PlayerExecutionDrillsV1 ExecutionGoals { get; private set; }
         public const string CurriculumVersion = "ml-drill-curriculum-v29-stability-order";
         public string Task = "reaction-contact";
         public string FixedServeSides = "right";
@@ -135,6 +136,7 @@ namespace Picklebot.PlayerLearning
             public readonly PlayerMlAgentV3[] BackgroundAgents = new PlayerMlAgentV3[4];
             public PlayerContactDrillV3 Drill { get; private set; }
             private float reward;
+            private PlayerExecutionGoalV1[] goals;
             private int firstDecision, firstBackgroundDecision;
             private readonly int[] firstByPlayer=new int[4];
             private readonly SimpleMultiAgentGroup group=new();
@@ -154,11 +156,11 @@ namespace Picklebot.PlayerLearning
                     var go = new GameObject("Independent player " + i);
                     go.SetActive(false); go.transform.SetParent(owner.transform);
                     var behavior = go.AddComponent<BehaviorParameters>();
-                    behavior.BehaviorName = PlayerMlAgentV3.BehaviorName;
+                    behavior.BehaviorName = owner.ExecutionGoals == null ? PlayerMlAgentV3.BehaviorName : PlayerExecutionGoalV1.BehaviorName;
                     // All seats share actor weights. Paired practice groups only
                     // this court's two teammates; it has no opposing learner team.
                     behavior.TeamId = 0;
-                    behavior.BrainParameters.VectorObservationSize = PlayerObservationV3.Count;
+                    behavior.BrainParameters.VectorObservationSize = owner.ExecutionGoals == null ? PlayerObservationV3.Count : PlayerExecutionGoalV1.ObservationCount;
                     behavior.BrainParameters.NumStackedVectorObservations = 1;
                     behavior.BrainParameters.ActionSpec = new ActionSpec(PlayerMlAgentV3.ContinuousCount, new[] {2});
                     behavior.Model = owner.InferenceModel;
@@ -168,6 +170,7 @@ namespace Picklebot.PlayerLearning
                     var agent = go.AddComponent<PlayerMlAgentV3>();
                     agent.Bind(seat, () => { if(owner.OptimizerDiagnostics)PlayerDrillDiagnosticsV3.Record(Agents[seat],Drill.Seed-owner.FirstSeed,Drill.Done); return PlayerObservationV3.Capture(Drill.Match, seat, Drill.Match.Tick); },
                         () => PlayerContactDrillV3.IsDropTask(Drill.Task) && Drill.Match.BallHeld && Drill.Match.World.Rules.Server == seat);
+                    if (owner.ExecutionGoals != null) agent.BindGoal(() => goals[seat]);
                     agent.Received += (current, actions) =>
                     {
                         var row=owner.RecordDecision(Drill,current,actions);
@@ -192,6 +195,7 @@ namespace Picklebot.PlayerLearning
             }
             private void Attach()
             {
+                goals = owner.ExecutionGoals?.Goals(Drill);
                 foreach(var old in group.GetRegisteredAgents().ToArray())group.UnregisterAgent(old);
                 foreach (var agent in Agents) { agent.ClearCommand(); agent.Learning = owner.CooperativePairs?agent.Seat/2==Drill.Player/2:agent.Seat==Drill.Player; if(owner.CooperativePairs&&agent.Learning)group.RegisterAgent(agent); firstByPlayer[agent.Seat]=agent.DecisionsReceived; }
                 firstDecision = owner.CooperativePairs?Agents.Sum(p=>p.DecisionsReceived):Agents[Drill.Player].DecisionsReceived;
@@ -235,8 +239,10 @@ namespace Picklebot.PlayerLearning
                     throw new InvalidOperationException("Drill simulation failed: " + Drill.Outcome + "; seed="+Drill.Seed+" player="+Drill.Player+" tick="+Drill.Match.Tick+"; " + Drill.Match.Failure);
                 }
 
-                reward += Drill.Reward;
-                if(owner.CooperativePairs)group.AddGroupReward(Drill.Reward);else Agents[Drill.Player].AddReward(Drill.Reward);
+                float stepReward = Drill.Reward;
+                if (Drill.Done && owner.ExecutionGoals != null) stepReward += owner.ExecutionGoals.Finish(Drill,goals[Drill.Player]);
+                reward += stepReward;
+                if(owner.CooperativePairs)group.AddGroupReward(stepReward);else Agents[Drill.Player].AddReward(stepReward);
                 if (!Drill.Done) return;
                 var record = new MlDrillEpisodeV3 { seed = Drill.Seed, player = Drill.Player, task = Drill.Task, serveFromLeft = Drill.ServeFromLeft, rallyServer=Drill.RallyServer??-1, rallyServerOnRight=Drill.RallyServerOnRight, randomMatchContext=Drill.RandomMatchContext,
                     resetRejections = resetRejections, initialHoldLift = Drill.InitialHoldLift, feedDifficulty = Drill.FeedDifficulty, feedLowering = Drill.FeedLowering, feedLateralOffset = Drill.FeedLateralOffset, faceContactBallHeight = Drill.FaceContactBallHeight, outcome = Drill.Outcome, physicsTicks = Drill.Match.Tick, reward = reward,
@@ -441,11 +447,14 @@ namespace Picklebot.PlayerLearning
                 || TicksPerFrame < 1 || FirstSeed < seedMinimum || (long)FirstSeed + SeedCount > seedMaximum)
                 throw new ArgumentException("Invalid or non-training drill allocation.");
             if(!float.IsFinite(InitialHoldLift)||InitialHoldLift<0||InitialHoldLift>140|| (InitialHoldLift!=0&&!PlayerContactDrillV3.IsDropTask(Task)&&Task!="serve-return"&&Task!="contact-return"&&Task!="serve-practice-return"))throw new ArgumentOutOfRangeException(nameof(InitialHoldLift));
+            ExecutionGoals = GetComponent<PlayerExecutionDrillsV1>();
+            if (ExecutionGoals != null && !ExecutionGoals.enabled) ExecutionGoals = null;
+            ExecutionGoals?.Prepare(this);
             var academy = Academy.Instance;
             academy.AutomaticSteppingEnabled = false;
             if (!RequireTrainer && academy.IsCommunicatorOn) throw new InvalidOperationException("Evaluation cannot connect to a Python trainer.");
             if (RequireTrainer && !academy.IsCommunicatorOn) throw new InvalidOperationException("Python trainer is not connected; no heuristic fallback allowed.");
-            Report = new MlDrillReportV3 { status = "running", task = Task, fixedServeSides = FixedServeSides, activePracticePlayers=BackgroundModel!=null, cooperativePairs=CooperativePairs, randomMatchContext=RandomizeMatchContext, firstSeed = FirstSeed, seedCount = SeedCount,
+            Report = new MlDrillReportV3 { contract = ExecutionGoals == null ? PlayerMlAgentV3.ContractVersion : PlayerExecutionGoalV1.Contract, status = "running", task = Task, fixedServeSides = FixedServeSides, activePracticePlayers=BackgroundModel!=null, cooperativePairs=CooperativePairs, randomMatchContext=RandomizeMatchContext, firstSeed = FirstSeed, seedCount = SeedCount,
                 arenas = ArenaCount, sourceIdentity = SourceIdentity, unityVersion = Application.unityVersion,
                 interleavedRecovery=InterleavedRecovery,optimizerDiagnostics=OptimizerDiagnostics,schedulerWorkerId=SchedulerWorkerId,movementRecoveryMix=MovementRecoveryMix,movementRehearsalRange=MovementRehearsalRange,movementRange=MovementRange,movementTiming=MovementTiming,movementStartVariation=MovementStartVariation,movementPositionReward=MovementPositionReward,movementPattern=MovementPattern, initialHoldLift = InitialHoldLift, stationaryFlightDifficulty = StationaryFlightDifficulty, maximumReturnDifficulty = MaximumReturnDifficulty, feedLowering = FeedLowering, feedLateralOffset = FeedLateralOffset, trainerConnected = academy.IsCommunicatorOn, alignedDecisions = AlignDrillDecisions, split = RequireTrainer ? "training" : InferenceModel != null ? "development" : "interactive" };
             if (!string.IsNullOrEmpty(EvidenceDirectory))
@@ -498,7 +507,7 @@ namespace Picklebot.PlayerLearning
         {
             if (decisionEvidence == null && string.IsNullOrEmpty(EvidenceDirectory)) return null;
             var row = new MlDecisionV3 { backgroundPolicy=background, seed = drill.Seed, player = agent.Seat, observationTick = agent.ObservedTick, task = drill.Task, serveFromLeft = drill.ServeFromLeft,
-                observation = agent.LastObservation.ToArray(), physical = agent.LastCommand.ToArray(),
+                observation = agent.LastPolicyObservation, physical = agent.LastCommand.ToArray(),
                 continuous = actions.ContinuousActions.ToArray(), release = actions.DiscreteActions[0],
                 canRelease = PlayerContactDrillV3.IsDropTask(drill.Task) && drill.Match.BallHeld && drill.Match.World.Rules.Server == agent.Seat };
             decisionEvidence?.WriteLine(JsonUtility.ToJson(row));

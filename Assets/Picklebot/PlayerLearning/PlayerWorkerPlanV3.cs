@@ -18,6 +18,9 @@ namespace Picklebot.PlayerLearning
         public string movementPattern="court";
         public float movementRange,movementTiming,movementStartVariation,movementPositionReward,movementRehearsalRange;
         public string backgroundModelHash;
+        public string executionContract;
+        public bool sampleShotTargets;
+        public float targetRadius=1.5f, legalTargetReward=.25f;
     }
 
     // Startup allocation only. No access to live balls, bodies, actions or rewards.
@@ -42,6 +45,11 @@ namespace Picklebot.PlayerLearning
         public static PlayerWorkerPlanV3 Create(PlayerWorkerManifestV3 manifest,int workerId)
         {
             if(manifest==null||manifest.version!=Version)throw new ArgumentException("Unknown worker manifest version.");
+            bool execution = !string.IsNullOrEmpty(manifest.executionContract);
+            if(execution && manifest.executionContract!=PlayerExecutionGoalV1.Contract)throw new ArgumentException("Unknown execution contract.");
+            if(!execution && manifest.sampleShotTargets)throw new ArgumentException("Shot targets require the execution contract.");
+            if(execution && (manifest.task=="fixed-team-match" || manifest.task=="paired-maintenance" || manifest.task=="paired-movement-maintenance" || manifest.optimizerDiagnostics || !string.IsNullOrEmpty(manifest.backgroundModelHash)))throw new ArgumentException("Execution v1 currently supports solo practice only.");
+            if(execution && (!float.IsFinite(manifest.targetRadius)||manifest.targetRadius<=0||manifest.targetRadius>3||!float.IsFinite(manifest.legalTargetReward)||manifest.legalTargetReward<0||manifest.legalTargetReward>.25f))throw new ArgumentException("Invalid execution target parameters.");
             if(manifest.mode!="training"&&manifest.mode!="evaluation")throw new ArgumentException("Explicit training/evaluation mode required.");
             if(manifest.mode=="training"&&(manifest.task=="falling-contact"||manifest.task=="falling-return"))throw new ArgumentException("Freely falling drills are retired from training; use stationary contact and held-ball serve practice.");
             if(manifest.task!="fixed-team-match"&&!PlayerContactDrillV3.ValidTask(manifest.task)&&!PlayerMlDrillsV3.IsMovementTask(manifest.task)&&manifest.task!="paired-maintenance"&&manifest.task!="rally-maintenance"&&manifest.task!="receive-varied-maintenance"&&manifest.task!="receive-maintenance"&&manifest.task!="serve-receive"&&manifest.task!="serve-context-return"&&manifest.task!="context-range-return"&&manifest.task!="context-flight-return"&&manifest.task!="flight-return-mix"&&manifest.task!="fixed-serve-return"&&manifest.task!="falling-return"&&manifest.task!="stationary-return"&&manifest.task!="stationary-practice"&&manifest.task!="serve-return"&&manifest.task!="contact-return"&&manifest.task!="low-high-return"&&manifest.task!="mixed-height-return"&&manifest.task!="lateral-practice-return"&&manifest.task!="focused-lateral-return"&&manifest.task!="serve-practice-return")throw new ArgumentException("Unknown task.");
@@ -109,6 +117,11 @@ namespace Picklebot.PlayerLearning
             if(IsTeamMatch||run==null||run.gameObject.activeInHierarchy||run.Report!=null)throw new InvalidOperationException("Configure before enabling the drill and its agents.");
             if(!RequireTrainer&&model==null)throw new ArgumentException("Evaluation cannot fall back to heuristic control.");
             if(!string.IsNullOrEmpty(Manifest.backgroundModelHash)&&model==null)throw new ArgumentException("Frozen practice model required.");
+            if(!string.IsNullOrEmpty(Manifest.executionContract))
+            {
+                var goals=run.gameObject.AddComponent<PlayerExecutionDrillsV1>();
+                goals.SampleShotTargets=Manifest.sampleShotTargets;goals.TargetRadius=Manifest.targetRadius;goals.LegalTargetReward=Manifest.legalTargetReward;
+            }
             run.BackgroundModel=string.IsNullOrEmpty(Manifest.backgroundModelHash)?null:model;
             run.RandomizeMatchContext=Manifest.randomMatchContext;run.Task=Manifest.task;run.FixedServeSides=Manifest.fixedServeSides;run.FirstSeed=FirstSeed;run.SeedCount=SeedCount;
             run.ArenaCount=Manifest.arenasPerWorker;run.TicksPerFrame=Manifest.ticksPerFrame;
