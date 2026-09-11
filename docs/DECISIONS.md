@@ -761,3 +761,269 @@ Migration and compatibility:
 
 Affected roadmap/spec sections:
 ```
+
+### D-030 â€” Prepare Windows environment and migrate editor tooling to Unity CLI
+
+- Date: 2026-09-07
+- Status: Accepted; CLI connectivity and actor inference parity verified. Training portability remains open.
+
+The user authorized destination setup and requested migration from the earlier
+CoplayDev MCP setup to the official Unity CLI. Use Pixi for a project-local,
+locked Windows environment preserving Python 3.10.12, NumPy 1.23.5 and
+PyTorch 2.1.2. Preserve the pinned Editor and the original baseline evidence.
+CLI connectivity, response compatibility, source identity and model parity
+must be established before claiming the transfer ready for training.
+CoplayDev removal follows successful CLI verification and requires a separate
+record of the package-only baseline deviation, not replacement baseline hashes.
+This decision does not authorize model promotion or alter simulation behavior.
+See WINDOWS_SETUP.md for commands and migration gates.
+
+Migration evidence (2026-09-08 local): CLI beta.8 rejected Pipeline 0.5.0-exp.1
+for command execution, requiring at least 0.6.0-exp.1. That exact package update
+and CoplayDev removal now compile and support live eval through the original
+Python wrapper. All 156 EditMode tests pass after correcting an obsolete
+ML-Agents version assertion. Saved actor inference passes 32 cases. The two
+package-file baseline deviations are recorded separately in
+config/windows-tooling-migration.json; the original manifest remains immutable.
+The Windows Python/C# source-hash discrepancy is unresolved, so this is tooling
+readiness, not authorization or readiness for a new training run.
+
+### D-031 — Portable source identity with preserved checkpoint provenance
+
+- Date: 2026-09-08
+- Status: Accepted and verified on Windows.
+
+The user asked to fix Windows source-hash compatibility. Python and C# now
+normalize repository-relative paths to forward slashes, sort using ordinal
+UTF-16 ordering, and normalize source-text CRLF/CR to LF before hashing UTF-8.
+Tests folders and the existing presenter exclusions are applied consistently.
+Contact, player and team source hashes agree across the two languages.
+Artifact byte hashes remain byte-exact and do not normalize line endings.
+
+The hashing code is itself covered by source identity; changing it legitimately
+produces a new source revision. No old model sourceHash is overwritten, no
+historical report is relabelled, and no stale-source rejection is disabled.
+The existing allowHistoricalCandidate path remains explicit and records both
+actorTrainingSourceHash and the current sourceHash. Strict legacy evaluation
+continues to reject checkpoints trained against a different source revision.
+Fresh training, promotion, and new acceptance evidence are outside this fix.
+
+config/windows-source-migration.json records the original commit, original
+player identity, new contact/player/team identities, exact implementation
+hashes, three baseline source-file changes and 82 preserved artifact hashes.
+It builds on the immutable D-030 package migration record. source-check verifies
+58 unchanged baseline files plus the three exact source and two exact package
+changes; original baseline and package migration checks intentionally remain
+strict historical checks. Original source reconstructed from Git, using the
+canonical path rules, reproduces the transferred actor's original identity.
+
+Verification: 300 Python tests and 158 Unity EditMode tests pass. Regression
+cases cover path separators, enumeration order, case-sensitive sorting,
+newline/BOM handling, test exclusions, and detection of real source changes.
+Live Unity/Python contact, player and team hashes match. Saved actor inference
+passes all 32 cases with maximum error 0.000003814697265625. Evidence is under
+artifacts/windows-source-migration and artifacts/windows-hash-*. Original
+checkpoints and evidence were checked byte-for-byte against Git.
+
+### D-032 — Continue 2v2 goal with independent shared-weight players and staged controls
+
+- Date: 2026-09-08
+- Status: Accepted direction; implementation in progress.
+
+The user explicitly requested a persistent goal for a workable 2v2 game. They
+confirmed independent players sharing policy weights, and asked to improve
+controls while setting up the movement/jump/energy systems needed for simulation.
+The earlier pending controller choice is resolved at this scope level.
+Implement the new control behavior in a versioned experimental path, retaining
+the existing baseline. Do not silently change V1 action/observation dimensions,
+checkpoint metadata, or the frozen final protocol. Shared weights do not permit
+sharing player decisions or centrally assigning the hitter.
+
+PLAYER_CONTROLS_V2.md defines the staged contract, present kernel/lab limits,
+Windows measurements and remaining collision/paddle/learning integration.
+Nine kernel tests pass. The prototype is not a trained or physically calibrated
+human controller, and it does not complete the independent-player goal.
+
+
+D-032 implementation evidence update (2026-09-08): the experimental lab now
+resolves four motor proposals together using swept horizontal disc contacts.
+Equal-mass inelastic response and safety-enclosure walls are explicit prototype
+assumptions, not empirical human contact calibration or pickleball court lines.
+Collision velocity changes are reported separately from controlled acceleration.
+No V1 physics or acceptance limits changed. All 176 EditMode tests pass; 18 cover
+V2 controls/contacts. Body/feet/paddle, rules and learning integration remain open.
+
+
+D-032 body-pose implementation update (2026-09-08): the experimental contact
+world now owns articulated foot/leg/shoulder poses with planted stance feet,
+bounded airborne repositioning and explicit unsupported-foot state. Rotated shoe
+support is exercised against the unchanged DoublesRules kitchen and late-volley
+momentum behavior. All 184 EditMode tests pass (26 V2 control tests). The lab is
+still untrained, and ball/paddle/match integration and calibration remain open.
+
+
+## D-033 - Opt-in control integration with existing doubles physics
+
+- Date: 2026-09-08
+- Status: Implemented adapter; game/policy integration remains in progress.
+
+To carry D-032 controls into the actual 2v2 physics, add PlayerBody.ApplyExternalFrame
+and PlayerControlMatch. The new adapter drives existing colliders, articulated
+meshes and physical paddles from a single contact/body/paddle trial. Default V1
+controllers and saved scene assets remain on their original path. Running both
+root motors is rejected. Real physical paddle contact is verified in PlayMode.
+
+This explicitly changes shared body source identity. Preserve the pre-adapter
+working source archive and all original models/manifests; never rewrite older
+checkpoint training hashes. config/player-controls-v2-integration.json records
+the exact two affected baseline-scope files, new experimental source inventory
+and current identities. player-controls-verify.py checks archived baseline bytes,
+82 historical artifacts, exact current scope and live Unity/Python agreement.
+D-031 source-check remains historical and intentionally rejects later changes.
+
+Paddle requests are body-local, speed/acceleration/reach/rotation bounded and
+atomic with root motion. Infeasible trials are exposed; no hidden final hand
+projection or central ball planner is introduced. The adapter currently takes
+four supplied command pairs; it is not yet an accepted policy or full-game loop.
+
+
+## D-034 - Explicit independent-player V2 decision contract
+
+- Date: 2026-09-08
+- Status: Interface and physical probe verified; learned gameplay incomplete.
+
+Implement a separate 96-value observation and 15-value direct action contract.
+Preserve the identifiable V1 54-value prefix without changing the V1 actor loader.
+Do not relabel V1 weights or map categorical shot logits silently into physical
+hand controls. Four policy instances may share learned parameters while keeping
+their own decisions, memory and random streams. Capture all observations before
+inference; retain 12-tick decisions and six-tick latency. Expose the player's own
+existing kitchen eligibility and volley-momentum flags through read-only getters.
+
+The V2 physics match can now attach four policies and execute delayed decisions.
+The shared-weight integration probe is untrained and is not game-strength or
+checkpoint-transfer evidence. 196 EditMode tests and four targeted physics tests
+pass. A test-only ambiguous Random reference was corrected; the earlier 188-test
+run used old assemblies and is not evidence for D-034. Current build and schema
+dimensions were explicitly confirmed before the accepted run.
+
+config/player-controls-v2-decisions.json and player-decisions-verify.py preserve
+D-033/D-031 evidence and record current exact scope/identity. The new shared
+source change is two rule-state getters; no rule transition behavior changes.
+Serving/full-game progression, policy learning and all acceptance gates remain.
+
+
+## D-035 - Physical serve/reset and complete-game mechanics
+
+- Date: 2026-09-08
+- Status: Targeted mechanics tests pass; learned gameplay/acceptance incomplete.
+
+Add disclosed drop-serve and dead-ball reset skills around the independent V2
+decision loop. They operate through real bounded body/paddle commands and retain
+all collisions, service-foot checks and late volley-momentum resolution. Applied
+action observations report actual commands, including assistance. Failure is
+terminal; no silent retries or slowed simulation count as successful play.
+
+Diagnostic failures exposed a forearm in the striking plane. The experimental
+elbow pole now follows the back of the paddle face, retaining fixed arm lengths
+and colliders. Preferred paddle braking reserve has a counted radial recovery
+mode; all hard speed/acceleration/reach/rotation/relative-speed limits remain.
+The previous adapter source and all failed probes remain available as evidence.
+
+Game mechanics are tested using untrained hold policies. A complete winning
+score in that fixture is not learned policy strength or acceptance. The existing
+scene assets/default V1 path remain unchanged. Current exact identity/evidence is
+recorded by player-controls-v2-game.json and player-game-verify.py; previous
+migration/decision records and model hashes are not overwritten.
+
+The user has been asked to clarify learned action scope before costly training:
+movement/posture plus shot intent executed by a bounded independent swing, or
+direct learned paddle trajectories. Both use the same physical command boundary.
+
+## D-036 - Explicit historical actor intent bridge
+
+The working training assumption is movement/posture plus shot intent, pending
+user steering. Four LegacyActorIntentPolicyV2 instances share the unchanged V1
+model weights while retaining independent inference traces and RNG streams.
+Only the frozen 54-value observation prefix enters that network. Current heading
+rotates its movement request into body coordinates. This is explicitly a V1
+compatibility bridge, not a model trained on the 96-value V2 observation.
+
+PlayerShotIntentV2 is captured with the movement action and applied after the
+same six-tick latency. Each seat owns a separate PlayerIntentSwingV2 contact plan.
+The swing planner requests paddle motion and never chooses locomotion or the
+hitter. The legacy bridge explicitly requests sprinting and permits automatic
+crouch for a planned stroke. New policies can retain their own posture. Physical
+speed, acceleration, reach, energy, contacts and support constraints still apply.
+Contact planning currently uses neutral residuals and the historical reach
+prediction assumptions; the checkpoint's contact-model integration is unfinished.
+
+All 200 EditMode and 162 PlayMode tests pass. Fixed and sampled checkpoint
+inference match the original actor over 64 observations each, including random
+stream consumption and movement coordinate transforms. Timing tests ensure
+mutable policy state cannot change an already queued shot. These are contract
+and regression tests, not proof of playable transferred behavior.
+
+The first actual four-checkpoint diagnostic failed at physics step 675: player 2
+had no feasible paddle transition. The entire trial was rejected. The preserved
+report is artifacts/player-controls-v2/intent-probe-01.json, using only interactive
+seed 1300000 and exact actor SHA 61c59e110797290c46b30b91a9fa2d0d3665e92a40f3c998bf2e24ed168edc06.
+No game score had been awarded. Do not present this as a playable V2 model.
+
+NEXT: capture the failing motor state, add a reproducible coupled shoulder/paddle
+fixture, and improve feasible control execution without increasing physical
+limits. Then finish contact-model and trainer/protocol integration and expose
+the V2 mode through the original presentation. Training, agent-strength gates,
+final evaluation and promotion remain incomplete. Original scene assets remain
+unchanged; IndependentPlayers is the selected scene.
+
+Current checks: intent-check / intent-check-unity. D-035 game-check is now a
+strict historical snapshot. Current source and test records are
+config/player-controls-v2-intent.json and player-controls-v2-intent-tests.json.
+The failed first PlayMode run (one CLI timeout log) and its successful clean rerun
+are both retained. All 82 historical artifacts and prior records remain intact.
+
+## Bounded wrist recovery (D-037, 2026-09-08)
+
+The exact step-675 failure was reproduced twice. The paddle had angular velocity
+(-11.7105, 2.5425, -0.6324) rad/s immediately before the ready target demanded a
+wrist stop. Losing the grip's rotational velocity made the 6 m/s shoulder-relative
+hand-speed constraint incompatible with the linear acceleration bound for the
+orientations previously considered. It was a restricted candidate search, not
+proof that every physical wrist orientation was infeasible.
+
+PlayerPaddleControl now tries ten bounded continuations of the previous wrist
+rotation after its existing twenty candidates fail. Every candidate retains the
+same 12 m/s speed, 100 m/s2 acceleration, 0.62 m reach, 12 rad/s rotation and 6 m/s
+relative hand-speed checks. No position projection or relaxed limit was added.
+WristRecoverySteps counts this path. The 80 rad/s2 decrement spaces recovery
+candidates; it is not a globally imposed angular-acceleration limit. The failed
+state is now an exact regression fixture, including all hard constraints and
+position integration. Failed trials expose a diagnostic snapshot without
+advancing physics. On successful JSON reports, failure/status is authoritative;
+Unity may serialize a null snapshot as a zero-valued object.
+
+All 201 EditMode and 162 PlayMode tests pass. The unchanged fixed-inference V1
+checkpoint now completes 6,000 steps without controller failure and a separate
+full 11-0 game in 11,484 physics steps. All eleven rallies contain only the serve
+and one return: five out faults and six wrong-side faults. This resolves a
+controller failure; it does not establish good rallies, balanced participation,
+competitive 2v2, model acceptance, or trained V2 behavior. Both probes use only
+interactive seed 1300000. Full-game evidence: intent-probe-05-full-game.json.
+
+The matching historical contact residual file is still present at
+Assets/Picklebot/Doubles/Models/contact.json. Its normalized SHA256 is
+6698221451858f044e26a28c58a39447d391c4f1aba58a68f11370926df9cba4, matching the actor.
+NEXT: integrate those residuals explicitly, diagnose actual return trajectories,
+and finish trainer/protocol and original-scene presentation integration. The
+current bridge still uses neutral residuals, disclosed serve/reset assistance,
+compatibility sprint and automatic crouch. No new model was trained or promoted.
+
+D-036 source is preserved in artifacts/player-controls-v2/d036-source.zip and
+verified against its manifest. Current checks: wrist-check / wrist-check-unity;
+prior stage checks remain historical. D-037 source and tests are recorded in
+config/player-controls-v2-wrist.json and player-controls-v2-wrist-tests.json.
+
+## Snapshot before hierarchical control (2026-09-11)
+
+Preserve the current ML-Agents player system before implementing strategy and execution policies. The latest critic-key comparison completed without passing its improvement screen; no candidate was promoted. Current capabilities, limitations and the proposed two-policy direction are recorded in [CURRENT_STATE.md](CURRENT_STATE.md). Demo clips are historical recordings with explicit checkpoint identities. The prior long README is preserved in the archive. Source, scenes, ONNX models, five full checkpoints and compact research evidence are included; generated environments, builds and raw rollouts remain local.

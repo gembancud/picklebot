@@ -1,0 +1,99 @@
+{
+  "schema": "player-controls-v2-wrist-v1",
+  "decision": "D-037",
+  "status": "Bounded wrist continuation resolves recorded checkpoint transition; competitive acceptance incomplete",
+  "priorMigrationSha256": "4738f60fd7a805457c5a3f91421be59877fa51881e7e3afe71f084f410654b96",
+  "preIntegrationSha256": "fd017938be3c70fdd6848dfe144e70d319229ed47c1cb2e3ac6c8425f5905347",
+  "baselineAdapterFiles": {
+    "Assets/Picklebot/Doubles/PlayerBody.cs": "622b09c4fc8d5716cc372b2428511fa8078dedec6e9c4992099076f353dd1bea",
+    "Assets/Picklebot/Doubles/PlayerBodyExternal.cs": "1eaaca14e647234b2f088d78289cd1481f8f253609e6b5297e1964a2199553bf",
+    "Assets/Picklebot/Doubles/DoublesRules.cs": "32f98fa7f1e76a2f8d9fcb7c4fc52f9cd38a2ddc1d9aedbf42a322ce3fed45cd"
+  },
+  "experimentalFiles": {
+    "Assets/Picklebot/PlayerControls/Picklebot.PlayerControls.asmdef": "92369295468243bb3c60c05a6554861796b8f8f591b911011b6696f848d175ce",
+    "Assets/Picklebot/PlayerControls/PlayerBodyPose.cs": "bc3c41ddb24306612ce0820c2db1ba008c634b8c5ab59261aa30fc30924fd13b",
+    "Assets/Picklebot/PlayerControls/PlayerControlContacts.cs": "ce8bae5ef9064d0fd158875462f23b8aa65c5d6564c166f10d593736886d85ee",
+    "Assets/Picklebot/PlayerControls/PlayerControlLab.cs": "7e0004f1939ee97001355b82e86388863533a7f926bf2f2bcb5d934b9e97554c",
+    "Assets/Picklebot/PlayerControls/PlayerControlMotor.cs": "f5ba01a2c5eb3adcaf36f09baa2e021ce99ab5d38ef8c2b97c0b5d23a4b99584",
+    "Assets/Picklebot/PlayerControls/PlayerControlObservation.cs": "a54204e181c291bff959406f4d6b42ab72264d0e7b38281d7f30a6885c93fca3",
+    "Assets/Picklebot/PlayerControls/PlayerControlWorld.cs": "53fa4792fa9cd1b5ec843ab3d37b520b3a23cce2eb0cc2e200f7d5be62ec7740",
+    "Assets/Picklebot/PlayerControls/PlayerPaddleControl.cs": "f7e3094709a1ba6df60584b9fd7ddcbd49887ab20b8aafc9f1808eaca1d9b517",
+    "Assets/Picklebot/PlayerControls/Editor/Picklebot.PlayerControls.Editor.asmdef": "0df0ce8d3f00d39c7d60649e7b6ac9fd371e69665db9ebd84ede7adb3d34a314",
+    "Assets/Picklebot/PlayerControls/Editor/PlayerControlLabEditor.cs": "19af76e86610b3a8f50704e3a4ff3a2d3a4cdb1987d3babfd59b6b3179c1941f",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/Picklebot.PlayerControls.Tests.asmdef": "48ac0ea02b01f3fd7c6a6b0216b592957e6bfeeeb64c1c755d6740c075746659",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/PlayerBodyPoseTests.cs": "a02dc4b110664d6b47be638352892f0c0f5c7c2a88eba3a5ddbf80f87f4c0f35",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/PlayerControlContactTests.cs": "fc102d37ce4a03f1c5442773eccca3b27a8f7b9bfc202571356b160c8913a257",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/PlayerControlMotorTests.cs": "140e8babbff0c8c0984607383e6b8a81429e108e4dc9ef78e357ba840efe2bf2",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/PlayerControlWorldTests.cs": "9cc7cbb68c25af0b32ef2350cab2a92e5d8f54a4104009b73cd9fd04f4d14364",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/PlayerPaddleControlTests.cs": "44c8f1920b06dabe562aeae4a5d67d755156a79641c6c778c768171d13ccf328",
+    "Assets/Picklebot/PlayerControlsIntegration/LegacyActorIntentPolicyV2.cs": "830123a7c69be62a8784dcbdebced8271f25785d28d95ce6ae857d0f7ddb0004",
+    "Assets/Picklebot/PlayerControlsIntegration/Picklebot.PlayerControlsIntegration.asmdef": "8e5efa27785876f7b550bd88450b71b34b419135135d6ee552b3e62b5abbeef7",
+    "Assets/Picklebot/PlayerControlsIntegration/PlayerActionV2.cs": "c4559909e65369a78d518c39fb42b6b4154b0f1d8fabe1a43c1c45ed0bc49172",
+    "Assets/Picklebot/PlayerControlsIntegration/PlayerControlMatch.cs": "f30e4d50020cc7ead1078c6e7d084168a5b1eb3daf6ef481748c8e21a7c3d80e",
+    "Assets/Picklebot/PlayerControlsIntegration/PlayerDecisionLoopV2.cs": "dbf59baf68d33da0e046908f508e2b6c481017426b613a275db84ab5f857a7b4",
+    "Assets/Picklebot/PlayerControlsIntegration/PlayerGameV2.cs": "bd7c8baa221bfe5d067ba80affa3a4c9c4d8ee069003c2f51f966a34c51e1b6e",
+    "Assets/Picklebot/PlayerControlsIntegration/PlayerIntentSwingV2.cs": "a8a39c650925ca6844f51f9a865e7d2fdcf171eaddda69b65d921922acb63801",
+    "Assets/Picklebot/PlayerControlsIntegration/PlayerObservationV2.cs": "86ee5f0d8394ad9c186ee1ae40a9ed9cd1c5796f8f084a2fd88db238cd80b86c",
+    "Assets/Picklebot/PlayerControlsIntegration/PlayerServeSkillV2.cs": "d238c6ebe71d4ac996c17df6f2cd527568fad9810735a3c054fdb74863d2ed79",
+    "Assets/Picklebot/PlayerControlsIntegration/PlayerShotIntentV2.cs": "cce76a31b6c3fc9eaf493ad6faf0494af617c3d16d108b35bf77142908d975fd",
+    "Assets/Picklebot/PlayerControlsIntegration/Editor/Picklebot.PlayerControlsIntegration.Editor.asmdef": "3a4ac3c92afbf36496c44f9bc1323ebcd540b72ff8d6599ed2a66c2b04155753",
+    "Assets/Picklebot/PlayerControlsIntegration/Editor/PlayerControlSource.cs": "9d7e080c62aaf725657e22fbe518a76f9ae3f696c5fc5588b74602589836c942",
+    "Assets/Picklebot/PlayerControlsIntegration/Editor/PlayerGameProbeV2.cs": "904e57e5d8eee55cd2eb5d4046c92571c8bd86c335bd7de75681089438d2c0cd",
+    "Assets/Picklebot/PlayerControlsIntegration/Tests/Editor/Picklebot.PlayerControlsIntegration.Tests.asmdef": "d517164b0257832345821c89f9601d327a339ef23880fd1795f0ed08be479d70",
+    "Assets/Picklebot/PlayerControlsIntegration/Tests/Editor/PlayerDecisionLoopV2Tests.cs": "bdc04799f0275d44047fd763b9c734b8c2642ff2cb971389efc5eb7a86c64de6",
+    "Assets/Picklebot/PlayerControlsIntegration/Tests/Editor/PlayerIntentBridgeTests.cs": "be4d094ebdeb39b11501df29dab8c252a31920f16e4d94f1e73ac2f18b04399b",
+    "Assets/Picklebot/PlayerControlsIntegration/Tests/PlayMode/Picklebot.PlayerControlsIntegration.PlayTests.asmdef": "43519b33f257e7641e3afd82203525faa0bcfb70f154d1002afff5d170db28d5",
+    "Assets/Picklebot/PlayerControlsIntegration/Tests/PlayMode/PlayerControlMatchTests.cs": "fe1939dfadeadc5dbd8a97f9bd340753c69065d2e18e41e7c03a9736177e13ec",
+    "Assets/Picklebot/PlayerControlsIntegration/Tests/PlayMode/PlayerGameV2Tests.cs": "0046a6a03c55f3ee968d0a7af47d916540bc2fed35a3c9b3a7dda1c81d8dd36b"
+  },
+  "verifierSha256": "b5cd99d6e4681338b18a88249d934bc9f50fc67f62e3ac1ddbc9253688f2a75e",
+  "sourceHashes": {
+    "contact": "59175edb2bf5f088457e8b857196b48fe96b2ecae9135c95b9d7b70d097625b6",
+    "player": "721e4881a7bbef14a3fb6dc7302a98251111b232bf26e42f7a84599fe1943c16",
+    "team": "c7fdd14bb5ad2263a32b821e889c8c6432542a56d9a49de777d398a22f0d41ea",
+    "controls": "f6b86d044e006e45400efa1c36abe9300a8cdf92d476a6b9f8b8a75308c5f490"
+  },
+  "priorIntegrationSha256": "8c162bb3f2835c875b893cb42aa33cbdd1751bf9d752c11fff487f48c7123b29",
+  "observation": {
+    "version": "player-observation-v2-direct-96",
+    "count": 96,
+    "legacyPrefixCount": 54
+  },
+  "action": {
+    "version": "player-action-v2-direct-15",
+    "count": 15
+  },
+  "decisionTicks": 12,
+  "latencyTicks": 6,
+  "priorDecisionsSha256": "761cc1503512355c58b4df6e7aeca8457bdda107adb19f9fc4bb6f67cd281ac0",
+  "priorAdapterSources": {
+    "Assets/Picklebot/Doubles/PlayerBodyExternal.cs": "artifacts/player-controls-v2/PlayerBodyExternal-d033.cs.txt"
+  },
+  "serve": {
+    "kind": "scripted physical drop serve",
+    "planner": "existing StrokeController",
+    "speedRequestScale": 1.25,
+    "pitchRequestBiasDegrees": -4,
+    "bodyDriveLeadSeconds": 0.16,
+    "initialRootAbsZ": 7.3,
+    "driveTargetAbsZ": 6.5,
+    "lateralRootOffset": 0.4,
+    "faceTargetUpOffset": 0.1035,
+    "ballVelocityInjection": false
+  },
+  "reserveRecovery": "Radial braking recovery can omit preferred outward reserve only; speed/acceleration/reach/rotation and shoulder-relative speed remain bounded",
+  "priorGameSha256": "93f24acabe1cbb7884e38985c672e8c9b98f395769b383754f6eb2686f590485",
+  "priorGameVerifierSha256": "118b392e39e9bf96c10619dc0162bcb46c01ddee5393d6f98ab1c8ed0fa1f676",
+  "checkpoint": {
+    "path": "artifacts/player-agents/ppo-20260907-130353/actor.json",
+    "sha256": "61c59e110797290c46b30b91a9fa2d0d3665e92a40f3c998bf2e24ed168edc06",
+    "projection": "54-value V1 prefix only",
+    "intent": "private delayed shot planner per player",
+    "assistance": "compatibility sprint request and automatic crouch; neutral contact residuals; existing serve/reset",
+    "accepted": false
+  },
+  "priorIntentSha256": "5cfbc7f0d7c80ad691d18da30f2773f0ef865436ef5a6d8c0f9faf0a588c1e0f",
+  "priorIntentVerifierSha256": "60bc9c73bf2b55a86eb7f3dbd58663b334bcb95c63e262c7f28fd52d3b3bab05",
+  "priorIntentArchive": "artifacts/player-controls-v2/d036-source.zip",
+  "priorIntentArchiveSha256": "a00df721acf994e529626739fa550b3fcffefd4cddf0ad813b60da5e2127ef1b"
+}

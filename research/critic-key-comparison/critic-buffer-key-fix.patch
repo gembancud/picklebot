@@ -1,0 +1,11 @@
+--- a/tools/mlagents-training/vendor/ml-agents/ml-agents/mlagents/trainers/buffer.py
++++ b/tools/mlagents-training/vendor/ml-agents/ml-agents/mlagents/trainers/buffer.py
+@@ -79,7 +79,7 @@
+ 
+     @staticmethod
+     def value_estimates_key(name: str) -> AgentBufferKey:
+-        return RewardSignalKeyPrefix.RETURNS, name
++        return RewardSignalKeyPrefix.VALUE_ESTIMATES, name
+ 
+     @staticmethod
+     def returns_key(name: str) -> AgentBufferKey:

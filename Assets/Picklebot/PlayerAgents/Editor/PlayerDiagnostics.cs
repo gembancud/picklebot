@@ -58,9 +58,9 @@ namespace Picklebot.PlayerAgents.Editor
         private static string outputPath;
         private static readonly string[] Modes = { "saved baseline / sampled shots", "four actors / constant hold", "four actors / constant attempt" };
 
-        public static string SourceHash() => ContactTraining.Hash(ContactTraining.SourceHash() + "\n" + string.Join("\n",
+        public static string SourceHash() => ContactTraining.Hash(ContactTraining.SourceHash() + "\n" + ContactTraining.SourceText(
             Directory.GetFiles("Assets/Picklebot/PlayerAgents", "*.cs", SearchOption.AllDirectories)
-            .Where(p => !p.Contains("/Tests/")).OrderBy(p => p, StringComparer.Ordinal).Select(p => p + "\n" + File.ReadAllText(p))));
+            .Where(p => !ContactTraining.CanonicalPath(p).Contains("/Tests/"))));
 
         public static void StartBenchmark(int physicsSteps = 6000)
         {

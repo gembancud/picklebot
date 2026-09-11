@@ -361,7 +361,7 @@ namespace Picklebot.Tests.Phase1B.EditMode
                 Is.False);
             Assert.That(
                 Phase1CProtocolV0.UnityTrainerPackage,
-                Is.EqualTo("com.unity.ml-agents@4.0.0"));
+                Is.EqualTo("com.unity.ml-agents@4.0.3"));
         }
 
         [Test]

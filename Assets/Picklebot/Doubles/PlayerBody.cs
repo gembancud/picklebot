@@ -5,7 +5,7 @@ namespace Picklebot.Doubles
 {
     // Analytic, kinematic IK. The same constrained hand pose controls the paddle
     // and the visible arm. This is not a learned muscle or balance simulation.
-    public sealed class PlayerBody
+    public sealed partial class PlayerBody
     {
         public const float Speed=3.8f, Acceleration=14f, PaddleSpeed=12f, PaddleAcceleration=100f;
         public const float AngularSpeed=12f, ArmUpper=.32f, ArmLower=.31f, Radius=.28f;
@@ -19,10 +19,10 @@ namespace Picklebot.Doubles
         public Vector3 LeftFoot { get; private set; }
         public Vector3 RightFoot { get; private set; }
         public Vector3 Hand=>Paddle.position+Paddle.rotation*GripLocal;
-        public Vector3 Shoulder=>Position+new Vector3(-Side*.19f,shoulderHeight,0);
-        public bool FeetInKitchen=>FootInKitchen(LeftFoot)||FootInKitchen(RightFoot);
-        public bool BothFeetOutside=>!FeetInKitchen&&LeftFoot.y<.061f&&RightFoot.y<.061f;
-        public bool BalanceRecovered=>Velocity.z*-Side<=.02f&&BothFeetOutside;
+        public Vector3 Shoulder=>externalDriven?externalFrame.shoulder:Position+new Vector3(-Side*.19f,shoulderHeight,0);
+        public bool FeetInKitchen=>externalDriven?externalFrame.touchesKitchen:FootInKitchen(LeftFoot)||FootInKitchen(RightFoot);
+        public bool BothFeetOutside=>externalDriven?externalFrame.bothFeetOutside:!FeetInKitchen&&LeftFoot.y<.061f&&RightFoot.y<.061f;
+        public bool BalanceRecovered=>externalDriven?externalFrame.balanceRecovered:Velocity.z*-Side<=.02f&&BothFeetOutside;
         public int Side=>Id<2?-1:1;
         private float shoulderHeight=1.36f, stepProgress=1;
         private int steppingFoot;
@@ -49,6 +49,8 @@ namespace Picklebot.Doubles
         public static bool FootInKitchen(Vector3 foot)=>foot.y<.08f&&Mathf.Abs(foot.x)<=DoublesRules.HalfWidth+.065f&&Mathf.Abs(foot.z)<=DoublesRules.Kitchen+.14f;
         public void Reset(Vector3 position)
         {
+            if(externalDriven){Torso.height=.9f;Torso.transform.rotation=Quaternion.identity;}
+            externalDriven=false;
             Position=position;Velocity=PaddleVelocity=AngularVelocity=Vector3.zero;shoulderHeight=1.36f;stepProgress=1;
             LeftFoot=Position+new Vector3(Side*.16f,.055f,0);RightFoot=Position+new Vector3(-Side*.16f,.055f,0);
             var rot=Quaternion.LookRotation(Vector3.forward*-Side);
@@ -66,6 +68,7 @@ namespace Picklebot.Doubles
         }
         public void Step(Vector3 moveTarget,Vector3 paddleTarget,Quaternion targetRotation,Vector3 feedVelocity,PlayerBody partner,float dt)
         {
+            if(externalDriven)throw new System.InvalidOperationException("External body control cannot also run the legacy motor. Reset first.");
             var old=Position;moveTarget.y=0;
             var wanted=Vector3.ClampMagnitude((moveTarget-Position)*4,Speed);
             var separation=Position-partner.Position;separation.y=0;
@@ -121,6 +124,7 @@ namespace Picklebot.Doubles
         private void Sphere(int i,Vector3 p,Vector3 size) {parts[i].position=p;parts[i].localScale=size;}
         private void Pose()
         {
+            if(externalDriven) { ExternalPose();return; }
             var pelvis=Position+Vector3.up*Mathf.Min(.85f,shoulderHeight-.48f);var chest=Position+Vector3.up*(shoulderHeight-.04f);
             Segment(0,pelvis,chest,.18f);Sphere(1,Position+Vector3.up*(shoulderHeight+.21f),new Vector3(.23f,.28f,.23f));
             var shoulder=Shoulder;var hand=Hand;

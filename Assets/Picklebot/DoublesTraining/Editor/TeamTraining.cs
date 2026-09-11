@@ -37,7 +37,7 @@ namespace Picklebot.DoublesTraining.Editor
         private static bool training;
         private static System.Random rng;
         private static float minSeparation,maxPaddleSpeed,maxReach;
-        public static string SourceHash()=>ContactTraining.Hash(ContactTraining.SourceHash()+string.Join("\n",Directory.GetFiles("Assets/Picklebot/DoublesTraining","*.cs",SearchOption.AllDirectories).OrderBy(p=>p,StringComparer.Ordinal).Select(File.ReadAllText)));
+        public static string SourceHash()=>ContactTraining.Hash(ContactTraining.SourceHash()+string.Join("\n",Directory.GetFiles("Assets/Picklebot/DoublesTraining","*.cs",SearchOption.AllDirectories).OrderBy(ContactTraining.CanonicalPath,StringComparer.Ordinal).Select(p=>ContactTraining.CanonicalText(File.ReadAllText(p)))));
         public static void Start(int rallies=500,bool learn=true,string mode="trained")
         {
             if(!EditorApplication.isPlaying||Running||ContactTraining.Running)throw new InvalidOperationException("Start Play and finish other jobs first.");

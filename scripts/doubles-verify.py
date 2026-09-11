@@ -15,12 +15,48 @@ def digest(value):
     return hashlib.sha256(value.encode()).hexdigest()
 
 
-def contact_source_hash():
-    paths = []
-    for folder in ("Doubles", "Core", "Simulation"):
-        paths.extend((ROOT / "Assets/Picklebot" / folder).rglob("*.cs"))
-    paths = [p for p in paths if "/Tests/" not in str(p) and p.name not in ("DoublesDemo.cs", "DoublesEditor.cs")]
-    return digest("\n".join(p.relative_to(ROOT).as_posix() + "\n" + p.read_text() for p in sorted(paths)))
+def canonical_path(path):
+    return str(path).replace("\\", "/")
+
+
+def canonical_text(text):
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def ordinal_key(path):
+    return canonical_path(path).encode("utf-16-be")
+
+
+def source_record_text(records):
+    records = [(canonical_path(path), canonical_text(text)) for path, text in records]
+    return "\n".join(path + "\n" + text for path, text in sorted(records, key=lambda item: ordinal_key(item[0])))
+
+
+def source_records(root, folders, excluded=()):
+    records = []
+    for folder in folders:
+        for path in (root / "Assets/Picklebot" / folder).rglob("*.cs"):
+            name = path.relative_to(root).as_posix()
+            if "/Tests/" not in name and path.name not in excluded:
+                records.append((name, path.read_text(encoding="utf-8-sig")))
+    return records
+
+
+def source_digest(text):
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def contact_source_hash(root=ROOT):
+    return source_digest(source_record_text(source_records(root, ("Doubles", "Core", "Simulation"), ("DoublesDemo.cs", "DoublesEditor.cs"))))
+
+
+def player_source_hash(root):
+    return source_digest(contact_source_hash(root) + "\n" + source_record_text(source_records(root, ("PlayerAgents",))))
+
+
+def team_source_hash(root):
+    paths = sorted((root / "Assets/Picklebot/DoublesTraining").rglob("*.cs"), key=lambda p: ordinal_key(p.relative_to(root)))
+    return source_digest(contact_source_hash(root) + "\n".join(canonical_text(p.read_text(encoding="utf-8-sig")) for p in paths))
 
 
 def check(condition, message):
@@ -52,8 +88,7 @@ def main():
     teams = read("Assets/Picklebot/Doubles/Models/teams.json")
     training = read("artifacts/doubles/teams-training.json")
     validation = read("artifacts/doubles/teams-trained.json")
-    sources = sorted((ROOT / "Assets/Picklebot/DoublesTraining").rglob("*.cs"))
-    team_hash = digest(current_hash + "\n".join(p.read_text() for p in sources))
+    team_hash = team_source_hash(ROOT)
     check(teams["sourceHash"] == training["sourceHash"] == validation["sourceHash"] == team_hash, "Team source evidence is stale")
     contact_hash = digest((ROOT / "Assets/Picklebot/Doubles/Models/contact.json").read_text())
     check(teams["contactModelHash"] == contact_hash == validation["contactModelHash"], "Team contact model hash mismatch")

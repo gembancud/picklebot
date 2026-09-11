@@ -1,0 +1,18 @@
+[workspace]
+name = "picklebot-mlagents"
+version = "0.1.0"
+channels = ["conda-forge"]
+platforms = ["win-64"]
+
+[dependencies]
+python = "==3.10.12"
+pip = "*"
+
+[pypi-dependencies]
+numpy = "==1.23.5"
+torch = { version = "==2.8.0", index = "https://download.pytorch.org/whl/cu126" }
+mlagents = { path = "vendor/ml-agents/ml-agents" }
+mlagents-envs = { path = "vendor/ml-agents/ml-agents-envs" }
+
+[tasks]
+trainer-help = "mlagents-learn --help"

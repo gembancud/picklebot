@@ -1,0 +1,38 @@
+{
+  "sourceHashes": {
+    "contact": "59175edb2bf5f088457e8b857196b48fe96b2ecae9135c95b9d7b70d097625b6",
+    "player": "721e4881a7bbef14a3fb6dc7302a98251111b232bf26e42f7a84599fe1943c16",
+    "team": "c7fdd14bb5ad2263a32b821e889c8c6432542a56d9a49de777d398a22f0d41ea",
+    "controls": "02fe092ef247f6b0e449c3d568cc945a6cc390aca8919d341270f506eb23e93d"
+  },
+  "evidence": {
+    "artifacts/controls-v2-intent-editmode-final.json": {
+      "sha256": "5960951309186a4b821787725293fd8fa2b560145b9703703037058036202d0e",
+      "summary": {
+        "total": 200,
+        "passed": 200,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      }
+    },
+    "artifacts/controls-v2-intent-playmode-clean.json": {
+      "sha256": "7e72660df071fd31059dc0707c979207e877389dc043c8af5e30ebdb472363aa",
+      "summary": {
+        "total": 162,
+        "passed": 162,
+        "failed": 0,
+        "skipped": 0,
+        "inconclusive": 0
+      }
+    },
+    "artifacts/player-controls-v2/intent-probe-01.json": {
+      "sha256": "26de54afbf8075825e8ee2dd74080d749e07ccc29c43c20f388dff6c5c6539d7",
+      "status": "failed",
+      "steps": 675,
+      "failure": "System.InvalidOperationException: Player 2 paddle constraints are infeasible; entire trial rejected.\r\n  at Picklebot.PlayerControls.PlayerControlWorld.Step (Picklebot.PlayerControls.PlayerControlCommand[] commands, Picklebot.PlayerControls.PlayerPaddleCommand[] paddleCommands, System.Single dt) [0x001f3] in F:\\dev\\picklebot\\Assets\\Picklebot\\PlayerControls\\PlayerControlWorld.cs:62 \r\n  at Picklebot.PlayerControlsIntegration.PlayerControlMatch.Step (Picklebot.PlayerControls.PlayerControlCommand[] movement, Picklebot.PlayerControls.PlayerPaddleCommand[] paddle) [0x00000] in F:\\dev\\picklebot\\Assets\\Picklebot\\PlayerControlsIntegration\\PlayerControlMatch.cs:56 \r\n  at Picklebot.PlayerControlsIntegration.PlayerControlMatch.StepAgents (System.Func`3[T1,T2,TResult] disclosedSkill) [0x000eb] in F:\\dev\\picklebot\\Assets\\Picklebot\\PlayerControlsIntegration\\PlayerControlMatch.cs:52 \r\n  at Picklebot.PlayerControlsIntegration.PlayerGameV2.Step () [0x00288] in F:\\dev\\picklebot\\Assets\\Picklebot\\PlayerControlsIntegration\\PlayerGameV2.cs:61 \r\n  at Picklebot.PlayerControlsIntegration.Editor.PlayerGameProbeV2.Tick () [0x00006] in F:\\dev\\picklebot\\Assets\\Picklebot\\PlayerControlsIntegration\\Editor\\PlayerGameProbeV2.cs:60 "
+    }
+  },
+  "acceptance": false,
+  "next": "Capture failing player 2 motor state and solve coupled shoulder/paddle feasibility without relaxing physical bounds."
+}

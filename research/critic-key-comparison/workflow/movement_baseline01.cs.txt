@@ -1,0 +1,44 @@
+if(!UnityEditor.EditorApplication.isPlaying)throw new System.Exception("Play mode required");
+var dir=@"F:\dev\picklebot\artifacts\player-v3\movement-parent-dev-01";
+if(System.IO.File.Exists(System.IO.Path.Combine(dir,"started.json")))throw new System.Exception("Refuse duplicate baseline");
+var launch=Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(System.IO.Path.Combine(dir,"launch.json")));
+var cases=(Newtonsoft.Json.Linq.JArray)launch["cases"];
+var model=UnityEditor.AssetDatabase.LoadAssetAtPath<Unity.InferenceEngine.ModelAsset>((string)launch["model"]);if(model==null)throw new System.Exception("Missing model");
+System.IO.File.WriteAllText(System.IO.Path.Combine(dir,"started.json"),"{}");
+int caseIndex=0,ticks=0;UnityEngine.GameObject root=null;Picklebot.PlayerLearning.PlayerMlDrillsV3 run=null;
+var initialized=new System.Collections.Generic.HashSet<int>();var resets=new System.Collections.Generic.List<object>();var completed=new System.Collections.Generic.List<object>();
+var timer=System.Diagnostics.Stopwatch.StartNew();
+UnityEditor.EditorApplication.CallbackFunction pump=null;
+System.Action cleanup=()=>{if(root!=null)UnityEngine.Object.DestroyImmediate(root);root=null;run=null;if(Unity.MLAgents.Academy.IsInitialized)Unity.MLAgents.Academy.Instance.Dispose();};
+pump=()=>{
+try{
+ if(!UnityEditor.EditorApplication.isPlaying)throw new System.Exception("Play mode ended before baseline completion");
+ if(caseIndex>=cases.Count){UnityEditor.EditorApplication.update-=pump;System.IO.File.WriteAllText(System.IO.Path.Combine(dir,"complete.json"),Newtonsoft.Json.JsonConvert.SerializeObject(completed,Newtonsoft.Json.Formatting.Indented));return;}
+ var c=cases[caseIndex];string label=(string)c["label"];
+ if(run==null){
+  root=new UnityEngine.GameObject("Movement baseline "+label);root.SetActive(false);run=root.AddComponent<Picklebot.PlayerLearning.PlayerMlDrillsV3>();run.AutoRun=false;run.RequireTrainer=false;run.InferenceModel=model;
+  run.Task="movement-maintenance";run.MaximumReturnDifficulty=.25f;run.FixedServeSides="both";
+  run.MovementRange=(float)c["range"];run.MovementTiming=(float)c["timing"];run.MovementStartVariation=(float)c["starts"];
+  run.FirstSeed=(int)launch["firstSeed"];run.SeedCount=(int)launch["seedCount"];run.ArenaCount=4;run.SourceIdentity=(string)launch["sourceIdentity"];run.EvidenceDirectory=System.IO.Path.Combine(dir,label);
+  root.SetActive(true);run.InitializeRun();initialized.Clear();resets.Clear();ticks=0;
+ }
+ var slice=System.Diagnostics.Stopwatch.StartNew();
+ while(run.Report.status=="running"&&slice.ElapsedMilliseconds<12){
+  foreach(var arena in run.ActiveArenas){
+   if(arena.Finished)continue;var d=arena.Drill;if(!initialized.Add(d.Seed))continue;
+   if(d.Match.Tick!=0)throw new System.Exception("Reset capture is late");
+   var m=d.Match;var p=m.World.Ball.position;var v=m.World.Ball.linearVelocity;var target=m.MovementNominalPoint;
+   resets.Add(new{seed=d.Seed,player=d.Player,task=d.Task,movement=d.MovementFeed,range=d.MovementRange,timing=d.MovementTiming,starts=d.MovementStartVariation,region=m.MovementRegion,nominalPoint=new[]{target.x,target.y,target.z},ballPosition=new[]{p.x,p.y,p.z},ballVelocity=new[]{v.x,v.y,v.z},roots=m.World.Players.Select(b=>new[]{b.Position.x,b.Position.y,b.Position.z}).ToArray()});
+  }
+  run.StepOneTick();ticks++;if(ticks>=600000)throw new System.Exception("Baseline tick guard exceeded");
+ }
+ if(timer.ElapsedMilliseconds>1000){System.IO.File.WriteAllText(System.IO.Path.Combine(dir,"live.json"),Newtonsoft.Json.JsonConvert.SerializeObject(new{label,caseIndex,episodes=run.Episodes.Count,ticks,utc=System.DateTime.UtcNow}));timer.Restart();}
+ if(run.Report.status!="running"){
+  if(run.Report.status!="seed_budget_complete"||run.Episodes.Count!=(int)launch["seedCount"])throw new System.Exception("Incomplete condition: "+run.Report.failure);
+  System.IO.File.WriteAllText(System.IO.Path.Combine(dir,label,"resets.json"),Newtonsoft.Json.JsonConvert.SerializeObject(resets));
+  completed.Add(new{label,episodes=run.Episodes.Count,tasks=run.Episodes.GroupBy(e=>new{e.task,e.movementRange}).Select(g=>new{task=g.Key.task,range=g.Key.movementRange,attempts=g.Count(),contacts=g.Count(e=>e.faceContact),legal=g.Count(e=>e.outcome=="legal_return"||e.outcome=="legal_serve"),movingReturns=g.Count(e=>e.outcome=="legal_return"&&e.contactDisplacement>=.5f)}).ToArray()});
+  cleanup();caseIndex++;System.IO.File.WriteAllText(System.IO.Path.Combine(dir,"progress.json"),Newtonsoft.Json.JsonConvert.SerializeObject(completed,Newtonsoft.Json.Formatting.Indented));
+ }
+}catch(System.Exception ex){UnityEditor.EditorApplication.update-=pump;cleanup();System.IO.File.WriteAllText(System.IO.Path.Combine(dir,"error.txt"),ex.ToString());UnityEngine.Debug.LogException(ex);}
+};
+UnityEditor.EditorApplication.update+=pump;return "Frozen-model movement baseline registered; editor yields between batches";

@@ -41,12 +41,22 @@ namespace Picklebot.Doubles
         private readonly bool[] kitchenOccupied=new bool[4], volleyPending=new bool[4], establishedOutside=new bool[4];
         private bool resolved;
         private int lastHitter=-1;
+        public bool EstablishedOutside(int player) { Team(player);return establishedOutside[player]; }
+        public bool VolleyMomentumPending(int player) { Team(player);return volleyPending[player]; }
         public static int Team(int player) { if(player<0||player>3)throw new ArgumentOutOfRangeException(nameof(player));return player/2; }
         public static int Side(int team)=>team==0?-1:1;
         public int RightPlayer(int team)=>rightPlayer[team];
         public bool IsRight(int player)=>rightPlayer[Team(player)]==player;
         public float ServiceX(int player)=>(IsRight(player)?1:-1)*-Side(Team(player))*HalfWidth*.5f;
-        public DoublesRules() { Server=0;ServerNumber=2;BeginRally(); }
+        public DoublesRules():this(0) { }
+        public DoublesRules(int initialServer,bool initialServerOnRight=true,int initialScore0=0,int initialScore1=0,int initialServerNumber=2,bool swapReceivingPlayers=false)
+        {
+            if(initialScore0<0||initialScore0>10||initialScore1<0||initialScore1>10||(initialServerNumber!=1&&initialServerNumber!=2))throw new ArgumentException("Practice reset requires unfinished scores 0..10 and service number 1 or 2.");
+            Score[0]=initialScore0;Score[1]=initialScore1;
+            ServingTeam=Team(initialServer);Server=initialServer;ServerNumber=initialServerNumber;
+            if(swapReceivingPlayers)rightPlayer[1-ServingTeam]^=1;
+            rightPlayer[ServingTeam]=initialServerOnRight?Server:Server^1;BeginRally();
+        }
         public void BeginRally()
         {
             if(GameWinner>=0)throw new InvalidOperationException("The game is complete.");
@@ -88,6 +98,15 @@ namespace Picklebot.Doubles
             if(!legalFeet) {Fail(ServingTeam,Fault.ServeFoot,time,default,player);return;}
             if(!legalRelease||(dropServe?!bouncedBeforeHit:(!upwardArc||!belowWaist||!paddleBelowWrist)))
             {Fail(ServingTeam,Fault.ServeMotion,time,default,player);return;}
+            Phase=RallyPhase.ServeFlight;lastHitter=player;Hits=1;Event("serve",player,time);
+        }
+        // Explicit prototype variant: stationary support replaces release/motion
+        // requirements. Server identity, feet, landing and rally rules remain active.
+        public void FixedBallServe(int player,bool legalFeet,float time)
+        {
+            if(Phase!=RallyPhase.AwaitServe)return;
+            if(player!=Server){Fail(ServingTeam,Fault.WrongReceiver,time,default,player);return;}
+            if(!legalFeet){Fail(ServingTeam,Fault.ServeFoot,time,default,player);return;}
             Phase=RallyPhase.ServeFlight;lastHitter=player;Hits=1;Event("serve",player,time);
         }
         public void Hit(int player,float time,Vector3 position=default,bool continuousSingleDirectionStroke=false)

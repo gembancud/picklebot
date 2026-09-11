@@ -43,7 +43,16 @@ namespace Picklebot.Doubles.Editor
         {EditorApplication.update-=Tick;match?.Dispose();match=null;Status="cancelled; no accepted model saved";}
         public static string Hash(string value) {using var sha=SHA256.Create();return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(value))).Replace("-","").ToLowerInvariant();}
         // Separate runtime/contact training code from presentation and test edits.
-        public static string SourceHash()=>Hash(string.Join("\n",new[]{"Doubles","Core","Simulation"}.SelectMany(f=>Directory.GetFiles("Assets/Picklebot/"+f,"*.cs",SearchOption.AllDirectories)).Where(p=>!p.Contains("/Tests/")&&!p.EndsWith("DoublesDemo.cs")&&!p.EndsWith("DoublesEditor.cs")).OrderBy(p=>p,StringComparer.Ordinal).Select(p=>p+"\n"+File.ReadAllText(p))));
+        public static string CanonicalPath(string path) => path.Replace('\\', '/');
+        public static string CanonicalText(string text) => text.Replace("\r\n", "\n").Replace("\r", "\n");
+        public static string SourceRecordText(IEnumerable<KeyValuePair<string, string>> records) => string.Join("\n",
+            records.Select(r => new KeyValuePair<string, string>(CanonicalPath(r.Key), CanonicalText(r.Value)))
+            .OrderBy(r => r.Key, StringComparer.Ordinal).Select(r => r.Key + "\n" + r.Value));
+        public static string SourceText(IEnumerable<string> paths) => SourceRecordText(paths
+            .Select(p => new KeyValuePair<string, string>(p, File.ReadAllText(p))));
+        public static string SourceHash() => Hash(SourceText(new[] { "Doubles", "Core", "Simulation" }
+            .SelectMany(f => Directory.GetFiles("Assets/Picklebot/" + f, "*.cs", SearchOption.AllDirectories))
+            .Where(p => !CanonicalPath(p).Contains("/Tests/") && Path.GetFileName(p) != "DoublesDemo.cs" && Path.GetFileName(p) != "DoublesEditor.cs")));
         public static void Start(int candidates=24,int samples=3,bool validate=false,bool resume=false,int testSeed=930000)
         {
             if(!EditorApplication.isPlaying||Running)throw new InvalidOperationException("Start Play and finish the current job first.");

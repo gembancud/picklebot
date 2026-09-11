@@ -1,10 +1,123 @@
 # Independent player agents
 
-Status: active, not complete. Started 2026-09-06. The app goal was found marked
-blocked at 08:50 UTC. The user resumed it at 16:40 UTC (2026-09-07 locally).
-The retention trial and the contact, shot-quality, and teacher-gap diagnoses are complete.
-No candidate or command change is promoted. The proposed movement, jump, and energy
-controller is awaiting the user's decision. No controller change is approved.
+Windows setup update (2026-09-08): official CLI integration and portable source
+identity are verified under D-030/D-031. 300 Python tests, 158 EditMode tests
+and 32 saved-actor parity cases pass after the identity fix. No new training
+or model promotion occurred. See WINDOWS_SETUP.md; older reports below retain
+their historical source identities.
+
+## Current Windows goal — 2026-09-08
+
+The user resumed a persistent goal for a workable independent-player 2v2 game.
+They confirmed shared policy weights with independent decisions and asked to
+improve controls while preparing movement, jump, and energy support (D-032).
+The V2 physical controls and four independent decision streams now have a
+disclosed serve/reset and full-game mechanics loop (D-035). Eight targeted
+PlayMode tests pass, including legal physical serving, a completed winning score,
+momentum-safe reset, bounded paddle transitions and terminal failure. All 196
+EditMode tests pass; all 162 non-explicit PlayMode regressions pass. Ready-hold
+policies in these fixtures are untrained and do not establish agent strength.
+
+The previous probe reached 9-8 but repeatedly faulted one service box. Exact pose
+diagnostics led to orienting the experimental elbow behind the actual paddle
+face; current complete-game tests pass. Original failed probes and previous
+adapter source are preserved. Current verification: game-check / game-check-unity.
+Prior records and 82 model/evidence files remain unchanged; earlier stage checks
+remain strict historical snapshots.
+
+NEXT: resolve the pending training-design clarification (shot intent plus bounded
+swing controller versus direct learned paddle trajectories), implement explicit
+checkpoint transfer/initialization and trainer/protocol integration, add the
+playable V2 option to existing presentation, then bounded development and training.
+No learned V2 model, final evaluation or acceptance is complete. Preserve the
+full objective, final-evaluation seeds and original evidence. See PLAYER_CONTROLS_V2.md.
+The open scene is IndependentPlayers; retain the existing game presentation.
+
+## Bounded wrist recovery (D-037, 2026-09-08)
+
+The exact step-675 failure was reproduced twice. The paddle had angular velocity
+(-11.7105, 2.5425, -0.6324) rad/s immediately before the ready target demanded a
+wrist stop. Losing the grip's rotational velocity made the 6 m/s shoulder-relative
+hand-speed constraint incompatible with the linear acceleration bound for the
+orientations previously considered. It was a restricted candidate search, not
+proof that every physical wrist orientation was infeasible.
+
+PlayerPaddleControl now tries ten bounded continuations of the previous wrist
+rotation after its existing twenty candidates fail. Every candidate retains the
+same 12 m/s speed, 100 m/s2 acceleration, 0.62 m reach, 12 rad/s rotation and 6 m/s
+relative hand-speed checks. No position projection or relaxed limit was added.
+WristRecoverySteps counts this path. The 80 rad/s2 decrement spaces recovery
+candidates; it is not a globally imposed angular-acceleration limit. The failed
+state is now an exact regression fixture, including all hard constraints and
+position integration. Failed trials expose a diagnostic snapshot without
+advancing physics. On successful JSON reports, failure/status is authoritative;
+Unity may serialize a null snapshot as a zero-valued object.
+
+All 201 EditMode and 162 PlayMode tests pass. The unchanged fixed-inference V1
+checkpoint now completes 6,000 steps without controller failure and a separate
+full 11-0 game in 11,484 physics steps. All eleven rallies contain only the serve
+and one return: five out faults and six wrong-side faults. This resolves a
+controller failure; it does not establish good rallies, balanced participation,
+competitive 2v2, model acceptance, or trained V2 behavior. Both probes use only
+interactive seed 1300000. Full-game evidence: intent-probe-05-full-game.json.
+
+The matching historical contact residual file is still present at
+Assets/Picklebot/Doubles/Models/contact.json. Its normalized SHA256 is
+6698221451858f044e26a28c58a39447d391c4f1aba58a68f11370926df9cba4, matching the actor.
+NEXT: integrate those residuals explicitly, diagnose actual return trajectories,
+and finish trainer/protocol and original-scene presentation integration. The
+current bridge still uses neutral residuals, disclosed serve/reset assistance,
+compatibility sprint and automatic crouch. No new model was trained or promoted.
+
+D-036 source is preserved in artifacts/player-controls-v2/d036-source.zip and
+verified against its manifest. Current checks: wrist-check / wrist-check-unity;
+prior stage checks remain historical. D-037 source and tests are recorded in
+config/player-controls-v2-wrist.json and player-controls-v2-wrist-tests.json.
+
+## Historical checkpoint intent bridge (D-036, 2026-09-08)
+
+The working training assumption is movement/posture plus shot intent, pending
+user steering. Four LegacyActorIntentPolicyV2 instances share the unchanged V1
+model weights while retaining independent inference traces and RNG streams.
+Only the frozen 54-value observation prefix enters that network. Current heading
+rotates its movement request into body coordinates. This is explicitly a V1
+compatibility bridge, not a model trained on the 96-value V2 observation.
+
+PlayerShotIntentV2 is captured with the movement action and applied after the
+same six-tick latency. Each seat owns a separate PlayerIntentSwingV2 contact plan.
+The swing planner requests paddle motion and never chooses locomotion or the
+hitter. The legacy bridge explicitly requests sprinting and permits automatic
+crouch for a planned stroke. New policies can retain their own posture. Physical
+speed, acceleration, reach, energy, contacts and support constraints still apply.
+Contact planning currently uses neutral residuals and the historical reach
+prediction assumptions; the checkpoint's contact-model integration is unfinished.
+
+All 200 EditMode and 162 PlayMode tests pass. Fixed and sampled checkpoint
+inference match the original actor over 64 observations each, including random
+stream consumption and movement coordinate transforms. Timing tests ensure
+mutable policy state cannot change an already queued shot. These are contract
+and regression tests, not proof of playable transferred behavior.
+
+The first actual four-checkpoint diagnostic failed at physics step 675: player 2
+had no feasible paddle transition. The entire trial was rejected. The preserved
+report is artifacts/player-controls-v2/intent-probe-01.json, using only interactive
+seed 1300000 and exact actor SHA 61c59e110797290c46b30b91a9fa2d0d3665e92a40f3c998bf2e24ed168edc06.
+No game score had been awarded. Do not present this as a playable V2 model.
+
+NEXT: capture the failing motor state, add a reproducible coupled shoulder/paddle
+fixture, and improve feasible control execution without increasing physical
+limits. Then finish contact-model and trainer/protocol integration and expose
+the V2 mode through the original presentation. Training, agent-strength gates,
+final evaluation and promotion remain incomplete. Original scene assets remain
+unchanged; IndependentPlayers is the selected scene.
+
+Current checks: intent-check / intent-check-unity. D-035 game-check is now a
+strict historical snapshot. Current source and test records are
+config/player-controls-v2-intent.json and player-controls-v2-intent-tests.json.
+The failed first PlayMode run (one CLI timeout log) and its successful clean rerun
+are both retained. All 82 historical artifacts and prior records remain intact.
+
+The reports below are historical V1 results from the original machine.
 
 ## Latest verified state â€” 2026-09-07 13:27 UTC
 
@@ -4905,3 +5018,14 @@ the Editor/rule tests and repeat the physical kitchen probe. Actual legal
 returns, full regressions, and fresh training remain unverified. Stopping
 Play for the tests removed the temporary live preview; it must be restored
 after validation. No saved scene or baseline model was changed.
+
+
+D-035 final mechanics evidence: 196 EditMode tests and 162 non-explicit PlayMode
+tests pass, including eight targeted V2 integration/game tests. The final bounded
+diagnostic completed 11-0 in 10,805 physics steps with 11 rallies, 2,089 assisted
+serve steps and 2,651 assisted reset steps. All scoring followed physical serves
+and unreturned balls against untrained hold policies. This does not establish
+non-serve participation, learned returns, opponent strength or full acceptance.
+Evidence: artifacts/player-controls-v2/game-probe-11.json and
+config/player-controls-v2-game-tests.json. The existing IndependentPlayers scene
+is open and Play is stopped. No model promotion or final-evaluation seeds used.

@@ -1,0 +1,42 @@
+{
+  "schema": "player-controls-v2-integration-v1",
+  "decision": "D-033",
+  "status": "Opt-in physical controller adapter; no trained V2 policy or full game acceptance",
+  "priorMigrationSha256": "4738f60fd7a805457c5a3f91421be59877fa51881e7e3afe71f084f410654b96",
+  "preIntegrationSha256": "fd017938be3c70fdd6848dfe144e70d319229ed47c1cb2e3ac6c8425f5905347",
+  "baselineAdapterFiles": {
+    "Assets/Picklebot/Doubles/PlayerBody.cs": "622b09c4fc8d5716cc372b2428511fa8078dedec6e9c4992099076f353dd1bea",
+    "Assets/Picklebot/Doubles/PlayerBodyExternal.cs": "2ba88a16b1979e9dc5e0815464db60319771c30c062a7e7b76032adabf80713d"
+  },
+  "experimentalFiles": {
+    "Assets/Picklebot/PlayerControls/Editor/Picklebot.PlayerControls.Editor.asmdef": "0df0ce8d3f00d39c7d60649e7b6ac9fd371e69665db9ebd84ede7adb3d34a314",
+    "Assets/Picklebot/PlayerControls/Editor/PlayerControlLabEditor.cs": "19af76e86610b3a8f50704e3a4ff3a2d3a4cdb1987d3babfd59b6b3179c1941f",
+    "Assets/Picklebot/PlayerControls/Picklebot.PlayerControls.asmdef": "92369295468243bb3c60c05a6554861796b8f8f591b911011b6696f848d175ce",
+    "Assets/Picklebot/PlayerControls/PlayerBodyPose.cs": "bc3c41ddb24306612ce0820c2db1ba008c634b8c5ab59261aa30fc30924fd13b",
+    "Assets/Picklebot/PlayerControls/PlayerControlContacts.cs": "ce8bae5ef9064d0fd158875462f23b8aa65c5d6564c166f10d593736886d85ee",
+    "Assets/Picklebot/PlayerControls/PlayerControlLab.cs": "7e0004f1939ee97001355b82e86388863533a7f926bf2f2bcb5d934b9e97554c",
+    "Assets/Picklebot/PlayerControls/PlayerControlMotor.cs": "f5ba01a2c5eb3adcaf36f09baa2e021ce99ab5d38ef8c2b97c0b5d23a4b99584",
+    "Assets/Picklebot/PlayerControls/PlayerControlObservation.cs": "a54204e181c291bff959406f4d6b42ab72264d0e7b38281d7f30a6885c93fca3",
+    "Assets/Picklebot/PlayerControls/PlayerControlWorld.cs": "b122b01d4e1774704ca83e1680cedc79efa1ddba5b033527afe12053343ad02f",
+    "Assets/Picklebot/PlayerControls/PlayerPaddleControl.cs": "8fdd373798438e2df876b505d547cca4bf37633862c9a5caa87c0ea9a760b89b",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/Picklebot.PlayerControls.Tests.asmdef": "48ac0ea02b01f3fd7c6a6b0216b592957e6bfeeeb64c1c755d6740c075746659",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/PlayerBodyPoseTests.cs": "a02dc4b110664d6b47be638352892f0c0f5c7c2a88eba3a5ddbf80f87f4c0f35",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/PlayerControlContactTests.cs": "fc102d37ce4a03f1c5442773eccca3b27a8f7b9bfc202571356b160c8913a257",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/PlayerControlMotorTests.cs": "140e8babbff0c8c0984607383e6b8a81429e108e4dc9ef78e357ba840efe2bf2",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/PlayerControlWorldTests.cs": "9cc7cbb68c25af0b32ef2350cab2a92e5d8f54a4104009b73cd9fd04f4d14364",
+    "Assets/Picklebot/PlayerControls/Tests/Editor/PlayerPaddleControlTests.cs": "cd2befee9d386aa1c98aea803988b02b70f184aa6eaaa370bf51734b3c5c0e43",
+    "Assets/Picklebot/PlayerControlsIntegration/Editor/Picklebot.PlayerControlsIntegration.Editor.asmdef": "b91d908879490492d27b29be1ce709f2e06821354ee00631c3d26392f85d2d80",
+    "Assets/Picklebot/PlayerControlsIntegration/Editor/PlayerControlSource.cs": "9d7e080c62aaf725657e22fbe518a76f9ae3f696c5fc5588b74602589836c942",
+    "Assets/Picklebot/PlayerControlsIntegration/Picklebot.PlayerControlsIntegration.asmdef": "e8d2f189b6582730cb28beca9942958900ee0572c84be44b26f048c8d26c9885",
+    "Assets/Picklebot/PlayerControlsIntegration/PlayerControlMatch.cs": "29c2f4190fcf1eb3fdc2b4994948a10a6c9af966031031cf566d0c43447c1818",
+    "Assets/Picklebot/PlayerControlsIntegration/Tests/PlayMode/Picklebot.PlayerControlsIntegration.PlayTests.asmdef": "dacd055b3318904e7a92eeb5ff8ee29baf3b4cc2e6bb4e5afb3e430b7f22d6d2",
+    "Assets/Picklebot/PlayerControlsIntegration/Tests/PlayMode/PlayerControlMatchTests.cs": "29c144c4115d43a9d896874698a98a1f9900feff744cb8c4602f50f586be601d"
+  },
+  "verifierSha256": "621b439f73af4b3787213bf7d91b28c6f3996dd8574c0ed4e0e07adb48c6f6c5",
+  "sourceHashes": {
+    "contact": "ac74bdafcbbffe4a96f740f945719c4a165e44296d3093de381a8da7f66a8027",
+    "player": "3dcd7d53ca97649838f08c9606907eb9cc49a660db8856de7881e2e53634bc08",
+    "team": "5313b98bcec2d8fa823a2f9325e89871a825193e88d2489833932e9901a6003e",
+    "controls": "029361f39906cc33539299b0bbcc73cc8d27c7274b1ac5513f88a7adc6c5786d"
+  }
+}

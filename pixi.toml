@@ -1,0 +1,35 @@
+[workspace]
+name = "picklebot"
+version = "0.1.0"
+channels = ["conda-forge"]
+platforms = ["win-64"]
+
+[dependencies]
+python = "==3.10.12"
+pip = "*"
+
+[pypi-dependencies]
+numpy = "==1.23.5"
+torch = "==2.1.2"
+
+[tasks]
+player-tests = 'python -m unittest discover -s scripts/tests -p "test_player*.py"'
+baseline-check = "python scripts/player-agents-baseline.py --check"
+tooling-check = "python scripts/windows-tooling-verify.py"
+source-check = "python scripts/windows-source-verify.py"
+source-check-unity = "python scripts/windows-source-verify.py --unity"
+
+controls-check = "python scripts/player-controls-verify.py"
+controls-check-unity = "python scripts/player-controls-verify.py --unity"
+
+decisions-check = "python scripts/player-decisions-verify.py"
+decisions-check-unity = "python scripts/player-decisions-verify.py --unity"
+
+game-check = "python scripts/player-game-verify.py"
+game-check-unity = "python scripts/player-game-verify.py --unity"
+
+intent-check = "python scripts/player-intent-verify.py"
+intent-check-unity = "python scripts/player-intent-verify.py --unity"
+
+wrist-check = "python scripts/player-wrist-verify.py"
+wrist-check-unity = "python scripts/player-wrist-verify.py --unity"

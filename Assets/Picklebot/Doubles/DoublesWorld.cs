@@ -20,11 +20,12 @@ namespace Picklebot.Doubles
         public readonly PicklebotEnvironmentFixtureV1 Fixture;
         public readonly Rigidbody Ball;
         public readonly PlayerBody[] Players=new PlayerBody[4];
-        public readonly DoublesRules Rules=new();
+        public readonly DoublesRules Rules;
         public readonly List<DoublesContact> Contacts=new();
         public readonly List<DoublesFrame> Frames=new();
         public float Time {get;private set;}
         public bool ServeBounced {get;private set;}
+        public bool FixedBallServe {get;set;}
         public bool RecordFrames;
         public SimulationConfigV1 Configuration=>Fixture.Configuration;
         public GameObject Root=>Fixture.Root;
@@ -36,8 +37,10 @@ namespace Picklebot.Doubles
         private readonly HashSet<Collider> paddleTouching=new();
         private readonly bool[] contactEpisode=new bool[4];
         private readonly float[] contactStarted=new float[4];
-        public DoublesWorld(bool visible)
+        public DoublesWorld(bool visible):this(visible,0) { }
+        public DoublesWorld(bool visible,int initialServer,bool initialServerOnRight=true,int initialScore0=0,int initialScore1=0,int initialServerNumber=2,bool swapReceivingPlayers=false)
         {
+            Rules=new DoublesRules(initialServer,initialServerOnRight,initialScore0,initialScore1,initialServerNumber,swapReceivingPlayers);
             scene=SceneManager.CreateScene("Doubles-"+Guid.NewGuid().ToString("N"),new CreateSceneParameters(LocalPhysicsMode.Physics3D));physics=scene.GetPhysicsScene();
             Fixture=PicklebotEnvironmentFactoryV1.Create("Doubles / outdoor acrylic / provisional");Ball=Fixture.Environment.Ball;var first=Fixture.Environment.Paddle;
             UnityEngine.Object.DestroyImmediate(Ball.GetComponent<BallContactReporterV1>());UnityEngine.Object.DestroyImmediate(Fixture.Environment);
@@ -106,7 +109,14 @@ namespace Picklebot.Doubles
         }
         public void Contact(Collider collider,Vector3 point,Vector3 normal)=>pending.Add((collider,point,normal));
         public void ContactEnded(Collider collider)=>paddleTouching.Remove(collider);
-        public void Simulate()
+        public bool IsPaddleContactActive(int player)
+        {
+            if(player<0||player>=Players.Length)throw new ArgumentOutOfRangeException(nameof(player));
+            foreach(var collider in paddleTouching)
+                if(collider.attachedRigidbody==Players[player].Paddle)return true;
+            return false;
+        }
+        public void Simulate(bool suspendBallForces=false)
         {
             for(int i=0;i<4;i++)Rules.Feet(i,Players[i].FeetInKitchen,Players[i].BothFeetOutside,Players[i].BalanceRecovered,Time);
             for(int i=0;i<4;i++)
@@ -123,29 +133,37 @@ namespace Picklebot.Doubles
                     if(c.bounds.Intersects(net.bounds)&&Physics.ComputePenetration(c,c.transform.position,c.transform.rotation,net,net.transform.position,net.transform.rotation,out _,out _))Rules.TouchNet(i,Time);
             }
             var incoming=Ball.linearVelocity;
-            Ball.AddForce(Configuration.Gravity*Ball.mass+AerodynamicModelV1.Evaluate(incoming,Ball.angularVelocity,Configuration.AerodynamicParameters).TotalForce);
-            Ball.angularVelocity*=AerodynamicModelV1.AngularVelocityMultiplier(Dt,Configuration.AerodynamicParameters);
+            // A held ball is positioned by its hand attachment. Dynamic forces
+            // and spin decay resume on release; Unity rejects kinematic velocity writes.
+            if(!Ball.isKinematic&&!suspendBallForces)
+            {
+                Ball.AddForce(Configuration.Gravity*Ball.mass+AerodynamicModelV1.Evaluate(incoming,Ball.angularVelocity,Configuration.AerodynamicParameters).TotalForce);
+                Ball.angularVelocity*=AerodynamicModelV1.AngularVelocityMultiplier(Dt,Configuration.AerodynamicParameters);
+            }
             Physics.SyncTransforms();physics.Simulate(Dt);Time+=Dt;
-            var hitThisStep=new HashSet<int>();bool floorThisStep=false;
+            var hitThisStep=new HashSet<int>();var faceThisStep=new HashSet<int>();bool floorThisStep=false;
             foreach(var c in pending)
             {
                 int player=-1;for(int i=0;i<4;i++)if(c.collider.attachedRigidbody==Players[i].Paddle)player=i;
                 string surface=c.collider.name;
+                // A simultaneous handle callback must not consume face transfer.
+                // Face physics and the once-per-player rule hit are independent.
+                if(player>=0&&surface=="RoundedHittingFace"&&faceThisStep.Add(player))
+                {
+                    var result=PaddleSpinTransferV1.Evaluate(Ball.position,Ball.linearVelocity,Ball.angularVelocity,Players[player].ContactVelocity(c.point),c.point,c.normal,Configuration);
+                    Ball.linearVelocity=result.LinearVelocity;Ball.angularVelocity=result.AngularVelocity;
+                }
                 if(player>=0&&hitThisStep.Add(player))
                 {
                     bool continuing=contactEpisode[player];if(!continuing)contactStarted[player]=Time;contactEpisode[player]=true;
-                    if(surface=="RoundedHittingFace")
-                    {
-                        var result=PaddleSpinTransferV1.Evaluate(Ball.position,Ball.linearVelocity,Ball.angularVelocity,Players[player].ContactVelocity(c.point),c.point,c.normal,Configuration);
-                        Ball.linearVelocity=result.LinearVelocity;Ball.angularVelocity=result.AngularVelocity;
-                    }
                     if(Rules.Phase==RallyPhase.AwaitServe)
                     {
                         var b=Players[player];bool legalFeet=Mathf.Abs(b.LeftFoot.z)-.14f>DoublesRules.HalfLength&&Mathf.Abs(b.RightFoot.z)-.14f>DoublesRules.HalfLength
                             &&b.LeftFoot.x*Rules.ServiceX(player)>0&&b.RightFoot.x*Rules.ServiceX(player)>0
                             &&Mathf.Abs(b.LeftFoot.x)+.065f<DoublesRules.HalfWidth&&Mathf.Abs(b.RightFoot.x)+.065f<DoublesRules.HalfWidth;
                         legalFeet&=b.LeftFoot.y<=.061f||b.RightFoot.y<=.061f;
-                        Rules.Serve(player,legalFeet,true,true,ServeBounced,false,false,false,Time);
+                        if(FixedBallServe)Rules.FixedBallServe(player,legalFeet,Time);
+                        else Rules.Serve(player,legalFeet,true,true,ServeBounced,false,false,false,Time);
                     }
                     else if(!continuing)Rules.Hit(player,Time,c.point);
                 }

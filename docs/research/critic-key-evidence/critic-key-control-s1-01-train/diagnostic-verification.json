@@ -1,0 +1,131 @@
+{
+  "status": "complete",
+  "updates": 60,
+  "maxValueClipDominatesFraction": 0.0,
+  "meanValueClipDominatesFraction": 0.0,
+  "validCapturedCriticEpisodes": 14181,
+  "mixture": {
+    "workers": [
+      {
+        "worker": 0,
+        "episodes": 1842,
+        "mix": {
+          "prior": 461,
+          "focus": 921,
+          "familiar": 460
+        },
+        "privateDecisionsVerified": true
+      },
+      {
+        "worker": 1,
+        "episodes": 1766,
+        "mix": {
+          "prior": 443,
+          "familiar": 442,
+          "focus": 881
+        },
+        "privateDecisionsVerified": true
+      },
+      {
+        "worker": 2,
+        "episodes": 1819,
+        "mix": {
+          "prior": 455,
+          "focus": 909,
+          "familiar": 455
+        },
+        "privateDecisionsVerified": true
+      },
+      {
+        "worker": 3,
+        "episodes": 1809,
+        "mix": {
+          "focus": 904,
+          "prior": 453,
+          "familiar": 452
+        },
+        "privateDecisionsVerified": true
+      },
+      {
+        "worker": 4,
+        "episodes": 1801,
+        "mix": {
+          "focus": 899,
+          "prior": 451,
+          "familiar": 451
+        },
+        "privateDecisionsVerified": true
+      },
+      {
+        "worker": 5,
+        "episodes": 1738,
+        "mix": {
+          "focus": 868,
+          "prior": 435,
+          "familiar": 435
+        },
+        "privateDecisionsVerified": true
+      },
+      {
+        "worker": 6,
+        "episodes": 1759,
+        "mix": {
+          "focus": 879,
+          "prior": 440,
+          "familiar": 440
+        },
+        "privateDecisionsVerified": true
+      },
+      {
+        "worker": 7,
+        "episodes": 1660,
+        "mix": {
+          "prior": 416,
+          "familiar": 415,
+          "focus": 829
+        },
+        "privateDecisionsVerified": true
+      }
+    ],
+    "totalCompletedMix": {
+      "prior": 3554,
+      "focus": 7090,
+      "familiar": 3550
+    }
+  },
+  "workerCoverage": {
+    "status": "all_workers_contributed_across_run",
+    "updates": 60,
+    "experiencesByWorker": {
+      "0": 64148,
+      "1": 61464,
+      "2": 63327,
+      "3": 62668,
+      "4": 62690,
+      "5": 60201,
+      "6": 61360,
+      "7": 57257
+    },
+    "updatesWithMissingWorkers": [
+      {
+        "update": 27,
+        "missingWorkers": [
+          "7"
+        ]
+      },
+      {
+        "update": 28,
+        "missingWorkers": [
+          "7"
+        ]
+      },
+      {
+        "update": 59,
+        "missingWorkers": [
+          "1"
+        ]
+      }
+    ],
+    "interpretation": "Asynchronous workers need not appear in every individual buffer; worker completion, drill coverage and private actions are checked independently."
+  }
+}

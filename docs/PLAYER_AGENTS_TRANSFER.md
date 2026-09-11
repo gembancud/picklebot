@@ -88,3 +88,12 @@ self-play collection does not need all old recorded games.
 
 No automatic training, installation, cleanup, or model promotion occurs on clone.
 See `docs/PLAYER_AGENTS_PROGRESS.md` for the measured results and remaining work.
+
+## Windows destination update — 2026-09-08
+
+The CLI/Pixi setup and D-031 path-hashing fix are verified. Follow
+[Windows setup](WINDOWS_SETUP.md) for current commands. The source-hash concern
+above is resolved by consistent path, ordering and newline rules. The fix is a
+new source revision; original checkpoint/source hashes remain unchanged.
+Use `pixi run source-check-unity` with the Editor open. This does not run training
+or convert old validation reports into current-source acceptance evidence.

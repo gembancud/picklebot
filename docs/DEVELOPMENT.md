@@ -6,7 +6,9 @@
 |---|---|
 | Unity Editor | `6000.5.5f1` |
 | Unity Test Framework | `1.7.0` |
-| CoplayDev MCP for Unity | `10.0.0` |
+| Official Unity CLI | `1.0.0-beta.8` |
+| Unity Pipeline | `0.6.0-exp.1` |
+| Pixi (Windows player trainer) | `0.80.0` |
 | Phase 0 environment | `env-v0` |
 | Phase 1A protocol | `phase1a-protocol-v0` |
 | Phase 1B calibration spec | `physics-calibration-v0` |
@@ -41,25 +43,16 @@ Mac keyboard and mouse/trackpad controls, station behavior, visual legends, and
 the boundary between intuitive feel checks and empirical calibration are
 documented in [PHYSICS_MUSEUM.md](PHYSICS_MUSEUM.md).
 
-## MCP for Unity
+## Official Unity CLI
 
-The project pins CoplayDev MCP for Unity `v10.0.0`. The Codex project
-configuration points to the plugin's loopback HTTP endpoint:
+D-030 replaces CoplayDev MCP with the official standalone Unity CLI. On the
+Windows destination, open `F:\dev\picklebot` with Editor 6000.5.5f1. Pipeline
+0.6.0-exp.1 is required by CLI 1.0.0-beta.8; the old 0.5.0 package could list
+commands but could not execute them with this CLI version.
 
-```text
-http://127.0.0.1:8080/mcp
-```
-
-After Unity imports the project:
-
-1. Open **Window → MCP for Unity**.
-2. Run **Auto-Setup**.
-3. Start the Unity Bridge if it is not already running.
-4. Select Codex and configure the detected client.
-5. Restart Codex so the project-local MCP server is discovered.
-
-The MCP is development tooling only. Runtime and core simulation assemblies
-must not reference it.
+See [Windows setup](WINDOWS_SETUP.md) for Pixi commands, verification results,
+the package migration record, and remaining Windows source-hash work.
+The older Mac paths and shell commands below remain historical references.
 
 ## Batch verification
 
@@ -200,3 +193,8 @@ The headless command shape and semicolon/filter behavior follow Unity's current
 Test Framework command-line reference:
 
 <https://docs.unity3d.com/Packages/com.unity.test-framework@2.0/manual/reference-command-line.html>
+
+## Windows destination and CLI migration
+
+See [Windows setup](WINDOWS_SETUP.md) for the current Pixi environment and
+official Unity CLI migration. Do not configure a new CoplayDev connection on this destination.
