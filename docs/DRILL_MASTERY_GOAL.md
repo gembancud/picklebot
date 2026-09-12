@@ -21,7 +21,7 @@ Evidence required for completion:
 - Representative successes and misses recorded for human inspection of movement.
 - Previous models and experiment evidence retained. Final evaluation seeds remain unused until the candidate is frozen for acceptance.
 
-Current work: two-region and smooth-distance placement experiments retained legality but did not establish target following. The first-decision goal-path diagnostic passed; a bounded unchanged continuation to roughly 1M experiences tests whether more training develops useful target following. Keep the existing recovery screen as an anchor and expand development coverage for varied required-bounce receiving, explicit kitchen behavior and measured lateral/deep/shallow positioning. [Coverage audit](research/drill-mastery-coverage.md). Movement-goal and strategy training remain later stages.
+Current work: the longer unchanged continuation produced positive paired target responsiveness while retaining legal returns, but failed balanced placement screening. Confirm the frozen final checkpoint on separately declared unused development cases, reporting actual physical novelty and per-drill/region failures. Keep the existing recovery screen as an anchor and expand coverage for varied required-bounce receiving, explicit kitchen behavior and measured lateral/deep/shallow positioning. [Latest result](research/execution-v1-smooth-continued.md) · [Coverage audit](research/drill-mastery-coverage.md). Movement-goal and strategy training remain later stages.
 
 App status: active. The earlier paused 2v2 goal was cleared, and this focused drill-mastery goal was created on 12 September 2026.
 

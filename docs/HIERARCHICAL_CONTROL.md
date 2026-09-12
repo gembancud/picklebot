@@ -60,3 +60,5 @@ An initialized goal-conditioned executor is not a trained strategy system, and a
 Two-region practice now opts in with `targetLayout: two-regions` and radius at most1m. Default random targets are unchanged. Serve regions differ in depth within the correct service box; rally regions differ laterally. Every legal landing records canonical `landingX`, `landingZ` and `hasLanding` for paired target-response evaluation. [Two-region experiment](research/execution-v1-two-regions.md) failed its placement screen; the shared policy is not yet accepted as a goal-following executor.
 
 [Smooth-distance experiment](research/execution-v1-smooth-distance.md): denser feedback preserved legality but failed paired target following after 262,179 experiences. Nonzero placement bonus is not target success. No executor promotion.
+
+[Longer unchanged continuation](research/execution-v1-smooth-continued.md): at 1,048,609 experiences the final model shows positive paired target response while preserving legality, but balanced placement remains unproven. The full screen failed and no model was promoted.

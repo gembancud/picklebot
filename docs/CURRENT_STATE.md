@@ -1,3 +1,14 @@
+# Active drill-mastery goal — longer training produces partial target response
+
+The unchanged continuation completed at **1,048,609 total experiences**. The predeclared midpoint and final models each completed 768 frozen evaluation attempts. Compared with the 262,179-experience parent, final A/B/random target hits changed **109/18/65 → 103/35/71** out of 256 per condition. Final legal counts were **229/231/229**; the per-drill legal-retention screen passed against both the initializer and immediate parent.
+
+The requested-versus-opposite-region assignment gain improved from **−0.04883 to +0.0625**, final paired 95% interval **[0.03125, 0.09570]**. This is early target responsiveness on a reused development anchor. The full screen still failed because A accuracy did not exceed the initializer. B-air remains 0/112 and B-required-bounce receiving 0/16; no reset succeeds at both requested regions. No promotion or mastery acceptance.
+
+No training or task-owned Editor is active. The next action is a fresh, predeclared frozen-model development comparison, including a count of genuinely new physical resets and separate drill/region results. More training or architecture changes depend on that evidence. Wide/deep/shallow positioning, varied rule contexts, paired teamwork and learned strategy remain unfinished.
+
+[Latest result](research/execution-v1-smooth-continued.md) · [Remaining coverage](research/drill-mastery-coverage.md) · [Active goal](DRILL_MASTERY_GOAL.md)
+
+---
 # Active drill-mastery goal — smooth placement screen complete
 
 The smooth-distance experiment completed at **262,179 experiences**, with 20 Unity checks passing and 768 frozen-policy attempts. It preserved legal returns but failed the predeclared aiming screen. On the same 256 resets, initializer → candidate target hits were A **117 → 109**, B **4 → 18**, and random **75 → 65**. Legal landings were **228 → 228/229/229** respectively.
