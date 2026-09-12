@@ -1,0 +1,2195 @@
+{
+  "groups": {
+    "all": {
+      "models": {
+        "ExecutionV1SmoothContinuedFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 512,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 0
+            },
+            "B": {
+              "attempts": 512,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 512,
+              "contributingResets": 512,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 512,
+              "contributingResets": 512,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 0,
+            "allPairs": 512,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": null,
+              "ci95": null,
+              "baseResets": 512,
+              "contributingResets": 0
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 512,
+            "uniquePhysicalObservationClusters": 8,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        },
+        "ExecutionV1RightAcquisitionFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 512,
+              "legal": 512,
+              "targetHits": 256,
+              "contacts": 512,
+              "netCrossings": 512
+            },
+            "B": {
+              "attempts": 512,
+              "legal": 512,
+              "targetHits": 192,
+              "contacts": 512,
+              "netCrossings": 512
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0625,
+              "ci95": [
+                0.037109375,
+                0.0888671875
+              ],
+              "baseResets": 512,
+              "contributingResets": 512,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 512,
+              "contributingResets": 512,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 512,
+            "allPairs": 512,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": 0.12018100498244166,
+              "ci95": [
+                0.07153805148282118,
+                0.170985205958641
+              ],
+              "baseResets": 512,
+              "contributingResets": 512,
+              "bootstrapReplicatesWithContributors": 10000
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0625,
+            "ci95": [
+              -0.125,
+              0.25
+            ],
+            "resetPairs": 512,
+            "uniquePhysicalObservationClusters": 8,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        }
+      },
+      "pairedChanges": {
+        "A": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 512,
+            "contributingResets": 512,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.5,
+            "ci95": [
+              0.45703125,
+              0.54296875
+            ],
+            "baseResets": 512,
+            "contributingResets": 512,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.5,
+            "ci95": [
+              0.45703125,
+              0.54296875
+            ],
+            "baseResets": 512,
+            "contributingResets": 512,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        },
+        "B": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 512,
+            "contributingResets": 512,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.375,
+            "ci95": [
+              0.333984375,
+              0.41796875
+            ],
+            "baseResets": 512,
+            "contributingResets": 512,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.375,
+            "ci95": [
+              0.333984375,
+              0.41796875
+            ],
+            "baseResets": 512,
+            "contributingResets": 512,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        }
+      }
+    },
+    "rally-air-feed": {
+      "models": {
+        "ExecutionV1SmoothContinuedFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 256,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            },
+            "B": {
+              "attempts": 256,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 256,
+              "contributingResets": 256,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 256,
+              "contributingResets": 256,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 0,
+            "allPairs": 256,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": null,
+              "ci95": null,
+              "baseResets": 256,
+              "contributingResets": 0
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 256,
+            "uniquePhysicalObservationClusters": 4,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        },
+        "ExecutionV1RightAcquisitionFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 256,
+              "legal": 256,
+              "targetHits": 128,
+              "contacts": 256,
+              "netCrossings": 256
+            },
+            "B": {
+              "attempts": 256,
+              "legal": 256,
+              "targetHits": 64,
+              "contacts": 256,
+              "netCrossings": 256
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": -0.125,
+              "ci95": [
+                -0.15234375,
+                -0.099609375
+              ],
+              "baseResets": 256,
+              "contributingResets": 256,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 256,
+              "contributingResets": 256,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 256,
+            "allPairs": 256,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": -0.3141879737377167,
+              "ci95": [
+                -0.34247421256732197,
+                -0.2858058128273115
+              ],
+              "baseResets": 256,
+              "contributingResets": 256,
+              "bootstrapReplicatesWithContributors": 10000
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": -0.125,
+            "ci95": [
+              -0.375,
+              0.0
+            ],
+            "resetPairs": 256,
+            "uniquePhysicalObservationClusters": 4,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        }
+      },
+      "pairedChanges": {
+        "A": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.5,
+            "ci95": [
+              0.4375,
+              0.5625
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.5,
+            "ci95": [
+              0.4375,
+              0.5625
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        },
+        "B": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.25,
+            "ci95": [
+              0.19921875,
+              0.3046875
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.25,
+            "ci95": [
+              0.19921875,
+              0.3046875
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        }
+      }
+    },
+    "rally-air-feed/seat0": {
+      "models": {
+        "ExecutionV1SmoothContinuedFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 0,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": null,
+              "ci95": null,
+              "baseResets": 64,
+              "contributingResets": 0
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        },
+        "ExecutionV1RightAcquisitionFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 64
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 64,
+              "contacts": 64,
+              "netCrossings": 64
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 64,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": -0.18993687629699707,
+              "ci95": [
+                -0.18993687629699707,
+                -0.18993687629699707
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        }
+      },
+      "pairedChanges": {
+        "A": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        },
+        "B": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        }
+      }
+    },
+    "rally-air-feed/seat1": {
+      "models": {
+        "ExecutionV1SmoothContinuedFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 0,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": null,
+              "ci95": null,
+              "baseResets": 64,
+              "contributingResets": 0
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        },
+        "ExecutionV1RightAcquisitionFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 64,
+              "contacts": 64,
+              "netCrossings": 64
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 64
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 64,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": -0.5595967769622803,
+              "ci95": [
+                -0.5595967769622803,
+                -0.5595967769622803
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        }
+      },
+      "pairedChanges": {
+        "A": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        },
+        "B": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        }
+      }
+    },
+    "rally-air-feed/seat2": {
+      "models": {
+        "ExecutionV1SmoothContinuedFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 0,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": null,
+              "ci95": null,
+              "baseResets": 64,
+              "contributingResets": 0
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        },
+        "ExecutionV1RightAcquisitionFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 64
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 64
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": -0.5,
+              "ci95": [
+                -0.5,
+                -0.5
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 64,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": 0.0034056901931762695,
+              "ci95": [
+                0.0034056901931762695,
+                0.0034056901931762695
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": -0.5,
+            "ci95": [
+              -0.5,
+              -0.5
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        }
+      },
+      "pairedChanges": {
+        "A": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        },
+        "B": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        }
+      }
+    },
+    "rally-air-feed/seat3": {
+      "models": {
+        "ExecutionV1SmoothContinuedFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 0,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": null,
+              "ci95": null,
+              "baseResets": 64,
+              "contributingResets": 0
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        },
+        "ExecutionV1RightAcquisitionFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 64,
+              "contacts": 64,
+              "netCrossings": 64
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 64
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 64,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": -0.5106239318847656,
+              "ci95": [
+                -0.5106239318847656,
+                -0.5106239318847656
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        }
+      },
+      "pairedChanges": {
+        "A": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        },
+        "B": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        }
+      }
+    },
+    "rally-bounce-feed": {
+      "models": {
+        "ExecutionV1SmoothContinuedFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 256,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 0
+            },
+            "B": {
+              "attempts": 256,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 256,
+              "contributingResets": 256,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 256,
+              "contributingResets": 256,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 0,
+            "allPairs": 256,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": null,
+              "ci95": null,
+              "baseResets": 256,
+              "contributingResets": 0
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 256,
+            "uniquePhysicalObservationClusters": 4,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        },
+        "ExecutionV1RightAcquisitionFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 256,
+              "legal": 256,
+              "targetHits": 128,
+              "contacts": 256,
+              "netCrossings": 256
+            },
+            "B": {
+              "attempts": 256,
+              "legal": 256,
+              "targetHits": 128,
+              "contacts": 256,
+              "netCrossings": 256
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.25,
+              "ci95": [
+                0.21875,
+                0.28125
+              ],
+              "baseResets": 256,
+              "contributingResets": 256,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 256,
+              "contributingResets": 256,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 256,
+            "allPairs": 256,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": 0.5545499837026,
+              "ci95": [
+                0.4957224966205104,
+                0.6142431980439141
+              ],
+              "baseResets": 256,
+              "contributingResets": 256,
+              "bootstrapReplicatesWithContributors": 10000
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.25,
+            "ci95": [
+              0.0,
+              0.5
+            ],
+            "resetPairs": 256,
+            "uniquePhysicalObservationClusters": 4,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        }
+      },
+      "pairedChanges": {
+        "A": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.5,
+            "ci95": [
+              0.4375,
+              0.5625
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.5,
+            "ci95": [
+              0.4375,
+              0.5625
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        },
+        "B": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.5,
+            "ci95": [
+              0.4375,
+              0.5625
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.5,
+            "ci95": [
+              0.4375,
+              0.5625
+            ],
+            "baseResets": 256,
+            "contributingResets": 256,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        }
+      }
+    },
+    "rally-bounce-feed/seat0": {
+      "models": {
+        "ExecutionV1SmoothContinuedFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 0,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": null,
+              "ci95": null,
+              "baseResets": 64,
+              "contributingResets": 0
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        },
+        "ExecutionV1RightAcquisitionFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 64
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 64,
+              "contacts": 64,
+              "netCrossings": 64
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 64,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": 0.07711821794509888,
+              "ci95": [
+                0.07711821794509888,
+                0.07711821794509888
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        }
+      },
+      "pairedChanges": {
+        "A": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        },
+        "B": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        }
+      }
+    },
+    "rally-bounce-feed/seat1": {
+      "models": {
+        "ExecutionV1SmoothContinuedFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 0,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": null,
+              "ci95": null,
+              "baseResets": 64,
+              "contributingResets": 0
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        },
+        "ExecutionV1RightAcquisitionFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 64,
+              "contacts": 64,
+              "netCrossings": 64
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 64
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 64,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": 1.3655640482902527,
+              "ci95": [
+                1.3655640482902527,
+                1.3655640482902527
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        }
+      },
+      "pairedChanges": {
+        "A": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        },
+        "B": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        }
+      }
+    },
+    "rally-bounce-feed/seat2": {
+      "models": {
+        "ExecutionV1SmoothContinuedFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 0,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": null,
+              "ci95": null,
+              "baseResets": 64,
+              "contributingResets": 0
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        },
+        "ExecutionV1RightAcquisitionFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 64
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 64,
+              "contacts": 64,
+              "netCrossings": 64
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.5,
+              "ci95": [
+                0.5,
+                0.5
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 64,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": 0.2931489646434784,
+              "ci95": [
+                0.2931489646434784,
+                0.2931489646434784
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.5,
+            "ci95": [
+              0.5,
+              0.5
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        }
+      },
+      "pairedChanges": {
+        "A": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        },
+        "B": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        }
+      }
+    },
+    "rally-bounce-feed/seat3": {
+      "models": {
+        "ExecutionV1SmoothContinuedFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 0
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 0,
+              "targetHits": 0,
+              "contacts": 0,
+              "netCrossings": 0
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 0,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": null,
+              "ci95": null,
+              "baseResets": 64,
+              "contributingResets": 0
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        },
+        "ExecutionV1RightAcquisitionFinal01": {
+          "conditions": {
+            "A": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 64,
+              "contacts": 64,
+              "netCrossings": 64
+            },
+            "B": {
+              "attempts": 64,
+              "legal": 64,
+              "targetHits": 0,
+              "contacts": 64,
+              "netCrossings": 64
+            }
+          },
+          "causal": {
+            "assignmentGain": {
+              "mean": 0.5,
+              "ci95": [
+                0.5,
+                0.5
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothRequestedTargetsHitPerPair": {
+              "mean": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            },
+            "bothLegalPairs": 64,
+            "allPairs": 64,
+            "landingShiftTowardBMetresGivenBothLegal": {
+              "mean": 0.48236870393157005,
+              "ci95": [
+                0.48236870393157005,
+                0.48236870393157005
+              ],
+              "baseResets": 64,
+              "contributingResets": 64,
+              "bootstrapReplicatesWithContributors": 10000
+            }
+          },
+          "uniqueClusterAssignmentGain": {
+            "mean": 0.5,
+            "ci95": [
+              0.5,
+              0.5
+            ],
+            "resetPairs": 64,
+            "uniquePhysicalObservationClusters": 1,
+            "clusterMultiplicityMin": 64,
+            "clusterMultiplicityMax": 64,
+            "bootstrapReplicates": 10000,
+            "weighting": "Mean gain within each exact float32 124-observation cluster, then equal weight per unique cluster; resample whole clusters."
+          }
+        }
+      },
+      "pairedChanges": {
+        "A": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        },
+        "B": {
+          "legalRateChange": {
+            "mean": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "targetRateChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          },
+          "bonusIncidenceChange": {
+            "mean": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ],
+            "baseResets": 64,
+            "contributingResets": 64,
+            "bootstrapReplicatesWithContributors": 10000
+          }
+        }
+      }
+    }
+  },
+  "uniquePhysicalObservationClusters": 8,
+  "inputSha256": {
+    "research/hierarchy-v1/wide-movement-01/analyze_wide_movement.py": "4dd61ae3a1fb072567ddbfd0c8600f0798dc7d016057763b2ef7b77fd09750f1",
+    "research/hierarchy-v1/fresh-placement-01/analyze_fresh_placement.py": "5223da419a0d08453afca78d86845e8a8c4db4d0135b73c11e64fdd56ea202e4",
+    "research/hierarchy-v1/smooth-distance-01/analyze_smooth_distance.py": "69b627d8821a25fa249ff01ea4e070c47d26eb0221103981c62e4f06be4cf7e6",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/A/episodes.jsonl": "4e9caece6e3faee5eed4d21664c1c1eda00088d86304e075d11aff7e8a38adf6",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/A/execution-goals.jsonl": "7bdd3573be019df48c2f1cb59091d57c2f0ac3c9a6a79cc68b5a4a18e2f454bb",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/A/first-decisions.json": "20118d7ac1ce5f11596c4c361979888976ef9a337b825556268e181a1946d2b2",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/A/report.json": "6dac81671b5b552fc4abf12c40c00006a49f81e9004944983216771477f0c8f3",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/A/model-identity.json": "61b85f15d7e5b17390c6433b3760f5372a5971e2e8eea67902e8645943ff19e5",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/A/summary.json": "5011eacca1ef628e84217a3603c94f331d54035f50ab6e8355ac01b4139a1d01",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/B/episodes.jsonl": "b2b9f84e2bb91fa3aa3fb1d4eea17334a5d78392db6ab02cf9946520111d51ed",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/B/execution-goals.jsonl": "f1e7ec98276941aba4e76a85d33404766c0d5239a778c256ff3ce4a3492d4402",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/B/first-decisions.json": "84850fe6e59ba41797ca87379bc623ad70381f1480e2042dbf95fcd77679b721",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/B/report.json": "aa6564bf41885b817066db30bf5692649fa0c3d83cf626c9113f88d8e3fff8d1",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/B/model-identity.json": "61b85f15d7e5b17390c6433b3760f5372a5971e2e8eea67902e8645943ff19e5",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1SmoothContinuedFinal01/B/summary.json": "2b9549e280e658f328e447c143df4bf05770e40de7a42097a6efae212cd82dff",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/A/episodes.jsonl": "a44d260e88c823670e83bbcfa751cae487d4fdd7db1f5fc21b276550f9840e3f",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/A/execution-goals.jsonl": "d695cc9083d29ccaf90f753d2c01b9fb96eda7db3bd159acd20de209276bdd37",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/A/first-decisions.json": "fe57799398ad975274c1ba2408593976e5c6a854136babcc95fbe5718574c291",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/A/report.json": "367a01cb8cca98f205e351ee38f729a9c8a1967527b7a57984a782192811f4e9",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/A/model-identity.json": "cbb4756c90788fe7735b2a1e9680b3650122a4118b5759b3054baabe52d8b003",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/A/summary.json": "d795af8c41d2eca6d431bad10da074921bb75066153877649319a11dbe668008",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/B/episodes.jsonl": "88c03bbf492233d5d9243109e306aef54c243193de781429d93b90d64a4cd7bc",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/B/execution-goals.jsonl": "faf17f05858d584c7518b454b62c1b20bd98625206dc0e4209e73017c32a1aa9",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/B/first-decisions.json": "630d02f1a3fbf9194a9aaae64d24a1882f56e5d700c8e21e28d6980cebffb64c",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/B/report.json": "3f1f447724639097c01dde32452c9f4beb0185aaa921db235f46354f84a9c18e",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/B/model-identity.json": "cbb4756c90788fe7735b2a1e9680b3650122a4118b5759b3054baabe52d8b003",
+    "artifacts/hierarchy-v1/right-acquisition-01/evaluation/acquisition/ExecutionV1RightAcquisitionFinal01/B/summary.json": "085002a1cadd55200a2e9a5d60d678ba3bf00be8b046e119132425fd9ee1a331"
+  },
+  "scriptHash": "d0f3b38ab2f2ec7902d60e34958bbabdaf796946623826b45819e5e6154c3c56",
+  "fullRetentionEvaluationRequired": true,
+  "masteryAccepted": false,
+  "promoted": false,
+  "finalSeedsConsumed": false
+}
