@@ -1,0 +1,51 @@
+{
+  "scripts": {
+    "prepare_right_acquisition_evaluation.py": "9b8b050855e2863f4855d2424dfb354408c6e63db128ad6dc521411c7a7859ee",
+    "analyze_right_acquisition_final.py": "54ec5e2ef88aebe8f14b9a993db7ee7f74b62b2b775df95376415242fc525c30",
+    "prepare_right_acquisition_matched.py": "a6381ddc388538ef50f4ab61bed44152b1d1ba676f7130525f586df065417580",
+    "analyze_right_acquisition_matched.py": "d0f3b38ab2f2ec7902d60e34958bbabdaf796946623826b45819e5e6154c3c56",
+    "prepare_right_acquisition_recording.py": "e2e59871dd8741790f710bc224e7ed8e91f1a63464bf8c2a2892e4a798f85716",
+    "build_right_acquisition_review.py": "7ffff6cf29dc74ba607a6cb9ae069b80c81a5ae912fe177a14ae028ff6c23dc6",
+    "right-acquisition-eval-prepare.cs": "43c81a7450c93663ac298afa0bd99da1b8250f1959f182a888ed48aa40d57636",
+    "right-acquisition-eval-restore.cs": "6ce08dbc9fd2648a34e1aa3316e06c71fa2f51d626458bc7dd92b502a097024e"
+  },
+  "endpoint": 2097152,
+  "checkpointSelection": "Fixed final endpoint, no selection by performance",
+  "acquisition": {
+    "firstSeed": 1109849,
+    "count": 512,
+    "conditions": [
+      "A",
+      "B"
+    ],
+    "models": [
+      "ExecutionV1SmoothContinuedFinal01",
+      "ExecutionV1RightAcquisitionFinal01"
+    ]
+  },
+  "retention": [
+    "narrow-A",
+    "narrow-B",
+    "narrow-random",
+    "wide-A",
+    "wide-B"
+  ],
+  "demo": {
+    "seeds": [
+      1109849,
+      1109850,
+      1109851,
+      1109852,
+      1109853,
+      1109854,
+      1109855,
+      1109856
+    ],
+    "selection": "First eight resets, fixed before final evaluation; retain successes and misses",
+    "replayParityEpisodes": 512
+  },
+  "developmentReuse": true,
+  "acceptanceSeedsUsed": false,
+  "promotion": false,
+  "concurrency": "Baseline editor evaluations overlap independent training. Wall time and asynchronous worker ordering need not reproduce a previous isolated run."
+}
