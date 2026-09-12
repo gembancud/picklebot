@@ -54,3 +54,5 @@ Use a fresh output directory when repeating initialization. `config/mlagents/exe
 An initialized goal-conditioned executor is not a trained strategy system, and a short integration run does not establish goal-following competence. Jointly changing both policies is deferred until executor behavior is sufficiently reliable to evaluate tactical decisions.
 
 [First integration results](research/execution-v1-integration.md): contract, warm-start parity, actual PPO learning and a small exported-model screen.
+
+[Target response and longer placement run](research/execution-v1-placement.md): goal sensitivity verified; general aiming not yet established.

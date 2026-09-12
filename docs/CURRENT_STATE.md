@@ -1,3 +1,10 @@
+# Execution placement evaluation — 12 September 2026
+
+Completed target-response checks and a 262,147-experience run (8 workers × 16 courts). Goal inputs affect actions, but varied-target hits did not improve: initializer 20/64, short run 21/64, longer run 19/64. Legal landings were 53/54/55 respectively. No promotion, no active training. Strategy policy and movement-goal training remain pending. Next: simpler two-region placement with familiar-skill rehearsal and actual landing-coordinate diagnostics.
+
+[Latest experiment and evidence](research/execution-v1-placement.md)
+
+---
 # Execution-goal stage implemented
 
 12 September 2026, branch `feat/hierarchical-control`. The executor now accepts movement and shot goals. The initial shot-goal training check completed (32,776 experiences); its 64-attempt development screen changed from 53 to 54 legal landings and 20 to 21 target hits. This is an integration result, not a demonstrated aiming breakthrough. No new model is promoted.
@@ -35,3 +42,4 @@ The next motor milestone is a return policy that accepts a target area and handl
 Source, scenes, all existing ONNX exports, five full comparison checkpoints, training configuration and compact evaluation evidence are committed. Local virtual environments, generated executable builds, raw rollouts, TensorBoard events, credentials and bulk frame collections remain local. Older specifications and reports describe earlier stages; their historical conclusions are preserved.
 
 The original repository README is preserved in [the archive](archive/README-before-2026-09-11.md). The current setup is [here](TRAINING_SETUP.md).
+

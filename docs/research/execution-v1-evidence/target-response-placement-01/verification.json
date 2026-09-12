@@ -1,0 +1,32 @@
+{
+  "status": "counterfactual_completed",
+  "results": [
+    {
+      "model": "ExecutionV1Placement01",
+      "modelHash": "5c759bc6aa13e5d2d8ea3ca25044b7bdc9cc057393edbfb4b22c5b622ef6ac15",
+      "identicalPhysicalResets": 64,
+      "firstActionMaxAbsoluteDelta": 0.004920274019241333,
+      "firstActionMedianMaxAbsoluteDelta": 0.004375070333480835,
+      "firstActionsChanged": 64,
+      "conditions": [
+        {
+          "side": -1,
+          "attempts": 64,
+          "legal": 55,
+          "targets": 24,
+          "meanDistanceGivenLegal": 1.728843753310767
+        },
+        {
+          "side": 1,
+          "attempts": 64,
+          "legal": 55,
+          "targets": 14,
+          "meanDistanceGivenLegal": 2.2424804720011626
+        }
+      ]
+    }
+  ],
+  "negativeControlReference": "target-response-01/verification.json",
+  "interpretation": "Goal sensitivity is separate from goal accuracy. Small action changes do not prove useful aiming. This is a reused development screen, not final acceptance.",
+  "promoted": false
+}
