@@ -1,3 +1,16 @@
+# Active drill-mastery goal — movement reward experiment running
+
+<!-- movement-progress-running -->
+
+The matched **execution-movement-progress-01** experiment is running on **128 courts**, from the preserved 1,048,609-experience parent toward a fixed endpoint near 2.1 million. It keeps the same 6.25–25 cm axes mixture and PPO settings, adding at most 0.25 for measured forward ball travel after an accepted contact in focus drills. Familiar and prior-court rewards remain unchanged. All 50 Unity checks passed, the new worker build passed, and all eight workers started with exact registered trainer-state restoration.
+
+The preceding run did not resolve lateral returns and reduced aiming accuracy. This branch starts from the common earlier checkpoint so that its fixed endpoint can be compared with the completed no-progress control. No new performance result or mastery acceptance is claimed.
+
+TensorBoard: `execution-movement-progress-01` on the existing port 6009. Steps before 1,048,609 are inherited history.
+
+[Running experiment](research/execution-v1-movement-progress.md) · [Control results](research/execution-v1-axes-recovery-final.md)
+
+---
 # Active drill-mastery goal — graded movement assessed
 
 <!-- axes-recovery-final-status -->
