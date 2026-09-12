@@ -1,3 +1,12 @@
+# Active drill-mastery goal — graded movement training running
+
+**execution-axes-recovery-01** is running on **128 practice courts**, resumed at **1,048,609 experiences** toward a fixed endpoint near **2.1 million**. The full policy, critic, normalization and optimizer state loaded exactly. Only focus practice changes: smaller **6.25–25 cm left/right/shallow/deep offsets**, retaining the **25/25/50 familiar/prior/focus** mixture and existing PPO, body, target and reward settings.
+
+All **14 curriculum checks passed**, followed by a verified new worker build. The previous frozen model's seven movement recordings match the full 512-attempt diagnostic; browser playback remains unverified because local-file automation was blocked. The new training has no assessed performance result yet. Its endpoint must pass narrow retention and wider movement comparisons before further decisions. Final acceptance seeds remain unused; mastery is not accepted.
+
+[Current experiment](research/execution-v1-axes-recovery.md) · [Movement recordings](research/execution-v1-wide-movement-review.md) · [Active goal](DRILL_MASTERY_GOAL.md)
+
+---
 # Active drill-mastery goal — wider movement assessed
 
 The frozen **1,048,609-experience executor** completed a 512-reset diagnostic under each of two target instructions. In the 256 explicit directional challenges, it made **38 legal returns under A and 40 under B**. A results by nominal feed displacement were **31/64 at 25 cm, 7/64 at 50 cm, and 0/64 at both 75 and 100 cm**. By direction: left 3/66, right 0/64, shallow 19/62 and deep 16/64.

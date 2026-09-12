@@ -67,3 +67,6 @@ Two-region practice now opts in with `targetLayout: two-regions` and radius at m
 
 
 [Wider movement diagnostic](research/execution-v1-wide-movement.md): the current executor makes some 25 cm returns, few 50 cm returns, and no 75–100 cm returns. Recorded body movement is present; timely positioning and contact remain weak. Next is graded four-direction execution practice with familiar-skill rehearsal, before learned strategy.
+
+
+[Graded movement continuation](research/execution-v1-axes-recovery.md) is running after14 passing curriculum checks. Recovery now accepts opt-in axes focus while preserving default lateral behavior. No additional actor or strategy policy is introduced.

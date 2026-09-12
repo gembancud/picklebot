@@ -84,7 +84,7 @@ namespace Picklebot.PlayerLearning
         public bool MovementRecoveryMix; // Opt-in256-episode25/25/50 recovery schedule.
         public bool InterleavedRecovery, OptimizerDiagnostics;
         public int SchedulerWorkerId;
-        private PlayerRecoveryScheduleV3.Episode Recovery(int index)=>PlayerRecoveryScheduleV3.For(index,MovementRange,MovementRehearsalRange,MaximumReturnDifficulty);
+        private PlayerRecoveryScheduleV3.Episode Recovery(int index)=>PlayerRecoveryScheduleV3.For(index,MovementRange,MovementRehearsalRange,MaximumReturnDifficulty,MovementPattern);
         public static void ValidateMovementPositionReward(string task,float range,float budget)
         {
             PlayerMovementPositionRewardV3.ValidateBudget(budget);
