@@ -16,7 +16,7 @@ namespace Picklebot.PlayerLearning
         public static Episode For(int index,float lateralRange,float priorRange,float receiveDifficulty,string focusPattern="lateral")
         {
             if(index<0)throw new ArgumentOutOfRangeException(nameof(index));
-            if(focusPattern!="lateral"&&focusPattern!="axes")throw new ArgumentException("Recovery focus must be lateral or axes.",nameof(focusPattern));
+            if(focusPattern!="lateral"&&focusPattern!="axes"&&focusPattern!="lateral-right")throw new ArgumentException("Recovery focus must be lateral, axes, or fixed lateral-right.",nameof(focusPattern));
             int block=index/4%64;
             if(block<16) {
                 int basic=block%8;
@@ -25,15 +25,18 @@ namespace Picklebot.PlayerLearning
             }
             float fraction=(1+block%4)*.25f;
             if(block<32)return new Episode(block<24?"rally-air-feed":"rally-bounce-feed","court","prior",priorRange*fraction,0);
+            // New acquisition-retention arm: preserve the first128 maintenance resets;
+            // focus on the same fixed rightward range that the acquisition run learned.
+            if(focusPattern=="lateral-right")return new Episode(block<48?"rally-air-feed":"rally-bounce-feed","lateral-right","focus",lateralRange,0);
             bool air=block<48,left=block<40||block>=48&&block<60;
             return new Episode(air?"rally-air-feed":"rally-bounce-feed",focusPattern=="axes"?"axes":left?"lateral-left":"lateral-right","focus",lateralRange*fraction,0);
         }
         public static void Validate(bool enabled,string task,float range,float priorRange,string pattern,float timing,float starts,float bonus,int seedCount)
         {
             if(!enabled)return;
-            if(task!="movement-maintenance"||(pattern!="lateral"&&pattern!="axes")||!float.IsFinite(range)||range<=0||range>.25f||!float.IsFinite(priorRange)||priorRange<=0||priorRange>1
+            if(task!="movement-maintenance"||(pattern!="lateral"&&pattern!="axes"&&pattern!="lateral-right")||!float.IsFinite(range)||range<=0||range>.25f||!float.IsFinite(priorRange)||priorRange<=0||priorRange>1
                ||timing!=0||starts!=0||bonus!=0||seedCount<=0||seedCount%CycleLength!=0)
-                throw new ArgumentException("Recovery mix requires solo lateral or axes practice, positive bounded focus/prior ranges, zero timing/start/reward changes and complete256-episode cycles.");
+                throw new ArgumentException("Recovery mix requires solo lateral, axes or fixed-right practice, positive bounded focus/prior ranges, zero timing/start/reward changes and complete256-episode cycles.");
         }
     }
 }

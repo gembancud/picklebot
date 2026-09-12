@@ -1,3 +1,11 @@
+# Active drill-mastery goal: mixed rightward retention setup tested
+
+The next reset-only curriculum uses50% fixed rightward25cm,25% familiar drills and25% prior-court episode starts, interleaved within16 starts.18 Unity tests passed, including physical reset parity and original recovery behavior. Build and frozen-worker fixture are next; no training launch yet. Planned common parent1048609 to fixed2097152 with unchanged PPO, controls and rewards. Mandatory acquisition plus all5 retention evaluations; no automatic promotion or extension. Final acceptance seeds remain unused.
+
+Plan and tests: `research/hierarchy-v1/right-retention-setup-01`. The previous right-only result is preserved and unpromoted: [report](research/execution-v1-right-acquisition-final.md).
+
+---
+
 # Active drill-mastery goal: acquisition verified; retention failed
 
 Rightward-only training completed and all seven evaluations passed evidence validation. The endpoint learned eight canonical rightward 25 cm situations (512 repeated attempts legal under each target), but earlier skills collapsed: narrow A/B/random 23/21/21 out of256 versus parent234/235/235; wide A/B32/30 out of512 versus285/288. Both serving sides fell to zero. Wider rightward returns improved0→15/64, while other directions regressed. No mastery or policy promotion; target assignment gain interval across eight unique situations includes zero.
