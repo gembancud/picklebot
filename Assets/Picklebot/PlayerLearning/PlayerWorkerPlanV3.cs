@@ -15,6 +15,7 @@ namespace Picklebot.PlayerLearning
         public string fixedServeSides="right";
         public float maximumReturnDifficulty, stationaryFlightDifficulty, feedLowering, feedLateralOffset, initialHoldLift;
         public bool alignedDecisions, recordDecisions, randomMatchContext, movementRecoveryMix, interleavedRecovery, optimizerDiagnostics;
+        public bool movementForwardProgressReward;
         public string movementPattern="court";
         public float movementRange,movementTiming,movementStartVariation,movementPositionReward,movementRehearsalRange;
         public string backgroundModelHash;
@@ -80,6 +81,7 @@ namespace Picklebot.PlayerLearning
                 throw new ArgumentException("Team matches require explicit bounded game limits, no drill feed parameters, and no unsupported decision recording.");
             PlayerMlDrillsV3.ValidateMovement(manifest.task,manifest.movementRange,manifest.movementTiming,manifest.movementStartVariation);
             PlayerMlDrillsV3.ValidateMovementPositionReward(manifest.task,manifest.movementRange,manifest.movementPositionReward);
+            PlayerMlDrillsV3.ValidateMovementForwardProgressReward(manifest.task,manifest.movementRange,manifest.movementForwardProgressReward);
             PlayerMlDrillsV3.ValidateMovementRehearsal(manifest.task,manifest.movementRehearsalRange);
             PlayerRecoveryScheduleV3.Validate(manifest.movementRecoveryMix,manifest.task,manifest.movementRange,manifest.movementRehearsalRange,manifest.movementPattern,manifest.movementTiming,manifest.movementStartVariation,manifest.movementPositionReward,manifest.seedsPerWorker);
             PlayerInterleavedRecoveryV3.Validate(manifest.interleavedRecovery,manifest.movementRecoveryMix,manifest.seedsPerWorker,workerId);
@@ -134,7 +136,7 @@ namespace Picklebot.PlayerLearning
             run.RequireTrainer=RequireTrainer;run.InferenceModel=RequireTrainer?null:model;
             run.AutoRun=true;run.RecordDecisions=Manifest.recordDecisions;run.AlignDrillDecisions=Manifest.alignedDecisions;
             run.FeedLowering=Manifest.feedLowering;run.FeedLateralOffset=Manifest.feedLateralOffset;
-            run.InterleavedRecovery=Manifest.interleavedRecovery;run.OptimizerDiagnostics=Manifest.optimizerDiagnostics;run.SchedulerWorkerId=WorkerId;run.MovementRecoveryMix=Manifest.movementRecoveryMix;run.MovementRehearsalRange=Manifest.movementRehearsalRange;run.MovementRange=Manifest.movementRange;run.MovementTiming=Manifest.movementTiming;run.MovementStartVariation=Manifest.movementStartVariation;run.MovementPositionReward=Manifest.movementPositionReward;run.MovementPattern=Manifest.movementPattern;
+            run.InterleavedRecovery=Manifest.interleavedRecovery;run.OptimizerDiagnostics=Manifest.optimizerDiagnostics;run.SchedulerWorkerId=WorkerId;run.MovementRecoveryMix=Manifest.movementRecoveryMix;run.MovementRehearsalRange=Manifest.movementRehearsalRange;run.MovementRange=Manifest.movementRange;run.MovementTiming=Manifest.movementTiming;run.MovementStartVariation=Manifest.movementStartVariation;run.MovementPositionReward=Manifest.movementPositionReward;run.MovementForwardProgressReward=Manifest.movementForwardProgressReward;run.MovementPattern=Manifest.movementPattern;
             run.StationaryFlightDifficulty=Manifest.stationaryFlightDifficulty;run.InitialHoldLift=Manifest.initialHoldLift;run.MaximumReturnDifficulty=Manifest.maximumReturnDifficulty;
             run.EvidenceDirectory=EvidenceDirectory;run.SourceIdentity=Manifest.sourceIdentity;
         }

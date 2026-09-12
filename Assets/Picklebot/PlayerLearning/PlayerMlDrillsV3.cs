@@ -49,6 +49,9 @@ namespace Picklebot.PlayerLearning
         public float movementRange,movementTiming,movementStartVariation,contactDisplacement,contactDistanceFromStart;
         public string movementPattern;
         public float movementPositionRewardScale,movementPositionReward;
+        public bool movementForwardProgressRewardEnabled;
+        public float movementForwardProgressReward;
+        public int movementForwardProgressRewardedSteps;
         public float[] travelBeforeContact;
         public bool faceContact, netCrossed, released, dropBounced, serveAccepted, serveFromLeft, randomMatchContext;
     }
@@ -63,6 +66,7 @@ namespace Picklebot.PlayerLearning
         public int nextSeedIndex;
         public float maximumReturnDifficulty, stationaryFlightDifficulty, feedLowering, feedLateralOffset, initialHoldLift;
         public bool trainerConnected, alignedDecisions, randomMatchContext, movementRecoveryMix, interleavedRecovery, optimizerDiagnostics;
+        public bool movementForwardProgressReward;
         public int schedulerWorkerId;
         public int schedulerTicks, decisionBatches, requestedDecisions, backgroundDecisions;
         public bool activePracticePlayers, cooperativePairs;
@@ -80,6 +84,7 @@ namespace Picklebot.PlayerLearning
         public float MaximumReturnDifficulty = 1;
         public string MovementPattern="court";
         public float MovementRange,MovementTiming,MovementStartVariation,MovementPositionReward;
+        public bool MovementForwardProgressReward; // Optional focus-only measured post-contact flight feedback.
         public float MovementRehearsalRange; // Zero preserves the existing schedule. Positive: half of challenges rehearse prior court feeds.
         public bool MovementRecoveryMix; // Opt-in256-episode25/25/50 recovery schedule.
         public bool InterleavedRecovery, OptimizerDiagnostics;
@@ -89,6 +94,11 @@ namespace Picklebot.PlayerLearning
         {
             PlayerMovementPositionRewardV3.ValidateBudget(budget);
             if(budget>0&&(task!="movement-maintenance"||!float.IsFinite(range)||range<=0))throw new ArgumentException("Position reward requires solo movement practice with a positive range.");
+        }
+        public static void ValidateMovementForwardProgressReward(string task,float range,bool enabled)
+        {
+            if(enabled&&(task!="movement-maintenance"||!float.IsFinite(range)||range<=0||range>1))
+                throw new ArgumentException("Forward flight reward requires solo movement practice with a positive bounded range.");
         }
         public static bool IsMovementTask(string task)=>task=="movement-maintenance"||task=="paired-movement-maintenance";
         public bool MovementPractice=>IsMovementTask(Task);
@@ -248,6 +258,7 @@ namespace Picklebot.PlayerLearning
                     resetRejections = resetRejections, initialHoldLift = Drill.InitialHoldLift, feedDifficulty = Drill.FeedDifficulty, feedLowering = Drill.FeedLowering, feedLateralOffset = Drill.FeedLateralOffset, faceContactBallHeight = Drill.FaceContactBallHeight, outcome = Drill.Outcome, physicsTicks = Drill.Match.Tick, reward = reward,
                     decisions = (owner.CooperativePairs?Agents.Sum(p=>p.DecisionsReceived):Agents[Drill.Player].DecisionsReceived)-firstDecision,
                     movementPattern=Drill.MovementPattern,movementPositionRewardScale=Drill.MovementPositionRewardScale,movementPositionReward=Drill.MovementPositionReward,
+                    movementForwardProgressRewardEnabled=Drill.MovementForwardProgressRewardEnabled,movementForwardProgressReward=Drill.MovementForwardProgressReward,movementForwardProgressRewardedSteps=Drill.MovementForwardProgressRewardedSteps,
                     movementFeed=Drill.MovementFeed,movementRegion=Drill.Match.MovementRegion,movementRange=Drill.MovementRange,movementTiming=Drill.MovementTiming,movementStartVariation=Drill.MovementStartVariation,travelBeforeContact=Drill.TravelBeforeContact,contactDisplacement=Drill.ContactDisplacement,contactDistanceFromStart=Drill.ContactDistanceFromStart,
                     cooperativePairs=owner.CooperativePairs,hitter=Drill.Hitter,pairFeedLane=Drill.Match.RallyFeedLane,decisionsByPlayer=Agents.Select(p=>p.DecisionsReceived-firstByPlayer[p.Seat]).ToArray(),
                     backgroundDecisions=BackgroundAgents.Where(p=>p!=null).Sum(p=>p.DecisionsReceived)-firstBackgroundDecision,
@@ -301,7 +312,7 @@ namespace Picklebot.PlayerLearning
                 }
                 try
                 {
-                    var drill=new PlayerContactDrillV3(seed,index%4,TaskForEpisode(index),DifficultyForEpisode(index),lower,offset,HoldLiftForEpisode(index),ServeFromLeftForEpisode(index),RallyServerForEpisode(index),RallyServerOnRightForEpisode(index),RandomizeMatchContext&&(TaskForEpisode(index)=="receive-serve"||PlayerContactDrillV3.IsFixedServeTask(TaskForEpisode(index))||RallyServerForEpisode(index).HasValue)?(int?)seed:null,cooperative:CooperativePairs,movementRange:MovementRangeForEpisode(index),movementTiming:NewMovementChallenge(index)?MovementTiming:0,movementStartVariation:NewMovementChallenge(index)?MovementStartVariation:0,movementPositionReward:NewMovementChallenge(index)?MovementPositionReward:0,movementPattern:MovementPatternForEpisode(index));
+                    var drill=new PlayerContactDrillV3(seed,index%4,TaskForEpisode(index),DifficultyForEpisode(index),lower,offset,HoldLiftForEpisode(index),ServeFromLeftForEpisode(index),RallyServerForEpisode(index),RallyServerOnRightForEpisode(index),RandomizeMatchContext&&(TaskForEpisode(index)=="receive-serve"||PlayerContactDrillV3.IsFixedServeTask(TaskForEpisode(index))||RallyServerForEpisode(index).HasValue)?(int?)seed:null,cooperative:CooperativePairs,movementRange:MovementRangeForEpisode(index),movementTiming:NewMovementChallenge(index)?MovementTiming:0,movementStartVariation:NewMovementChallenge(index)?MovementStartVariation:0,movementPositionReward:NewMovementChallenge(index)?MovementPositionReward:0,movementPattern:MovementPatternForEpisode(index),movementForwardProgressReward:NewMovementChallenge(index)&&MovementForwardProgressReward);
                     rejectedSurfaces=rejected.ToArray();return drill;
                 }
                 catch(StationaryResetOverlapException e) when(IsVariedContactEpisode(index)) { rejected.Add(e.Surface); }
@@ -437,6 +448,7 @@ namespace Picklebot.PlayerLearning
             if (float.IsNaN(MaximumReturnDifficulty) || MaximumReturnDifficulty < 0 || MaximumReturnDifficulty > 1) throw new ArgumentOutOfRangeException(nameof(MaximumReturnDifficulty));
             ValidateMovement(Task,MovementRange,MovementTiming,MovementStartVariation);
             ValidateMovementPositionReward(Task,MovementRange,MovementPositionReward);
+            ValidateMovementForwardProgressReward(Task,MovementRange,MovementForwardProgressReward);
             ValidateMovementRehearsal(Task,MovementRehearsalRange);
             PlayerRecoveryScheduleV3.Validate(MovementRecoveryMix,Task,MovementRange,MovementRehearsalRange,MovementPattern,MovementTiming,MovementStartVariation,MovementPositionReward,SeedCount);
             PlayerInterleavedRecoveryV3.Validate(InterleavedRecovery,MovementRecoveryMix,SeedCount,SchedulerWorkerId);
@@ -456,7 +468,7 @@ namespace Picklebot.PlayerLearning
             if (RequireTrainer && !academy.IsCommunicatorOn) throw new InvalidOperationException("Python trainer is not connected; no heuristic fallback allowed.");
             Report = new MlDrillReportV3 { contract = ExecutionGoals == null ? PlayerMlAgentV3.ContractVersion : PlayerExecutionGoalV1.Contract, status = "running", task = Task, fixedServeSides = FixedServeSides, activePracticePlayers=BackgroundModel!=null, cooperativePairs=CooperativePairs, randomMatchContext=RandomizeMatchContext, firstSeed = FirstSeed, seedCount = SeedCount,
                 arenas = ArenaCount, sourceIdentity = SourceIdentity, unityVersion = Application.unityVersion,
-                interleavedRecovery=InterleavedRecovery,optimizerDiagnostics=OptimizerDiagnostics,schedulerWorkerId=SchedulerWorkerId,movementRecoveryMix=MovementRecoveryMix,movementRehearsalRange=MovementRehearsalRange,movementRange=MovementRange,movementTiming=MovementTiming,movementStartVariation=MovementStartVariation,movementPositionReward=MovementPositionReward,movementPattern=MovementPattern, initialHoldLift = InitialHoldLift, stationaryFlightDifficulty = StationaryFlightDifficulty, maximumReturnDifficulty = MaximumReturnDifficulty, feedLowering = FeedLowering, feedLateralOffset = FeedLateralOffset, trainerConnected = academy.IsCommunicatorOn, alignedDecisions = AlignDrillDecisions, split = RequireTrainer ? "training" : InferenceModel != null ? "development" : "interactive" };
+                interleavedRecovery=InterleavedRecovery,optimizerDiagnostics=OptimizerDiagnostics,schedulerWorkerId=SchedulerWorkerId,movementRecoveryMix=MovementRecoveryMix,movementRehearsalRange=MovementRehearsalRange,movementRange=MovementRange,movementTiming=MovementTiming,movementStartVariation=MovementStartVariation,movementPositionReward=MovementPositionReward,movementForwardProgressReward=MovementForwardProgressReward,movementPattern=MovementPattern, initialHoldLift = InitialHoldLift, stationaryFlightDifficulty = StationaryFlightDifficulty, maximumReturnDifficulty = MaximumReturnDifficulty, feedLowering = FeedLowering, feedLateralOffset = FeedLateralOffset, trainerConnected = academy.IsCommunicatorOn, alignedDecisions = AlignDrillDecisions, split = RequireTrainer ? "training" : InferenceModel != null ? "development" : "interactive" };
             if (!string.IsNullOrEmpty(EvidenceDirectory))
             {
                 Directory.CreateDirectory(EvidenceDirectory);
@@ -536,6 +548,9 @@ namespace Picklebot.PlayerLearning
                 string movement="Picklebot/Movement/"+(episode.task=="rally-air-feed"?"Air/":"Bounce/")+(episode.movementRange==0?"Retained/":"Challenge/");
                 stats.Add(movement+"Pattern/"+episode.movementPattern+"/LegalReturn",episode.outcome=="legal_return"?1:0);
                 stats.Add(movement+"PositionReward",episode.movementPositionReward);
+                stats.Add(movement+"ForwardProgressRewardEnabled",episode.movementForwardProgressRewardEnabled?1:0);
+                stats.Add(movement+"ForwardProgressReward",episode.movementForwardProgressReward);
+                stats.Add(movement+"ForwardProgressRewardedSteps",episode.movementForwardProgressRewardedSteps);
                 stats.Add(movement+"LegalReturn",episode.outcome=="legal_return"?1:0);
                 stats.Add(movement+"FaceContact",episode.faceContact?1:0);
                 stats.Add(movement+"NetCrossed",episode.netCrossed?1:0);
