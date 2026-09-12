@@ -1,3 +1,11 @@
+# Active drill-mastery goal: pre-contact experiment evaluated
+
+Training and all five development evaluations are complete. Final2,097,186 experiences; candidate not promoted. Directional legal returns36/256 and30/256 versus common-parent38/256 and40/256; right2/64 and0/64, deep7/64 in both. Narrow serves16/16 in all conditions, but aiming still lacks positive paired assignment gain. No training is running. The task-owned evaluation Editor was restored and asked to exit. Final acceptance seeds unused.
+
+See `docs/research/execution-v1-precontact-final.md` and `research/hierarchy-v1/precontact-final-01`. Next: diagnose matched pre-contact versus outgoing-shot failures before another learning intervention; no automatic extension. The full drill-mastery goal remains active and incomplete.
+
+---
+
 # Active drill-mastery goal: pre-contact training started
 
 Run `execution-precontact-alignment-01` resumed the preserved common parent at1,048,609 experiences and targets2,097,152, using8 workers x16 courts. Pre-contact potential shaping is enabled only on focus drills; the25/25/50 familiar/prior/focus mixture and maintained PPO are unchanged. Previous movement bonuses remain off. No model is promoted; five shaping-off development batteries are required after completion, and final acceptance seeds remain unused.
