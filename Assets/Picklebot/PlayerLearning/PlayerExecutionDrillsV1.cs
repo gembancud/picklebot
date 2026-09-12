@@ -10,7 +10,10 @@ namespace Picklebot.PlayerLearning
     // This supplies practice goals only, not the eventual strategy policy.
     public sealed class PlayerExecutionDrillsV1 : MonoBehaviour
     {
+        public const string LinearReward = "linear-radius";
+        public const string SmoothDistanceReward = "smooth-distance-2m";
         public bool SampleShotTargets;
+        public string RewardMode = LinearReward;
         public string TargetLayout = "random";
         public float TargetRadius = 1.5f;
         public float LegalTargetReward = .25f;
@@ -25,7 +28,12 @@ namespace Picklebot.PlayerLearning
             public int seed, player;
             public bool assigned, legalLanding, targetHit, hasLanding;
             public float targetX, targetZ, radius, distance, bonus, landingX, landingZ;
-            public string targetLayout;
+            public string targetLayout, rewardMode;
+        }
+
+        public static void ValidateRewardMode(string mode)
+        {
+            if(mode!=LinearReward && mode!=SmoothDistanceReward)throw new ArgumentException("Unknown placement reward mode.");
         }
 
         public static void ValidateLayout(string layout, bool sample, float radius)
@@ -45,6 +53,8 @@ namespace Picklebot.PlayerLearning
         public void Prepare(PlayerMlDrillsV3 run)
         {
             ValidateLayout(TargetLayout,SampleShotTargets,TargetRadius);
+            ValidateRewardMode(RewardMode);
+            if(RewardMode!=LinearReward&&!SampleShotTargets)throw new ArgumentException("Smooth placement feedback requires assigned targets.");
             if (run.CooperativePairs || run.OptimizerDiagnostics || run.BackgroundModel != null)
                 throw new ArgumentException("The first execution-goal stage supports solo drills; legacy optimizer diagnostics and teammate training need their own new contract.");
             if (!float.IsFinite(TargetRadius) || TargetRadius <= 0 || TargetRadius > 3 ||
@@ -86,13 +96,16 @@ namespace Picklebot.PlayerLearning
                 PlayerIntentV1.PlayBall,shotTarget:seat==drill.Player?target:null,shotRadius:TargetRadius)).ToArray();
         }
 
-        public static float TargetBonus(PlayerExecutionGoalV1 goal, bool legal, Vector3 landing, float budget)
+        public static float TargetBonus(PlayerExecutionGoalV1 goal, bool legal, Vector3 landing, float budget, string mode = LinearReward)
         {
+            ValidateRewardMode(mode);
             if (!float.IsFinite(budget) || budget < 0 || budget > .25f) throw new ArgumentException("Invalid target bonus.");
             if (!legal || !goal.HasShotTarget) return 0;
             float distance = goal.LandingDistance(landing);
             if (!float.IsFinite(distance)) throw new ArgumentException("Non-finite landing.");
-            return budget*Mathf.Max(0,1-distance/goal.ShotRadius);
+            // Success is still measured with ShotRadius. This optional feedback also
+            // distinguishes legal misses outside that circle; it never changes physics.
+            return budget*(mode==SmoothDistanceReward?Mathf.Exp(-distance/2f):Mathf.Max(0,1-distance/goal.ShotRadius));
         }
 
         public float Finish(PlayerContactDrillV3 drill, PlayerExecutionGoalV1 goal)
@@ -100,7 +113,7 @@ namespace Picklebot.PlayerLearning
             if (!drill.Done || goal.Seat!=drill.Player) throw new InvalidOperationException("Only a settled private drill may receive target feedback.");
             bool legal = drill.Outcome=="legal_return" || drill.Outcome=="legal_serve";
             var row = new Result {seed=drill.Seed,player=drill.Player,outcome=drill.Outcome,
-                targetLayout=TargetLayout,assigned=goal.HasShotTarget,legalLanding=legal,targetX=goal.ShotTarget.x,targetZ=goal.ShotTarget.y,radius=goal.ShotRadius,distance=-1};
+                targetLayout=TargetLayout,rewardMode=RewardMode,assigned=goal.HasShotTarget,legalLanding=legal,targetX=goal.ShotTarget.x,targetZ=goal.ShotTarget.y,radius=goal.ShotRadius,distance=-1};
             if (legal)
             {
                 int sign = drill.Player<2?1:-1;
@@ -111,7 +124,7 @@ namespace Picklebot.PlayerLearning
                 if(goal.HasShotTarget)
                 {
                     row.distance=goal.LandingDistance(bounce.position);row.targetHit=row.distance<=goal.ShotRadius;
-                    row.bonus=TargetBonus(goal,true,bounce.position,LegalTargetReward);
+                    row.bonus=TargetBonus(goal,true,bounce.position,LegalTargetReward,RewardMode);
                 }
             }
             Completed++; if(legal)LegalLandings++; if(row.targetHit)TargetsHit++;
@@ -120,6 +133,7 @@ namespace Picklebot.PlayerLearning
             if(row.assigned)
             {
                 stats.Add("PicklebotExecution/TargetHitPerAttempt",row.targetHit?1:0);
+                stats.Add("PicklebotExecution/PlacementBonus",row.bonus);
                 if(legal){stats.Add("PicklebotExecution/TargetHitGivenLegal",row.targetHit?1:0);stats.Add("PicklebotExecution/LandingDistanceGivenLegal",row.distance);}
             }
             evidence?.WriteLine(JsonUtility.ToJson(row));

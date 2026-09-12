@@ -22,9 +22,9 @@ Goals do not move the body, assign a stroke, predict a contact point or choose a
 
 Current practice assigns `PlayBall` plus a seeded shot target. The goal sampler has its own RNG and does not change ball-feed randomness. Serve targets lie within the receiving service box. Existing solo serve/return/volley/movement mixtures remain available.
 
-A target bonus is paid once, after the existing drill reports a legal outcome and an accepted post-contact opponent-court bounce exists. Maximum bonus is 0.25; it decreases linearly to zero at the target radius. Existing legal-hit rewards remain. Misses, illegal hits and illegal serves receive no placement bonus. Target circles near boundaries are effectively clipped by court legality.
+A target bonus is paid once, after the existing drill reports a legal outcome and an accepted post-contact opponent-court bounce exists. Maximum bonus is 0.25. The default `linear-radius` mode decreases linearly to zero at the target radius. An opt-in `smooth-distance-2m` experiment pays `0.25 × exp(−distance / 2 m)` for legal landings, including legal target misses. Both modes keep the same target-hit radius and existing legal-hit rewards. Attempts without a legal landing receive no placement bonus. Target circles near boundaries are effectively clipped by court legality.
 
-Metrics: `PicklebotExecution/LegalLanding`, `TargetHitPerAttempt`, `TargetHitGivenLegal`, and `LandingDistanceGivenLegal`. Read both success-per-attempt and conditional accuracy: better conditional aim alone can conceal more misses. Exact targets and outcomes are recorded in `execution-goals.jsonl`.
+Metrics: `PicklebotExecution/LegalLanding`, `TargetHitPerAttempt`, `TargetHitGivenLegal`, `LandingDistanceGivenLegal`, and `PlacementBonus`. Read both success-per-attempt and conditional accuracy: better conditional aim alone can conceal more misses. Exact targets and outcomes are recorded in `execution-goals.jsonl`.
 
 Worker manifests explicitly opt into `execution-v1-136obs-16continuous-release`. Legacy workers remain on the old contract. This first execution stage rejects paired workers, background models and legacy optimizer diagnostics rather than silently mixing incompatible contracts.
 
@@ -58,3 +58,5 @@ An initialized goal-conditioned executor is not a trained strategy system, and a
 [Target response and longer placement run](research/execution-v1-placement.md): goal sensitivity verified; general aiming not yet established.
 
 Two-region practice now opts in with `targetLayout: two-regions` and radius at most1m. Default random targets are unchanged. Serve regions differ in depth within the correct service box; rally regions differ laterally. Every legal landing records canonical `landingX`, `landingZ` and `hasLanding` for paired target-response evaluation. [Two-region experiment](research/execution-v1-two-regions.md) failed its placement screen; the shared policy is not yet accepted as a goal-following executor.
+
+[Smooth-distance experiment](research/execution-v1-smooth-distance.md): denser feedback preserved legality but failed paired target following after 262,179 experiences. Nonzero placement bonus is not target success. No executor promotion.

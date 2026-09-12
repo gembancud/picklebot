@@ -1,0 +1,111 @@
+{
+  "createdAt": "2026-09-12T05:33:28.580248+00:00",
+  "hypothesis": "The 32-buffer initial exposure may be too short for useful target conditioning. Extend the same policy and reward recipe with full optimizer state; inspect fixed checkpoints rather than selecting a lucky result.",
+  "parentRun": "execution-smooth-distance-01",
+  "runId": "execution-smooth-continued-01",
+  "sourceIdentity": "5f8c4a10a777ea4c69c0a2ef01831163252a3614bddaaedfe2ab4024d04831c9",
+  "buildIdentity": "ff5e4a6d5d3cb04458d577ddfb273be747595b1f054c0c8639bb18eecce42359",
+  "parentCheckpointHash": "d3d5c9ce0c1c8ef919d2b0ee4320842ffb61860c12a911b32414903cbd709205",
+  "parentModelHash": "29cb54047f5cb79f570114d09704bc8bf0513dba77874f289d9fcad354d2f8a6",
+  "initialStep": 262179,
+  "targetGlobalStep": 1048576,
+  "configHash": "71286e39147a9c2e5c45df36862f4cdd9f0504cc7d275893ee3e73071a2349a9",
+  "trainingSeed": 19013,
+  "basePort": 5655,
+  "workerCount": 8,
+  "configPath": "config/mlagents/execution-v1-smooth-continued.yaml",
+  "sourceRecordPath": "artifacts/hierarchy-v1/smooth-distance-01/source-records.json",
+  "buildRecordPath": "artifacts/hierarchy-v1/smooth-distance-01/build-verification.json",
+  "resume": {
+    "framework": "pinned ML-Agents --resume",
+    "init_path": "removed because it takes precedence over resume in the installed loader",
+    "preserved": [
+      "actor",
+      "critic",
+      "normalization",
+      "Adam optimizer",
+      "global step"
+    ],
+    "notPreserved": [
+      "live Unity state",
+      "in-flight rollout buffer",
+      "Python/Unity process RNG progression"
+    ],
+    "trainingResetReuse": {
+      "firstSeed": 1000000,
+      "seedsPerWorker": 12288,
+      "workers": 8
+    },
+    "checkpointPaths": "Copy into an isolated results directory and rewrite checkpoint-manager paths; never permit retention to delete parent files"
+  },
+  "evaluation": {
+    "split": "reused development anchor",
+    "firstSeed": 1108985,
+    "baseResets": 256,
+    "conditions": [
+      "A",
+      "B",
+      "random"
+    ],
+    "rewardMode": "linear-radius",
+    "midpointSelection": "Retained numbered checkpoint nearest 524288, within 8192 steps; lower step wins a tie; determined from step numbers before evaluating performance.",
+    "finalSelection": "Final exported checkpoint at or above1048576 and below1056768. No best-of-checkpoint selection.",
+    "baselineInputs": {
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/A/episodes.jsonl": "629177b6dbfed6282963325f3705e5d540c3e5d72d2b29f8d3c4030ba581074e",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/A/execution-goals.jsonl": "35bbe80874cb612db77fe12abbdf04fe83b45d607d1284623c5d9682261e265c",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/A/first-decisions.json": "5e0a3ceef6bdcec128ceece85f955e55d404d0b560efe47e3a9ce99289631c88",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/A/report.json": "c24f135676b0ad5e7a83038cbdfb37b9cd04fb8efc1737cdeedce78ae61d7c33",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/A/summary.json": "d7ae08ca624d37a0a5091baec36e66cb79a1e98741a7b13f1c328d46f256b2e3",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/B/episodes.jsonl": "46ff213df3ef53975a7c59187bddbd64c16c36385a2d751bed21fc47ad4ffb8d",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/B/execution-goals.jsonl": "6018792730a9f63d4e939de26359590794a916ffa647988209e960af7c9d6a25",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/B/first-decisions.json": "8b94e4cf02a82db2ebcc38c8ae30f17349c257241a64e9db9b4d3b4478884cef",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/B/report.json": "c24f135676b0ad5e7a83038cbdfb37b9cd04fb8efc1737cdeedce78ae61d7c33",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/B/summary.json": "0b5d5cf2a1dff3cbb9d730d41cb8458d8ee12d1064cebd5f278efbb2033b0492",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/random/episodes.jsonl": "a28d52ad78455b5b6bee92010cc317d7108e101c0748dcf5e8e7f4cff65c2c02",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/random/execution-goals.jsonl": "72fbd8d5808114e294cee3ef3ac6bc5cc47fa64f4123614ae4b33e5fec8e9966",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/random/first-decisions.json": "b954b2fb7a31dddfb812d16d85b28447debf02f910d40a1710a1052013e1ae59",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/random/report.json": "c24f135676b0ad5e7a83038cbdfb37b9cd04fb8efc1737cdeedce78ae61d7c33",
+      "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/random/summary.json": "4715dabc2fd2f33bfe4357882e75db8fc467ff3bb607b5115ab9418535baec73",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/A/episodes.jsonl": "998bd4f5cd9ae7286683b64e6375d1f3f2c84c4289fb905f5113f2f349c2f447",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/A/execution-goals.jsonl": "f982b9abf85d0ff30e02f2dfa10e6d4b6fdeafb7d8aa832dd150669cae06b918",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/A/first-decisions.json": "16f97b329c36cc5b2c225ae4297fdd69c392932f9dd530bfef4e7a669719bf2e",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/A/report.json": "f61f937006d1ff9d4ea2f7b8ccbd1d59edbc561fcfbede01370b23198bdf2d98",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/A/summary.json": "296a6d6cb7bf462e9fa623fe9505884f5e13a01dee3b3d7b3079e41cf424fb0e",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/B/episodes.jsonl": "c395d4df84400079c7ad2b6e269eaaef674f44baf9ebf3168eba892bbcefd7ec",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/B/execution-goals.jsonl": "6cf6a2e612c07be71862076dd99d39c547aa058838c6e8828587b22ce2f57e41",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/B/first-decisions.json": "f6e26b25ee501a288b583f6744034b85018e270167f47ab07fdd96731f450c52",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/B/report.json": "5eaec1dede670090d8ef0f810d77f13c637c4a072905601cf4be6cec5f1bd674",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/B/summary.json": "e8a24897073c8058923883d5bdea85625074c657187199d1d6154d0627bc1053",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/random/episodes.jsonl": "a2fc616139bf02cc982612a11fe60f9b99b3dccbe3989a5cfcc11d52fe0ca497",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/random/execution-goals.jsonl": "8797be4f323ef5f498094451af36cb74444a154f3b395ae247b56870ace6ce35",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/random/first-decisions.json": "7fd4001c8471e68d0ab36b9d064b344b0e88515abfd1b17737aa5f31fc983c42",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/random/report.json": "e4e3060221b0766e5e89f58dac894a7d53bd2dadc9e75b2bdeca3f783a918573",
+      "artifacts/hierarchy-v1/smooth-distance-01/evaluation/ExecutionV1SmoothDistance01/random/summary.json": "57f9232fb381aff7896f296585d336b3741dac8607ab8a70b597dce2b1c535da"
+    },
+    "comparisons": [
+      "initializer",
+      "262179-experience parent"
+    ],
+    "screen": [
+      "Final assignment gain paired-bootstrap95% lower >0",
+      "Both A and B target rates exceed the initializer",
+      "No per-drill legal rate drop greater than5percentage points versus initializer or immediate parent in any condition"
+    ],
+    "midpointUse": "Diagnostic trajectory only; final selection remains fixed.",
+    "freshDevelopment": "Only after promising development response; separately predeclare reset coverage. Final seeds remain reserved."
+  },
+  "limits": {
+    "wallSeconds": 2400,
+    "restartAttempts": 0,
+    "automaticPromotion": false,
+    "architectureChanges": false,
+    "scriptedActions": false
+  },
+  "limitations": [
+    "One continuing training lineage; not a replicated recipe comparison.",
+    "Input diagnostic covers first decisions only.",
+    "Existing movement screen covers small feed shifts and does not establish broad positioning mastery."
+  ],
+  "finalSeedsConsumed": false,
+  "masteryAccepted": false
+}

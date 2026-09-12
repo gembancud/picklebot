@@ -67,6 +67,28 @@ namespace Picklebot.PlayerLearning.Tests
         }
 
         [Test]
+        public void SmoothBonusGradesLegalMissesWithoutChangingTheSuccessRadius()
+        {
+            var goal=new PlayerExecutionGoalV1(0,0,PlayerIntentV1.PlayBall,shotTarget:new Vector2(0,4),shotRadius:1);
+            string mode=PlayerExecutionDrillsV1.SmoothDistanceReward;
+            Assert.AreEqual(0,PlayerExecutionDrillsV1.TargetBonus(goal,false,new Vector3(0,0,4),.25f,mode));
+            Assert.AreEqual(.25f,PlayerExecutionDrillsV1.TargetBonus(goal,true,new Vector3(0,0,4),.25f,mode));
+            float previous=.25f;
+            foreach(float distance in new[]{.5f,1f,2f,4f,8f})
+            {
+                float bonus=PlayerExecutionDrillsV1.TargetBonus(goal,true,new Vector3(distance,0,4),.25f,mode);
+                Assert.Greater(bonus,0);Assert.Less(bonus,previous);previous=bonus;
+                Assert.That(bonus,Is.EqualTo(.25f*Mathf.Exp(-distance/2)).Within(1e-7));
+            }
+            Assert.AreEqual(1,goal.ShotRadius);
+            Assert.AreEqual(0,PlayerExecutionDrillsV1.TargetBonus(goal,true,new Vector3(2,0,4),.25f));
+            Assert.AreEqual(0,PlayerExecutionDrillsV1.TargetBonus(new PlayerExecutionGoalV1(0,0,PlayerIntentV1.PlayBall),true,Vector3.zero,.25f,mode));
+            Assert.Throws<ArgumentException>(()=>PlayerExecutionDrillsV1.TargetBonus(goal,true,new Vector3(float.NaN,0,4),.25f,mode));
+            Assert.Throws<ArgumentException>(()=>PlayerExecutionDrillsV1.TargetBonus(goal,true,Vector3.zero,float.NaN,mode));
+            Assert.Throws<ArgumentException>(()=>PlayerExecutionDrillsV1.TargetBonus(goal,true,Vector3.zero,.25f,"unknown"));
+        }
+
+        [Test]
         public void LegacyBehaviorCannotSilentlyLoadNewObservations()
         {
             var root=new GameObject("Contract fixture");root.SetActive(false);
@@ -124,14 +146,13 @@ namespace Picklebot.PlayerLearning.Tests
             Assert.Throws<ArgumentException>(()=>PlayerExecutionDrillsV1.ValidateLayout("two-regions",true,1.5f));
         }
 
-        [UnityTest]
-        public IEnumerator TwoRegionWorkerRecordsCanonicalLegalLandings()
+        private static (MlDrillEpisodeV3[] episodes,PlayerExecutionDrillsV1.Result[] records,float[] trace) RunTwoRegionWorker(string mode)
         {
             string output=System.IO.Path.Combine(System.IO.Path.GetTempPath(),"picklebot-two-regions-"+Guid.NewGuid().ToString("N"));
             var manifest=new PlayerWorkerManifestV3 {version=PlayerWorkerPlanV3.Version,mode="evaluation",task="rally-maintenance",
                 sourceIdentity=new string('a',64),buildIdentity=new string('b',64),modelHash=new string('c',64),evidenceRoot=output,
                 basePort=5305,workerCount=1,firstSeed=1109529,seedsPerWorker=32,arenasPerWorker=4,ticksPerFrame=48,
-                executionContract=PlayerExecutionGoalV1.Contract,sampleShotTargets=true,targetLayout="two-regions",targetRadius=1,
+                executionContract=PlayerExecutionGoalV1.Contract,sampleShotTargets=true,targetLayout="two-regions",targetRadius=1,placementRewardMode=mode,
                 maximumReturnDifficulty=0,fixedServeSides="both"};
             var root=new GameObject("Two-region worker integration");root.SetActive(false);
             try
@@ -143,6 +164,9 @@ namespace Picklebot.PlayerLearning.Tests
                 PlayerWorkerPlanV3.Create(manifest,0).Configure(run,model);
 #endif
                 run.AutoRun=false;root.SetActive(true);run.InitializeRun();
+                var trace=new List<float>();
+                foreach(var arena in run.ActiveArenas)foreach(var agent in arena.Agents)
+                    agent.Received+=(current,actions)=>{trace.AddRange(current.LastPolicyObservation);trace.AddRange(current.LastCommand.ToArray());};
                 for(int i=0;i<100000&&run.Report.status!="seed_budget_complete";i++)run.StepOneTick();
                 Assert.AreEqual("seed_budget_complete",run.Report.status);
                 string file=System.IO.Path.Combine(run.EvidenceDirectory,"execution-goals.jsonl");
@@ -152,7 +176,7 @@ namespace Picklebot.PlayerLearning.Tests
                 var observed=new HashSet<string>();
                 foreach(var row in records)
                 {
-                    Assert.AreEqual("two-regions",row.targetLayout);Assert.AreEqual(1,row.radius);Assert.IsTrue(row.assigned);
+                    Assert.AreEqual(mode,row.rewardMode);Assert.AreEqual("two-regions",row.targetLayout);Assert.AreEqual(1,row.radius);Assert.IsTrue(row.assigned);
                     var ep=episodes.Single(e=>e.seed==row.seed);bool serve=PlayerContactDrillV3.IsServeTask(ep.task);
                     var target=new Vector2(row.targetX,row.targetZ);
                     Assert.IsTrue(new[]{0,1}.Any(region=>PlayerExecutionDrillsV1.RegionTarget(serve,(int)Mathf.Sign(row.targetX),region)==target));
@@ -165,8 +189,26 @@ namespace Picklebot.PlayerLearning.Tests
                     else Assert.AreEqual(0,row.bonus);
                 }
                 CollectionAssert.AreEquivalent(new[]{"stationary-serve","receive-feed","rally-air-feed","rally-bounce-feed"},observed);
+                return (episodes,records,trace.ToArray());
             }
             finally{Object.DestroyImmediate(root);if(Academy.IsInitialized)Academy.Instance.Dispose();}
+        }
+
+        [UnityTest]
+        public IEnumerator TwoRegionWorkerRecordsCanonicalLegalLandings()
+        {
+            var linear=RunTwoRegionWorker(PlayerExecutionDrillsV1.LinearReward);
+            var smooth=RunTwoRegionWorker(PlayerExecutionDrillsV1.SmoothDistanceReward);
+            CollectionAssert.AreEqual(linear.trace,smooth.trace);
+            Assert.IsTrue(smooth.records.Any(r=>r.legalLanding&&!r.targetHit&&r.bonus>0));
+            for(int i=0;i<linear.episodes.Length;i++)
+            {
+                linear.episodes[i].reward=0;smooth.episodes[i].reward=0;
+                Assert.AreEqual(JsonUtility.ToJson(linear.episodes[i]),JsonUtility.ToJson(smooth.episodes[i]));
+                linear.records[i].bonus=0;smooth.records[i].bonus=0;
+                linear.records[i].rewardMode="";smooth.records[i].rewardMode="";
+                Assert.AreEqual(JsonUtility.ToJson(linear.records[i]),JsonUtility.ToJson(smooth.records[i]));
+            }
             yield return null;
         }
 

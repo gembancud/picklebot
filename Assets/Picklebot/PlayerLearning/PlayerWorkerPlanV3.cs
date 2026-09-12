@@ -21,6 +21,7 @@ namespace Picklebot.PlayerLearning
         public string executionContract;
         public bool sampleShotTargets;
         public string targetLayout="random";
+        public string placementRewardMode=PlayerExecutionDrillsV1.LinearReward;
         public float targetRadius=1.5f, legalTargetReward=.25f;
     }
 
@@ -48,6 +49,8 @@ namespace Picklebot.PlayerLearning
             if(manifest==null||manifest.version!=Version)throw new ArgumentException("Unknown worker manifest version.");
             bool execution = !string.IsNullOrEmpty(manifest.executionContract);
             PlayerExecutionDrillsV1.ValidateLayout(manifest.targetLayout,manifest.sampleShotTargets,manifest.targetRadius);
+            PlayerExecutionDrillsV1.ValidateRewardMode(manifest.placementRewardMode);
+            if(manifest.placementRewardMode!=PlayerExecutionDrillsV1.LinearReward&&(!execution||!manifest.sampleShotTargets))throw new ArgumentException("Smooth placement feedback requires an active execution target contract.");
             if(!execution && manifest.targetLayout!="random")throw new ArgumentException("Target layout requires execution contract.");
             if(execution && manifest.executionContract!=PlayerExecutionGoalV1.Contract)throw new ArgumentException("Unknown execution contract.");
             if(!execution && manifest.sampleShotTargets)throw new ArgumentException("Shot targets require the execution contract.");
@@ -123,7 +126,7 @@ namespace Picklebot.PlayerLearning
             if(!string.IsNullOrEmpty(Manifest.executionContract))
             {
                 var goals=run.gameObject.AddComponent<PlayerExecutionDrillsV1>();
-                goals.TargetLayout=Manifest.targetLayout;goals.SampleShotTargets=Manifest.sampleShotTargets;goals.TargetRadius=Manifest.targetRadius;goals.LegalTargetReward=Manifest.legalTargetReward;
+                goals.RewardMode=Manifest.placementRewardMode;goals.TargetLayout=Manifest.targetLayout;goals.SampleShotTargets=Manifest.sampleShotTargets;goals.TargetRadius=Manifest.targetRadius;goals.LegalTargetReward=Manifest.legalTargetReward;
             }
             run.BackgroundModel=string.IsNullOrEmpty(Manifest.backgroundModelHash)?null:model;
             run.RandomizeMatchContext=Manifest.randomMatchContext;run.Task=Manifest.task;run.FixedServeSides=Manifest.fixedServeSides;run.FirstSeed=FirstSeed;run.SeedCount=SeedCount;

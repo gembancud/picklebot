@@ -1,3 +1,15 @@
+# Active drill-mastery goal — smooth placement screen complete
+
+The smooth-distance experiment completed at **262,179 experiences**, with 20 Unity checks passing and 768 frozen-policy attempts. It preserved legal returns but failed the predeclared aiming screen. On the same 256 resets, initializer → candidate target hits were A **117 → 109**, B **4 → 18**, and random **75 → 65**. Legal landings were **228 → 228/229/229** respectively.
+
+Changing the requested region produced a negative assignment gain of **−0.04883** (paired 95% interval **[−0.078125, −0.021484]**). This is one short training run on reused development cases; no model was promoted and mastery is not accepted. Both target instructions appeared in all 440 recorded training reset-descriptor cells, so gross assignment imbalance does not explain the result.
+
+The input diagnostic passed for recorded first decisions. A bounded unchanged continuation, `execution-smooth-continued-01`, is now running toward 1,048,576 total experiences on 128 courts. The installed loader matched the complete saved state and the trainer confirmed resume at step 262,179. Midpoint and final checkpoint selection are fixed before evaluation. The task-owned evaluation Editor is closed. Wide/deep/shallow positioning, varied mandatory-bounce receiving and kitchen-boundary behavior remain separate coverage gaps.
+
+[Experiment and evidence](research/execution-v1-smooth-distance.md) · [Coverage audit](research/drill-mastery-coverage.md) · [Active goal](DRILL_MASTERY_GOAL.md)
+
+---
+
 # Active drill-mastery goal — two-region screen complete
 
 The goal is active. Two-region layout and canonical legal landing diagnostics are implemented; 19 Unity checks passed. The final two-region model trained for262,165 experiences over128courts. Matched256-reset evaluation: A targets117→100, B4→26, unchanged random75→66. Legal landings228→231/230/229 respectively. Requested-versus-opposite-region assignment gain−0.02148, paired95% interval[−0.046875,0.00390625]: useful target following was not demonstrated. The legal-retention point-estimate screen passed, but placement screening failed. No promotion or mastery acceptance.
