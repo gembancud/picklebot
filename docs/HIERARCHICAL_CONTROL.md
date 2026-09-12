@@ -64,3 +64,6 @@ Two-region practice now opts in with `targetLayout: two-regions` and radius at m
 [Longer unchanged continuation](research/execution-v1-smooth-continued.md): at 1,048,609 experiences the final model shows positive paired target response while preserving legality, but balanced placement remains unproven. The full screen failed and no model was promoted.
 
 [Fresh frozen comparison](research/execution-v1-fresh-placement.md): target responsiveness persisted mainly on repeated physical setups. Balanced aiming and broader movement remain unproven; the predeclared screen failed, including one extra required-bounce receiving miss in a small sample. No executor promotion.
+
+
+[Wider movement diagnostic](research/execution-v1-wide-movement.md): the current executor makes some 25 cm returns, few 50 cm returns, and no 75–100 cm returns. Recorded body movement is present; timely positioning and contact remain weak. Next is graded four-direction execution practice with familiar-skill rehearsal, before learned strategy.

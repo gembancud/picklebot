@@ -1,3 +1,16 @@
+# Active drill-mastery goal — wider movement assessed
+
+The frozen **1,048,609-experience executor** completed a 512-reset diagnostic under each of two target instructions. In the 256 explicit directional challenges, it made **38 legal returns under A and 40 under B**. A results by nominal feed displacement were **31/64 at 25 cm, 7/64 at 50 cm, and 0/64 at both 75 and 100 cm**. By direction: left 3/66, right 0/64, shallow 19/62 and deep 16/64.
+
+The body moves: accepted contacts followed an average 44 cm of root travel. Misses averaged 98 cm through episode termination, a longer measurement window. Movement alone is therefore insufficient; useful positioning and contact remain weak. Nominal feed displacement is not required player travel, and reset geometry checks do not establish every trajectory's reachability.
+
+The previous narrow focus practised only 2.5–10 cm of lateral feed displacement. The next bounded experiment will introduce four-direction focus at **6.25–25 cm**, retaining the **25% familiar / 25% prior court / 50% focus** mixture, interleaved ordering, current body and PPO settings. It will resume the complete saved trainer state to approximately 2.1 million total experiences and compare the frozen endpoint against both narrow and wider tests. The curriculum change and training are not yet launched in this snapshot.
+
+The current checkpoint still serves legally on both sides, but balanced aiming and broader receiving remain unfinished. No model promotion or mastery acceptance. Final evaluation seeds remain unused.
+
+[Diagnostic and recordings](research/execution-v1-wide-movement.md) · [Coverage](research/drill-mastery-coverage.md) · [Active goal](DRILL_MASTERY_GOAL.md)
+
+---
 # Active drill-mastery goal — fresh placement comparison complete
 
 The frozen **1,048,609-experience executor** and initializer each completed 768 attempts on a newly reserved development cohort. Initializer → candidate target hits were **A 115 → 96**, **B 3 → 33**, and **random 65 → 77**, out of 256 per condition. Legal landings were **235 → 234/235/235** respectively.

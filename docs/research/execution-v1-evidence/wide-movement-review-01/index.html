@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Picklebot · Skill museum</title><link rel="stylesheet" href="museum.css"></head>
+<body>
+<header><a class="brand" href="#left"><span class="court-mark" aria-hidden="true">▥</span> PICKLEBOT <span class="brand-sub">WIDER MOVEMENT</span></a><span class="snapshot">Recorded model · Wider movement diagnostic</span></header>
+<section class="intro"><div><p class="eyebrow">THE LEARNING COLLECTION</p><h1>Watch the wider returns.</h1><p>The current model attempts left, right, shallow and deep feeds. Scores cover all 256 directional challenges; the full 512-attempt replay also checked familiar drills.</p></div><div class="model-note"><span class="tiny">SAME MODEL IN EVERY EXHIBIT</span><strong>Execution model · Target A</strong><span>Checkpoint 1,048,609</span><small id="collection-size"></small></div></section>
+<main>
+<aside><p class="eyebrow">EXPLORE THE DRILLS</p><nav id="exhibits" aria-label="Drill exhibits"></nav><div class="sidebar-note"><strong>How to read this</strong><p>The score covers the full evaluation batch. A clip is one example, selected to show a success or a failure.</p><p>Simple drills repeat a small set of starting situations. A perfect drill score does not establish match readiness.</p></div></aside>
+<article>
+<div class="exhibit-heading"><div><p class="eyebrow" id="stage-label"></p><h2 id="title"></h2></div><span id="stage-status" class="badge"></span></div>
+<p id="description" class="description"></p>
+<section class="score-strip" id="metrics" aria-label="Measured outcomes"></section>
+<div class="clip-picker"><label for="clip">RECORDED ATTEMPT</label><select id="clip"></select><span id="clip-result" class="badge"></span></div>
+<section class="screens" aria-label="Synchronized replay views">
+ <figure><div class="screen-label"><span>FULL COURT</span><span>Orange / cyan teams</span></div><img id="court-view" alt="Actual Unity recording of the wider movement drill"><figcaption id="court-caption"></figcaption></figure>
+ <figure><div class="screen-label"><span id="detail-label">PLAYER DETAIL</span><span>Same moment</span></div><img id="detail-view" alt="Synchronized close view of the player"><figcaption id="detail-caption"></figcaption></figure>
+</section>
+<div class="playback"><button id="play" class="primary" aria-label="Play replay">▶ Play</button><button id="previous" aria-label="Previous frame">←</button><button id="next" aria-label="Next frame">→</button><label class="sr-only" for="seek">Replay position</label><input id="seek" type="range" min="0" value="0" step="1"><span id="time">0.00 s</span><label class="sr-only" for="speed">Playback speed</label><select id="speed"><option value="0.25">¼ speed</option><option value="0.5">½ speed</option><option value="1" selected>1× speed</option></select></div>
+<div id="events" class="events" aria-live="off"></div>
+<div class="notes"><section><p class="eyebrow">WHAT COUNTS AS SUCCESS</p><p id="success-note"></p></section><section><p class="eyebrow">WHAT TO WATCH</p><p id="watch-note"></p></section></div>
+<section id="breakdown-section"><h3>Inside this evaluation</h3><div class="table-wrap"><table><thead><tr><th>Situation</th><th>Legal outcomes</th><th>Paddle contacts</th></tr></thead><tbody id="breakdown"></tbody></table></div></section>
+<details class="evidence"><summary>Evaluation details & provenance</summary><p id="provenance"></p><p>These are development evaluations with fixed model weights. Swings and navigation come from the policy. The court, ball and bounded body use the Unity simulation. Frames are sampled at 20 fps; the outcome comes from the full completed attempt.</p><p id="evidence-links"></p><p><a href="verification.json">Museum verification</a> · <a href="manifest.json">Recording manifest</a> · <a href="source-records.json">Source identity</a></p></details>
+</article>
+</main>
+<footer><span>LEARNING THROUGH OBSERVATION</span><p>Wider movement remains an open skill. These are frozen solo-policy recordings; paired teamwork and sustained 2v2 remain ahead.</p></footer>
+<script src="data.js"></script><script src="museum.js"></script>
+</body></html>

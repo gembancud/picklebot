@@ -60,3 +60,12 @@ For eventual mastery, predeclare per-skill and per-variation criteria and non-re
 The [fresh comparison](execution-v1-fresh-placement.md) completed both frozen models on a newly reserved 256-reset cohort under the same recipe. It contained 150 unique initial physical observations; 194 resets (90 unique observations) matched the earlier anchor and 62 resets (60 unique observations) differed. Nearest-prior feature differences and both reset-weighted and equal-unique-observation estimates are preserved in the analysis. This does not establish unseen-training generalization.
 
 The candidate's overall assignment gain was positive, but the exact-novel subset interval included zero. The full screen failed: A accuracy remained lower and required-bounce receiving A changed 14/16 to 13/16. All broader coverage gaps above remain open. The next prepared fixture uses existing standalone axes movement at nominal 25/50/75/100 cm, with recovery interleaving disabled; it is a proposal, not completed evaluation evidence or proof that footwork is required.
+
+
+## Wider movement follow-up
+
+The [512-reset diagnostic](execution-v1-wide-movement.md) completed paired A/B evaluations for both the initializer and current executor. Reset-only inspection covered all 32 direction/distance/feed cells, with 174 distinct initial physical observations. Two of 128 cells including player seat were absent. These are development probes, not final acceptance tests.
+
+The 256 directional challenges use nominal 25/50/75/100 cm feeds in all four directions. Current A legality is 38/256: left 3/66, right 0/64, shallow 19/62 and deep 16/64. Distance results are 31/64, 7/64, 0/64 and 0/64. Only 69/256 attempts made accepted contact. Actual contacts distinguish volleys from bounced returns; the remaining 187 attempts had no accepted contact. Root travel exists but does not establish useful positioning or natural movement.
+
+Wide target assignment gain was -0.00586, interval [-0.015625, 0.001953125]; aggregate target responsiveness came from familiar cases. No wide target-following claim is supported. The next proposed focus spans 6.25–25 cm left/right/shallow/deep while keeping familiar and prior-court rehearsal. Wider probes remain for transfer measurement; mandatory-bounce variations and deliberate kitchen behavior still require separate coverage.
