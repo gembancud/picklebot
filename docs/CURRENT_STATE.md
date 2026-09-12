@@ -1,3 +1,9 @@
+# Active drill-mastery goal — pre-contact shaping implementation
+
+The contact-quality telemetry is implemented and preserves all512 development replay outcomes. A standalone pre-contact geometry/potential accountant now passes7 Unity tests, including terminal discount telescoping and decision-clock rejection. It is **not connected to the drill scheduler or active in training**. Next: integrate at actual policy transitions, verify focus-only reward delivery and default-off physical parity, then rebuild for the specified bounded experiment. Prior endpoints remain unpromoted and final acceptance seeds unused.
+
+---
+
 # Active drill-mastery goal â€” reward experiment assessed
 
 The fixed **2,097,183-experience** movement-progress endpoint completed all five development evaluations with the extra reward disabled. No training or evaluation process remains active. The experiment did not resolve lateral returns and is not promoted.
