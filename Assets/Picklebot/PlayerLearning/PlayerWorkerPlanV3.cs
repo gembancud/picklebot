@@ -44,7 +44,7 @@ namespace Picklebot.PlayerLearning
             EvidenceDirectory=Path.Combine(Path.GetFullPath(manifest.evidenceRoot),"worker-"+workerId.ToString("D2"));
         }
         public static bool IsHash(string s)=>s!=null&&s.Length==64&&s.All(c=>c>='0'&&c<='9'||c>='a'&&c<='f');
-        public static int CycleLength(string task,string fixedServeSides="right")=>PlayerMlDrillsV3.IsMovementTask(task)?64:task=="paired-maintenance"?32:task=="rally-maintenance"?32:task=="receive-varied-maintenance"?32:task=="receive-maintenance"?16:task=="serve-receive"?16:task=="serve-context-return"?256:task=="context-range-return"?128:task=="context-flight-return"?64:fixedServeSides=="both"&&(task=="fixed-serve-return"||PlayerContactDrillV3.IsFixedServeTask(task))?(task=="fixed-serve-return"?16:8):task=="mixed-height-return"?40:(task=="lateral-practice-return"||task=="focused-lateral-return"||task=="serve-practice-return")?32:
+        public static int CycleLength(string task,string fixedServeSides="right")=>task==PlayerRightReturnAcquisitionV1.Task?8:PlayerMlDrillsV3.IsMovementTask(task)?64:task=="paired-maintenance"?32:task=="rally-maintenance"?32:task=="receive-varied-maintenance"?32:task=="receive-maintenance"?16:task=="serve-receive"?16:task=="serve-context-return"?256:task=="context-range-return"?128:task=="context-flight-return"?64:fixedServeSides=="both"&&(task=="fixed-serve-return"||PlayerContactDrillV3.IsFixedServeTask(task))?(task=="fixed-serve-return"?16:8):task=="mixed-height-return"?40:(task=="lateral-practice-return"||task=="focused-lateral-return"||task=="serve-practice-return")?32:
             task=="flight-return-mix"||task=="fixed-serve-return"||task=="falling-return"||task=="stationary-return"||task=="serve-return"||task=="contact-return"||task=="low-high-return"?8:4;
         public static PlayerWorkerPlanV3 Create(PlayerWorkerManifestV3 manifest,int workerId)
         {
@@ -89,7 +89,8 @@ namespace Picklebot.PlayerLearning
             PlayerInterleavedRecoveryV3.Validate(manifest.interleavedRecovery,manifest.movementRecoveryMix,manifest.seedsPerWorker,workerId);
             if(manifest.optimizerDiagnostics&&(manifest.mode!="training"||!manifest.movementRecoveryMix))throw new ArgumentException("Optimizer diagnostics require recovery training.");
             if(manifest.movementRehearsalRange>0&&manifest.seedsPerWorker%128!=0)throw new ArgumentException("Rehearsal worker allocation must cover complete 128-episode mixtures.");
-            PlayerMovementPatternV3.Validate(manifest.movementPattern,manifest.movementRange,manifest.task=="movement-maintenance");
+            PlayerRightReturnAcquisitionV1.Validate(manifest.task,manifest.movementRange,manifest.movementPattern,manifest.movementRecoveryMix,manifest.movementRehearsalRange,manifest.interleavedRecovery,manifest.movementTiming,manifest.movementStartVariation,manifest.maximumReturnDifficulty);
+            PlayerMovementPatternV3.Validate(manifest.movementPattern,manifest.movementRange,manifest.task=="movement-maintenance"||manifest.task==PlayerRightReturnAcquisitionV1.Task);
             PlayerMlDrillsV3.ValidateStationaryFlightDifficulty(manifest.stationaryFlightDifficulty,manifest.task);
             PlayerMlDrillsV3.ValidateFixedServeSides(manifest.fixedServeSides,manifest.task);
             return new PlayerWorkerPlanV3(manifest,workerId);

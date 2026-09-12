@@ -1,3 +1,11 @@
+# Active drill-mastery goal: concentrated acquisition diagnostic prepared
+
+Added opt-in `right-return-acquisition`: fixed rightward range, alternating air/bounce rally feeds, all four seats, no maintenance schedule and no new rewards.13 Unity tests pass, including retained legacy schedule and shaping constraints. This is a diagnostic of acquisition under concentrated practice, not a replacement for the shared execution policy or its retention requirements. No training is running.
+
+Plan and test evidence: `research/hierarchy-v1/right-acquisition-setup-01`. Next: rebuild, validate the reset contract with frozen inference, then run the bounded diagnostic from the preserved common parent. Acquisition success still requires all five full-drill evaluations before any promotion; final acceptance seeds remain unused.
+
+---
+
 # Active drill-mastery goal: failure modes and training stall checked
 
 No training is running. Seven within-run windows show25cm success roughly37-41%, right25cm roughly1-8%, without sustained improvement. Matched regressions distinguish deep contact-without-net-crossing from rightward no-contact failures. Two512-case frozen inference probes (no weight/normalizer/optimizer updates) do not indicate an export mismatch or sampled-action rescue; apparent aggregate gaps mix different distances and task/seat frequencies. Final candidate remains unpromoted and final acceptance seeds unused.

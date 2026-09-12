@@ -115,7 +115,7 @@ namespace Picklebot.PlayerLearning
             if(enabled&&(task!="movement-maintenance"||!float.IsFinite(range)||range<=0||range>1))
                 throw new ArgumentException("Forward flight reward requires solo movement practice with a positive bounded range.");
         }
-        public static bool IsMovementTask(string task)=>task=="movement-maintenance"||task=="paired-movement-maintenance";
+        public static bool IsMovementTask(string task)=>task=="movement-maintenance"||task=="paired-movement-maintenance"||task==PlayerRightReturnAcquisitionV1.Task;
         public bool MovementPractice=>IsMovementTask(Task);
         public static void ValidateMovement(string task,float range,float timing,float starts)
         {
@@ -130,9 +130,9 @@ namespace Picklebot.PlayerLearning
         }
         public bool MovementRehearsalForEpisode(int index)=>MovementRecoveryMix?Recovery(index).Group=="prior":MovementChallenge(index)&&MovementRehearsalRange>0&&index/64%2==1;
         public string MovementPatternForEpisode(int index)=>MovementRecoveryMix?Recovery(index).Pattern:MovementChallenge(index)&&!MovementRehearsalForEpisode(index)?MovementPattern:"court";
-        public float MovementRangeForEpisode(int index)=>MovementRecoveryMix?Recovery(index).Range:!MovementPractice||!PlayerContactDrillV3.IsRallyFeed(TaskForEpisode(index))?-1:index/4%16<8?0:(MovementRehearsalForEpisode(index)?MovementRehearsalRange:MovementRange)*(1+index/4%4)*.25f;
+        public float MovementRangeForEpisode(int index)=>Task==PlayerRightReturnAcquisitionV1.Task?MovementRange:MovementRecoveryMix?Recovery(index).Range:!MovementPractice||!PlayerContactDrillV3.IsRallyFeed(TaskForEpisode(index))?-1:index/4%16<8?0:(MovementRehearsalForEpisode(index)?MovementRehearsalRange:MovementRange)*(1+index/4%4)*.25f;
         private bool NewMovementChallenge(int index)=>MovementChallenge(index)&&!MovementRehearsalForEpisode(index);
-        private bool MovementChallenge(int index)=>MovementPractice&&(MovementRecoveryMix?Recovery(index).Group!="familiar":index/4%16>=8);
+        private bool MovementChallenge(int index)=>Task==PlayerRightReturnAcquisitionV1.Task||MovementPractice&&(MovementRecoveryMix?Recovery(index).Group!="familiar":index/4%16>=8);
         public float StationaryFlightDifficulty; // Mixed-task reset distance only; moving-return difficulty stays independent.
         public float FeedLowering;
         public float InitialHoldLift; // Reset only, applied to held-ball tasks. Subsequent actions remain unconstrained by this setting.
@@ -362,6 +362,7 @@ namespace Picklebot.PlayerLearning
         public float DifficultyForEpisode(int index)
         {
             if(index<0)throw new ArgumentOutOfRangeException(nameof(index));
+            if(Task==PlayerRightReturnAcquisitionV1.Task)return 0;
             if(MovementRecoveryMix)return Recovery(index).Difficulty;
             if(MovementPractice)return index/4%16<2?1:index/4%16==3?MaximumReturnDifficulty:0;
             if(CooperativePairs)return index/4%8<2?1:index/4%8==2?0:index/4%8==3?MaximumReturnDifficulty:StationaryFlightDifficulty;
@@ -377,6 +378,7 @@ namespace Picklebot.PlayerLearning
         public string TaskForEpisode(int index)
         {
             if(index<0)throw new ArgumentOutOfRangeException(nameof(index));
+            if(Task==PlayerRightReturnAcquisitionV1.Task)return PlayerRightReturnAcquisitionV1.Feed(index);
             if(MovementRecoveryMix)return Recovery(index).Task;
             if(MovementPractice){int block=index/4%16;return block<2?"stationary-serve":block<4?"receive-feed":block<6||block>=8&&block<12?"rally-air-feed":"rally-bounce-feed";}
             if(CooperativePairs)return index/4%8<2?"stationary-serve":index/4%8<4?"receive-feed":index/4%8<6?"rally-air-feed":"rally-bounce-feed";
@@ -485,7 +487,8 @@ namespace Picklebot.PlayerLearning
             PlayerInterleavedRecoveryV3.Validate(InterleavedRecovery,MovementRecoveryMix,SeedCount,SchedulerWorkerId);
             if(OptimizerDiagnostics){if(!RequireTrainer||!MovementRecoveryMix)throw new ArgumentException("Optimizer diagnostics require recovery training.");PlayerDrillDiagnosticsV3.ValidatePinnedContract();}
             if(MovementRehearsalRange>0&&SeedCount%128!=0)throw new ArgumentException("Rehearsal allocations must cover complete 128-episode mixtures.");
-            PlayerMovementPatternV3.Validate(MovementPattern,MovementRange,Task=="movement-maintenance");
+            PlayerRightReturnAcquisitionV1.Validate(Task,MovementRange,MovementPattern,MovementRecoveryMix,MovementRehearsalRange,InterleavedRecovery,MovementTiming,MovementStartVariation,MaximumReturnDifficulty);
+            PlayerMovementPatternV3.Validate(MovementPattern,MovementRange,Task=="movement-maintenance"||Task==PlayerRightReturnAcquisitionV1.Task);
             if ((!PlayerContactDrillV3.ValidTask(Task) && !MovementPractice && Task != "paired-maintenance" && Task != "rally-maintenance" && Task != "receive-varied-maintenance" && Task != "receive-maintenance" && Task != "serve-receive" && Task != "serve-context-return" && Task != "context-range-return" && Task != "context-flight-return" && Task != "flight-return-mix" && Task != "fixed-serve-return" && Task != "falling-return" && Task != "stationary-return" && Task != "stationary-practice" && Task != "serve-return" && Task != "contact-return" && Task != "low-high-return" && Task != "mixed-height-return" && Task != "lateral-practice-return" && Task != "focused-lateral-return" && Task != "serve-practice-return") || ArenaCount < 1 || ArenaCount > 32 || SeedCount < ArenaCount
                 || TicksPerFrame < 1 || FirstSeed < seedMinimum || (long)FirstSeed + SeedCount > seedMaximum)
                 throw new ArgumentException("Invalid or non-training drill allocation.");
