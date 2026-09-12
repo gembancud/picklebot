@@ -1,0 +1,18 @@
+{
+  "purpose": "Separate frozen deterministic control from sampled actions on the training recipe; no PPO updates",
+  "seeds": "1000000..1000511, already-used training seeds",
+  "episodesPerProbe": 512,
+  "courts": 16,
+  "worker": 0,
+  "conditions": [
+    "deterministic",
+    "sampled"
+  ],
+  "onlyDifference": "CLI deterministic action selection",
+  "shaping": false,
+  "finalSeedsConsumed": false,
+  "promotion": false,
+  "sourceIdentity": "02db54a0f390d9a015bce4dfad86fca8f01b10319737d2af9950924c40b1fe68",
+  "runnerHash": "725a538035cd63fdc57184508835bfb3128be5824ebc3ad31927152c924e9926",
+  "expectedShutdown": "Worker reaches512 resets and exits3; this is documented bounded probe termination, not a successful training run."
+}

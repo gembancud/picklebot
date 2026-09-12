@@ -1,3 +1,11 @@
+# Active drill-mastery goal: failure modes and training stall checked
+
+No training is running. Seven within-run windows show25cm success roughly37-41%, right25cm roughly1-8%, without sustained improvement. Matched regressions distinguish deep contact-without-net-crossing from rightward no-contact failures. Two512-case frozen inference probes (no weight/normalizer/optimizer updates) do not indicate an export mismatch or sampled-action rescue; apparent aggregate gaps mix different distances and task/seat frequencies. Final candidate remains unpromoted and final acceptance seeds unused.
+
+See `docs/research/execution-v1-precontact-diagnosis.md` and `research/hierarchy-v1/precontact-diagnosis-01`. Next learning design must address sideways contact acquisition and preserve useful deep contact, rather than automatically extending generic positioning feedback. The full goal remains active.
+
+---
+
 # Active drill-mastery goal: pre-contact experiment evaluated
 
 Training and all five development evaluations are complete. Final2,097,186 experiences; candidate not promoted. Directional legal returns36/256 and30/256 versus common-parent38/256 and40/256; right2/64 and0/64, deep7/64 in both. Narrow serves16/16 in all conditions, but aiming still lacks positive paired assignment gain. No training is running. The task-owned evaluation Editor was restored and asked to exit. Final acceptance seeds unused.
