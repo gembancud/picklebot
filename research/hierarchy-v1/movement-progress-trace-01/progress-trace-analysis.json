@@ -1,0 +1,152 @@
+{
+  "parity": {
+    "episodes.jsonl": {
+      "identicalBytes": true,
+      "sha256": "f35b0f4f4f4144116035665115f05228565be16061b1eb79f291f9b0eb5181f2"
+    },
+    "execution-goals.jsonl": {
+      "identicalBytes": true,
+      "sha256": "ab75883db68142ec69ee15a6ec3ebb82da64d00d6a4af999e90b531bbbe8ee2c"
+    },
+    "first-decisions.json": {
+      "identicalBytes": true,
+      "sha256": "acf364b8e6cfbb7543930a89a7c660cff5f1bf24302de3a4de6b04df611803cf"
+    }
+  },
+  "traceSha256": "414979c93d6d6ddf2b32b5de3bf7f52796fd912afac113d9ac120f5ec85b3a18",
+  "rows": [
+    {
+      "seed": 1109881,
+      "player": 0,
+      "frames": 348,
+      "closestTick": 162,
+      "rootDisplacementCanonical": [
+        -0.22280176000000007,
+        0.0,
+        0.1794990000000003
+      ],
+      "paddleCenterDistance": 0.09122872975785548,
+      "firstAcceptedContactTick": 163,
+      "firstAcceptedContactBallVelocityCanonical": [
+        -2.594308,
+        2.27188182,
+        8.258212
+      ],
+      "armRangeDegrees": [
+        102.9382973,
+        98.7238783,
+        35.2884481,
+        74.17498,
+        60.12537,
+        71.5304124,
+        30.0
+      ]
+    },
+    {
+      "seed": 1109899,
+      "player": 2,
+      "frames": 309,
+      "closestTick": 173,
+      "rootDisplacementCanonical": [
+        -0.18012172999999998,
+        0.0,
+        0.49436159
+      ],
+      "paddleCenterDistance": 0.2101092174367043,
+      "firstAcceptedContactTick": null,
+      "firstAcceptedContactBallVelocityCanonical": null,
+      "armRangeDegrees": [
+        90.800106,
+        116.10138330000001,
+        40.827310145,
+        60.201561000000005,
+        50.095909999999996,
+        39.20367657,
+        30.0
+      ]
+    },
+    {
+      "seed": 1109945,
+      "player": 0,
+      "frames": 404,
+      "closestTick": 158,
+      "rootDisplacementCanonical": [
+        -0.20747322999999995,
+        0.0,
+        0.17094321000000035
+      ],
+      "paddleCenterDistance": 0.24018103718716569,
+      "firstAcceptedContactTick": null,
+      "firstAcceptedContactBallVelocityCanonical": null,
+      "armRangeDegrees": [
+        135.641,
+        104.6685143,
+        47.7026045,
+        86.621512,
+        67.8723206,
+        64.332652,
+        30.0
+      ]
+    },
+    {
+      "seed": 1109963,
+      "player": 2,
+      "frames": 379,
+      "closestTick": 180,
+      "rootDisplacementCanonical": [
+        -0.20659537000000006,
+        0.0,
+        0.4832255400000003
+      ],
+      "paddleCenterDistance": 0.10783070792209416,
+      "firstAcceptedContactTick": 181,
+      "firstAcceptedContactBallVelocityCanonical": [
+        -1.88621926,
+        2.404256,
+        8.456543
+      ],
+      "armRangeDegrees": [
+        112.03549,
+        110.68301830000001,
+        45.92025852,
+        68.38509300000001,
+        50.470026,
+        45.3776704,
+        30.0
+      ]
+    },
+    {
+      "seed": 1109964,
+      "player": 3,
+      "frames": 314,
+      "closestTick": 179,
+      "rootDisplacementCanonical": [
+        -0.16795329999999997,
+        0.0,
+        0.5061650000000002
+      ],
+      "paddleCenterDistance": 0.15237985985394353,
+      "firstAcceptedContactTick": 180,
+      "firstAcceptedContactBallVelocityCanonical": [
+        0.0420336537,
+        0.346306145,
+        -0.155230761
+      ],
+      "armRangeDegrees": [
+        89.88136709999999,
+        109.82724830000001,
+        44.46445131,
+        64.7340846,
+        66.7302145,
+        63.4296328,
+        33.23659325
+      ]
+    }
+  ],
+  "limitations": [
+    "Five descriptive cases, not prevalence estimates or causal body interventions.",
+    "Paddle-center distance is not distance to the collision surface.",
+    "First contact velocity sampled on next pre-step; terminal pose may be omitted by scheduler reset.",
+    "Joint range spans entire recorded attempt, not only pre-contact."
+  ]
+}
