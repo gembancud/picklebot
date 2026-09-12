@@ -1,3 +1,13 @@
+# Active drill-mastery goal: rightward acquisition with maintenance running
+
+`execution-right-retention-01` resumed common parent1048609 toward fixed2097152. Episode-start allocation:50% fixed25cm rightward rally returns,25% familiar serves/receives/rally returns,25% prior-court returns.8 workers x16 courts; original interleaving, PPO, controls and rewards; no movement shaping. Runner34316, trainer4172 at launch; verify current processes before treating this historical note as live.
+
+18 Unity tests passed. Built-worker frozen512-case fixture passed without learned-state changes: familiar125/128 legal, prior87/128, right0/256; canonical serves32/32. Decision shares were28.6% familiar,25.2% prior,46.2% focus, illustrating episode/transition differences. Full-state resume preflight passed before launch. Evidence and pinned plan: `research/hierarchy-v1/right-retention-launch-01`.
+
+After completion, select the mandatory endpoint and run acquisitionA/B plus original narrowA/B/random and wideA/B. Require acquisition and per-drill retention together before advancing; aiming, wider movement, kitchen/mandatory-bounce coverage and repeated mastery acceptance remain open. No promotion or automatic extension; final seeds unused.
+
+---
+
 # Active drill-mastery goal: mixed rightward retention setup tested
 
 The next reset-only curriculum uses50% fixed rightward25cm,25% familiar drills and25% prior-court episode starts, interleaved within16 starts.18 Unity tests passed, including physical reset parity and original recovery behavior. Build and frozen-worker fixture are next; no training launch yet. Planned common parent1048609 to fixed2097152 with unchanged PPO, controls and rewards. Mandatory acquisition plus all5 retention evaluations; no automatic promotion or extension. Final acceptance seeds remain unused.

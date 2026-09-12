@@ -1,0 +1,50 @@
+{
+  "run": "execution-right-retention-01",
+  "parentStep": 1048609,
+  "targetStep": 2097152,
+  "maximumWallSeconds": 3600,
+  "runnerHash": "459251d644d0409c384c80ff7843a13ec893bceec5224c077020b29d07df90e1",
+  "fixtureVerificationHash": "c2a17092d77052fda04cd7b321dd5db04cb62b1aee9e9a70e0f301be4ef62f6a",
+  "sourceIdentity": "de8bda54ce1aad9fcb545226c91a92a115f08b41e57dc036b6f9431e15b1ed4e",
+  "buildIdentity": "07d73f51df68f51e1112c108fa8c9d97d17466f7f0004d216c66745c4ad7e9b1",
+  "baseline": {
+    "familiar": {
+      "episodes": 128,
+      "legal": 125,
+      "decisions": 4756
+    },
+    "prior": {
+      "episodes": 128,
+      "legal": 87,
+      "decisions": 4197
+    },
+    "right-focus": {
+      "episodes": 256,
+      "legal": 0,
+      "decisions": 7695
+    }
+  },
+  "episodeStartMix": {
+    "rightFocus": 0.5,
+    "familiar": 0.25,
+    "prior": 0.25
+  },
+  "selection": "Fixed endpoint, no peak selection",
+  "samePolicyRequired": true,
+  "requiredEvaluations": [
+    "acquisition-A512",
+    "acquisition-B512",
+    "narrow-A256",
+    "narrow-B256",
+    "narrow-random256",
+    "wide-A512",
+    "wide-B512"
+  ],
+  "developmentAdvanceGate": {
+    "canonicalRight": "All eight unique situations legal under both targets",
+    "legacyRetention": "No narrow drill/condition loses more than5 percentage points vs common parent; no lost canonical serves or receive successes in16-case cohorts",
+    "notMastery": true
+  },
+  "finalAcceptanceSeedsUsed": false,
+  "promotion": false
+}

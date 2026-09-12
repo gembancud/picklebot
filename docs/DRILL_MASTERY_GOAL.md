@@ -21,7 +21,7 @@ Evidence required for completion:
 - Representative successes and misses recorded for human inspection of movement.
 - Previous models and experiment evidence retained. Final evaluation seeds remain unused until the candidate is frozen for acceptance.
 
-Current work: Rightward acquisition completed at 2,097,175 with all seven evaluations. It learned the eight canonical rightward 25 cm cases but lost earlier skills, including serving. The checkpoint is preserved without promotion. Next prepare a maintenance-plus-concentrated-rightward experiment from the common parent, validating reset coverage before launch. Broader mastery, useful target following and acceptance thresholds remain unproven; final seeds are unused. [Completed comparison](research/execution-v1-right-acquisition-final.md).
+Current work: The mixed rightward acquisition/retention experiment is running from common parent 1,048,609 toward fixed 2,097,152. Eighteen Unity tests and the frozen built-worker fixture passed. Familiar and prior-court practice accompany fixed rightward 25 cm returns in one shared policy. The endpoint requires matched acquisition and all five retention evaluations. No mastery or promotion; final seeds remain unused. Plan: `research/hierarchy-v1/right-retention-launch-01/plan.json`.
 
 App status: active. The earlier paused 2v2 goal was cleared, and this focused drill-mastery goal was created on 12 September 2026.
 
