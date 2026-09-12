@@ -1,3 +1,13 @@
+# Active drill-mastery goal: right-return acquisition running
+
+`execution-right-acquisition-01` resumed the preserved common parent1048609 toward fixed2097152 experiences,8 workers x16 courts. All practice slots target rightward25cm rally returns, covering both feed types and all four seats. Physics, controls, PPO and placement rewards are unchanged; movement shaping is off. This is a diagnostic of concentrated acquisition, not a proposed deployed specialist or demonstrated retention fix.
+
+The rebuilt worker passed a512-case frozen baseline fixture: all rightward25cm,64 episodes per feed/seat cell, no actor/critic/normalizer/optimizer updates; baseline legal returns0/512. Source078092d28f4dde258c904e3a925a9a1fd555f3c55384d92f012b6cdeb8bb60c4.13 Unity tests passed before build. Runner PID25548, trainer PID13736 at2026-09-12 launch; check process state before interpreting this historical note as live.
+
+Evidence: `research/hierarchy-v1/right-acquisition-launch-01`; plan:`artifacts/hierarchy-v1/right-acquisition-01/plan.json`. No automatic extension or promotion. Final checkpoint requires matched acquisition testing and all five full-drill batteries, measuring forgetting and target-following. Final acceptance seeds remain unused; full mastery remains unproven.
+
+---
+
 # Active drill-mastery goal: concentrated acquisition diagnostic prepared
 
 Added opt-in `right-return-acquisition`: fixed rightward range, alternating air/bounce rally feeds, all four seats, no maintenance schedule and no new rewards.13 Unity tests pass, including retained legacy schedule and shaping constraints. This is a diagnostic of acquisition under concentrated practice, not a replacement for the shared execution policy or its retention requirements. No training is running.
