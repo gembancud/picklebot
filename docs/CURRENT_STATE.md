@@ -1,3 +1,16 @@
+# Active drill-mastery goal — fresh placement comparison complete
+
+The frozen **1,048,609-experience executor** and initializer each completed 768 attempts on a newly reserved development cohort. Initializer → candidate target hits were **A 115 → 96**, **B 3 → 33**, and **random 65 → 77**, out of 256 per condition. Legal landings were **235 → 234/235/235** respectively.
+
+Changing the requested region produced positive assignment gain: **0.06055**, paired 95% interval **[0.02734, 0.09180]**. Giving equal weight to each distinct initial physical observation also gave a positive interval. However, 194 resets repeated earlier observations; the 62 that differed did not show a clear response. These are differences from the earlier evaluation anchor, not proof of unseen training situations.
+
+The full predeclared screen **failed**. A-target accuracy stayed below the initializer, and required-bounce receiving under A fell from **14/16 to 13/16**, exceeding the five-percentage-point point-estimate tolerance. That one extra miss has wide uncertainty; it does not by itself establish a reliable regression. B-target hits remain **0/112 for airborne feeds** and **0/16 for required-bounce receiving**. Serves remained legal **16/16**, but A-target serves fell **16/16 → 0/16**. No model promotion or mastery acceptance.
+
+No training or task-owned Editor remains active. Next, broaden the frozen comparison to left/right/shallow/deep feeds with measured root travel, then use the per-skill results to choose the next bounded training stage. A reset-only axes fixture is prepared but has not been executed or allocated seeds. Varied rule contexts, paired teamwork and learned strategy remain unfinished. Final acceptance seeds remain untouched.
+
+[Latest result](research/execution-v1-fresh-placement.md) · [Remaining coverage](research/drill-mastery-coverage.md) · [Active goal](DRILL_MASTERY_GOAL.md)
+
+---
 # Active drill-mastery goal — longer training produces partial target response
 
 The unchanged continuation completed at **1,048,609 total experiences**. The predeclared midpoint and final models each completed 768 frozen evaluation attempts. Compared with the 262,179-experience parent, final A/B/random target hits changed **109/18/65 → 103/35/71** out of 256 per condition. Final legal counts were **229/231/229**; the per-drill legal-retention screen passed against both the initializer and immediate parent.

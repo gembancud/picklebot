@@ -54,3 +54,9 @@ For eventual mastery, predeclare per-skill and per-variation criteria and non-re
 - [Historical varied-receiving selection](F:/dev/picklebot/artifacts/player-v3/receive-varied-selection-01/verification.json)
 - [Historical rally-feed evaluation](F:/dev/picklebot/artifacts/player-v3/rally-feed-02-final-dev/verification.json)
 - [Legacy moving-return metric definition](F:/dev/picklebot/research/critic-key-comparison/workflow/local_movement_sequence.py)
+
+## Fresh placement follow-up
+
+The [fresh comparison](execution-v1-fresh-placement.md) completed both frozen models on a newly reserved 256-reset cohort under the same recipe. It contained 150 unique initial physical observations; 194 resets (90 unique observations) matched the earlier anchor and 62 resets (60 unique observations) differed. Nearest-prior feature differences and both reset-weighted and equal-unique-observation estimates are preserved in the analysis. This does not establish unseen-training generalization.
+
+The candidate's overall assignment gain was positive, but the exact-novel subset interval included zero. The full screen failed: A accuracy remained lower and required-bounce receiving A changed 14/16 to 13/16. All broader coverage gaps above remain open. The next prepared fixture uses existing standalone axes movement at nominal 25/50/75/100 cm, with recovery interleaving disabled; it is a proposal, not completed evaluation evidence or proof that footwork is required.
