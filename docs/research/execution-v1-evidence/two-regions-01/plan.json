@@ -1,0 +1,21 @@
+{
+  "version": "two-regions-placement-screen-01",
+  "parent": "ExecutionV1Initial",
+  "candidate": "ExecutionV1TwoRegions01",
+  "sourceIdentity": "48190f51a4fd7bedeca31377ea909afdba476722483d250a9610585a50e95f4c",
+  "experiences": 262144,
+  "training": "Same movement-maintenance recovery schedule and PPO settings as execution-placement-01; target layout two-regions, radius 1.0; fixed initializer and fresh optimizer",
+  "firstSeed": 1108985,
+  "baseResetCount": 256,
+  "developmentSeedsReused": true,
+  "finalSeedsConsumed": false,
+  "evaluation": [
+    "Each base reset repeated with regions A and B, for parent and final candidate",
+    "Unchanged random-target radius1.5 retention screen on same complete recovery cycle"
+  ],
+  "outcome": "Per drill/region and service side: legal/all attempts, legal target hits/all attempts, secondary conditional distance. Central vs actual movement separated.",
+  "causal": "All-pair requested-minus-opposite region assignment gain, illegal attempts zero; signed landing shift on both-legal pairs plus its denominator. Initializer negative control must cancel.",
+  "candidateSelection": "Final checkpoint only; no searching intermediate checkpoints after seeing these results",
+  "screening": "Promising only if all-pair assignment gain has positive95% paired-bootstrap lower bound, both regions improve target hit rate vs parent, and no drill legal-rate point estimate drops more than5percentage points. This is a development screening rule, not mastery acceptance.",
+  "acceptance": "No automatic promotion. Confirm promising results on fresh development cases and an independent training run before setting final mastery acceptance. No target/feed feasibility claim from geometry alone."
+}

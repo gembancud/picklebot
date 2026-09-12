@@ -20,6 +20,7 @@ namespace Picklebot.PlayerLearning
         public string backgroundModelHash;
         public string executionContract;
         public bool sampleShotTargets;
+        public string targetLayout="random";
         public float targetRadius=1.5f, legalTargetReward=.25f;
     }
 
@@ -46,6 +47,8 @@ namespace Picklebot.PlayerLearning
         {
             if(manifest==null||manifest.version!=Version)throw new ArgumentException("Unknown worker manifest version.");
             bool execution = !string.IsNullOrEmpty(manifest.executionContract);
+            PlayerExecutionDrillsV1.ValidateLayout(manifest.targetLayout,manifest.sampleShotTargets,manifest.targetRadius);
+            if(!execution && manifest.targetLayout!="random")throw new ArgumentException("Target layout requires execution contract.");
             if(execution && manifest.executionContract!=PlayerExecutionGoalV1.Contract)throw new ArgumentException("Unknown execution contract.");
             if(!execution && manifest.sampleShotTargets)throw new ArgumentException("Shot targets require the execution contract.");
             if(execution && (manifest.task=="fixed-team-match" || manifest.task=="paired-maintenance" || manifest.task=="paired-movement-maintenance" || manifest.optimizerDiagnostics || !string.IsNullOrEmpty(manifest.backgroundModelHash)))throw new ArgumentException("Execution v1 currently supports solo practice only.");
@@ -120,7 +123,7 @@ namespace Picklebot.PlayerLearning
             if(!string.IsNullOrEmpty(Manifest.executionContract))
             {
                 var goals=run.gameObject.AddComponent<PlayerExecutionDrillsV1>();
-                goals.SampleShotTargets=Manifest.sampleShotTargets;goals.TargetRadius=Manifest.targetRadius;goals.LegalTargetReward=Manifest.legalTargetReward;
+                goals.TargetLayout=Manifest.targetLayout;goals.SampleShotTargets=Manifest.sampleShotTargets;goals.TargetRadius=Manifest.targetRadius;goals.LegalTargetReward=Manifest.legalTargetReward;
             }
             run.BackgroundModel=string.IsNullOrEmpty(Manifest.backgroundModelHash)?null:model;
             run.RandomizeMatchContext=Manifest.randomMatchContext;run.Task=Manifest.task;run.FixedServeSides=Manifest.fixedServeSides;run.FirstSeed=FirstSeed;run.SeedCount=SeedCount;

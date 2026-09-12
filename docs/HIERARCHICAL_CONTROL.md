@@ -56,3 +56,5 @@ An initialized goal-conditioned executor is not a trained strategy system, and a
 [First integration results](research/execution-v1-integration.md): contract, warm-start parity, actual PPO learning and a small exported-model screen.
 
 [Target response and longer placement run](research/execution-v1-placement.md): goal sensitivity verified; general aiming not yet established.
+
+Two-region practice now opts in with `targetLayout: two-regions` and radius at most1m. Default random targets are unchanged. Serve regions differ in depth within the correct service box; rally regions differ laterally. Every legal landing records canonical `landingX`, `landingZ` and `hasLanding` for paired target-response evaluation. [Two-region experiment](research/execution-v1-two-regions.md) failed its placement screen; the shared policy is not yet accepted as a goal-following executor.
