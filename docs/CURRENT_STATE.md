@@ -1,3 +1,19 @@
+# Active drill-mastery goal — reward experiment assessed
+
+The fixed **2,097,183-experience** movement-progress endpoint completed all five development evaluations with the extra reward disabled. No training or evaluation process remains active. The experiment did not resolve lateral returns and is not promoted.
+
+Common parent to final: narrow legal returns A **234 to 224/256**, B **235 to 230/256**, random **235 to 225/256**. Legal serves stayed **16/16** in each narrow condition. Air-feed legality declined to **89/112 (A), 94/112 (B)**, while bounce-feed legality reached **107/112** in both.
+
+Wide directional challenges: final **33/256 (A), 43/256 (B)** legal, compared with parent **38/256, 40/256** and no-progress control **41/256, 36/256**. Rightward legality remains **0/64** in both conditions. Target assignment gains have intervals spanning zero in both batteries. These are reused development comparisons, not independent generalization or mastery evidence.
+
+Next: diagnose rightward misses versus accepted-contact failures and outgoing trajectories before choosing another training intervention. Preserve this endpoint and all prior models; do not automatically extend or widen. Final acceptance seeds remain unused.
+
+[Completed reward experiment](research/execution-v1-movement-progress-final.md) | [No-progress control](research/execution-v1-axes-recovery-final.md)
+
+---
+
+## Historical status snapshots
+
 # Active drill-mastery goal — movement reward experiment running
 
 <!-- movement-progress-running -->

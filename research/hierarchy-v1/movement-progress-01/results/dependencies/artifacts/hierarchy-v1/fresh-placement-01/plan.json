@@ -1,0 +1,87 @@
+{
+  "version": "fresh-placement-screen-01",
+  "createdAt": "2026-09-12T06:10:01.521933+00:00",
+  "sourceIdentity": "5f8c4a10a777ea4c69c0a2ef01831163252a3614bddaaedfe2ab4024d04831c9",
+  "firstSeed": 1109593,
+  "seedCount": 256,
+  "models": [
+    "ExecutionV1Initial",
+    "ExecutionV1SmoothContinuedFinal01"
+  ],
+  "modelIdentities": {
+    "ExecutionV1Initial": {
+      "modelHash": "bc6f8be16b791a2cd253b150b3f4c4c2492cdc0e65f94fa305ab4addefe78d51",
+      "checkpointHash": "2c1dcfab6c32d3e98dfd334863f5670c09cef2edfb8bf51483bba4abe683cb9f",
+      "step": 0,
+      "checkpoint": "training/snapshots/execution-v1-initial.pt",
+      "model": "ExecutionV1Initial",
+      "assetPath": "Assets/Picklebot/PlayerLearning/Models/ExecutionV1Initial.onnx",
+      "sourceIdentity": "5f8c4a10a777ea4c69c0a2ef01831163252a3614bddaaedfe2ab4024d04831c9"
+    },
+    "ExecutionV1SmoothContinuedFinal01": {
+      "modelHash": "40047704eaf92ae933e861abfbe4c6f262a4595685ca985e3c1a185804ed13cb",
+      "checkpointHash": "93029a5bfe5a13815f47d1487ff15c3e9455516ee3b5609d9e38f0c0f82e778d",
+      "step": 1048609,
+      "checkpoint": "training/snapshots/execution-v1-smooth-continued-final-01.pt",
+      "model": "ExecutionV1SmoothContinuedFinal01",
+      "assetPath": "Assets/Picklebot/PlayerLearning/Models/ExecutionV1SmoothContinuedFinal01.onnx",
+      "sourceIdentity": "5f8c4a10a777ea4c69c0a2ef01831163252a3614bddaaedfe2ab4024d04831c9"
+    }
+  },
+  "conditions": [
+    "A",
+    "B",
+    "random"
+  ],
+  "evaluationRewardMode": "linear-radius",
+  "priorObservationInputs": {
+    "artifacts/hierarchy-v1/two-regions-01/evaluation/ExecutionV1Initial/A/first-decisions.json": "5e0a3ceef6bdcec128ceece85f955e55d404d0b560efe47e3a9ce99289631c88"
+  },
+  "expectedPriorUniqueObservations": 150,
+  "physicalRecipe": {
+    "task": "movement-maintenance",
+    "maximumReturnDifficulty": 0.25,
+    "movementRange": 0.025,
+    "movementPattern": "lateral",
+    "movementRehearsalRange": 0.1,
+    "movementRecoveryMix": true,
+    "interleavedRecovery": true,
+    "movementTiming": 0,
+    "movementStartVariation": 0,
+    "fixedServeSides": "both"
+  },
+  "screening": {
+    "maximumPerDrillLegalDrop": 0.05,
+    "requireUniqueClusterGainCiLowerAboveZero": true,
+    "rules": [
+      "Reset-weighted assignment gain paired95% lower >0",
+      "Equal-weight unique-physical-observation cluster assignment gain95% lower >0",
+      "Both A/B target rates exceed the same-cohort initializer",
+      "No per-drill legal-rate drop greater than5percentage points in any condition"
+    ],
+    "interpretation": "Diagnostic confirmation of target responsiveness and retention. Full mastery and target feasibility remain unproven even if this screen passes."
+  },
+  "novelty": {
+    "fingerprint": "First124 physical observation values cast to float32; exclude goals,seedID and actions",
+    "prior": "Union of the pinned old observation inputs",
+    "report": [
+      "Exact within-cohort unique vectors and multiplicities",
+      "Exact overlap with prior vectors",
+      "Novel/repeated subsets by drill",
+      "Nearest-prior maximum absolute feature difference; thresholds1e-5 and1e-4 are descriptive, not a success filter"
+    ],
+    "interpretation": "New ledger IDs are not proof of new situations. Preserve all256 attempts in the primary analysis; do not select cases based on success. Same observed state does not prove equality of every hidden simulator variable.",
+    "constructorPrediction": {
+      "repeatedPotential": 184,
+      "potentiallyNovelMaximum": 72,
+      "basis": "Fixed serves/familiar/local focus and easy receives repeat at zero timing/start variation; court-grid and varied receive cases may change. Prediction must be checked against actual observations."
+    }
+  },
+  "freshness": {
+    "scope": "Unused within the current V3 ledger; olderV1/V2 historical freshness remains unverified",
+    "ledgerBeforeHash": "4298e2ac48ac83d775c60ed69482cbc7b97a364d0eb02bd897fd9d93c6e615d1"
+  },
+  "finalSeedsConsumed": false,
+  "masteryAccepted": false,
+  "automaticPromotion": false
+}
