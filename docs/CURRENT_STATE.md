@@ -1,3 +1,13 @@
+# Active drill-mastery goal: pre-contact training started
+
+Run `execution-precontact-alignment-01` resumed the preserved common parent at1,048,609 experiences and targets2,097,152, using8 workers x16 courts. Pre-contact potential shaping is enabled only on focus drills; the25/25/50 familiar/prior/focus mixture and maintained PPO are unchanged. Previous movement bonuses remain off. No model is promoted; five shaping-off development batteries are required after completion, and final acceptance seeds remain unused.
+
+The rebuilt worker passed a short trainer-delivery check:249 collected completed episodes matched reward totals and decision counts,125 shaped; maximum reward error2.29e-6 and potential accounting error7.89e-9. This was a multiset check, not seed-to-agent attribution. Two Unity completions after collection stopped and15 partial trajectories were excluded. The first probe failed before training because its diagnostic flag is unsupported for execution policies; it is preserved. The corrected probe used direct read-only trainer reward logging and its checkpoint is discarded as a parent.
+
+Artifacts: `artifacts/hierarchy-v1/precontact-alignment-01`; preserved launch evidence and scripts: `research/hierarchy-v1/precontact-training-launch-01`. Runner PID23132, trainer PID37460 at launch on2026-09-12. Check process/logs before treating this historical status as live. The full run is bounded to3600seconds; no automatic extension.
+
+---
+
 # Active drill-mastery goal — pre-contact scheduler validated
 
 Optional focus-only shaping is integrated and passes10 tests. Two512-case replays verify default-off exactness, unchanged actions/physical outcomes with shaping enabled, and256 focus episodes with one reward transition per decision. Maximum discounted accounting error is6.3e-9. The failed initial compile attempt is preserved; it was fixed by keeping geometry access inside the simulation adapter. No training is running. Next: rebuild workers and verify trainer-side reward delivery/config gamma before the bounded alignment experiment. Prior checkpoints remain unpromoted; final acceptance seeds unused.
