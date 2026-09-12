@@ -1,0 +1,74 @@
+{
+  "args": [
+    "F:\\dev\\picklebot\\tools\\mlagents-training\\.pixi\\envs\\default\\Scripts\\mlagents-learn.exe",
+    "F:\\dev\\picklebot\\config\\mlagents\\execution-v1-smooth-continued.yaml",
+    "--run-id",
+    "execution-smooth-continued-01",
+    "--results-dir",
+    "F:\\dev\\picklebot\\artifacts\\mlagents",
+    "--resume",
+    "--seed",
+    "19013",
+    "--env",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-build-01\\Picklebot.exe",
+    "--num-envs",
+    "8",
+    "--base-port",
+    "5655",
+    "--no-graphics",
+    "--timeout-wait",
+    "180",
+    "--max-lifetime-restarts",
+    "0",
+    "--env-args",
+    "--picklebot-manifest",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-continued-01\\training\\manifest.json"
+  ],
+  "planHash": "7b20833e650265f4551ce734b6a23bb935e0bba77a42a6758f3b9d155cd3a98b",
+  "configHash": "71286e39147a9c2e5c45df36862f4cdd9f0504cc7d275893ee3e73071a2349a9",
+  "manifestHash": "6c68569351d5c7e137d58b58574bf98d87b67dde7635e7a3e13f7b93dfb9cb82",
+  "sourceIdentity": "5f8c4a10a777ea4c69c0a2ef01831163252a3614bddaaedfe2ab4024d04831c9",
+  "parentLaunchHash": "c79b445ff21358de25967d82055a95be6ef2a22633d7a6070448f3904e0de963",
+  "parentConfigHash": "fcc465a26f72f7ae8d63e40f0ea340dce0d608d04e81e52ed0c68dc12535f449",
+  "parentManifestHash": "bb17328078296ba01d7cbb05d33b05412d476d540f677e9065555ddca95becac",
+  "buildIdentity": "ff5e4a6d5d3cb04458d577ddfb273be747595b1f054c0c8639bb18eecce42359",
+  "resumeProof": {
+    "status": "exact_registered_state_restored",
+    "globalStep": 262179,
+    "modules": [
+      "Policy",
+      "global_step",
+      "Optimizer:value_optimizer",
+      "Optimizer:critic"
+    ],
+    "actorCriticNormalizersAndAdamExact": true,
+    "snapshotHash": "4ad1b330342d70599dfcd987df696dacc886e82f5a87d1946d10f0e172e634b1",
+    "copiedCheckpointHash": "d3d5c9ce0c1c8ef919d2b0ee4320842ffb61860c12a911b32414903cbd709205",
+    "configHash": "71286e39147a9c2e5c45df36862f4cdd9f0504cc7d275893ee3e73071a2349a9",
+    "installedSourceHashes": {
+      "F:\\dev\\picklebot\\tools\\mlagents-training\\.pixi\\envs\\default\\lib\\site-packages\\mlagents\\trainers\\learn.py": "b7b37e0e4023dafda7cf0fda80f9f99393599a50d36fc8d3d6e412cb30eee016",
+      "F:\\dev\\picklebot\\tools\\mlagents-training\\.pixi\\envs\\default\\lib\\site-packages\\mlagents\\trainers\\ppo\\trainer.py": "76ae30afb15684e9dc279c69f7092b2c4a3311800c1213fbcdeba2a1a97d5d7e",
+      "F:\\dev\\picklebot\\tools\\mlagents-training\\.pixi\\envs\\default\\lib\\site-packages\\mlagents\\trainers\\model_saver\\torch_model_saver.py": "f0f4e3790ccc21b0122208ae4f382bbdcc6e0c08f71b4ae71012f0129f8db767",
+      "F:\\dev\\picklebot\\tools\\mlagents-training\\.pixi\\envs\\default\\lib\\site-packages\\mlagents\\trainers\\training_status.py": "2c33e15dd5f3a70ebc3dee3585cee16dc11ee8f4669f1db12e9e408adb871723"
+    },
+    "method": "Separate preflight invokes installed PPOTrainer.add_policy(load=True); same CLI config/copy/loader as trainer subprocess, not an in-subprocess tensor hook.",
+    "rngOrRolloutContinuationClaimed": false
+  },
+  "initialStep": 262179,
+  "targetGlobalStep": 1048576,
+  "maximumAcceptedGlobalStep": 1056767,
+  "wallTimeoutSeconds": 2400,
+  "scriptHash": "c4454b1c7e69b50386ece91167edcc5d67def34886247079cb0c25fbe633d715",
+  "workerEmbeddedModelHash": "bc6f8be16b791a2cd253b150b3f4c4c2492cdc0e65f94fa305ab4addefe78d51",
+  "resumedPolicyModelHash": "29cb54047f5cb79f570114d09704bc8bf0513dba77874f289d9fcad354d2f8a6",
+  "resetReuse": {
+    "firstSeed": 1000000,
+    "count": 98304
+  },
+  "limitations": [
+    "RNG and environment processes restart; reset IDs are intentionally reused.",
+    "PPO rollout buffers and per-agent environment states are not checkpointed.",
+    "Inherited TensorBoard history is copied; new experiences start after global step262179.",
+    "Preflight proves the installed loader's exact module state; trainer logs additionally confirm its actual resume step."
+  ]
+}

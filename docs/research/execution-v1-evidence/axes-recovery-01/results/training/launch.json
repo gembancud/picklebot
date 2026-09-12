@@ -1,0 +1,104 @@
+{
+  "args": [
+    "F:\\dev\\picklebot\\tools\\mlagents-training\\.pixi\\envs\\default\\Scripts\\mlagents-learn.exe",
+    "F:\\dev\\picklebot\\config\\mlagents\\execution-v1-axes-recovery.yaml",
+    "--run-id",
+    "execution-axes-recovery-01",
+    "--results-dir",
+    "F:\\dev\\picklebot\\artifacts\\mlagents",
+    "--resume",
+    "--seed",
+    "19017",
+    "--env",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\axes-recovery-01\\execution-axes-build-01\\Picklebot.exe",
+    "--num-envs",
+    "8",
+    "--base-port",
+    "5705",
+    "--no-graphics",
+    "--timeout-wait",
+    "180",
+    "--max-lifetime-restarts",
+    "0",
+    "--env-args",
+    "--picklebot-manifest",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\axes-recovery-01\\training\\manifest.json"
+  ],
+  "planHash": "38d5e09ce80ef22a0403edc04f645a5b0eabcdcd92054a9580753c3300f36e8d",
+  "configHash": "344ba4660f7f9f4ba7f67e15b042d44e7f5229606c9e280dfc461b1972d72f8a",
+  "manifestHash": "6ed1fad33999d5a6a44cdc3bf3224e6e0ca65c1cf09842a82d0167eb4dfc1776",
+  "sourceIdentity": "557040f9cec6f4825aa263e192de05d98388962b98a022d3add8c47a064f057f",
+  "buildIdentity": "05ca77f5d69baedd79c36ce09a4e2da42b36fc994f8f84d902f2f65e3eed8c39",
+  "parentLaunchHash": "d4a2cb5ad839ab1c0ef52a43a6f9e4fa5a1c1c0d2802fd0008ad056cb2387934",
+  "parentConfigHash": "71286e39147a9c2e5c45df36862f4cdd9f0504cc7d275893ee3e73071a2349a9",
+  "parentManifestHash": "6c68569351d5c7e137d58b58574bf98d87b67dde7635e7a3e13f7b93dfb9cb82",
+  "resumeProof": {
+    "status": "exact_registered_state_restored",
+    "globalStep": 1048609,
+    "modules": [
+      "Policy",
+      "global_step",
+      "Optimizer:value_optimizer",
+      "Optimizer:critic"
+    ],
+    "actorCriticNormalizersAndAdamExact": true,
+    "snapshotHash": "48c6cc192490d90ee6f07cd7dc653685ac23b58f3610a39356d50a13c4be05c6",
+    "copiedCheckpointHash": "c882329d7303f75703338738868a2ba53f553940e876b7962a7d410f20fa5a3d",
+    "configHash": "344ba4660f7f9f4ba7f67e15b042d44e7f5229606c9e280dfc461b1972d72f8a",
+    "installedSourceHashes": {
+      "F:\\dev\\picklebot\\tools\\mlagents-training\\.pixi\\envs\\default\\lib\\site-packages\\mlagents\\trainers\\learn.py": "b7b37e0e4023dafda7cf0fda80f9f99393599a50d36fc8d3d6e412cb30eee016",
+      "F:\\dev\\picklebot\\tools\\mlagents-training\\.pixi\\envs\\default\\lib\\site-packages\\mlagents\\trainers\\ppo\\trainer.py": "76ae30afb15684e9dc279c69f7092b2c4a3311800c1213fbcdeba2a1a97d5d7e",
+      "F:\\dev\\picklebot\\tools\\mlagents-training\\.pixi\\envs\\default\\lib\\site-packages\\mlagents\\trainers\\model_saver\\torch_model_saver.py": "f0f4e3790ccc21b0122208ae4f382bbdcc6e0c08f71b4ae71012f0129f8db767",
+      "F:\\dev\\picklebot\\tools\\mlagents-training\\.pixi\\envs\\default\\lib\\site-packages\\mlagents\\trainers\\training_status.py": "2c33e15dd5f3a70ebc3dee3585cee16dc11ee8f4669f1db12e9e408adb871723"
+    },
+    "method": "Separate preflight invokes installed PPOTrainer.add_policy(load=True); same CLI config/copy/loader as trainer subprocess, not an in-subprocess tensor hook.",
+    "rngOrRolloutContinuationClaimed": false
+  },
+  "initialStep": 1048609,
+  "targetGlobalStep": 2097152,
+  "maximumAcceptedGlobalStep": 2105343,
+  "wallTimeoutSeconds": 3600,
+  "scriptHash": "45f9e9bdeb7718a8082be5f312d724d7c84685338005e0c0c8f32fb66fe8b180",
+  "helperHash": "c4454b1c7e69b50386ece91167edcc5d67def34886247079cb0c25fbe633d715",
+  "portPreflight": [
+    {
+      "checkedAt": 1789196704.1343875,
+      "ports": [
+        5705,
+        5706,
+        5707,
+        5708,
+        5709,
+        5710,
+        5711,
+        5712
+      ],
+      "allExclusiveBindsSucceeded": true,
+      "reservationHeldDuringTrainerStart": false
+    },
+    {
+      "checkedAt": 1789196706.0483005,
+      "ports": [
+        5705,
+        5706,
+        5707,
+        5708,
+        5709,
+        5710,
+        5711,
+        5712
+      ],
+      "allExclusiveBindsSucceeded": true,
+      "reservationHeldDuringTrainerStart": false
+    }
+  ],
+  "workerEmbeddedModelHash": "bc6f8be16b791a2cd253b150b3f4c4c2492cdc0e65f94fa305ab4addefe78d51",
+  "resumedPolicyModelHash": "40047704eaf92ae933e861abfbe4c6f262a4595685ca985e3c1a185804ed13cb",
+  "trainingSeed": 19017,
+  "limitations": [
+    "Processes and RNG restart; reset IDs are intentionally reused.",
+    "PPO rollout buffers and live environment states are not restored.",
+    "Copied TensorBoard history precedes1048609; count only later steps as new training.",
+    "Port checks are live checks, not an atomic lease through trainer startup."
+  ]
+}
