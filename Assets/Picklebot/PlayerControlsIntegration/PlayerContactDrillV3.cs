@@ -61,6 +61,9 @@ namespace Picklebot.PlayerControlsIntegration
         public string Outcome {get;private set;}
         public float Reward {get;private set;}
         public float FaceContactTime => faceTime;
+        // Match the first accepted collider contact, not a later/better strike.
+        public float FaceContactNormalAlignment => !FaceContact?-1:
+            Match.World.Contacts.FirstOrDefault(c=>c.player==Hitter&&c.surface=="RoundedHittingFace"&&c.time==faceTime)?.faceNormalAlignment??-1;
         private float distance;
         private PlayerReturnProgressV3 returnProgress;
         private PlayerDropApproachV3 dropApproach;

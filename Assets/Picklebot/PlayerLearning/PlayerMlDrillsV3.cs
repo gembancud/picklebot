@@ -54,6 +54,7 @@ namespace Picklebot.PlayerLearning
         public int movementForwardProgressRewardedSteps;
         public float[] travelBeforeContact;
         public bool faceContact, netCrossed, released, dropBounced, serveAccepted, serveFromLeft, randomMatchContext;
+        public float faceContactNormalAlignment=-1;
     }
     [Serializable] public sealed class MlDrillReportV3
     {
@@ -262,7 +263,7 @@ namespace Picklebot.PlayerLearning
                     movementFeed=Drill.MovementFeed,movementRegion=Drill.Match.MovementRegion,movementRange=Drill.MovementRange,movementTiming=Drill.MovementTiming,movementStartVariation=Drill.MovementStartVariation,travelBeforeContact=Drill.TravelBeforeContact,contactDisplacement=Drill.ContactDisplacement,contactDistanceFromStart=Drill.ContactDistanceFromStart,
                     cooperativePairs=owner.CooperativePairs,hitter=Drill.Hitter,pairFeedLane=Drill.Match.RallyFeedLane,decisionsByPlayer=Agents.Select(p=>p.DecisionsReceived-firstByPlayer[p.Seat]).ToArray(),
                     backgroundDecisions=BackgroundAgents.Where(p=>p!=null).Sum(p=>p.DecisionsReceived)-firstBackgroundDecision,
-                    incomingServeLanded=Drill.IncomingServeLanded, contactWasVolley=Drill.ContactWasVolley,terminalFault=Drill.Match.World.Rules.LastFault.ToString(), faceContact = Drill.FaceContact, netCrossed = Drill.NetCrossed, released = Drill.Released,
+                    incomingServeLanded=Drill.IncomingServeLanded, contactWasVolley=Drill.ContactWasVolley,terminalFault=Drill.Match.World.Rules.LastFault.ToString(), faceContact = Drill.FaceContact, faceContactNormalAlignment=Drill.FaceContactNormalAlignment, netCrossed = Drill.NetCrossed, released = Drill.Released,
                     dropBounced = Drill.DropBounced, serveAccepted = Drill.ServeAccepted };
                 owner.Record(record);
                 // The final observation is captured by EndEpisode before this world's
@@ -559,6 +560,10 @@ namespace Picklebot.PlayerLearning
                 if(episode.movementRange>0)stats.Add(movement+"Region"+episode.movementRegion+"/LegalReturn",episode.outcome=="legal_return"?1:0);
             }
             stats.Add("Picklebot/FaceContact", episode.faceContact ? 1 : 0);
+            // Alignment is conditional on recorded accepted contact; misses are not zero-angle samples.
+            stats.Add("Picklebot/ContactQuality/Measured",episode.faceContactNormalAlignment>=0?1:0);
+            if(episode.faceContactNormalAlignment>=0)stats.Add("Picklebot/ContactQuality/NormalAlignment",episode.faceContactNormalAlignment);
+
             stats.Add("Picklebot/NetCrossed", episode.netCrossed ? 1 : 0);
             stats.Add("Picklebot/LegalReturn", episode.outcome == "legal_return" ? 1 : 0);
             stats.Add("Picklebot/LegalServe", episode.outcome == "legal_serve" ? 1 : 0);
@@ -569,6 +574,7 @@ namespace Picklebot.PlayerLearning
             stats.Add(prefix+"LegalReturn",episode.outcome=="legal_return"?1:0);
             stats.Add(prefix+"LegalServe",episode.outcome=="legal_serve"?1:0);
             stats.Add(prefix+"FaceContact",episode.faceContact?1:0);
+            if(episode.faceContactNormalAlignment>=0)stats.Add(prefix+"ContactNormalAlignment",episode.faceContactNormalAlignment);
             stats.Add(prefix+"FeedLowering",episode.feedLowering);
             stats.Add(prefix+"FeedLateralOffset",episode.feedLateralOffset);
             if(episode.faceContact)stats.Add(prefix+"ContactBallHeight",episode.faceContactBallHeight);

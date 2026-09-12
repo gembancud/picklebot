@@ -11,6 +11,13 @@ namespace Picklebot.Doubles
     {
         public float time;public int player=-1;public string surface;
         public Vector3 point,normal,incoming,velocity,spin;
+        // Telemetry only. The closed face collider includes its thin side surfaces.
+        public float faceNormalAlignment=-1;
+        public static float MeasureFaceNormalAlignment(Vector3 normal,Vector3 faceNormal)
+        {
+            if(!float.IsFinite(normal.sqrMagnitude)||!float.IsFinite(faceNormal.sqrMagnitude)||normal.sqrMagnitude<1e-12f||faceNormal.sqrMagnitude<1e-12f)return -1;
+            return Mathf.Clamp01(Mathf.Abs(Vector3.Dot(normal.normalized,faceNormal.normalized)));
+        }
     }
     [Serializable] public sealed class DoublesFrame
     {public float time;public Vector3 ball;public Vector3[] players,paddles;public Quaternion[] rotations;}
@@ -171,7 +178,7 @@ namespace Picklebot.Doubles
                 else if((surface=="CourtSurface"||surface=="OutCatchFloor")&&!floorThisStep)
                 {floorThisStep=true;if(Rules.Phase==RallyPhase.AwaitServe)ServeBounced=true;else Rules.Bounce(c.point,Time);}
                 else if(surface=="NetPost")Rules.PermanentObject(Time);
-                Contacts.Add(new DoublesContact {time=Time,player=player,surface=surface,point=c.point,normal=c.normal,incoming=incoming,velocity=Ball.linearVelocity,spin=Ball.angularVelocity});
+                Contacts.Add(new DoublesContact {time=Time,player=player,surface=surface,point=c.point,normal=c.normal,incoming=incoming,velocity=Ball.linearVelocity,spin=Ball.angularVelocity,faceNormalAlignment=player>=0&&surface=="RoundedHittingFace"?DoublesContact.MeasureFaceNormalAlignment(c.normal,Players[player].Paddle.rotation*Vector3.forward):-1});
                 if(player>=0)paddleTouching.Add(c.collider);
             }
             pending.Clear();
