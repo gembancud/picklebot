@@ -49,6 +49,11 @@ namespace Picklebot.PlayerLearning
         public float movementRange,movementTiming,movementStartVariation,contactDisplacement,contactDistanceFromStart;
         public string movementPattern;
         public float movementPositionRewardScale,movementPositionReward;
+        public bool precontactAlignmentRewardEnabled;
+        public float precontactShapingReward,precontactInitialPotential;
+        public double precontactDiscountedReward;
+        public int precontactTransitions;
+        public bool precontactSettled;
         public bool movementForwardProgressRewardEnabled;
         public float movementForwardProgressReward;
         public int movementForwardProgressRewardedSteps;
@@ -67,7 +72,8 @@ namespace Picklebot.PlayerLearning
         public int nextSeedIndex;
         public float maximumReturnDifficulty, stationaryFlightDifficulty, feedLowering, feedLateralOffset, initialHoldLift;
         public bool trainerConnected, alignedDecisions, randomMatchContext, movementRecoveryMix, interleavedRecovery, optimizerDiagnostics;
-        public bool movementForwardProgressReward;
+        public bool movementForwardProgressReward,precontactAlignmentReward;
+        public float precontactGamma;
         public int schedulerWorkerId;
         public int schedulerTicks, decisionBatches, requestedDecisions, backgroundDecisions;
         public bool activePracticePlayers, cooperativePairs;
@@ -86,6 +92,14 @@ namespace Picklebot.PlayerLearning
         public string MovementPattern="court";
         public float MovementRange,MovementTiming,MovementStartVariation,MovementPositionReward;
         public bool MovementForwardProgressReward; // Optional focus-only measured post-contact flight feedback.
+        public bool PrecontactAlignmentReward;
+        public float PrecontactGamma=PlayerPrecontactPotentialV3.Gamma;
+        public static void ValidatePrecontactAlignment(string task,float range,bool enabled,float gamma,bool forward,float position)
+        {
+            if(!enabled)return;
+            if(task!="movement-maintenance"||!float.IsFinite(range)||range<=0||range>1||gamma!=PlayerPrecontactPotentialV3.Gamma||forward||position!=0)
+                throw new ArgumentException("Precontact shaping requires solo movement practice, gamma0.99 and no other movement shaping.");
+        }
         public float MovementRehearsalRange; // Zero preserves the existing schedule. Positive: half of challenges rehearse prior court feeds.
         public bool MovementRecoveryMix; // Opt-in256-episode25/25/50 recovery schedule.
         public bool InterleavedRecovery, OptimizerDiagnostics;
@@ -147,6 +161,9 @@ namespace Picklebot.PlayerLearning
             public readonly PlayerMlAgentV3[] BackgroundAgents = new PlayerMlAgentV3[4];
             public PlayerContactDrillV3 Drill { get; private set; }
             private float reward;
+            private bool precontactEnabled;
+            private PlayerPrecontactPotentialV3 precontact;
+            private float CurrentPotential()=>Drill.MeasurePrecontactPotential();
             private PlayerExecutionGoalV1[] goals;
             private int firstDecision, firstBackgroundDecision;
             private readonly int[] firstByPlayer=new int[4];
@@ -207,6 +224,7 @@ namespace Picklebot.PlayerLearning
             private void Attach()
             {
                 goals = owner.ExecutionGoals?.Goals(Drill);
+                precontact=precontactEnabled?new PlayerPrecontactPotentialV3(CurrentPotential(),owner.PrecontactGamma):null;
                 foreach(var old in group.GetRegisteredAgents().ToArray())group.UnregisterAgent(old);
                 foreach (var agent in Agents) { agent.ClearCommand(); agent.Learning = owner.CooperativePairs?agent.Seat/2==Drill.Player/2:agent.Seat==Drill.Player; if(owner.CooperativePairs&&agent.Learning)group.RegisterAgent(agent); firstByPlayer[agent.Seat]=agent.DecisionsReceived; }
                 firstDecision = owner.CooperativePairs?Agents.Sum(p=>p.DecisionsReceived):Agents[Drill.Player].DecisionsReceived;
@@ -220,6 +238,7 @@ namespace Picklebot.PlayerLearning
                 if (index < 0) { Finished = true; return; }
                 Drill?.Dispose();decisionTrace.Clear();
                 Drill = owner.CreateDrillForEpisode(index, out resetRejections);
+                precontactEnabled=owner.PrecontactAlignmentReward&&owner.NewMovementChallenge(index);
                 reward = 0;
             }
             public bool Request()
@@ -232,6 +251,12 @@ namespace Picklebot.PlayerLearning
                     if (!Finished) Attach();
                 }
                 if (Finished || Drill.Match.Tick % PlayerDecisionLoopV3.DecisionTicks != 0) return false;
+                // Submit previous transition shaping before Academy sends the next decision.
+                if(precontact!=null&&Drill.Match.Tick>0)
+                {
+                    float shaped=precontact.AtDecision(Drill.Match.Tick,CurrentPotential());
+                    reward+=shaped;Agents[Drill.Player].AddReward(shaped);
+                }
                 foreach(var agent in Agents)if(agent.Learning)agent.RequestDecision();
                 foreach(var agent in BackgroundAgents)if(agent!=null&&agent.Learning)agent.RequestDecision();
                 return true;
@@ -252,12 +277,16 @@ namespace Picklebot.PlayerLearning
 
                 float stepReward = Drill.Reward;
                 if (Drill.Done && owner.ExecutionGoals != null) stepReward += owner.ExecutionGoals.Finish(Drill,goals[Drill.Player]);
+                if(Drill.Done&&precontact!=null)stepReward+=precontact.AtTerminal(Drill.Match.Tick);
                 reward += stepReward;
                 if(owner.CooperativePairs)group.AddGroupReward(stepReward);else Agents[Drill.Player].AddReward(stepReward);
                 if (!Drill.Done) return;
                 var record = new MlDrillEpisodeV3 { seed = Drill.Seed, player = Drill.Player, task = Drill.Task, serveFromLeft = Drill.ServeFromLeft, rallyServer=Drill.RallyServer??-1, rallyServerOnRight=Drill.RallyServerOnRight, randomMatchContext=Drill.RandomMatchContext,
                     resetRejections = resetRejections, initialHoldLift = Drill.InitialHoldLift, feedDifficulty = Drill.FeedDifficulty, feedLowering = Drill.FeedLowering, feedLateralOffset = Drill.FeedLateralOffset, faceContactBallHeight = Drill.FaceContactBallHeight, outcome = Drill.Outcome, physicsTicks = Drill.Match.Tick, reward = reward,
                     decisions = (owner.CooperativePairs?Agents.Sum(p=>p.DecisionsReceived):Agents[Drill.Player].DecisionsReceived)-firstDecision,
+                    precontactAlignmentRewardEnabled=precontactEnabled,precontactShapingReward=precontact?.TotalReward??0,
+                    precontactInitialPotential=precontact?.InitialPotential??0,precontactDiscountedReward=precontact?.DiscountedReward??0,
+                    precontactTransitions=precontact?.Transitions??0,precontactSettled=precontact?.Settled??false,
                     movementPattern=Drill.MovementPattern,movementPositionRewardScale=Drill.MovementPositionRewardScale,movementPositionReward=Drill.MovementPositionReward,
                     movementForwardProgressRewardEnabled=Drill.MovementForwardProgressRewardEnabled,movementForwardProgressReward=Drill.MovementForwardProgressReward,movementForwardProgressRewardedSteps=Drill.MovementForwardProgressRewardedSteps,
                     movementFeed=Drill.MovementFeed,movementRegion=Drill.Match.MovementRegion,movementRange=Drill.MovementRange,movementTiming=Drill.MovementTiming,movementStartVariation=Drill.MovementStartVariation,travelBeforeContact=Drill.TravelBeforeContact,contactDisplacement=Drill.ContactDisplacement,contactDistanceFromStart=Drill.ContactDistanceFromStart,
@@ -450,6 +479,7 @@ namespace Picklebot.PlayerLearning
             ValidateMovement(Task,MovementRange,MovementTiming,MovementStartVariation);
             ValidateMovementPositionReward(Task,MovementRange,MovementPositionReward);
             ValidateMovementForwardProgressReward(Task,MovementRange,MovementForwardProgressReward);
+            ValidatePrecontactAlignment(Task,MovementRange,PrecontactAlignmentReward,PrecontactGamma,MovementForwardProgressReward,MovementPositionReward);
             ValidateMovementRehearsal(Task,MovementRehearsalRange);
             PlayerRecoveryScheduleV3.Validate(MovementRecoveryMix,Task,MovementRange,MovementRehearsalRange,MovementPattern,MovementTiming,MovementStartVariation,MovementPositionReward,SeedCount);
             PlayerInterleavedRecoveryV3.Validate(InterleavedRecovery,MovementRecoveryMix,SeedCount,SchedulerWorkerId);
@@ -469,7 +499,7 @@ namespace Picklebot.PlayerLearning
             if (RequireTrainer && !academy.IsCommunicatorOn) throw new InvalidOperationException("Python trainer is not connected; no heuristic fallback allowed.");
             Report = new MlDrillReportV3 { contract = ExecutionGoals == null ? PlayerMlAgentV3.ContractVersion : PlayerExecutionGoalV1.Contract, status = "running", task = Task, fixedServeSides = FixedServeSides, activePracticePlayers=BackgroundModel!=null, cooperativePairs=CooperativePairs, randomMatchContext=RandomizeMatchContext, firstSeed = FirstSeed, seedCount = SeedCount,
                 arenas = ArenaCount, sourceIdentity = SourceIdentity, unityVersion = Application.unityVersion,
-                interleavedRecovery=InterleavedRecovery,optimizerDiagnostics=OptimizerDiagnostics,schedulerWorkerId=SchedulerWorkerId,movementRecoveryMix=MovementRecoveryMix,movementRehearsalRange=MovementRehearsalRange,movementRange=MovementRange,movementTiming=MovementTiming,movementStartVariation=MovementStartVariation,movementPositionReward=MovementPositionReward,movementForwardProgressReward=MovementForwardProgressReward,movementPattern=MovementPattern, initialHoldLift = InitialHoldLift, stationaryFlightDifficulty = StationaryFlightDifficulty, maximumReturnDifficulty = MaximumReturnDifficulty, feedLowering = FeedLowering, feedLateralOffset = FeedLateralOffset, trainerConnected = academy.IsCommunicatorOn, alignedDecisions = AlignDrillDecisions, split = RequireTrainer ? "training" : InferenceModel != null ? "development" : "interactive" };
+                interleavedRecovery=InterleavedRecovery,optimizerDiagnostics=OptimizerDiagnostics,schedulerWorkerId=SchedulerWorkerId,movementRecoveryMix=MovementRecoveryMix,movementRehearsalRange=MovementRehearsalRange,movementRange=MovementRange,movementTiming=MovementTiming,movementStartVariation=MovementStartVariation,movementPositionReward=MovementPositionReward,movementForwardProgressReward=MovementForwardProgressReward,precontactAlignmentReward=PrecontactAlignmentReward,precontactGamma=PrecontactGamma,movementPattern=MovementPattern, initialHoldLift = InitialHoldLift, stationaryFlightDifficulty = StationaryFlightDifficulty, maximumReturnDifficulty = MaximumReturnDifficulty, feedLowering = FeedLowering, feedLateralOffset = FeedLateralOffset, trainerConnected = academy.IsCommunicatorOn, alignedDecisions = AlignDrillDecisions, split = RequireTrainer ? "training" : InferenceModel != null ? "development" : "interactive" };
             if (!string.IsNullOrEmpty(EvidenceDirectory))
             {
                 Directory.CreateDirectory(EvidenceDirectory);
@@ -559,6 +589,8 @@ namespace Picklebot.PlayerLearning
                 if(episode.faceContact){stats.Add(movement+"ContactDisplacementMetres",episode.contactDisplacement);stats.Add(movement+"ContactFromStartMetres",episode.contactDistanceFromStart);}
                 if(episode.movementRange>0)stats.Add(movement+"Region"+episode.movementRegion+"/LegalReturn",episode.outcome=="legal_return"?1:0);
             }
+            stats.Add("Picklebot/Precontact/Enabled",episode.precontactAlignmentRewardEnabled?1:0);
+            if(episode.precontactAlignmentRewardEnabled){stats.Add("Picklebot/Precontact/ShapingReward",episode.precontactShapingReward);stats.Add("Picklebot/Precontact/AccountingError",(float)Math.Abs(episode.precontactDiscountedReward+episode.precontactInitialPotential));}
             stats.Add("Picklebot/FaceContact", episode.faceContact ? 1 : 0);
             // Alignment is conditional on recorded accepted contact; misses are not zero-angle samples.
             stats.Add("Picklebot/ContactQuality/Measured",episode.faceContactNormalAlignment>=0?1:0);

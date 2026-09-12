@@ -1,3 +1,9 @@
+# Active drill-mastery goal — pre-contact scheduler validated
+
+Optional focus-only shaping is integrated and passes10 tests. Two512-case replays verify default-off exactness, unchanged actions/physical outcomes with shaping enabled, and256 focus episodes with one reward transition per decision. Maximum discounted accounting error is6.3e-9. The failed initial compile attempt is preserved; it was fixed by keeping geometry access inside the simulation adapter. No training is running. Next: rebuild workers and verify trainer-side reward delivery/config gamma before the bounded alignment experiment. Prior checkpoints remain unpromoted; final acceptance seeds unused.
+
+---
+
 # Active drill-mastery goal — pre-contact shaping implementation
 
 The contact-quality telemetry is implemented and preserves all512 development replay outcomes. A standalone pre-contact geometry/potential accountant now passes7 Unity tests, including terminal discount telescoping and decision-clock rejection. It is **not connected to the drill scheduler or active in training**. Next: integrate at actual policy transitions, verify focus-only reward delivery and default-off physical parity, then rebuild for the specified bounded experiment. Prior endpoints remain unpromoted and final acceptance seeds unused.

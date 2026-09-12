@@ -60,6 +60,13 @@ namespace Picklebot.PlayerControlsIntegration
         public bool Done {get;private set;}
         public string Outcome {get;private set;}
         public float Reward {get;private set;}
+        public float MeasurePrecontactPotential()
+        {
+            if(FaceContact||Done)return 0;
+            var world=Match.World;var face=world.Players[Player].Paddle.transform.Find("RoundedHittingFace");
+            if(face==null)throw new InvalidOperationException("Missing physical striking face.");
+            return PlayerPrecontactPotentialV3.Measure(world.Ball.position,face.position,face.rotation,world.Configuration.PaddleFaceSize,Picklebot.Core.CourtGeometryV1.PaddleCornerRadius,world.Configuration.BallDiameter*.5f);
+        }
         public float FaceContactTime => faceTime;
         // Match the first accepted collider contact, not a later/better strike.
         public float FaceContactNormalAlignment => !FaceContact?-1:
