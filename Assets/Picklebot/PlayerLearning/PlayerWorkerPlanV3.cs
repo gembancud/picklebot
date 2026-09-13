@@ -65,7 +65,10 @@ namespace Picklebot.PlayerLearning
             if(manifest.seedsPerWorker<manifest.arenasPerWorker||manifest.seedsPerWorker%CycleLength(manifest.task,manifest.fixedServeSides)!=0||manifest.ticksPerFrame<1||manifest.ticksPerFrame>256)throw new ArgumentException("Allocation must cover complete seat/curriculum cycles.");
             int minimum=manifest.mode=="training"?1000000:1100000;
             long end=(long)manifest.firstSeed+(long)manifest.workerCount*manifest.seedsPerWorker;
-            if(manifest.firstSeed<minimum||end>minimum+100000L)throw new ArgumentException("Entire worker allocation must stay in its declared seed split; final seeds are forbidden.");
+            bool expanded=manifest.movementRecoveryMix&&manifest.movementPattern=="randomized";
+            if(expanded)minimum=manifest.mode=="training"?2000000:4000000;
+            long capacity=expanded&&manifest.mode=="training"?1000000L:100000L;
+            if(manifest.firstSeed<minimum||end>minimum+capacity)throw new ArgumentException("Entire worker allocation must stay in its declared seed split; final seeds are forbidden.");
             if(manifest.basePort<1024||(long)manifest.basePort+manifest.workerCount>65536)throw new ArgumentException("Invalid communicator port allocation.");
             if(!IsHash(manifest.sourceIdentity)||!IsHash(manifest.buildIdentity)||(manifest.mode=="evaluation"&&!IsHash(manifest.modelHash)))throw new ArgumentException("Pinned source/build/model identities required.");
             if(string.IsNullOrWhiteSpace(manifest.evidenceRoot)||!Path.IsPathFullyQualified(manifest.evidenceRoot))throw new ArgumentException("Absolute evidence root required.");
@@ -90,7 +93,7 @@ namespace Picklebot.PlayerLearning
             if(manifest.optimizerDiagnostics&&(manifest.mode!="training"||!manifest.movementRecoveryMix))throw new ArgumentException("Optimizer diagnostics require recovery training.");
             if(manifest.movementRehearsalRange>0&&manifest.seedsPerWorker%128!=0)throw new ArgumentException("Rehearsal worker allocation must cover complete 128-episode mixtures.");
             PlayerRightReturnAcquisitionV1.Validate(manifest.task,manifest.movementRange,manifest.movementPattern,manifest.movementRecoveryMix,manifest.movementRehearsalRange,manifest.interleavedRecovery,manifest.movementTiming,manifest.movementStartVariation,manifest.maximumReturnDifficulty);
-            PlayerMovementPatternV3.Validate(manifest.movementPattern,manifest.movementRange,manifest.task=="movement-maintenance"||manifest.task==PlayerRightReturnAcquisitionV1.Task);
+            PlayerMovementPatternV3.Validate(manifest.movementRecoveryMix&&manifest.movementPattern=="randomized"?"axes":manifest.movementPattern,manifest.movementRange,manifest.task=="movement-maintenance"||manifest.task==PlayerRightReturnAcquisitionV1.Task);
             PlayerMlDrillsV3.ValidateStationaryFlightDifficulty(manifest.stationaryFlightDifficulty,manifest.task);
             PlayerMlDrillsV3.ValidateFixedServeSides(manifest.fixedServeSides,manifest.task);
             return new PlayerWorkerPlanV3(manifest,workerId);

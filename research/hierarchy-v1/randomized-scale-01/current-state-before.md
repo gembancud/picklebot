@@ -1,7 +1,3 @@
-# Active update: randomized scaling launched (2026-09-13)
-
-`execution-randomized-scale-01` is training:256x2,8million additional steps,8workers x16courts. Prior right-retention training and all7 evaluations finished; no promotion. See docs/research/execution-v1-randomized-scale.md and artifacts/hierarchy-v1/randomized-scale-01 for current process/checkpoint/evaluation status. Historical sections below may describe earlier running processes.
-
 # Active drill-mastery goal: rightward acquisition with maintenance running
 
 `execution-right-retention-01` resumed common parent1048609 toward fixed2097152. Episode-start allocation:50% fixed25cm rightward rally returns,25% familiar serves/receives/rally returns,25% prior-court returns.8 workers x16 courts; original interleaving, PPO, controls and rewards; no movement shaping. Runner34316, trainer4172 at launch; verify current processes before treating this historical note as live.

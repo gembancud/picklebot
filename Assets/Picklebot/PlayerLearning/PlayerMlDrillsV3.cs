@@ -104,7 +104,7 @@ namespace Picklebot.PlayerLearning
         public bool MovementRecoveryMix; // Opt-in256-episode25/25/50 recovery schedule.
         public bool InterleavedRecovery, OptimizerDiagnostics;
         public int SchedulerWorkerId;
-        private PlayerRecoveryScheduleV3.Episode Recovery(int index)=>PlayerRecoveryScheduleV3.For(index,MovementRange,MovementRehearsalRange,MaximumReturnDifficulty,MovementPattern);
+        private PlayerRecoveryScheduleV3.Episode Recovery(int index)=>PlayerRecoveryScheduleV3.For(index,MovementRange,MovementRehearsalRange,MaximumReturnDifficulty,MovementPattern,FirstSeed+index);
         public static void ValidateMovementPositionReward(string task,float range,float budget)
         {
             PlayerMovementPositionRewardV3.ValidateBudget(budget);
@@ -342,7 +342,7 @@ namespace Picklebot.PlayerLearning
                 }
                 try
                 {
-                    var drill=new PlayerContactDrillV3(seed,index%4,TaskForEpisode(index),DifficultyForEpisode(index),lower,offset,HoldLiftForEpisode(index),ServeFromLeftForEpisode(index),RallyServerForEpisode(index),RallyServerOnRightForEpisode(index),RandomizeMatchContext&&(TaskForEpisode(index)=="receive-serve"||PlayerContactDrillV3.IsFixedServeTask(TaskForEpisode(index))||RallyServerForEpisode(index).HasValue)?(int?)seed:null,cooperative:CooperativePairs,movementRange:MovementRangeForEpisode(index),movementTiming:NewMovementChallenge(index)?MovementTiming:0,movementStartVariation:NewMovementChallenge(index)?MovementStartVariation:0,movementPositionReward:NewMovementChallenge(index)?MovementPositionReward:0,movementPattern:MovementPatternForEpisode(index),movementForwardProgressReward:NewMovementChallenge(index)&&MovementForwardProgressReward);
+                    var drill=new PlayerContactDrillV3(seed,index%4,TaskForEpisode(index),DifficultyForEpisode(index),lower,offset,HoldLiftForEpisode(index),ServeFromLeftForEpisode(index),RallyServerForEpisode(index),RallyServerOnRightForEpisode(index),RandomizeMatchContext&&(TaskForEpisode(index)=="receive-serve"||PlayerContactDrillV3.IsFixedServeTask(TaskForEpisode(index))||RallyServerForEpisode(index).HasValue)?(int?)seed:null,cooperative:CooperativePairs,movementRange:MovementRangeForEpisode(index),movementTiming:MovementRecoveryMix&&MovementPattern=="randomized"?Recovery(index).Timing:NewMovementChallenge(index)?MovementTiming:0,movementStartVariation:MovementRecoveryMix&&MovementPattern=="randomized"?Recovery(index).Starts:NewMovementChallenge(index)?MovementStartVariation:0,movementPositionReward:NewMovementChallenge(index)?MovementPositionReward:0,movementPattern:MovementPatternForEpisode(index),movementForwardProgressReward:NewMovementChallenge(index)&&MovementForwardProgressReward);
                     rejectedSurfaces=rejected.ToArray();return drill;
                 }
                 catch(StationaryResetOverlapException e) when(IsVariedContactEpisode(index)) { rejected.Add(e.Surface); }
@@ -474,6 +474,7 @@ namespace Picklebot.PlayerLearning
             if (RequireTrainer && InferenceModel != null) throw new ArgumentException("Use a trainer checkpoint to initialize training; do not mix inference and training modes.");
             int seedMinimum = RequireTrainer ? 1000000 : InferenceModel != null ? 1100000 : 1300000;
             int seedMaximum = seedMinimum + 100000;
+            if(MovementRecoveryMix&&MovementPattern=="randomized") {seedMinimum=RequireTrainer?2000000:4000000;seedMaximum=seedMinimum+(RequireTrainer?1000000:100000);}
             if (!float.IsFinite(FeedLowering) || FeedLowering < 0 || FeedLowering > .9f) throw new ArgumentOutOfRangeException(nameof(FeedLowering));
             if ((Task=="lateral-practice-return"||Task=="focused-lateral-return"||Task=="serve-practice-return") && FeedLowering>.8f) throw new ArgumentOutOfRangeException(nameof(FeedLowering));
             if (!float.IsFinite(FeedLateralOffset) || Mathf.Abs(FeedLateralOffset) > .9f) throw new ArgumentOutOfRangeException(nameof(FeedLateralOffset));
@@ -488,7 +489,7 @@ namespace Picklebot.PlayerLearning
             if(OptimizerDiagnostics){if(!RequireTrainer||!MovementRecoveryMix)throw new ArgumentException("Optimizer diagnostics require recovery training.");PlayerDrillDiagnosticsV3.ValidatePinnedContract();}
             if(MovementRehearsalRange>0&&SeedCount%128!=0)throw new ArgumentException("Rehearsal allocations must cover complete 128-episode mixtures.");
             PlayerRightReturnAcquisitionV1.Validate(Task,MovementRange,MovementPattern,MovementRecoveryMix,MovementRehearsalRange,InterleavedRecovery,MovementTiming,MovementStartVariation,MaximumReturnDifficulty);
-            PlayerMovementPatternV3.Validate(MovementPattern,MovementRange,Task=="movement-maintenance"||Task==PlayerRightReturnAcquisitionV1.Task);
+            PlayerMovementPatternV3.Validate(MovementRecoveryMix&&MovementPattern=="randomized"?"axes":MovementPattern,MovementRange,Task=="movement-maintenance"||Task==PlayerRightReturnAcquisitionV1.Task);
             if ((!PlayerContactDrillV3.ValidTask(Task) && !MovementPractice && Task != "paired-maintenance" && Task != "rally-maintenance" && Task != "receive-varied-maintenance" && Task != "receive-maintenance" && Task != "serve-receive" && Task != "serve-context-return" && Task != "context-range-return" && Task != "context-flight-return" && Task != "flight-return-mix" && Task != "fixed-serve-return" && Task != "falling-return" && Task != "stationary-return" && Task != "stationary-practice" && Task != "serve-return" && Task != "contact-return" && Task != "low-high-return" && Task != "mixed-height-return" && Task != "lateral-practice-return" && Task != "focused-lateral-return" && Task != "serve-practice-return") || ArenaCount < 1 || ArenaCount > 32 || SeedCount < ArenaCount
                 || TicksPerFrame < 1 || FirstSeed < seedMinimum || (long)FirstSeed + SeedCount > seedMaximum)
                 throw new ArgumentException("Invalid or non-training drill allocation.");

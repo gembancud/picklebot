@@ -94,7 +94,7 @@ namespace Picklebot.PlayerControlsIntegration
             PlayerMovementPatternV3.Validate(movementPattern,movementRange,!cooperative&&IsRallyFeed(task)&&movementRange>=0);
             MovementPattern=movementPattern;MovementPositionRewardScale=movementPositionReward;
             MovementRange=movementRange;MovementTiming=movementTiming;MovementStartVariation=movementStartVariation;
-            if(!((seed>=1000000&&seed<1100000)||(seed>=1100000&&seed<1200000)||(seed>=1300000&&seed<1400000)))
+            if(!((seed>=1000000&&seed<1100000)||(seed>=1100000&&seed<1200000)||(seed>=1300000&&seed<1400000)||(seed>=2000000&&seed<3000000)||(seed>=4000000&&seed<4100000)))
                 throw new ArgumentException("Drills cannot consume final-evaluation seeds.");
             if(!ValidTask(task))throw new ArgumentException("Unknown drill task.");
             if(float.IsNaN(maximumReturnDifficulty)||maximumReturnDifficulty<0||maximumReturnDifficulty>1)throw new ArgumentOutOfRangeException(nameof(maximumReturnDifficulty));
