@@ -1,0 +1,19 @@
+[project]
+name = "picklebot-mj"
+version = "0.1.0"
+description = "Pickleball tasks for mjlab (D-038)"
+requires-python = ">=3.10,<3.14"
+dependencies = ["mjlab==1.6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["picklebot_mj*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

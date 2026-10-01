@@ -7,6 +7,9 @@ if [ ! -d "$ENV" ]; then
 fi
 source "$ENV/bin/activate"
 uv pip install "mjlab==1.6.0"
+# picklebot_mj package (editable) with test dependencies
+REPO="$(cd "$(dirname "$0")/../.." && pwd)"
+uv pip install -e "$REPO/mjlab[dev]"
 python - <<'EOF'
 import importlib.metadata as m, torch, warp as wp, mujoco
 for p in ["mjlab", "mujoco", "mujoco-warp", "warp-lang", "rsl-rl-lib", "torch"]:
