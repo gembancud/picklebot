@@ -788,7 +788,7 @@ config/windows-tooling-migration.json; the original manifest remains immutable.
 The Windows Python/C# source-hash discrepancy is unresolved, so this is tooling
 readiness, not authorization or readiness for a new training run.
 
-### D-031 ï¿½ Portable source identity with preserved checkpoint provenance
+### D-031 — Portable source identity with preserved checkpoint provenance
 
 - Date: 2026-09-08
 - Status: Accepted and verified on Windows.
@@ -825,7 +825,7 @@ passes all 32 cases with maximum error 0.000003814697265625. Evidence is under
 artifacts/windows-source-migration and artifacts/windows-hash-*. Original
 checkpoints and evidence were checked byte-for-byte against Git.
 
-### D-032 ï¿½ Continue 2v2 goal with independent shared-weight players and staged controls
+### D-032 — Continue 2v2 goal with independent shared-weight players and staged controls
 
 - Date: 2026-09-08
 - Status: Accepted direction; implementation in progress.
