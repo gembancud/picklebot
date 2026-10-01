@@ -1,3 +1,11 @@
+# Current publication: completed24-million-step executor
+
+Training completed at24000022. All scheduled evaluation batteries through snapshot23999987 completed. No40M extension has launched, no final acceptance seeds were consumed, and no policy was promoted. See docs/TRAINED_CHECKPOINT.md for model/checkpoint files, results and publication scope. Bulk artifacts remain local by user preference. Entries below are historical.
+
+# Active update:24-million-step continuation launched
+
+Run `execution-randomized-scale-24m` resumes the completed randomized256x2 run at8000058, targeting24000000 with unchanged curriculum/rewards and exact restored actor/critic/normalizers/Adam.8workers x16courts; frozen development evaluation every2million. Original8m run and7m retention reference preserved. Training resets and RNG streams restart on reused training-only seeds; this is not a bitwise rollout continuation. See artifacts/hierarchy-v1/randomized-scale-24m for current processes, logs, checkpoint and evaluation completion. No promotion or final-test use. Older status entries below are historical.
+
 # Active update: randomized scaling launched (2026-09-13)
 
 `execution-randomized-scale-01` is training:256x2,8million additional steps,8workers x16courts. Prior right-retention training and all7 evaluations finished; no promotion. See docs/research/execution-v1-randomized-scale.md and artifacts/hierarchy-v1/randomized-scale-01 for current process/checkpoint/evaluation status. Historical sections below may describe earlier running processes.

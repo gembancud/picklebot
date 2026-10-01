@@ -1,0 +1,43 @@
+--- a/Assets/Picklebot/PlayerLearning/PlayerRecoveryScheduleV3.cs
++++ b/Assets/Picklebot/PlayerLearning/PlayerRecoveryScheduleV3.cs
+@@ -13,9 +13,10 @@
+             public Episode(string task,string pattern,string group,float range,float difficulty,bool left=false)
+             {Task=task;Pattern=pattern;Group=group;Range=range;Difficulty=difficulty;ServeFromLeft=left;}
+         }
+-        public static Episode For(int index,float lateralRange,float priorRange,float receiveDifficulty)
++        public static Episode For(int index,float lateralRange,float priorRange,float receiveDifficulty,string focusPattern="lateral")
+         {
+             if(index<0)throw new ArgumentOutOfRangeException(nameof(index));
++            if(focusPattern!="lateral"&&focusPattern!="axes")throw new ArgumentException("Recovery focus must be lateral or axes.",nameof(focusPattern));
+             int block=index/4%64;
+             if(block<16) {
+                 int basic=block%8;
+@@ -25,14 +26,14 @@
+             float fraction=(1+block%4)*.25f;
+             if(block<32)return new Episode(block<24?"rally-air-feed":"rally-bounce-feed","court","prior",priorRange*fraction,0);
+             bool air=block<48,left=block<40||block>=48&&block<60;
+-            return new Episode(air?"rally-air-feed":"rally-bounce-feed",left?"lateral-left":"lateral-right","focus",lateralRange*fraction,0);
++            return new Episode(air?"rally-air-feed":"rally-bounce-feed",focusPattern=="axes"?"axes":left?"lateral-left":"lateral-right","focus",lateralRange*fraction,0);
+         }
+         public static void Validate(bool enabled,string task,float range,float priorRange,string pattern,float timing,float starts,float bonus,int seedCount)
+         {
+             if(!enabled)return;
+-            if(task!="movement-maintenance"||pattern!="lateral"||!float.IsFinite(range)||range<=0||range>.25f||!float.IsFinite(priorRange)||priorRange<=0||priorRange>1
++            if(task!="movement-maintenance"||(pattern!="lateral"&&pattern!="axes")||!float.IsFinite(range)||range<=0||range>.25f||!float.IsFinite(priorRange)||priorRange<=0||priorRange>1
+                ||timing!=0||starts!=0||bonus!=0||seedCount<=0||seedCount%CycleLength!=0)
+-                throw new ArgumentException("Recovery mix requires solo lateral practice, positive bounded focus/prior ranges, zero timing/start/reward changes and complete256-episode cycles.");
++                throw new ArgumentException("Recovery mix requires solo lateral or axes practice, positive bounded focus/prior ranges, zero timing/start/reward changes and complete256-episode cycles.");
+         }
+     }
+ }
+--- a/Assets/Picklebot/PlayerLearning/PlayerMlDrillsV3.cs
++++ b/Assets/Picklebot/PlayerLearning/PlayerMlDrillsV3.cs
+@@ -84,7 +84,7 @@
+         public bool MovementRecoveryMix; // Opt-in256-episode25/25/50 recovery schedule.
+         public bool InterleavedRecovery, OptimizerDiagnostics;
+         public int SchedulerWorkerId;
+-        private PlayerRecoveryScheduleV3.Episode Recovery(int index)=>PlayerRecoveryScheduleV3.For(index,MovementRange,MovementRehearsalRange,MaximumReturnDifficulty);
++        private PlayerRecoveryScheduleV3.Episode Recovery(int index)=>PlayerRecoveryScheduleV3.For(index,MovementRange,MovementRehearsalRange,MaximumReturnDifficulty,MovementPattern);
+         public static void ValidateMovementPositionReward(string task,float range,float budget)
+         {
+             PlayerMovementPositionRewardV3.ValidateBudget(budget);

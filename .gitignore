@@ -45,6 +45,17 @@ checkpoints/
 
 # Phase 0 generated verification artifacts
 artifacts/*
+# Optional local bulk backups are not part of the compact source/model publication.
+/backups/
+# Intermediate local exports remain reproducible from experiment outputs.
+/Assets/Picklebot/PlayerLearning/Models/ExecutionV1RandomizedScale*.onnx
+/Assets/Picklebot/PlayerLearning/Models/ExecutionV1RandomizedScale*.onnx.meta
+!/Assets/Picklebot/PlayerLearning/Models/ExecutionV1RandomizedScale24mFinal.onnx
+!/Assets/Picklebot/PlayerLearning/Models/ExecutionV1RandomizedScale24mFinal.onnx.meta
+!/Assets/Picklebot/PlayerLearning/Models/ExecutionV1RandomizedScale24m24000000.onnx
+!/Assets/Picklebot/PlayerLearning/Models/ExecutionV1RandomizedScale24m24000000.onnx.meta
+/Assets/Picklebot/Scenes/randomized-scale-build-01*.unity
+/Assets/Picklebot/Scenes/randomized-scale-build-01*.unity.meta
 # Selected continuation checkpoints and frozen baseline evidence only.
 # Keep raw recorded games and drill datasets local.
 !artifacts/doubles/
