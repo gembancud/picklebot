@@ -35,9 +35,26 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 ## Stage 1 — ball and court physics (paddle rig)
 - [x] Scaffold the `mjlab/picklebot_mj` package: court geometry (lines, net, kitchen) as MJCF, plus a unit-test setup.
 - [x] Ball body (real mass/diameter) with drag and Magnus applied as forces; tests for free-flight trajectories.
-- [ ] Court bounce (restitution, friction, spin) tuned against the Phase 1B reference numbers in `docs/PHASE1B_PHYSICS_CALIBRATION_SPEC.md` and the env-v1 Unity constants.
-- [ ] Driven paddle rig: a paddle moved along scripted paths; impact tests across speeds, with no tunnelling at max swing speed; choose the timestep and substeps.
-- [ ] **Gate:** a physics report (`mjlab/results/stage1-physics.md`) shows bounce, flight and paddle impacts within tolerance; GPU-batched throughput is still acceptable.
+- [x] ~~Court bounce with native MuJoCo contacts~~. Tried and found not viable (impact-phase-dependent restitution): `mjlab/results/stage1-bounce.md`. Replaced by the analytic model per **D-039** (user chose option A on 2026-10-02).
+- [ ] Analytic ball core `picklebot_mj/ball_sim.py`: batched torch state (pos, vel, spin), sub-stepped flight using `ball.aero_force`, and swept sphere-vs-court-plane bounce with an explicit impulse model. The model uses a normal COR, Coulomb friction with the slip/roll transition, and spin coupling. Tests:
+  - the official drop band at **every** drop height and phase (sweep 1.95–2.05 m plus random phases);
+  - no energy gain;
+  - angled bounce slows and gains topspin; backspin checks up;
+  - batch-equivalent and deterministic;
+  - matches `ball.reference_flight` between bounces.
+- [ ] Net and posts in the analytic model: swept sphere vs the two tilted net boxes and the post cylinders. Low restitution (Unity 0.10). Tests: a 12 m/s ball is stopped at any timestep; a ball passing 10 cm over the net is untouched; a net-cord touch is handled.
+- [ ] Paddle impact model: swept sphere vs a moving, rotating paddle face (oriented box, Unity dimensions) using paddle linear and angular velocity. Normal COR is chosen so the PBCoR surrogate is ≤ 0.43; tangential friction gives spin; the equal and opposite impulse is returned. Tests:
+  - no tunnelling up to 30 m/s relative speed;
+  - PBCoR protocol surrogate ≤ 0.43;
+  - momentum conserved with the paddle impulse;
+  - the face angle steers the outgoing direction.
+- [ ] MuJoCo integration on the GPU: court spec plus a non-colliding ball body plus a driven paddle rig in an mjlab env. Each step reads the paddle state from sim, advances the ball sim, writes the ball pose for rendering, and applies the reaction to the paddle via `xfrc_applied`. Scripted swing hits fed balls; record a short video.
+- [ ] **Gate:** physics report (`mjlab/results/stage1-physics.md`) shows:
+  - phase-independent bounce in the official band;
+  - flight vs RK4;
+  - net stops balls and lets clear balls pass;
+  - paddle PBCoR ≤ 0.43, with no tunnelling and no energy gain;
+  - GPU throughput with ball and paddle still ≥ 10× the Unity baseline at a usable env count.
 
 ## Stage 2 — standing G1 hits a fed ball
 - [ ] G1 plus a paddle fixed to the right wrist in the scene; reach and swing-speed envelope measured with scripted joint sweeps.
@@ -50,7 +67,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 Movement plus hitting (using the walking policy as a base or teacher), target-conditioned returns, privileged teacher → student distillation, both service sides, then 2v2.
 
 ## Open questions
-- **BLOCKING (2026-10-02): how should ball contacts be simulated?** Native MuJoCo soft contacts give impact-phase-dependent restitution: COR 0.1–2.9 at dt 1–2 ms, and still ±0.05 at 0.1 ms. At 5 ms the ball tunnels through the net. Evidence: `mjlab/results/stage1-bounce.md`. Options:
+- ~~**BLOCKING (2026-10-02): how should ball contacts be simulated?**~~ **Resolved 2026-10-02: the user chose A → D-039.** Native MuJoCo soft contacts give impact-phase-dependent restitution: COR 0.1–2.9 at dt 1–2 ms, and still ±0.05 at 0.1 ms. At 5 ms the ball tunnels through the net. Evidence: `mjlab/results/stage1-bounce.md`. Options:
   - **A. Analytic ball model (recommended).** MuJoCo collisions for the ball are disabled. Flight and impacts (court plane, net, paddle) are integrated in batched torch on the GPU with sub-stepping and swept collision tests, using an explicit restitution/friction/spin impulse model, as in Unity's contact surrogates. The paddle pose and velocity are read from MuJoCo each step, and the reaction impulse goes back to the hand via `xfrc_applied`. Ball–robot-body touches are detected as faults. The robot keeps dt 5 ms and throughput.
   - **B. Native contacts at a fine timestep** (≤ 0.25 ms) for the whole scene. Roughly 20–50× slower, and COR is still phase-dependent (±0.05–0.1).
   - **C. Accept native contacts at 1–2 ms** with randomised, unphysical bounces. Not recommended: it gains energy (COR > 1) on some impacts.
@@ -79,3 +96,4 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
   - Also found: condim 6 is not suitable for the floor pair; condim 3 is kept.
   - The suite stays green: 50 pass and 13 strict xfails document the findings.
   - Report: `mjlab/results/stage1-bounce.md`. User decision needed (Open questions); loop stopped.
+- 2026-10-02 — User chose option A. D-039 appended to `docs/DECISIONS.md` (analytic GPU ball contact model; amends D-038). Stage 1 steps restructured around it. Loop restarted.

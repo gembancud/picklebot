@@ -1043,3 +1043,19 @@ Trade-offs: Unity-specific rules, feeds, curricula and evaluation code must be r
 Migration and compatibility: Nothing is deleted. Seed discipline carries over: training, development and final ranges are disjoint, and final seeds stay unused until a frozen acceptance candidate exists. So do per-skill reporting, fixed-endpoint selection and no automatic promotion. D-006 remains respected: G1 locomotion uses mjlab's established velocity-tracking recipe as the base, rather than a new locomotion research program. Stage 0 must show at least 10× the Unity throughput before Stage 1 proceeds.
 
 Affected roadmap/spec sections: ROADMAP.md and CURRENT_STATE.md gain an mjlab track when Stage 0 completes. The HIERARCHICAL_CONTROL.md goals carry over conceptually; the 136-observation contract does not.
+
+### D-039 — Simulate the ball with an analytic GPU contact model
+
+- Date: 2026-10-02
+- Status: Accepted (user-directed, option A of the Stage 1 bounce finding)
+- Amends: D-038 (ball contact physics no longer uses native MuJoCo contacts)
+
+Decision: The ball's flight and its contacts with the court, net, posts and paddle are integrated in batched torch on the GPU by project code. The code sub-steps within each MuJoCo step, uses swept collision tests, and applies an explicit impulse model for normal restitution, Coulomb friction and spin. MuJoCo still simulates the robot at its normal timestep. The paddle pose and velocity are read from MuJoCo each step. The equal and opposite impulse is returned to the paddle body through `xfrc_applied`. Ball contact with any other robot body is detected and treated as a rules event, not a calibrated bounce. The ball is shown in MuJoCo as a non-colliding body driven by the analytic state.
+
+Evidence: `mjlab/results/stage1-bounce.md`. With native soft contacts, rebound is set by the impact phase relative to the timestep: COR 0.10–2.88 at dt 1–2 ms over drop heights 1.95–2.05 m, and still ±0.05 at 0.1 ms. A 12 m/s ball tunnels through the net at 5 ms. MuJoCo has no velocity-level restitution coefficient.
+
+Trade-offs: More project-owned physics code to validate. The ball does not take part in MuJoCo's constraint solver. The paddle coupling is a one-step impulse, not a simultaneous solve; with the paddle about 10× the ball mass this is a small approximation. This matches the Unity reference's use of contact surrogates.
+
+Migration and compatibility: `court.add_ball_contacts` remains as a documented, invalid baseline and is not used in tasks. The aerodynamic model and its RK4 reference (`ball.py`) carry over unchanged. Acceptance remains the official drop band (provisional for the acrylic court), now required at every drop height and impact phase, plus no energy gain and PBCoR ≤ 0.43 for the paddle surrogate.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 1 steps.
