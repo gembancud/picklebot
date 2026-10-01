@@ -59,7 +59,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 ## Stage 2 — standing G1 hits a fed ball
 - [x] G1 plus a paddle fixed to the right wrist in the scene; reach and swing-speed envelope measured with scripted joint sweeps.
 - [x] Rules and legality module (net clearance, in/out, kitchen) ported from the Unity rules, with tests.
-- [ ] Task: G1 standing (balance required), ball fed toward its forehand, reward for contact then a legal return; dev and train seed ranges defined.
+- [x] Task: G1 standing (balance required), ball fed toward its forehand, reward for contact then a legal return; dev and train seed ranges defined.
 - [ ] First training run (≤ 2 h) plus evaluation on dev seeds; video of successes and misses.
 - [ ] **Gate:** learns legal returns on easy feeds; report written.
 
