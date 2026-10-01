@@ -58,7 +58,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 
 ## Stage 2 — standing G1 hits a fed ball
 - [x] G1 plus a paddle fixed to the right wrist in the scene; reach and swing-speed envelope measured with scripted joint sweeps.
-- [ ] Rules and legality module (net clearance, in/out, kitchen) ported from the Unity rules, with tests.
+- [x] Rules and legality module (net clearance, in/out, kitchen) ported from the Unity rules, with tests.
 - [ ] Task: G1 standing (balance required), ball fed toward its forehand, reward for contact then a legal return; dev and train seed ranges defined.
 - [ ] First training run (≤ 2 h) plus evaluation on dev seeds; video of successes and misses.
 - [ ] **Gate:** learns legal returns on easy feeds; report written.
@@ -152,3 +152,8 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
     - peak face speed 14.0 m/s (95th percentile 10.3, median 5.7), up to 12.0 m/s along the face normal, about a 17 m/s ball exit.
   - **Caveats:** random pose-pair swings are lower bounds on skill but upper bounds on dynamics (fixed base); joint velocity limits not verified; no paddle self-collision.
   - Report: `mjlab/results/stage2-envelope.md`. No blocker.
+- 2026-10-02 — Rules: `picklebot_mj/rules.py`, a batched torch port of Unity `DoublesRules` at rally level.
+  - **Ported:** phases; serve landing (diagonal box beyond the kitchen line; the kitchen line is a fault, the centre line is in); two-bounce rule; kitchen volley plus the re-establish-both-feet requirement plus the volley-momentum fault; double hit; wrong receiver; out (lines in); wrong side; second bounce; body contact; player net touch; post (permanent object); lost; truncate. A ball touching the net is not a fault. The first fault sticks.
+  - **Frame mapping:** Unity z → x and Unity x → −y, which preserves left/right handedness. `begin_from_feed` supports drill starts (rally or must-bounce context).
+  - **Not ported** (not needed for Stage 2): scoring/side-out/server rotation, serve-motion rules and continuous-stroke contact.
+  - **Tests:** 24, mirroring 19 Unity rally-level cases by name, plus batching and drill feeds. Suite 118 pass + 13 xfails.
