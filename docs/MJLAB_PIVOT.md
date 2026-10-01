@@ -36,7 +36,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 - [x] Scaffold the `mjlab/picklebot_mj` package: court geometry (lines, net, kitchen) as MJCF, plus a unit-test setup.
 - [x] Ball body (real mass/diameter) with drag and Magnus applied as forces; tests for free-flight trajectories.
 - [x] ~~Court bounce with native MuJoCo contacts~~. Tried and found not viable (impact-phase-dependent restitution): `mjlab/results/stage1-bounce.md`. Replaced by the analytic model per **D-039** (user chose option A on 2026-10-02).
-- [ ] Analytic ball core `picklebot_mj/ball_sim.py`: batched torch state (pos, vel, spin), sub-stepped flight using `ball.aero_force`, and swept sphere-vs-court-plane bounce with an explicit impulse model. The model uses a normal COR, Coulomb friction with the slip/roll transition, and spin coupling. Tests:
+- [x] Analytic ball core `picklebot_mj/ball_sim.py`: batched torch state (pos, vel, spin), sub-stepped flight using `ball.aero_force`, and swept sphere-vs-court-plane bounce with an explicit impulse model. The model uses a normal COR, Coulomb friction with the slip/roll transition, and spin coupling. Tests:
   - the official drop band at **every** drop height and phase (sweep 1.95–2.05 m plus random phases);
   - no energy gain;
   - angled bounce slows and gains topspin; backspin checks up;
@@ -97,3 +97,18 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
   - The suite stays green: 50 pass and 13 strict xfails document the findings.
   - Report: `mjlab/results/stage1-bounce.md`. User decision needed (Open questions); loop stopped.
 - 2026-10-02 — User chose option A. D-039 appended to `docs/DECISIONS.md` (analytic GPU ball contact model; amends D-038). Stage 1 steps restructured around it. Loop restarted.
+- 2026-10-02 — Analytic ball core: `picklebot_mj/ball_sim.py` (`BallSim.step(state, dt, substeps)`, batched torch).
+  - **Flight:** RK4 sub-steps of gravity + aero + spin decay.
+  - **Court:** swept sphere-vs-plane with time-of-impact interpolation, then a rigid-sphere impulse. Normal COR, Coulomb friction capped by the normal impulse (slip/roll transition) and spin coupling. Resting balls are held on the surface. Contact events carry the first contact point.
+  - **Calibration:** court COR **0.6381** (`scripts/calibrate_analytic_cor.py`) puts the official drop apex at 0.813 m.
+  - **Tests:** 18 new; suite 68 pass + 13 documented xfails. They cover:
+    - phase independence: over the 1.95–2.05 m sweep that native MuJoCo failed, plus 32 random phases, the apex/height ratio spread is < 0.2% at 1, 4 and 10 substeps;
+    - the official apex is insensitive to step size (dt 2–20 ms);
+    - COR is constant from 0.3–3 m drops;
+    - no energy gain over 4,096 random spinning impacts, and the Coulomb cone is respected;
+    - energy is monotone through repeated bounces;
+    - an angled bounce gains topspin; topspin keeps pace; backspin skids at speed and checks back at low speed;
+    - a rolling ball gets no tangential impulse; a ball comes to rest without sinking;
+    - flight matches the RK4 reference to 1e-6 m;
+    - batches are equivalent and deterministic;
+    - CUDA float32 matches CPU float64 within 2 mm.
