@@ -48,7 +48,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
   - PBCoR protocol surrogate ≤ 0.43;
   - momentum conserved with the paddle impulse;
   - the face angle steers the outgoing direction.
-- [ ] MuJoCo integration on the GPU: court spec plus a non-colliding ball body plus a driven paddle rig in an mjlab env. Each step reads the paddle state from sim, advances the ball sim, writes the ball pose for rendering, and applies the reaction to the paddle via `xfrc_applied`. Scripted swing hits fed balls; record a short video.
+- [x] MuJoCo integration on the GPU: court spec plus a non-colliding ball body plus a driven paddle rig in an mjlab env. Each step reads the paddle state from sim, advances the ball sim, writes the ball pose for rendering, and applies the reaction to the paddle via `xfrc_applied`. Scripted swing hits fed balls; record a short video.
 - [ ] **Gate:** physics report (`mjlab/results/stage1-physics.md`) shows:
   - phase-independent bounce in the official band;
   - flight vs RK4;
@@ -134,3 +134,12 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
     - Brushing up gives topspin (> 50 rad/s).
     - Momentum is conserved to 1e-9 (ball Δp − gravity = −paddle impulse).
     - 2,048 random spinning impacts show no energy gain beyond depenetration slack.
+- 2026-10-02 — GPU integration: `picklebot_mj/rig_env.py`.
+  - **Env:** `PickleballRigEnv` is an mjlab `ManagerBasedRlEnv` with a plane terrain plus three mocap entities: court markings/net/posts (`court.court_entity_spec`, visual only), the ball and the paddle.
+  - **Physics hook:** the env wraps `sim.step`, so every MuJoCo physics step (5 ms, decimation 4) also advances `BallSim` against the scripted paddle and writes the ball and paddle mocap poses (plus env origins).
+  - **Scripted swing:** each 3 s episode tosses a ball 0.5–0.8 m above an intercept at x = −5.5 m. The paddle waits at a wind-up point, then swings through at 7–9 m/s and 30–40° with the face normal along the swing.
+  - **Results** (`scripts/stage1_rig.py`, 4096 envs × 300 env steps, 8,192 episodes): paddle hit 100%, landed 100%, in far court 89.9% (the rest long, up to x = 7.83 m, from the swing-speed range), net touches 0. Throughput **38,153 env steps/s** (152,613 physics steps/s) with no robot.
+  - **Video:** `scripts/stage1_rig_video.sh` renders headless EGL 960×540, 150 frames, into `mjlab/artifacts/stage1/rig.mp4` (local; frames inspected: contact at frame 15, ball over the net by frame 40). It uses the bundled imageio-ffmpeg; no system ffmpeg needed.
+  - **Bugs fixed on the way:** the mocap writer needs explicit env ids; the camera follows env 0's court; court markings are geom group 3; video recording skips the warm-up; the paddle no longer starts underground.
+  - **GPU smoke test** `tests/test_rig_env.py`; suite 90 pass + 13 xfails.
+  - **Limitations:** the paddle is kinematic, so the reaction impulse is accumulated but not yet applied to a dynamic body (that comes with the G1 wrist in Stage 2). The ball sim costs about 26 ms per physics step at 4096 envs: many small kernels and host syncs in the sub-step loop. Optimisation candidates: branch-free masks without `.any()` syncs, CUDA graphs or `torch.compile`.

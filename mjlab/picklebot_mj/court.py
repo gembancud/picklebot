@@ -147,6 +147,30 @@ def add_ball_contacts(spec: mujoco.MjSpec, ball_body: str = "ball", ball_geom: s
                       solref=[2 * dt, NET_DAMPRATIO], solimp=BALL_CONTACT_SOLIMP, friction=NET_FRICTION)
 
 
+def court_entity_spec() -> mujoco.MjSpec:
+    """Court markings, net and posts as one mocap body for mjlab scenes.
+
+    Visual only: no floor (the scene terrain provides it) and no collisions,
+    because the ball is simulated analytically (D-039).
+    """
+    spec = mujoco.MjSpec()
+    body = spec.worldbody.add_body(name="court", mocap=True)
+    for g in line_geoms():
+        body.add_geom(**g)
+    for side in (1, -1):
+        net = _net_half(side)
+        net.update(contype=0, conaffinity=0)
+        body.add_geom(**net)
+        body.add_geom(
+            name=f"net_post_{'pos' if side > 0 else 'neg'}",
+            type=mujoco.mjtGeom.mjGEOM_CYLINDER,
+            size=[NET_POST_RADIUS, NET_SIDELINE_HEIGHT / 2, 0.0],
+            pos=[0.0, side * (HALF_NET_POST_SPAN + NET_POST_RADIUS), NET_SIDELINE_HEIGHT / 2],
+            rgba=[0.3, 0.3, 0.3, 1.0], contype=0, conaffinity=0,
+        )
+    return spec
+
+
 def build_court_spec() -> mujoco.MjSpec:
     """Floor, court surface markings, net and posts in a standalone spec."""
     spec = mujoco.MjSpec()
