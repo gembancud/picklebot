@@ -37,6 +37,11 @@ REST_SPEED = 0.05  # m/s: below this normal approach speed the bounce is fully i
 NET_COR = 0.10  # Unity NetRestitution
 NET_FRICTION = 0.4  # Unity NetDynamicFriction
 MAX_TRAVEL = 0.5  # max ball travel per sub-step, in radii (prevents tunnelling through the net)
+# Paddle face: Unity CourtGeometryV1 width 0.2032 m, face length 0.4064 - 0.127 m, thickness 0.016 m.
+PADDLE_HALF = (0.2032 / 2, (0.4064 - 0.127) / 2, 0.016 / 2)
+# Normal COR against a rigid, kinematic paddle; this is the PBCoR surrogate (limit 0.43).
+PADDLE_COR = 0.40  # Unity PaddleRestitution
+PADDLE_FRICTION = 0.2  # Unity PaddleDynamicFriction
 
 
 @dataclass
@@ -49,6 +54,8 @@ class BallParams:
     court_friction: float = COURT_FRICTION
     net_cor: float = NET_COR
     net_friction: float = NET_FRICTION
+    paddle_cor: float = PADDLE_COR
+    paddle_friction: float = PADDLE_FRICTION
     aero: AeroParams = AeroParams()
 
 
@@ -128,21 +135,94 @@ def net_closest(x: torch.Tensor):
 
 
 @dataclass
+class PaddleState:
+    """Paddle face pose and velocity at the start of a step, per environment.
+
+    pos: face-centre position (N, 3). rot: (N, 3, 3) world-from-paddle rotation; its
+    columns are the face width axis, the length axis (toward the tip) and the face
+    normal. lin_vel / ang_vel: world-frame velocity of the face centre and angular velocity.
+    """
+
+    pos: torch.Tensor
+    rot: torch.Tensor
+    lin_vel: torch.Tensor
+    ang_vel: torch.Tensor
+
+
+def _rotvec_to_matrix(rv: torch.Tensor) -> torch.Tensor:
+    """Rodrigues: rotation vectors (N, 3) -> rotation matrices (N, 3, 3)."""
+    theta = rv.norm(dim=-1, keepdim=True)
+    k = rv / theta.clamp_min(1e-12)
+    kx, ky, kz = k.unbind(-1)
+    zero = torch.zeros_like(kx)
+    K = torch.stack([zero, -kz, ky, kz, zero, -kx, -ky, kx, zero], dim=-1).reshape(-1, 3, 3)
+    s, c = torch.sin(theta)[..., None], torch.cos(theta)[..., None]
+    eye = torch.eye(3, dtype=rv.dtype, device=rv.device).expand_as(K)
+    return eye + s * K + (1 - c) * (K @ K)
+
+
+def paddle_at(pd: PaddleState, t: float | torch.Tensor):
+    """Paddle pose after time t, assuming constant velocity over the step."""
+    pos = pd.pos + pd.lin_vel * t
+    rot = _rotvec_to_matrix(pd.ang_vel * t) @ pd.rot
+    return pos, rot
+
+
+@dataclass
 class StepEvents:
     court_contact: torch.Tensor  # (N,) bool: any court contact this step
     court_point: torch.Tensor  # (N, 3) first court contact point this step (nan if none)
     net_contact: torch.Tensor  # (N,) bool: any net or post contact this step
     post_contact: torch.Tensor  # (N,) bool: any post contact this step
+    paddle_contact: torch.Tensor | None = None  # (N,) bool
+    paddle_point: torch.Tensor | None = None  # (N, 3) first paddle contact point (world)
+    paddle_impulse: torch.Tensor | None = None  # (N, 3) total impulse ON THE PADDLE this step (reaction)
+    paddle_angular_impulse: torch.Tensor | None = None  # (N, 3) about the paddle face centre, on the paddle
 
 
 class BallSim:
     def __init__(self, params: BallParams | None = None):
         self.p = params or BallParams()
 
-    def substeps_for(self, s: BallState, dt: float, substeps: int) -> int:
-        """Raise the sub-step count so no ball travels more than MAX_TRAVEL * radius per sub-step."""
-        vmax = float(s.vel.norm(dim=-1).max()) if s.vel.numel() else 0.0
-        return max(substeps, math.ceil(vmax * dt / (MAX_TRAVEL * self.p.radius)))
+    def substeps_for(self, s: BallState, dt: float, substeps: int, paddle: PaddleState | None = None) -> int:
+        """Raise the sub-step count so no ball moves more than MAX_TRAVEL * radius per sub-step,
+        relative to the world or to the paddle (including paddle rotation at the face tip)."""
+        if not s.vel.numel():
+            return substeps
+        speed = s.vel.norm(dim=-1)
+        if paddle is not None:
+            tip = math.hypot(PADDLE_HALF[0], PADDLE_HALF[1])
+            speed = speed + paddle.lin_vel.norm(dim=-1) + paddle.ang_vel.norm(dim=-1) * tip
+        return max(substeps, math.ceil(float(speed.max()) * dt / (MAX_TRAVEL * self.p.radius)))
+
+    def _paddle(self, x, v, w, ppos, prot, pvel, pang):
+        """Sphere vs oriented box (paddle face). Returns updated (x, v, w), hit mask, impulse on ball, point."""
+        p = self.p
+        half = torch.tensor(PADDLE_HALF, dtype=x.dtype, device=x.device)
+        local = ((x - ppos).unsqueeze(-2) @ prot).squeeze(-2)  # R^T (x - c)
+        q_local = torch.maximum(torch.minimum(local, half), -half)
+        d_local = local - q_local
+        dist = d_local.norm(dim=-1, keepdim=True)
+        inside = dist.squeeze(-1) < 1e-9
+        # Inside the box: leave through the face the ball is approaching from (relative velocity).
+        q_world = ppos + (prot @ q_local.unsqueeze(-1)).squeeze(-1)
+        surf_vel = pvel + torch.cross(pang, q_world - ppos, dim=-1)
+        rel_local = ((v - surf_vel).unsqueeze(-2) @ prot).squeeze(-2)
+        face_sign = torch.where(rel_local[..., 2] > 0, -1.0, 1.0).to(x.dtype)
+        n_inside = prot[..., :, 2] * face_sign.unsqueeze(-1)
+        n_out = (prot @ (d_local / dist.clamp_min(1e-12)).unsqueeze(-1)).squeeze(-1)
+        n = torch.where(inside.unsqueeze(-1), n_inside, n_out)
+        overlap = dist.squeeze(-1) < p.radius
+        approaching = ((v - surf_vel) * n).sum(-1) < 0
+        hit = overlap & approaching
+        vb, wb, j = sphere_impulse(v, w, n, surf_vel, p.paddle_cor, p.paddle_friction, p)
+        q_surface = torch.where(inside.unsqueeze(-1),
+                                ppos + (prot @ (local * torch.tensor([1, 1, 0], dtype=x.dtype, device=x.device)).unsqueeze(-1)).squeeze(-1)
+                                + n_inside * half[2], q_world)
+        x_out = q_surface + n * p.radius
+        o3, h3 = overlap.unsqueeze(-1), hit.unsqueeze(-1)
+        return (torch.where(o3, x_out, x), torch.where(h3, vb, v), torch.where(h3, wb, w),
+                hit, torch.where(h3, j, torch.zeros_like(j)), q_surface)
 
     def _net(self, x, v, w):
         p = self.p
@@ -164,10 +244,17 @@ class BallSim:
         h3 = hit.unsqueeze(-1)
         return x, torch.where(h3, vb, v), torch.where(h3, wb, w), hit, hit & is_post
 
-    def step(self, s: BallState, dt: float, substeps: int = 10) -> tuple[BallState, StepEvents]:
+    def step(self, s: BallState, dt: float, substeps: int = 10,
+             paddle: PaddleState | None = None) -> tuple[BallState, StepEvents]:
         p = self.p
-        substeps = self.substeps_for(s, dt, substeps)
+        substeps = self.substeps_for(s, dt, substeps, paddle)
         h = dt / substeps
+        if paddle is not None:
+            pad_hit = torch.zeros(s.pos.shape[0], dtype=torch.bool, device=s.pos.device)
+            pad_point = torch.full_like(s.pos, float("nan"))
+            pad_j = torch.zeros_like(s.pos)
+            pad_l = torch.zeros_like(s.pos)
+        k = 0
         x, v, w = s.pos, s.vel, s.spin
         n = torch.zeros_like(x)
         n[..., 2] = 1.0
@@ -210,8 +297,20 @@ class BallSim:
                 x1, v1, w1 = torch.where(m3, xn, x1), torch.where(m3, vn, v1), torch.where(m3, wn, w1)
                 net_hit |= hn & near_net
                 post_hit |= hp & near_net
+            if paddle is not None:
+                k += 1
+                ppos, prot = paddle_at(paddle, k * h)
+                x1, v1, w1, ph, j, q = self._paddle(x1, v1, w1, ppos, prot, paddle.lin_vel, paddle.ang_vel)
+                first = ph & ~pad_hit
+                pad_point = torch.where(first.unsqueeze(-1), q, pad_point)
+                pad_hit |= ph
+                pad_j = pad_j - j  # reaction on the paddle
+                pad_l = pad_l + torch.cross(q - ppos, -j, dim=-1)
             x, v, w = x1, v1, w1
-        return BallState(x, v, w), StepEvents(contact, point, net_hit, post_hit)
+        ev = StepEvents(contact, point, net_hit, post_hit)
+        if paddle is not None:
+            ev.paddle_contact, ev.paddle_point, ev.paddle_impulse, ev.paddle_angular_impulse = pad_hit, pad_point, pad_j, pad_l
+        return BallState(x, v, w), ev
 
 
 def energy(s: BallState, p: BallParams) -> torch.Tensor:

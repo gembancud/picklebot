@@ -43,7 +43,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
   - batch-equivalent and deterministic;
   - matches `ball.reference_flight` between bounces.
 - [x] Net and posts in the analytic model: swept sphere vs the two tilted net boxes and the post cylinders. Low restitution (Unity 0.10). Tests: a 12 m/s ball is stopped at any timestep; a ball passing 10 cm over the net is untouched; a net-cord touch is handled.
-- [ ] Paddle impact model: swept sphere vs a moving, rotating paddle face (oriented box, Unity dimensions) using paddle linear and angular velocity. Normal COR is chosen so the PBCoR surrogate is ≤ 0.43; tangential friction gives spin; the equal and opposite impulse is returned. Tests:
+- [x] Paddle impact model: swept sphere vs a moving, rotating paddle face (oriented box, Unity dimensions) using paddle linear and angular velocity. Normal COR is chosen so the PBCoR surrogate is ≤ 0.43; tangential friction gives spin; the equal and opposite impulse is returned. Tests:
   - no tunnelling up to 30 m/s relative speed;
   - PBCoR protocol surrogate ≤ 0.43;
   - momentum conserved with the paddle impulse;
@@ -123,3 +123,14 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
     - Balls beyond the posts pass; a ball into a post bounces back.
     - 2,048 random spinning net impacts show no energy gain.
   - Earlier ball tests that dropped balls at x = 0 (now the net plane) were moved to open court. The calibration drop also moved to (−3, 1); COR unchanged.
+- 2026-10-02 — Paddle impacts in `ball_sim.py`: `BallSim.step(..., paddle=PaddleState)`.
+  - **Geometry and motion:** the paddle face is an oriented box (Unity face 0.2032 × 0.2794 × 0.016 m). Its pose is advanced within the step from its linear and angular velocity (Rodrigues). Sphere-vs-box uses the closest point; a ball centre inside the box exits through the face it approaches.
+  - **Response:** kinematic paddle (the arm is far heavier than the ball). Normal COR 0.40 (Unity; PBCoR surrogate ≤ 0.43); friction 0.2 uses the surface velocity, so brushing the ball generates spin.
+  - **Outputs:** reaction impulse and angular impulse about the face centre on the paddle (`paddle_impulse`, `paddle_angular_impulse`) plus the contact point, for `xfrc_applied` in the next step. Adaptive sub-steps also account for paddle speed and tip rotation.
+  - **Tests:** 11 new; suite 89 pass + 13 documented xfails.
+    - PBCoR surrogate 0.40 ± 0.02 at 5/10/20/30 m/s (≤ 0.43).
+    - No tunnelling: a 30 m/s swing through a resting ball at 40 phases, dt 5 ms and 20 ms with one requested sub-step, all hit, with exit speed (1 + e)·30 ± 0.2 m/s.
+    - The face tilt steers the ball; a ball beside the face misses.
+    - Brushing up gives topspin (> 50 rad/s).
+    - Momentum is conserved to 1e-9 (ball Δp − gravity = −paddle impulse).
+    - 2,048 random spinning impacts show no energy gain beyond depenetration slack.
