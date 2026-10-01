@@ -61,7 +61,7 @@ def test_official_drop_insensitive_to_step_size():
 @pytest.mark.parametrize("height", [0.3, 1.0, 2.0, 3.0])
 def test_cor_constant_across_heights(height):
     # Velocities at the 1 ms step ends straddling the contact.
-    s = state([0, 0, height + R])
+    s = state([-3.0, 1.0, height + R])
     sim = BallSim(P)
     vin = vout = None
     for _ in range(4000):
@@ -92,7 +92,7 @@ def test_no_energy_gain_random_impacts():
 
 def test_full_flight_energy_never_increases_through_bounces():
     sim = BallSim(P)
-    s = state([0, 0, 1.5 + R], [6.0, 1.0, 2.0], [10.0, -80.0, 30.0])
+    s = state([-6.0, 0, 1.5 + R], [6.0, 1.0, 2.0], [10.0, -80.0, 30.0])
     e_prev = energy(s, P)
     for _ in range(600):
         s, _ = sim.step(s, 0.005, 10)
@@ -140,7 +140,7 @@ def test_rolling_ball_keeps_rolling_without_slip_change():
 
 def test_ball_comes_to_rest_without_sinking():
     sim = BallSim(P)
-    s = state([0, 0, 1.0 + R])
+    s = state([-3.0, 1.0, 1.0 + R])
     zmin = 1.0
     for _ in range(int(6.0 / 0.005)):
         s, _ = sim.step(s, 0.005, 10)
@@ -150,12 +150,12 @@ def test_ball_comes_to_rest_without_sinking():
 
 
 def test_flight_between_bounces_matches_reference():
-    s = state([0, 0, 1.0], [15.0, 0.0, 3.0], [0.0, 150.0, 0.0])
+    s = state([-6.0, 0, 1.0], [15.0, 0.0, 3.0], [0.0, 150.0, 0.0])
     sim = BallSim(P)
     for _ in range(int(0.3 / 0.005)):
         s, ev = sim.step(s, 0.005, 10)
         assert not ev.court_contact.any()
-    rx, rv, rw = ball.reference_flight([0, 0, 1.0], [15.0, 0.0, 3.0], [0.0, 150.0, 0.0], 0.3)
+    rx, rv, rw = ball.reference_flight([-6.0, 0, 1.0], [15.0, 0.0, 3.0], [0.0, 150.0, 0.0], 0.3)
     assert torch.allclose(s.pos[0], rx, atol=1e-6) and torch.allclose(s.vel[0], rv, atol=1e-5)
 
 

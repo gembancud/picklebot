@@ -42,7 +42,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
   - angled bounce slows and gains topspin; backspin checks up;
   - batch-equivalent and deterministic;
   - matches `ball.reference_flight` between bounces.
-- [ ] Net and posts in the analytic model: swept sphere vs the two tilted net boxes and the post cylinders. Low restitution (Unity 0.10). Tests: a 12 m/s ball is stopped at any timestep; a ball passing 10 cm over the net is untouched; a net-cord touch is handled.
+- [x] Net and posts in the analytic model: swept sphere vs the two tilted net boxes and the post cylinders. Low restitution (Unity 0.10). Tests: a 12 m/s ball is stopped at any timestep; a ball passing 10 cm over the net is untouched; a net-cord touch is handled.
 - [ ] Paddle impact model: swept sphere vs a moving, rotating paddle face (oriented box, Unity dimensions) using paddle linear and angular velocity. Normal COR is chosen so the PBCoR surrogate is ≤ 0.43; tangential friction gives spin; the equal and opposite impulse is returned. Tests:
   - no tunnelling up to 30 m/s relative speed;
   - PBCoR protocol surrogate ≤ 0.43;
@@ -112,3 +112,14 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
     - flight matches the RK4 reference to 1e-6 m;
     - batches are equivalent and deterministic;
     - CUDA float32 matches CPU float64 within 2 mm.
+- 2026-10-02 — Net and posts added to `ball_sim.py`.
+  - **Geometry:** the net is a slab |x| ≤ 1 cm with its top following `net_height_at(y)` out to the posts; the posts are cylinders. A closest-point sphere test handles face hits, net-cord touches on the top edge and the ends the same way.
+  - **Response:** the same impulse model with net COR 0.10 and friction 0.4 (Unity), then depenetration to the surface. Events: `net_contact`, `post_contact`.
+  - **Tunnelling guard:** sub-steps adapt so no ball travels more than 0.5 r per sub-step (`substeps_for`).
+  - **Tests:** 9 new; suite 78 pass + 13 documented xfails.
+    - Balls at 12 and 30 m/s are stopped at 12 positions, with dt 5 ms and 20 ms and only one requested sub-step. They never pass the net face and come back slower than 0.3× their speed.
+    - A ball 10 cm over the net is untouched.
+    - A net-cord touch deflects the ball upward without energy gain.
+    - Balls beyond the posts pass; a ball into a post bounces back.
+    - 2,048 random spinning net impacts show no energy gain.
+  - Earlier ball tests that dropped balls at x = 0 (now the net plane) were moved to open court. The calibration drop also moved to (−3, 1); COR unchanged.

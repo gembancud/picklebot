@@ -18,6 +18,8 @@ def drop_apex_top(cor: float, height_bottom: float = 1.981, dt: float = 0.005, s
     n = h.shape[0]
     s = BallState(torch.zeros(n, 3, dtype=dtype, device=device), torch.zeros(n, 3, dtype=dtype, device=device),
                   torch.zeros(n, 3, dtype=dtype, device=device))
+    s.pos[:, 0] = -3.0  # open court, clear of the net
+    s.pos[:, 1] = 1.0
     s.pos[:, 2] = h + p.radius
     bounced = torch.zeros(n, dtype=torch.bool, device=device)
     apex = torch.zeros(n, dtype=dtype, device=device)
