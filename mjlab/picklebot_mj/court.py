@@ -31,6 +31,24 @@ RUNOFF = 4.0  # floor margin around the court
 PHYSICAL_GROUP = 0
 MARKING_GROUP = 3
 
+# Ball contact model (explicit contact pairs; the ball does not use default
+# world collisions). solref = (2*dt, dampratio) is the stable, monotonic regime
+# found in scripts/bounce_sweep.py; longer time constants were non-monotonic and
+# shorter damping gained energy. Damping ratios are calibrated per timestep by
+# scripts/calibrate_court_bounce.py to the centre of the official drop band
+# (1.981 m drop, rebound top 0.762-0.864 m). This is a provisional court bounce:
+# no acrylic-court reference exists yet (PHASE1B spec section 5).
+# Calibration conditions: implicitfast integrator, pyramidal cone (mjlab default),
+# condim 3, aerodynamics on. Contacts resolve in about one solver step, so
+# restitution depends on all of these; recalibrate if any change.
+BALL_CONTACT_SOLIMP = [0.9, 0.95, 0.001, 0.5, 2.0]  # MuJoCo default
+# Calibrated 2026-10-02 (rebound top 0.813 m, COR ~0.637, no energy gain).
+# Max penetration: 12.4 mm at 5 ms, 4.3 mm at 2 ms, 1.4 mm at 1 ms.
+COURT_DAMPRATIO_BY_DT = {0.005: 0.15754, 0.002: 0.40038, 0.001: 0.29745}
+COURT_FRICTION = [0.2, 0.2, 0.005, 0.0001, 0.0001]  # Unity average of ball 0.1 / court 0.3
+NET_DAMPRATIO = 1.0  # critically damped: Unity net restitution is 0.10
+NET_FRICTION = [0.4, 0.4, 0.005, 0.0001, 0.0001]
+
 # The net's top edge rises linearly from the centre to the sidelines.
 _NET_SLOPE = (NET_SIDELINE_HEIGHT - NET_CENTER_HEIGHT) / HALF_WIDTH
 
@@ -99,6 +117,34 @@ def line_geoms() -> list[dict]:
         _line("centerline_far", KITCHEN_DEPTH, hl, -w / 2, w / 2),
     ]
     return lines
+
+
+def court_solref(dt: float) -> list[float]:
+    if dt not in COURT_DAMPRATIO_BY_DT:
+        raise ValueError(f"No calibrated court bounce for dt={dt}; run scripts/calibrate_court_bounce.py")
+    return [2 * dt, COURT_DAMPRATIO_BY_DT[dt]]
+
+
+def add_ball_contacts(spec: mujoco.MjSpec, ball_body: str = "ball", ball_geom: str = "ball_geom",
+                      dt: float | None = None) -> None:
+    """Route the ball's court, net and post contacts through explicit pairs.
+
+    NOT VALID FOR TRAINING (2026-10-02): rebound depends on the impact phase
+    relative to the timestep (COR 0.1-2.9 at dt 1-2 ms; ±0.05 even at 0.1 ms).
+    See mjlab/results/stage1-bounce.md. Kept only as the measured baseline.
+
+    Default collisions between the ball and the world body are excluded, so the
+    floor stays an ordinary surface for other bodies (e.g. robot feet).
+    """
+    dt = spec.option.timestep if dt is None else dt
+    spec.add_exclude(bodyname1="world", bodyname2=ball_body)
+    # condim must stay 3: under the pyramidal cone, condim 6 changed the normal
+    # impulse and gained energy (COR 1.35 from 2 m).
+    spec.add_pair(name=f"{ball_body}_floor", geomname1="floor", geomname2=ball_geom, condim=3,
+                  solref=court_solref(dt), solimp=BALL_CONTACT_SOLIMP, friction=COURT_FRICTION)
+    for name in ("net_pos", "net_neg", "net_post_pos", "net_post_neg"):
+        spec.add_pair(name=f"{ball_body}_{name}", geomname1=name, geomname2=ball_geom, condim=3,
+                      solref=[2 * dt, NET_DAMPRATIO], solimp=BALL_CONTACT_SOLIMP, friction=NET_FRICTION)
 
 
 def build_court_spec() -> mujoco.MjSpec:

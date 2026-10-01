@@ -50,6 +50,10 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 Movement plus hitting (using the walking policy as a base or teacher), target-conditioned returns, privileged teacher → student distillation, both service sides, then 2v2.
 
 ## Open questions
+- **BLOCKING (2026-10-02): how should ball contacts be simulated?** Native MuJoCo soft contacts give impact-phase-dependent restitution: COR 0.1–2.9 at dt 1–2 ms, and still ±0.05 at 0.1 ms. At 5 ms the ball tunnels through the net. Evidence: `mjlab/results/stage1-bounce.md`. Options:
+  - **A. Analytic ball model (recommended).** MuJoCo collisions for the ball are disabled. Flight and impacts (court plane, net, paddle) are integrated in batched torch on the GPU with sub-stepping and swept collision tests, using an explicit restitution/friction/spin impulse model, as in Unity's contact surrogates. The paddle pose and velocity are read from MuJoCo each step, and the reaction impulse goes back to the hand via `xfrc_applied`. Ball–robot-body touches are detected as faults. The robot keeps dt 5 ms and throughput.
+  - **B. Native contacts at a fine timestep** (≤ 0.25 ms) for the whole scene. Roughly 20–50× slower, and COR is still phase-dependent (±0.05–0.1).
+  - **C. Accept native contacts at 1–2 ms** with randomised, unphysical bounces. Not recommended: it gains energy (COR > 1) on some impacts.
 - ~~WSL RAM is capped at 15 GB.~~ Resolved 2026-10-02: not a constraint up to 8192 envs.
 - Does mjlab run cleanly in WSL2 on this machine? (Stage 0)
 - Can the G1's reach and swing speed produce competitive returns? (Stage 2)
@@ -70,3 +74,8 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
   - MuJoCo flight vs RK4 after 1 s (implicitfast; 5 cases: flat, topspin, backspin dink, sidespin, lob): position error 2.6–3.6 cm at dt 5 ms and 0.5–0.7 cm at dt 1 ms. This is first-order convergence (error ratio ≈ 2 per halving, tested), consistent with ½·g·dt·T. Spin decay matches to 1e-3.
   - 34 tests pass (`mjlab/scripts/test.sh`).
   - Open for the paddle step: whether 5 ms is accurate enough, or contacts force a smaller dt.
+- 2026-10-02 — Court bounce step **blocked; not ticked**.
+  - Built explicit ball contact pairs (floor, net, posts) and swept 552 contact configurations. A per-dt damping calibration hit the official drop band exactly, but validation showed restitution is set by impact phase, not parameters: COR 0.10–1.64 at 2 ms and 0.11–2.88 at 1 ms over drop heights 1.95–2.05 m, linear in detection depth. Spread is still ±0.05 at 0.1 ms. At 5 ms the ball tunnels through the net.
+  - Also found: condim 6 is not suitable for the floor pair; condim 3 is kept.
+  - The suite stays green: 50 pass and 13 strict xfails document the findings.
+  - Report: `mjlab/results/stage1-bounce.md`. User decision needed (Open questions); loop stopped.
