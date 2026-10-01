@@ -1,0 +1,7957 @@
+{
+  "status": "descriptive_training_coverage",
+  "limitations": [
+    "Changing stochastic policies during training; not frozen evaluation.",
+    "Cells use recorded reset descriptors, not proof of identical initial full physical state.",
+    "Observed success establishes some support within a cell; failure does not prove physical impossibility."
+  ],
+  "inputHashes": {
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-00\\episodes.jsonl": "1e9d5c734a213b0177decb6e3f811db688ed1f297b2d74bb3789c573ac011d74",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-00\\execution-goals.jsonl": "ad981c927e4d16fb2e9cea5d384378578e9d59829c2f740e0f60995980f0d5cf",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-01\\episodes.jsonl": "7b3d39522116d017b4c0813f97733905a3cfbde664db52967c120be45292dc23",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-01\\execution-goals.jsonl": "675ab79cc7a1edfc0f97f11cbc6bcf016fdb6e5ab34e5b0d865b947af0df0ac4",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-02\\episodes.jsonl": "0090fa73ef3d92bf9fff9ab91599c1167488f4749f83b927501936e64e3e1666",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-02\\execution-goals.jsonl": "87e21118abd3e30334f021d22eba7d3146da35b0ddda2c02fdc5dcf4a3c3598d",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-03\\episodes.jsonl": "e9dd925afd414489d1f822ad51e84da39cd77f1da1743dbfac5d79b06429e339",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-03\\execution-goals.jsonl": "d3acfa239947562f536525b20b18cbbb047351077de48ed672b78908cf5bd055",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-04\\episodes.jsonl": "8f9a677c9b135499f0957dfe13222878c19824423f9fefd324bb13439e82b7a5",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-04\\execution-goals.jsonl": "11645166545992782b2c0cddd2e0492b739851837e993a71a532af1f61ac558a",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-05\\episodes.jsonl": "8f08c64ff7dd309e88bb3390620598ab20a2ec74ca956fe366d098878d840cd8",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-05\\execution-goals.jsonl": "ab665d1c37ed269c4a2e9fe9c8c60532420ee1b3cd4a68fb971c4115147126f2",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-06\\episodes.jsonl": "7fe3172b22d8c77825056baf8354b23dd431ec042a57cc95b90bb22f04d4d0f5",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-06\\execution-goals.jsonl": "2e98af1d8a15bf18e1cfa3aa269e5449f84970f3bfe1ec0598b946532c935f17",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-07\\episodes.jsonl": "c217fc6ddb2df100546a3a5845dec42a525badc289f2b3a8c168c00fe2bebf90",
+    "F:\\dev\\picklebot\\artifacts\\hierarchy-v1\\smooth-distance-01\\execution-smooth-distance-01\\worker-07\\execution-goals.jsonl": "8d6b01f7ef7ca3cda9c8e38fe5847063e9a14c399d5aeeb0864aeb559ca78c5d"
+  },
+  "cells": {
+    "[\"rally-air-feed\",1,null,0.0,\"court\",0,0.02500000037252903]": {
+      "attempts": [
+        3,
+        1
+      ],
+      "legal": [
+        3,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",4,0.02500000037252903]": {
+      "attempts": [
+        3,
+        1
+      ],
+      "legal": [
+        3,
+        1
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",0,0.02500000037252903]": {
+      "attempts": [
+        2,
+        4
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"lateral-left\",3,0.0062500000931322575]": {
+      "attempts": [
+        27,
+        31
+      ],
+      "legal": [
+        27,
+        31
+      ],
+      "landingsInA": [
+        9,
+        14
+      ],
+      "landingsInB": [
+        2,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"lateral-left\",3,0.0062500000931322575]": {
+      "attempts": [
+        31,
+        26
+      ],
+      "legal": [
+        29,
+        25
+      ],
+      "landingsInA": [
+        15,
+        13
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",5,0.02500000037252903]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"lateral-right\",5,0.0062500000931322575]": {
+      "attempts": [
+        30,
+        27
+      ],
+      "legal": [
+        30,
+        25
+      ],
+      "landingsInA": [
+        14,
+        10
+      ],
+      "landingsInB": [
+        2,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"lateral-left\",3,0.0062500000931322575]": {
+      "attempts": [
+        44,
+        45
+      ],
+      "legal": [
+        44,
+        45
+      ],
+      "landingsInA": [
+        15,
+        11
+      ],
+      "landingsInB": [
+        6,
+        5
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"lateral-right\",5,0.0062500000931322575]": {
+      "attempts": [
+        28,
+        30
+      ],
+      "legal": [
+        26,
+        29
+      ],
+      "landingsInA": [
+        10,
+        7
+      ],
+      "landingsInB": [
+        3,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"lateral-right\",5,0.0062500000931322575]": {
+      "attempts": [
+        14,
+        15
+      ],
+      "legal": [
+        12,
+        13
+      ],
+      "landingsInA": [
+        0,
+        3
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"lateral-left\",3,0.0062500000931322575]": {
+      "attempts": [
+        43,
+        47
+      ],
+      "legal": [
+        43,
+        46
+      ],
+      "landingsInA": [
+        11,
+        13
+      ],
+      "landingsInB": [
+        1,
+        3
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"lateral-left\",3,0.0062500000931322575]": {
+      "attempts": [
+        46,
+        43
+      ],
+      "legal": [
+        45,
+        42
+      ],
+      "landingsInA": [
+        16,
+        21
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"stationary-serve\",1,false,1.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        32,
+        25
+      ],
+      "legal": [
+        32,
+        22
+      ],
+      "landingsInA": [
+        8,
+        9
+      ],
+      "landingsInB": [
+        9,
+        6
+      ]
+    },
+    "[\"stationary-serve\",2,false,1.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        26,
+        31
+      ],
+      "legal": [
+        20,
+        25
+      ],
+      "landingsInA": [
+        13,
+        11
+      ],
+      "landingsInB": [
+        1,
+        10
+      ]
+    },
+    "[\"stationary-serve\",3,false,1.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        21,
+        36
+      ],
+      "legal": [
+        16,
+        31
+      ],
+      "landingsInA": [
+        10,
+        11
+      ],
+      "landingsInB": [
+        1,
+        5
+      ]
+    },
+    "[\"stationary-serve\",0,false,1.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        30,
+        28
+      ],
+      "legal": [
+        27,
+        25
+      ],
+      "landingsInA": [
+        19,
+        11
+      ],
+      "landingsInB": [
+        2,
+        4
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",6,0.05000000074505806]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        1,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",1,0.05000000074505806]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        1
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"lateral-left\",3,0.0062500000931322575]": {
+      "attempts": [
+        32,
+        26
+      ],
+      "legal": [
+        32,
+        25
+      ],
+      "landingsInA": [
+        17,
+        12
+      ],
+      "landingsInB": [
+        5,
+        1
+      ]
+    },
+    "[\"stationary-serve\",0,true,1.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        34,
+        24
+      ],
+      "legal": [
+        31,
+        18
+      ],
+      "landingsInA": [
+        13,
+        10
+      ],
+      "landingsInB": [
+        8,
+        4
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"lateral-right\",5,0.0062500000931322575]": {
+      "attempts": [
+        26,
+        32
+      ],
+      "legal": [
+        26,
+        31
+      ],
+      "landingsInA": [
+        9,
+        15
+      ],
+      "landingsInB": [
+        2,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"lateral-left\",3,0.0062500000931322575]": {
+      "attempts": [
+        43,
+        45
+      ],
+      "legal": [
+        42,
+        44
+      ],
+      "landingsInA": [
+        18,
+        19
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",5,0.05000000074505806]": {
+      "attempts": [
+        2,
+        2
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"lateral-left\",3,0.012500000186264515]": {
+      "attempts": [
+        44,
+        44
+      ],
+      "legal": [
+        44,
+        44
+      ],
+      "landingsInA": [
+        18,
+        20
+      ],
+      "landingsInB": [
+        4,
+        5
+      ]
+    },
+    "[\"stationary-serve\",2,true,1.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        32,
+        26
+      ],
+      "legal": [
+        27,
+        22
+      ],
+      "landingsInA": [
+        17,
+        14
+      ],
+      "landingsInB": [
+        3,
+        3
+      ]
+    },
+    "[\"stationary-serve\",1,true,1.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        26,
+        32
+      ],
+      "legal": [
+        23,
+        28
+      ],
+      "landingsInA": [
+        15,
+        14
+      ],
+      "landingsInB": [
+        2,
+        3
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"lateral-left\",3,0.012500000186264515]": {
+      "attempts": [
+        43,
+        44
+      ],
+      "legal": [
+        42,
+        44
+      ],
+      "landingsInA": [
+        27,
+        16
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"lateral-right\",5,0.0062500000931322575]": {
+      "attempts": [
+        30,
+        28
+      ],
+      "legal": [
+        30,
+        27
+      ],
+      "landingsInA": [
+        15,
+        9
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",0,0.05000000074505806]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"lateral-left\",3,0.0062500000931322575]": {
+      "attempts": [
+        30,
+        28
+      ],
+      "legal": [
+        28,
+        25
+      ],
+      "landingsInA": [
+        9,
+        12
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"lateral-right\",5,0.0062500000931322575]": {
+      "attempts": [
+        16,
+        13
+      ],
+      "legal": [
+        16,
+        13
+      ],
+      "landingsInA": [
+        8,
+        8
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"stationary-serve\",3,true,1.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        30,
+        28
+      ],
+      "legal": [
+        25,
+        23
+      ],
+      "landingsInA": [
+        7,
+        14
+      ],
+      "landingsInB": [
+        6,
+        5
+      ]
+    },
+    "[\"receive-feed\",0,null,0.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        30,
+        29
+      ],
+      "legal": [
+        29,
+        29
+      ],
+      "landingsInA": [
+        15,
+        12
+      ],
+      "landingsInB": [
+        1,
+        4
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"lateral-left\",3,0.012500000186264515]": {
+      "attempts": [
+        26,
+        33
+      ],
+      "legal": [
+        26,
+        33
+      ],
+      "landingsInA": [
+        11,
+        11
+      ],
+      "landingsInB": [
+        2,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",6,0.07500000298023224]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"lateral-left\",3,0.012500000186264515]": {
+      "attempts": [
+        41,
+        46
+      ],
+      "legal": [
+        41,
+        46
+      ],
+      "landingsInA": [
+        10,
+        16
+      ],
+      "landingsInB": [
+        3,
+        3
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",2,0.07500000298023224]": {
+      "attempts": [
+        2,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"lateral-right\",5,0.012500000186264515]": {
+      "attempts": [
+        29,
+        30
+      ],
+      "legal": [
+        24,
+        25
+      ],
+      "landingsInA": [
+        7,
+        10
+      ],
+      "landingsInB": [
+        5,
+        1
+      ]
+    },
+    "[\"receive-feed\",1,null,0.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        27,
+        32
+      ],
+      "legal": [
+        26,
+        32
+      ],
+      "landingsInA": [
+        14,
+        5
+      ],
+      "landingsInB": [
+        0,
+        6
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",6,0.07500000298023224]": {
+      "attempts": [
+        2,
+        2
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",1,0.07500000298023224]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        3,
+        1
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"lateral-left\",3,0.012500000186264515]": {
+      "attempts": [
+        28,
+        31
+      ],
+      "legal": [
+        27,
+        31
+      ],
+      "landingsInA": [
+        13,
+        14
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"lateral-left\",3,0.012500000186264515]": {
+      "attempts": [
+        44,
+        42
+      ],
+      "legal": [
+        43,
+        41
+      ],
+      "landingsInA": [
+        20,
+        16
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"lateral-left\",3,0.01875000074505806]": {
+      "attempts": [
+        42,
+        43
+      ],
+      "legal": [
+        42,
+        42
+      ],
+      "landingsInA": [
+        14,
+        14
+      ],
+      "landingsInB": [
+        2,
+        3
+      ]
+    },
+    "[\"receive-feed\",3,null,0.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        32,
+        27
+      ],
+      "legal": [
+        31,
+        26
+      ],
+      "landingsInA": [
+        11,
+        9
+      ],
+      "landingsInB": [
+        4,
+        5
+      ]
+    },
+    "[\"receive-feed\",2,null,0.0,\"court\",-1,-1.0]": {
+      "attempts": [
+        28,
+        31
+      ],
+      "legal": [
+        27,
+        29
+      ],
+      "landingsInA": [
+        10,
+        9
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"lateral-right\",5,0.012500000186264515]": {
+      "attempts": [
+        30,
+        29
+      ],
+      "legal": [
+        27,
+        27
+      ],
+      "landingsInA": [
+        12,
+        17
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"lateral-right\",5,0.0062500000931322575]": {
+      "attempts": [
+        15,
+        14
+      ],
+      "legal": [
+        15,
+        14
+      ],
+      "landingsInA": [
+        3,
+        3
+      ],
+      "landingsInB": [
+        2,
+        2
+      ]
+    },
+    "[\"receive-feed\",0,null,0.25,\"court\",-1,-1.0]": {
+      "attempts": [
+        33,
+        27
+      ],
+      "legal": [
+        26,
+        20
+      ],
+      "landingsInA": [
+        5,
+        9
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",7,0.10000000149011612]": {
+      "attempts": [
+        2,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"lateral-left\",3,0.012500000186264515]": {
+      "attempts": [
+        29,
+        31
+      ],
+      "legal": [
+        28,
+        30
+      ],
+      "landingsInA": [
+        6,
+        11
+      ],
+      "landingsInB": [
+        4,
+        4
+      ]
+    },
+    "[\"receive-feed\",2,null,0.25,\"court\",-1,-1.0]": {
+      "attempts": [
+        28,
+        31
+      ],
+      "legal": [
+        24,
+        25
+      ],
+      "landingsInA": [
+        9,
+        7
+      ],
+      "landingsInB": [
+        3,
+        4
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"lateral-right\",5,0.012500000186264515]": {
+      "attempts": [
+        27,
+        32
+      ],
+      "legal": [
+        26,
+        32
+      ],
+      "landingsInA": [
+        9,
+        10
+      ],
+      "landingsInB": [
+        2,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",2,0.10000000149011612]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"lateral-left\",3,0.012500000186264515]": {
+      "attempts": [
+        30,
+        29
+      ],
+      "legal": [
+        27,
+        28
+      ],
+      "landingsInA": [
+        18,
+        15
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"receive-feed\",1,null,0.25,\"court\",-1,-1.0]": {
+      "attempts": [
+        28,
+        31
+      ],
+      "legal": [
+        24,
+        22
+      ],
+      "landingsInA": [
+        6,
+        7
+      ],
+      "landingsInB": [
+        2,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"lateral-left\",3,0.01875000074505806]": {
+      "attempts": [
+        43,
+        43
+      ],
+      "legal": [
+        40,
+        40
+      ],
+      "landingsInA": [
+        21,
+        13
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",7,0.10000000149011612]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        1,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"lateral-left\",3,0.01875000074505806]": {
+      "attempts": [
+        41,
+        46
+      ],
+      "legal": [
+        40,
+        46
+      ],
+      "landingsInA": [
+        8,
+        5
+      ],
+      "landingsInB": [
+        4,
+        8
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",2,0.10000000149011612]": {
+      "attempts": [
+        3,
+        1
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"lateral-right\",5,0.012500000186264515]": {
+      "attempts": [
+        31,
+        28
+      ],
+      "legal": [
+        29,
+        26
+      ],
+      "landingsInA": [
+        10,
+        12
+      ],
+      "landingsInB": [
+        2,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"lateral-left\",3,0.01875000074505806]": {
+      "attempts": [
+        44,
+        43
+      ],
+      "legal": [
+        36,
+        38
+      ],
+      "landingsInA": [
+        18,
+        15
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"receive-feed\",3,null,0.25,\"court\",-1,-1.0]": {
+      "attempts": [
+        30,
+        29
+      ],
+      "legal": [
+        23,
+        20
+      ],
+      "landingsInA": [
+        4,
+        6
+      ],
+      "landingsInB": [
+        3,
+        3
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",8,0.02500000037252903]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        1,
+        5
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",4,0.0]": {
+      "attempts": [
+        7,
+        5
+      ],
+      "legal": [
+        7,
+        5
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"lateral-right\",5,0.0062500000931322575]": {
+      "attempts": [
+        15,
+        14
+      ],
+      "legal": [
+        15,
+        14
+      ],
+      "landingsInA": [
+        9,
+        5
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"lateral-left\",3,0.01875000074505806]": {
+      "attempts": [
+        31,
+        29
+      ],
+      "legal": [
+        31,
+        29
+      ],
+      "landingsInA": [
+        13,
+        12
+      ],
+      "landingsInB": [
+        4,
+        5
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",8,0.0]": {
+      "attempts": [
+        7,
+        7
+      ],
+      "legal": [
+        7,
+        7
+      ],
+      "landingsInA": [
+        5,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"lateral-left\",3,0.02500000037252903]": {
+      "attempts": [
+        43,
+        45
+      ],
+      "legal": [
+        43,
+        43
+      ],
+      "landingsInA": [
+        9,
+        9
+      ],
+      "landingsInB": [
+        2,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",8,0.02500000037252903]": {
+      "attempts": [
+        5,
+        1
+      ],
+      "legal": [
+        5,
+        1
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",4,0.0]": {
+      "attempts": [
+        5,
+        4
+      ],
+      "legal": [
+        5,
+        4
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        2,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",3,0.02500000037252903]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"lateral-left\",3,0.01875000074505806]": {
+      "attempts": [
+        31,
+        28
+      ],
+      "legal": [
+        26,
+        25
+      ],
+      "landingsInA": [
+        17,
+        16
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"lateral-right\",5,0.01875000074505806]": {
+      "attempts": [
+        29,
+        31
+      ],
+      "legal": [
+        19,
+        18
+      ],
+      "landingsInA": [
+        3,
+        5
+      ],
+      "landingsInB": [
+        3,
+        4
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",8,0.0]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"lateral-left\",3,0.02500000037252903]": {
+      "attempts": [
+        45,
+        43
+      ],
+      "legal": [
+        40,
+        38
+      ],
+      "landingsInA": [
+        14,
+        13
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",3,0.02500000037252903]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        4,
+        4
+      ],
+      "landingsInA": [
+        3,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"lateral-left\",3,0.02500000037252903]": {
+      "attempts": [
+        44,
+        45
+      ],
+      "legal": [
+        42,
+        45
+      ],
+      "landingsInA": [
+        14,
+        14
+      ],
+      "landingsInB": [
+        6,
+        7
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"lateral-right\",5,0.01875000074505806]": {
+      "attempts": [
+        31,
+        26
+      ],
+      "legal": [
+        26,
+        22
+      ],
+      "landingsInA": [
+        11,
+        13
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",0,0.05000000074505806]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        1,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",5,0.0]": {
+      "attempts": [
+        6,
+        8
+      ],
+      "legal": [
+        6,
+        8
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"lateral-right\",5,0.012500000186264515]": {
+      "attempts": [
+        13,
+        16
+      ],
+      "legal": [
+        11,
+        16
+      ],
+      "landingsInA": [
+        3,
+        1
+      ],
+      "landingsInB": [
+        3,
+        4
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",0,0.0]": {
+      "attempts": [
+        7,
+        5
+      ],
+      "legal": [
+        7,
+        5
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"lateral-left\",3,0.01875000074505806]": {
+      "attempts": [
+        25,
+        33
+      ],
+      "legal": [
+        24,
+        33
+      ],
+      "landingsInA": [
+        10,
+        13
+      ],
+      "landingsInB": [
+        1,
+        4
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"lateral-left\",3,0.02500000037252903]": {
+      "attempts": [
+        44,
+        45
+      ],
+      "legal": [
+        38,
+        37
+      ],
+      "landingsInA": [
+        20,
+        6
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"lateral-right\",5,0.01875000074505806]": {
+      "attempts": [
+        29,
+        29
+      ],
+      "legal": [
+        24,
+        22
+      ],
+      "landingsInA": [
+        7,
+        7
+      ],
+      "landingsInB": [
+        3,
+        3
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",4,0.05000000074505806]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        5,
+        3
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"lateral-left\",3,0.01875000074505806]": {
+      "attempts": [
+        28,
+        30
+      ],
+      "legal": [
+        24,
+        27
+      ],
+      "landingsInA": [
+        9,
+        14
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",0,0.0]": {
+      "attempts": [
+        7,
+        6
+      ],
+      "legal": [
+        6,
+        6
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",8,0.05000000074505806]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        4,
+        1
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",4,0.05000000074505806]": {
+      "attempts": [
+        5,
+        2
+      ],
+      "legal": [
+        5,
+        2
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"lateral-right\",5,0.01875000074505806]": {
+      "attempts": [
+        30,
+        28
+      ],
+      "legal": [
+        30,
+        28
+      ],
+      "landingsInA": [
+        8,
+        9
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",0,0.07500000298023224]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",1,0.07500000298023224]": {
+      "attempts": [
+        5,
+        1
+      ],
+      "legal": [
+        4,
+        1
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"lateral-right\",5,0.012500000186264515]": {
+      "attempts": [
+        17,
+        13
+      ],
+      "legal": [
+        17,
+        13
+      ],
+      "landingsInA": [
+        10,
+        5
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",6,0.0]": {
+      "attempts": [
+        5,
+        6
+      ],
+      "legal": [
+        5,
+        6
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        2,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"lateral-left\",3,0.02500000037252903]": {
+      "attempts": [
+        27,
+        32
+      ],
+      "legal": [
+        25,
+        32
+      ],
+      "landingsInA": [
+        8,
+        13
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"lateral-right\",5,0.02500000037252903]": {
+      "attempts": [
+        27,
+        32
+      ],
+      "legal": [
+        14,
+        13
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        3,
+        3
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",5,0.07500000298023224]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"lateral-right\",5,0.012500000186264515]": {
+      "attempts": [
+        15,
+        14
+      ],
+      "legal": [
+        14,
+        11
+      ],
+      "landingsInA": [
+        4,
+        1
+      ],
+      "landingsInB": [
+        2,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",1,0.0]": {
+      "attempts": [
+        6,
+        4
+      ],
+      "legal": [
+        6,
+        4
+      ],
+      "landingsInA": [
+        3,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",5,0.0]": {
+      "attempts": [
+        6,
+        6
+      ],
+      "legal": [
+        6,
+        5
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        2,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"lateral-left\",3,0.02500000037252903]": {
+      "attempts": [
+        31,
+        28
+      ],
+      "legal": [
+        25,
+        18
+      ],
+      "landingsInA": [
+        11,
+        7
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",4,0.07500000298023224]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"lateral-right\",5,0.02500000037252903]": {
+      "attempts": [
+        28,
+        29
+      ],
+      "legal": [
+        20,
+        20
+      ],
+      "landingsInA": [
+        11,
+        9
+      ],
+      "landingsInB": [
+        2,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",1,0.0]": {
+      "attempts": [
+        4,
+        6
+      ],
+      "legal": [
+        4,
+        6
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",1,0.10000000149011612]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",1,0.10000000149011612]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        1,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"lateral-left\",3,0.02500000037252903]": {
+      "attempts": [
+        29,
+        29
+      ],
+      "legal": [
+        27,
+        25
+      ],
+      "landingsInA": [
+        11,
+        4
+      ],
+      "landingsInB": [
+        2,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",6,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        1,
+        2
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"lateral-right\",5,0.02500000037252903]": {
+      "attempts": [
+        30,
+        28
+      ],
+      "legal": [
+        21,
+        17
+      ],
+      "landingsInA": [
+        3,
+        3
+      ],
+      "landingsInB": [
+        5,
+        5
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",2,0.0]": {
+      "attempts": [
+        7,
+        6
+      ],
+      "legal": [
+        7,
+        6
+      ],
+      "landingsInA": [
+        5,
+        4
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",6,0.0]": {
+      "attempts": [
+        8,
+        8
+      ],
+      "legal": [
+        8,
+        8
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"lateral-left\",3,0.02500000037252903]": {
+      "attempts": [
+        27,
+        31
+      ],
+      "legal": [
+        19,
+        17
+      ],
+      "landingsInA": [
+        6,
+        9
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",5,0.10000000149011612]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"lateral-right\",5,0.02500000037252903]": {
+      "attempts": [
+        32,
+        25
+      ],
+      "legal": [
+        29,
+        25
+      ],
+      "landingsInA": [
+        9,
+        14
+      ],
+      "landingsInB": [
+        2,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"lateral-right\",5,0.012500000186264515]": {
+      "attempts": [
+        13,
+        15
+      ],
+      "legal": [
+        13,
+        15
+      ],
+      "landingsInA": [
+        6,
+        5
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",7,0.02500000037252903]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        4,
+        4
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",3,0.02500000037252903]": {
+      "attempts": [
+        3,
+        1
+      ],
+      "legal": [
+        3,
+        1
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",7,0.02500000037252903]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        4,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"lateral-right\",5,0.01875000074505806]": {
+      "attempts": [
+        12,
+        16
+      ],
+      "legal": [
+        8,
+        10
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        4,
+        3
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",2,0.02500000037252903]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",8,0.05000000074505806]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",8,0.05000000074505806]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        2,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",3,0.05000000074505806]": {
+      "attempts": [
+        5,
+        2
+      ],
+      "legal": [
+        5,
+        2
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",0,0.07500000298023224]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",3,0.05000000074505806]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"lateral-right\",5,0.01875000074505806]": {
+      "attempts": [
+        13,
+        16
+      ],
+      "legal": [
+        13,
+        13
+      ],
+      "landingsInA": [
+        6,
+        8
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",4,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",1,0.10000000149011612]": {
+      "attempts": [
+        2,
+        4
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",8,0.07500000298023224]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        5,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        3,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"lateral-right\",5,0.01875000074505806]": {
+      "attempts": [
+        15,
+        15
+      ],
+      "legal": [
+        11,
+        14
+      ],
+      "landingsInA": [
+        0,
+        3
+      ],
+      "landingsInB": [
+        2,
+        3
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",4,0.07500000298023224]": {
+      "attempts": [
+        4,
+        1
+      ],
+      "legal": [
+        4,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",5,0.10000000149011612]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",0,0.10000000149011612]": {
+      "attempts": [
+        2,
+        6
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",5,0.10000000149011612]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",7,0.0]": {
+      "attempts": [
+        4,
+        7
+      ],
+      "legal": [
+        4,
+        7
+      ],
+      "landingsInA": [
+        3,
+        1
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"lateral-right\",5,0.01875000074505806]": {
+      "attempts": [
+        17,
+        13
+      ],
+      "legal": [
+        16,
+        13
+      ],
+      "landingsInA": [
+        7,
+        5
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",1,0.02500000037252903]": {
+      "attempts": [
+        3,
+        5
+      ],
+      "legal": [
+        3,
+        5
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",2,0.0]": {
+      "attempts": [
+        6,
+        6
+      ],
+      "legal": [
+        6,
+        6
+      ],
+      "landingsInA": [
+        2,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",6,0.02500000037252903]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        2,
+        5
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",6,0.0]": {
+      "attempts": [
+        7,
+        7
+      ],
+      "legal": [
+        7,
+        7
+      ],
+      "landingsInA": [
+        2,
+        3
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",1,0.02500000037252903]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",1,0.0]": {
+      "attempts": [
+        9,
+        6
+      ],
+      "legal": [
+        8,
+        6
+      ],
+      "landingsInA": [
+        7,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",5,0.02500000037252903]": {
+      "attempts": [
+        4,
+        1
+      ],
+      "legal": [
+        4,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"lateral-right\",5,0.02500000037252903]": {
+      "attempts": [
+        15,
+        13
+      ],
+      "legal": [
+        8,
+        9
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        2,
+        3
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",2,0.05000000074505806]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        3,
+        1
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",3,0.0]": {
+      "attempts": [
+        5,
+        7
+      ],
+      "legal": [
+        5,
+        7
+      ],
+      "landingsInA": [
+        3,
+        4
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",7,0.05000000074505806]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",2,0.05000000074505806]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",3,0.07500000298023224]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        0,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",2,0.0]": {
+      "attempts": [
+        8,
+        4
+      ],
+      "legal": [
+        8,
+        4
+      ],
+      "landingsInA": [
+        5,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",7,0.0]": {
+      "attempts": [
+        6,
+        9
+      ],
+      "legal": [
+        6,
+        9
+      ],
+      "landingsInA": [
+        2,
+        3
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",6,0.05000000074505806]": {
+      "attempts": [
+        4,
+        1
+      ],
+      "legal": [
+        4,
+        1
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"lateral-right\",5,0.02500000037252903]": {
+      "attempts": [
+        15,
+        13
+      ],
+      "legal": [
+        14,
+        10
+      ],
+      "landingsInA": [
+        5,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",8,0.0]": {
+      "attempts": [
+        6,
+        7
+      ],
+      "legal": [
+        6,
+        7
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        4,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",7,0.07500000298023224]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",3,0.07500000298023224]": {
+      "attempts": [
+        6,
+        2
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",3,0.0]": {
+      "attempts": [
+        9,
+        6
+      ],
+      "legal": [
+        9,
+        6
+      ],
+      "landingsInA": [
+        5,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",8,0.0]": {
+      "attempts": [
+        5,
+        6
+      ],
+      "legal": [
+        5,
+        6
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"lateral-right\",5,0.02500000037252903]": {
+      "attempts": [
+        12,
+        17
+      ],
+      "legal": [
+        7,
+        12
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        1,
+        4
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",3,0.0]": {
+      "attempts": [
+        6,
+        5
+      ],
+      "legal": [
+        6,
+        5
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",7,0.07500000298023224]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",0,0.0]": {
+      "attempts": [
+        8,
+        7
+      ],
+      "legal": [
+        8,
+        7
+      ],
+      "landingsInA": [
+        3,
+        0
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",4,0.10000000149011612]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",8,0.10000000149011612]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",4,0.0]": {
+      "attempts": [
+        6,
+        5
+      ],
+      "legal": [
+        6,
+        5
+      ],
+      "landingsInA": [
+        3,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",0,0.0]": {
+      "attempts": [
+        6,
+        6
+      ],
+      "legal": [
+        6,
+        6
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        3,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",8,0.10000000149011612]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",4,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",4,0.0]": {
+      "attempts": [
+        10,
+        4
+      ],
+      "legal": [
+        10,
+        4
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",7,0.02500000037252903]": {
+      "attempts": [
+        5,
+        2
+      ],
+      "legal": [
+        5,
+        2
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"lateral-right\",5,0.02500000037252903]": {
+      "attempts": [
+        14,
+        15
+      ],
+      "legal": [
+        14,
+        14
+      ],
+      "landingsInA": [
+        5,
+        5
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",2,0.02500000037252903]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        0,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",7,0.02500000037252903]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",2,0.02500000037252903]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        4,
+        2
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",8,0.05000000074505806]": {
+      "attempts": [
+        2,
+        4
+      ],
+      "legal": [
+        1,
+        4
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",3,0.05000000074505806]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",7,0.05000000074505806]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",0,0.07500000298023224]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",3,0.05000000074505806]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",4,0.07500000298023224]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",0,0.10000000149011612]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",8,0.07500000298023224]": {
+      "attempts": [
+        2,
+        4
+      ],
+      "legal": [
+        1,
+        3
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",0,0.10000000149011612]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",5,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",4,0.10000000149011612]": {
+      "attempts": [
+        4,
+        1
+      ],
+      "legal": [
+        1,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",6,0.0]": {
+      "attempts": [
+        6,
+        8
+      ],
+      "legal": [
+        6,
+        8
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        2,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",1,0.02500000037252903]": {
+      "attempts": [
+        3,
+        5
+      ],
+      "legal": [
+        3,
+        5
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",1,0.02500000037252903]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        4,
+        4
+      ],
+      "landingsInA": [
+        3,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",6,0.02500000037252903]": {
+      "attempts": [
+        3,
+        5
+      ],
+      "legal": [
+        3,
+        5
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",5,0.02500000037252903]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",2,0.05000000074505806]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",6,0.05000000074505806]": {
+      "attempts": [
+        2,
+        4
+      ],
+      "legal": [
+        2,
+        4
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",3,0.07500000298023224]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",2,0.05000000074505806]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        4,
+        4
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",6,0.05000000074505806]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        4,
+        4
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",7,0.07500000298023224]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        2,
+        1
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",4,0.10000000149011612]": {
+      "attempts": [
+        5,
+        4
+      ],
+      "legal": [
+        1,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",2,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",7,0.07500000298023224]": {
+      "attempts": [
+        5,
+        2
+      ],
+      "legal": [
+        2,
+        1
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",8,0.10000000149011612]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",3,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",8,0.10000000149011612]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",5,0.02500000037252903]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",0,0.02500000037252903]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        5,
+        3
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",4,0.02500000037252903]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",1,0.05000000074505806]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",6,0.05000000074505806]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        2,
+        5
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",5,0.05000000074505806]": {
+      "attempts": [
+        3,
+        5
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",1,0.05000000074505806]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",2,0.07500000298023224]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",2,0.07500000298023224]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",3,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",6,0.07500000298023224]": {
+      "attempts": [
+        2,
+        6
+      ],
+      "legal": [
+        1,
+        5
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",3,0.10000000149011612]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",7,0.10000000149011612]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",7,0.10000000149011612]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",0,0.0]": {
+      "attempts": [
+        7,
+        6
+      ],
+      "legal": [
+        7,
+        6
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",4,0.02500000037252903]": {
+      "attempts": [
+        1,
+        5
+      ],
+      "legal": [
+        1,
+        5
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        4
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",4,0.0]": {
+      "attempts": [
+        10,
+        5
+      ],
+      "legal": [
+        10,
+        5
+      ],
+      "landingsInA": [
+        6,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",8,0.02500000037252903]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        5,
+        3
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",0,0.0]": {
+      "attempts": [
+        6,
+        7
+      ],
+      "legal": [
+        5,
+        7
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",3,0.02500000037252903]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        5,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        2,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",4,0.0]": {
+      "attempts": [
+        4,
+        9
+      ],
+      "legal": [
+        4,
+        9
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",8,0.02500000037252903]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",1,0.0]": {
+      "attempts": [
+        7,
+        11
+      ],
+      "legal": [
+        7,
+        11
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        3,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",5,0.05000000074505806]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        2,
+        5
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",5,0.0]": {
+      "attempts": [
+        9,
+        7
+      ],
+      "legal": [
+        8,
+        7
+      ],
+      "landingsInA": [
+        5,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",0,0.05000000074505806]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        4,
+        4
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",4,0.05000000074505806]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        4,
+        4
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",5,0.0]": {
+      "attempts": [
+        8,
+        10
+      ],
+      "legal": [
+        8,
+        10
+      ],
+      "landingsInA": [
+        3,
+        5
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",0,0.05000000074505806]": {
+      "attempts": [
+        6,
+        2
+      ],
+      "legal": [
+        6,
+        2
+      ],
+      "landingsInA": [
+        3,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",2,0.0]": {
+      "attempts": [
+        7,
+        7
+      ],
+      "legal": [
+        7,
+        7
+      ],
+      "landingsInA": [
+        0,
+        3
+      ],
+      "landingsInB": [
+        4,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",5,0.07500000298023224]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        5,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",6,0.0]": {
+      "attempts": [
+        6,
+        9
+      ],
+      "legal": [
+        5,
+        9
+      ],
+      "landingsInA": [
+        2,
+        6
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",6,0.10000000149011612]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",1,0.0]": {
+      "attempts": [
+        7,
+        12
+      ],
+      "legal": [
+        7,
+        11
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",1,0.07500000298023224]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",5,0.07500000298023224]": {
+      "attempts": [
+        4,
+        5
+      ],
+      "legal": [
+        4,
+        5
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        2,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",5,0.0]": {
+      "attempts": [
+        8,
+        7
+      ],
+      "legal": [
+        8,
+        7
+      ],
+      "landingsInA": [
+        5,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",6,0.10000000149011612]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",0,0.07500000298023224]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        2,
+        4
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",2,0.10000000149011612]": {
+      "attempts": [
+        6,
+        1
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",7,0.0]": {
+      "attempts": [
+        8,
+        10
+      ],
+      "legal": [
+        8,
+        10
+      ],
+      "landingsInA": [
+        2,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",2,0.0]": {
+      "attempts": [
+        8,
+        6
+      ],
+      "legal": [
+        8,
+        6
+      ],
+      "landingsInA": [
+        4,
+        1
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",6,0.0]": {
+      "attempts": [
+        5,
+        8
+      ],
+      "legal": [
+        5,
+        8
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",1,0.10000000149011612]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        3,
+        1
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",0,0.02500000037252903]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",4,0.02500000037252903]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        5,
+        3
+      ],
+      "landingsInA": [
+        4,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",4,0.02500000037252903]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",1,0.05000000074505806]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",0,0.05000000074505806]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        1,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",5,0.05000000074505806]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        0,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",6,0.07500000298023224]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        2,
+        4
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",1,0.07500000298023224]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",5,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",2,0.10000000149011612]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        4,
+        4
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",2,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        3,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",6,0.10000000149011612]": {
+      "attempts": [
+        3,
+        5
+      ],
+      "legal": [
+        1,
+        2
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",8,0.0]": {
+      "attempts": [
+        9,
+        3
+      ],
+      "legal": [
+        9,
+        3
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",3,0.02500000037252903]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",7,0.02500000037252903]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",3,0.02500000037252903]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        2
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",8,0.0]": {
+      "attempts": [
+        5,
+        7
+      ],
+      "legal": [
+        5,
+        7
+      ],
+      "landingsInA": [
+        3,
+        0
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",8,0.05000000074505806]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",7,0.02500000037252903]": {
+      "attempts": [
+        1,
+        5
+      ],
+      "legal": [
+        1,
+        5
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",3,0.0]": {
+      "attempts": [
+        5,
+        6
+      ],
+      "legal": [
+        5,
+        6
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",4,0.05000000074505806]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",3,0.05000000074505806]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",8,0.05000000074505806]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        2,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",0,0.07500000298023224]": {
+      "attempts": [
+        1,
+        6
+      ],
+      "legal": [
+        1,
+        5
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",4,0.07500000298023224]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",1,0.0]": {
+      "attempts": [
+        6,
+        6
+      ],
+      "legal": [
+        6,
+        6
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",5,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",5,0.0]": {
+      "attempts": [
+        5,
+        7
+      ],
+      "legal": [
+        5,
+        7
+      ],
+      "landingsInA": [
+        2,
+        5
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",8,0.07500000298023224]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",5,0.10000000149011612]": {
+      "attempts": [
+        5,
+        1
+      ],
+      "legal": [
+        5,
+        1
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",1,0.10000000149011612]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        2,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",0,0.10000000149011612]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        0,
+        2
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",5,0.10000000149011612]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        2,
+        4
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",2,0.02500000037252903]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",7,0.02500000037252903]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",2,0.02500000037252903]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",6,0.02500000037252903]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",3,0.05000000074505806]": {
+      "attempts": [
+        5,
+        2
+      ],
+      "legal": [
+        3,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",3,0.05000000074505806]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",7,0.05000000074505806]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",4,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",8,0.07500000298023224]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",8,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",5,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",0,0.10000000149011612]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",0,0.10000000149011612]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        4,
+        2
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",2,0.0]": {
+      "attempts": [
+        8,
+        7
+      ],
+      "legal": [
+        8,
+        7
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",6,0.02500000037252903]": {
+      "attempts": [
+        1,
+        4
+      ],
+      "legal": [
+        1,
+        4
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",6,0.0]": {
+      "attempts": [
+        6,
+        8
+      ],
+      "legal": [
+        6,
+        8
+      ],
+      "landingsInA": [
+        0,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",1,0.02500000037252903]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",1,0.0]": {
+      "attempts": [
+        10,
+        5
+      ],
+      "legal": [
+        10,
+        5
+      ],
+      "landingsInA": [
+        5,
+        4
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",5,0.02500000037252903]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",0,0.02500000037252903]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",6,0.05000000074505806]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",2,0.05000000074505806]": {
+      "attempts": [
+        2,
+        4
+      ],
+      "legal": [
+        1,
+        0
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",7,0.0]": {
+      "attempts": [
+        5,
+        6
+      ],
+      "legal": [
+        5,
+        6
+      ],
+      "landingsInA": [
+        3,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",2,0.0]": {
+      "attempts": [
+        9,
+        7
+      ],
+      "legal": [
+        9,
+        7
+      ],
+      "landingsInA": [
+        2,
+        3
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",6,0.05000000074505806]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",6,0.0]": {
+      "attempts": [
+        5,
+        8
+      ],
+      "legal": [
+        5,
+        6
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",1,0.05000000074505806]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",7,0.07500000298023224]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        2,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",3,0.0]": {
+      "attempts": [
+        10,
+        6
+      ],
+      "legal": [
+        10,
+        5
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",2,0.07500000298023224]": {
+      "attempts": [
+        3,
+        5
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",2,0.07500000298023224]": {
+      "attempts": [
+        3,
+        5
+      ],
+      "legal": [
+        0,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",7,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",3,0.0]": {
+      "attempts": [
+        9,
+        4
+      ],
+      "legal": [
+        9,
+        4
+      ],
+      "landingsInA": [
+        3,
+        1
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",7,0.0]": {
+      "attempts": [
+        7,
+        7
+      ],
+      "legal": [
+        7,
+        7
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        2,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",8,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",4,0.0]": {
+      "attempts": [
+        7,
+        7
+      ],
+      "legal": [
+        7,
+        7
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",8,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",8,0.0]": {
+      "attempts": [
+        5,
+        6
+      ],
+      "legal": [
+        5,
+        6
+      ],
+      "landingsInA": [
+        4,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",3,0.10000000149011612]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",4,0.0]": {
+      "attempts": [
+        6,
+        4
+      ],
+      "legal": [
+        6,
+        4
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        2,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",8,0.0]": {
+      "attempts": [
+        4,
+        9
+      ],
+      "legal": [
+        4,
+        9
+      ],
+      "landingsInA": [
+        1,
+        6
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",3,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",2,0.02500000037252903]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",2,0.02500000037252903]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",3,0.05000000074505806]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        1,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",6,0.02500000037252903]": {
+      "attempts": [
+        3,
+        6
+      ],
+      "legal": [
+        3,
+        6
+      ],
+      "landingsInA": [
+        2,
+        4
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",7,0.05000000074505806]": {
+      "attempts": [
+        5,
+        2
+      ],
+      "legal": [
+        5,
+        1
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",7,0.05000000074505806]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",3,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",4,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",8,0.07500000298023224]": {
+      "attempts": [
+        3,
+        5
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",0,0.10000000149011612]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        2,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",4,0.10000000149011612]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        1,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",1,0.02500000037252903]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",5,0.02500000037252903]": {
+      "attempts": [
+        3,
+        5
+      ],
+      "legal": [
+        3,
+        5
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",6,0.05000000074505806]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        0,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",7,0.07500000298023224]": {
+      "attempts": [
+        3,
+        5
+      ],
+      "legal": [
+        1,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",1,0.05000000074505806]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        2,
+        5
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",7,0.07500000298023224]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        0,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",2,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",3,0.10000000149011612]": {
+      "attempts": [
+        1,
+        5
+      ],
+      "legal": [
+        1,
+        5
+      ],
+      "landingsInA": [
+        0,
+        4
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",8,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",3,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",5,0.02500000037252903]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",0,0.02500000037252903]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",4,0.02500000037252903]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        4,
+        2
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",1,0.05000000074505806]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        1,
+        5
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",5,0.05000000074505806]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        2,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",6,0.07500000298023224]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",6,0.07500000298023224]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",1,0.07500000298023224]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        2,
+        5
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",7,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        0,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",7,0.10000000149011612]": {
+      "attempts": [
+        5,
+        2
+      ],
+      "legal": [
+        2,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",2,0.10000000149011612]": {
+      "attempts": [
+        2,
+        6
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",8,0.02500000037252903]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",7,0.0]": {
+      "attempts": [
+        6,
+        7
+      ],
+      "legal": [
+        6,
+        7
+      ],
+      "landingsInA": [
+        4,
+        4
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",3,0.0]": {
+      "attempts": [
+        5,
+        6
+      ],
+      "legal": [
+        5,
+        6
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",2,0.05000000074505806]": {
+      "attempts": [
+        2,
+        2
+      ],
+      "legal": [
+        1,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",7,0.05000000074505806]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",8,0.07500000298023224]": {
+      "attempts": [
+        2,
+        2
+      ],
+      "legal": [
+        2,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",0,0.0]": {
+      "attempts": [
+        5,
+        7
+      ],
+      "legal": [
+        5,
+        7
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",3,0.07500000298023224]": {
+      "attempts": [
+        1,
+        2
+      ],
+      "legal": [
+        1,
+        2
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",4,0.10000000149011612]": {
+      "attempts": [
+        2,
+        2
+      ],
+      "legal": [
+        1,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",5,0.0]": {
+      "attempts": [
+        4,
+        6
+      ],
+      "legal": [
+        4,
+        5
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",0,0.0]": {
+      "attempts": [
+        8,
+        4
+      ],
+      "legal": [
+        8,
+        4
+      ],
+      "landingsInA": [
+        3,
+        1
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",6,0.02500000037252903]": {
+      "attempts": [
+        5,
+        2
+      ],
+      "legal": [
+        5,
+        2
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",1,0.02500000037252903]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",7,0.05000000074505806]": {
+      "attempts": [
+        5,
+        2
+      ],
+      "legal": [
+        5,
+        2
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",2,0.05000000074505806]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",8,0.07500000298023224]": {
+      "attempts": [
+        5,
+        2
+      ],
+      "legal": [
+        5,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        3,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",3,0.07500000298023224]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",4,0.10000000149011612]": {
+      "attempts": [
+        5,
+        3
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",0,0.02500000037252903]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",1,0.0]": {
+      "attempts": [
+        6,
+        6
+      ],
+      "legal": [
+        6,
+        6
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",5,0.0]": {
+      "attempts": [
+        4,
+        8
+      ],
+      "legal": [
+        4,
+        8
+      ],
+      "landingsInA": [
+        2,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",4,0.02500000037252903]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",5,0.05000000074505806]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        1,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",1,0.07500000298023224]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        4,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",7,0.0]": {
+      "attempts": [
+        4,
+        8
+      ],
+      "legal": [
+        4,
+        8
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",6,0.07500000298023224]": {
+      "attempts": [
+        4,
+        1
+      ],
+      "legal": [
+        2,
+        1
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",2,0.0]": {
+      "attempts": [
+        5,
+        7
+      ],
+      "legal": [
+        5,
+        7
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        1,
+        2
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",7,0.0]": {
+      "attempts": [
+        4,
+        5
+      ],
+      "legal": [
+        4,
+        5
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",2,0.10000000149011612]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",6,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        1,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",8,0.02500000037252903]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        2
+      ],
+      "landingsInA": [
+        2,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",0,0.05000000074505806]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",4,0.05000000074505806]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        4,
+        4
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",5,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        3,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",0,0.07500000298023224]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",6,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",3,0.0]": {
+      "attempts": [
+        6,
+        3
+      ],
+      "legal": [
+        6,
+        3
+      ],
+      "landingsInA": [
+        3,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",1,0.10000000149011612]": {
+      "attempts": [
+        3,
+        5
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",6,0.02500000037252903]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",5,0.05000000074505806]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        0,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",2,0.07500000298023224]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        2,
+        5
+      ],
+      "landingsInA": [
+        1,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",7,0.10000000149011612]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",8,0.02500000037252903]": {
+      "attempts": [
+        1,
+        3
+      ],
+      "legal": [
+        1,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",0,0.05000000074505806]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",3,0.02500000037252903]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",4,0.05000000074505806]": {
+      "attempts": [
+        4,
+        1
+      ],
+      "legal": [
+        4,
+        1
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",0,0.05000000074505806]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",4,0.05000000074505806]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",5,0.07500000298023224]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",1,0.07500000298023224]": {
+      "attempts": [
+        1,
+        3
+      ],
+      "legal": [
+        1,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",0,0.07500000298023224]": {
+      "attempts": [
+        1,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",5,0.07500000298023224]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",2,0.10000000149011612]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        1,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",6,0.10000000149011612]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",1,0.10000000149011612]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",3,0.02500000037252903]": {
+      "attempts": [
+        6,
+        2
+      ],
+      "legal": [
+        6,
+        2
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",8,0.05000000074505806]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        0,
+        2
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",4,0.07500000298023224]": {
+      "attempts": [
+        2,
+        4
+      ],
+      "legal": [
+        2,
+        4
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",5,0.10000000149011612]": {
+      "attempts": [
+        4,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",6,0.02500000037252903]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",1,0.02500000037252903]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",2,0.05000000074505806]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        1,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",3,0.07500000298023224]": {
+      "attempts": [
+        2,
+        2
+      ],
+      "legal": [
+        2,
+        2
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",8,0.10000000149011612]": {
+      "attempts": [
+        1,
+        3
+      ],
+      "legal": [
+        1,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",0,0.02500000037252903]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        2,
+        4
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",5,0.05000000074505806]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",1,0.07500000298023224]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        4,
+        2
+      ],
+      "landingsInA": [
+        0,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",6,0.10000000149011612]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",7,0.02500000037252903]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",4,0.05000000074505806]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        4
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",8,0.05000000074505806]": {
+      "attempts": [
+        2,
+        4
+      ],
+      "legal": [
+        1,
+        1
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",0,0.07500000298023224]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",1,0.10000000149011612]": {
+      "attempts": [
+        2,
+        4
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        2,
+        1
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",1,null,0.0,\"court\",2,0.02500000037252903]": {
+      "attempts": [
+        2,
+        5
+      ],
+      "legal": [
+        2,
+        5
+      ],
+      "landingsInA": [
+        2,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",2,null,0.0,\"court\",7,0.05000000074505806]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        4,
+        3
+      ],
+      "landingsInA": [
+        0,
+        1
+      ],
+      "landingsInB": [
+        2,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",0,null,0.0,\"court\",0,0.10000000149011612]": {
+      "attempts": [
+        4,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",3,0.07500000298023224]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        3,
+        1
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-bounce-feed\",3,null,0.0,\"court\",4,0.10000000149011612]": {
+      "attempts": [
+        3,
+        4
+      ],
+      "legal": [
+        3,
+        3
+      ],
+      "landingsInA": [
+        0,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",1,null,0.0,\"court\",5,0.02500000037252903]": {
+      "attempts": [
+        3,
+        3
+      ],
+      "legal": [
+        2,
+        3
+      ],
+      "landingsInA": [
+        1,
+        2
+      ],
+      "landingsInB": [
+        1,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",6,0.07500000298023224]": {
+      "attempts": [
+        1,
+        5
+      ],
+      "legal": [
+        1,
+        5
+      ],
+      "landingsInA": [
+        0,
+        3
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",2,null,0.0,\"court\",1,0.05000000074505806]": {
+      "attempts": [
+        4,
+        2
+      ],
+      "legal": [
+        4,
+        2
+      ],
+      "landingsInA": [
+        1,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",3,0.10000000149011612]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",7,0.10000000149011612]": {
+      "attempts": [
+        2,
+        3
+      ],
+      "legal": [
+        0,
+        0
+      ],
+      "landingsInA": [
+        0,
+        0
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    },
+    "[\"rally-air-feed\",0,null,0.0,\"court\",4,0.02500000037252903]": {
+      "attempts": [
+        1,
+        3
+      ],
+      "legal": [
+        1,
+        3
+      ],
+      "landingsInA": [
+        1,
+        1
+      ],
+      "landingsInB": [
+        0,
+        1
+      ]
+    },
+    "[\"rally-air-feed\",3,null,0.0,\"court\",8,0.02500000037252903]": {
+      "attempts": [
+        3,
+        2
+      ],
+      "legal": [
+        3,
+        2
+      ],
+      "landingsInA": [
+        3,
+        2
+      ],
+      "landingsInB": [
+        0,
+        0
+      ]
+    }
+  },
+  "summary": {
+    "cells": 440,
+    "bothInstructionsSeen": 440,
+    "atLeastOneLegalLandingInEachRegion": 157,
+    "attemptsByInstruction": [
+      3722,
+      3747
+    ]
+  }
+}

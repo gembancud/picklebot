@@ -1,0 +1,56 @@
+{
+  "status": "counterfactual_completed",
+  "results": [
+    {
+      "model": "ExecutionV1Initial",
+      "modelHash": "bc6f8be16b791a2cd253b150b3f4c4c2492cdc0e65f94fa305ab4addefe78d51",
+      "identicalPhysicalResets": 64,
+      "firstActionMaxAbsoluteDelta": 0.0,
+      "firstActionMedianMaxAbsoluteDelta": 0.0,
+      "firstActionsChanged": 0,
+      "conditions": [
+        {
+          "side": -1,
+          "attempts": 64,
+          "legal": 53,
+          "targets": 21,
+          "meanDistanceGivenLegal": 1.663246640056934
+        },
+        {
+          "side": 1,
+          "attempts": 64,
+          "legal": 53,
+          "targets": 1,
+          "meanDistanceGivenLegal": 2.4968931135141625
+        }
+      ]
+    },
+    {
+      "model": "ExecutionV1Smoke01",
+      "modelHash": "a4a3e29b787a95a56861151051bbc7fbfc69787b2ef486a50afdfbe2b57bec31",
+      "identicalPhysicalResets": 64,
+      "firstActionMaxAbsoluteDelta": 0.0030717551708221436,
+      "firstActionMedianMaxAbsoluteDelta": 0.0026469826698303223,
+      "firstActionsChanged": 64,
+      "conditions": [
+        {
+          "side": -1,
+          "attempts": 64,
+          "legal": 54,
+          "targets": 22,
+          "meanDistanceGivenLegal": 1.8254866742839415
+        },
+        {
+          "side": 1,
+          "attempts": 64,
+          "legal": 54,
+          "targets": 9,
+          "meanDistanceGivenLegal": 2.469924504558245
+        }
+      ]
+    }
+  ],
+  "negativeControlExact": true,
+  "interpretation": "Goal sensitivity is separate from goal accuracy. Small action changes do not prove useful aiming. This is a reused development screen, not final acceptance.",
+  "promoted": false
+}

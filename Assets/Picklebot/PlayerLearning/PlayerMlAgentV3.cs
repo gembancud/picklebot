@@ -18,6 +18,19 @@ namespace Picklebot.PlayerLearning
         private static readonly int[] Channels = {0,1,2,3,5,6,7,8,9,10,11,12,13,14,15,17};
         private Func<PlayerObservationV3> capture;
         private Func<bool> releaseAvailable;
+        private Func<PlayerExecutionGoalV1> captureGoal;
+        private float[] policyObservation;
+        public PlayerExecutionGoalV1 LastGoal { get; private set; }
+        public float[] LastPolicyObservation => policyObservation == null ? null : (float[])policyObservation.Clone();
+        public void BindGoal(Func<PlayerExecutionGoalV1> goal)
+        {
+            var behavior = GetComponent<Unity.MLAgents.Policies.BehaviorParameters>();
+            if (isActiveAndEnabled || goal == null || behavior == null ||
+                behavior.BehaviorName != PlayerExecutionGoalV1.BehaviorName ||
+                behavior.BrainParameters.VectorObservationSize != PlayerExecutionGoalV1.ObservationCount)
+                throw new InvalidOperationException("Bind execution goals before activation with the explicit 136-observation behavior.");
+            captureGoal = goal;
+        }
         private PlayerActionV3 command;
         public int Seat { get; private set; }
         public bool Learning { get; set; }
@@ -39,7 +52,7 @@ namespace Picklebot.PlayerLearning
         }
         public override void Initialize() { MaxStep = 0; }
         public override void OnEpisodeBegin() { ClearCommand(); }
-        public void ClearCommand() { command = default; ObservedTick = -1; }
+        public void ClearCommand() { command = default; ObservedTick = -1; LastGoal = null; policyObservation = null; }
         void IPlayerPolicyV3.Reset() { ClearCommand(); }
         public override void CollectObservations(VectorSensor sensor)
         {
@@ -47,7 +60,10 @@ namespace Picklebot.PlayerLearning
             LastObservation = capture().Copy();
             if (LastObservation.player != Seat) throw new InvalidOperationException("Private observation identity mismatch.");
             ObservedTick = LastObservation.tick;
-            sensor.AddObservation(LastObservation.ToArray());
+            LastGoal = captureGoal == null ? null : captureGoal();
+            if (captureGoal != null && LastGoal == null) throw new InvalidOperationException("Execution goal is missing.");
+            policyObservation = LastGoal == null ? LastObservation.ToArray() : LastGoal.Observe(LastObservation);
+            sensor.AddObservation(policyObservation);
         }
         public override void WriteDiscreteActionMask(IDiscreteActionMask mask)
         { mask.SetActionEnabled(0, 1, Learning && releaseAvailable()); }

@@ -1,0 +1,189 @@
+{
+  "version": "wide-recording-selection-01",
+  "purpose": "Illustrative actual-policy replay, not a new estimate of success rate",
+  "model": "Assets/Picklebot/PlayerLearning/Models/ExecutionV1SmoothContinuedFinal01.onnx",
+  "modelName": "ExecutionV1SmoothContinuedFinal01",
+  "modelHash": "40047704eaf92ae933e861abfbe4c6f262a4595685ca985e3c1a185804ed13cb",
+  "checkpoint": 1048609,
+  "checkpointHash": "93029a5bfe5a13815f47d1487ff15c3e9455516ee3b5609d9e38f0c0f82e778d",
+  "checkpointPath": "training/snapshots/execution-v1-smooth-continued-final-01.pt",
+  "sourceIdentity": "5f8c4a10a777ea4c69c0a2ef01831163252a3614bddaaedfe2ab4024d04831c9",
+  "firstSeed": 1109849,
+  "seedCount": 512,
+  "stages": [
+    {
+      "label": "A",
+      "condition": "A",
+      "task": "movement-maintenance",
+      "firstSeed": 1109849,
+      "seedCount": 512,
+      "arenas": 8,
+      "referenceDirectory": "F:/dev/picklebot/artifacts/hierarchy-v1/wide-movement-fixture-01/evaluation/ExecutionV1SmoothContinuedFinal01/A",
+      "reference": "F:/dev/picklebot/artifacts/hierarchy-v1/wide-movement-fixture-01/evaluation/ExecutionV1SmoothContinuedFinal01/A/episodes.jsonl",
+      "referenceHash": "cd53af0c8e3a89b1fd68451b408e14ae0ce264d502a344d49752525c0cafebe7",
+      "clipSeeds": [
+        1109897,
+        1109882,
+        1109886,
+        1109881,
+        1109885,
+        1109898,
+        1109906
+      ]
+    }
+  ],
+  "physicalRecipe": {
+    "task": "movement-maintenance",
+    "maximumReturnDifficulty": 0.25,
+    "movementRange": 0.25,
+    "movementPattern": "axes",
+    "movementRehearsalRange": 0,
+    "movementRecoveryMix": false,
+    "interleavedRecovery": false,
+    "movementTiming": 0,
+    "movementStartVariation": 0,
+    "movementPositionReward": 0,
+    "fixedServeSides": "both"
+  },
+  "decisionSchedule": "Eight arenas, alignedDecisions=false, interleavedRecovery=false, exact original ordinal schedule",
+  "goalRecipe": {
+    "intent": "PlayBall",
+    "movementTarget": false,
+    "targetLayout": "two-regions",
+    "conditions": [
+      "A"
+    ],
+    "radius": 1,
+    "rewardMode": "linear-radius",
+    "legalTargetReward": 0.25
+  },
+  "selectionRule": "For each canonical axis direction, choose the lowest seed with a legal return under A and the lowest seed without a legal return under A. Replay condition A. Missing categories remain unavailable; no substitution based on visual appeal.",
+  "selected": [
+    {
+      "seed": 1109897,
+      "direction": "left",
+      "nominalShiftCm": 25,
+      "task": "rally-bounce-feed",
+      "player": 0,
+      "categoryUnderA": "legal-return",
+      "eligibleCount": 3,
+      "selectionRank": 1,
+      "outcomes": {
+        "A": "legal_return"
+      }
+    },
+    {
+      "seed": 1109882,
+      "direction": "left",
+      "nominalShiftCm": 25,
+      "task": "rally-air-feed",
+      "player": 1,
+      "categoryUnderA": "unsuccessful-return",
+      "eligibleCount": 63,
+      "selectionRank": 1,
+      "outcomes": {
+        "A": "receive_fault"
+      }
+    },
+    {
+      "seed": 1109886,
+      "direction": "right",
+      "nominalShiftCm": 50,
+      "task": "rally-air-feed",
+      "player": 1,
+      "categoryUnderA": "unsuccessful-return",
+      "eligibleCount": 64,
+      "selectionRank": 1,
+      "outcomes": {
+        "A": "receive_fault"
+      }
+    },
+    {
+      "seed": 1109881,
+      "direction": "shallow",
+      "nominalShiftCm": 25,
+      "task": "rally-air-feed",
+      "player": 0,
+      "categoryUnderA": "legal-return",
+      "eligibleCount": 19,
+      "selectionRank": 1,
+      "outcomes": {
+        "A": "legal_return"
+      }
+    },
+    {
+      "seed": 1109885,
+      "direction": "shallow",
+      "nominalShiftCm": 50,
+      "task": "rally-air-feed",
+      "player": 0,
+      "categoryUnderA": "unsuccessful-return",
+      "eligibleCount": 43,
+      "selectionRank": 1,
+      "outcomes": {
+        "A": "receive_fault"
+      }
+    },
+    {
+      "seed": 1109898,
+      "direction": "deep",
+      "nominalShiftCm": 25,
+      "task": "rally-bounce-feed",
+      "player": 1,
+      "categoryUnderA": "legal-return",
+      "eligibleCount": 16,
+      "selectionRank": 1,
+      "outcomes": {
+        "A": "legal_return"
+      }
+    },
+    {
+      "seed": 1109906,
+      "direction": "deep",
+      "nominalShiftCm": 75,
+      "task": "rally-bounce-feed",
+      "player": 1,
+      "categoryUnderA": "unsuccessful-return",
+      "eligibleCount": 48,
+      "selectionRank": 1,
+      "outcomes": {
+        "A": "receive_fault"
+      }
+    }
+  ],
+  "unavailable": [
+    {
+      "direction": "right",
+      "category": "legal-return",
+      "eligibleCount": 0
+    }
+  ],
+  "selectionWasOutcomeStratified": true,
+  "statisticalDenominators": "Keep the full512 attempts per condition in museum score cards. Clips deliberately include outcomes of both kinds and cannot estimate prevalence.",
+  "fullReplayEpisodes": 512,
+  "clipCount": 7,
+  "frameStrideTicks": 12,
+  "physicsHz": 240,
+  "fps": 20,
+  "referenceInputSha256": {
+    "artifacts/hierarchy-v1/wide-movement-fixture-01/evaluation/ExecutionV1SmoothContinuedFinal01/A/episodes.jsonl": "cd53af0c8e3a89b1fd68451b408e14ae0ce264d502a344d49752525c0cafebe7",
+    "artifacts/hierarchy-v1/wide-movement-fixture-01/evaluation/ExecutionV1SmoothContinuedFinal01/A/execution-goals.jsonl": "d07555f272e7ac28fe077d2a1238aa417d4afef58ffca9a9269401ac7922cc1a",
+    "artifacts/hierarchy-v1/wide-movement-fixture-01/evaluation/ExecutionV1SmoothContinuedFinal01/A/first-decisions.json": "8663c99d06f934f94a5dd410ca9a2f06084c2e82c21f5dce133dcc89b4db1192",
+    "artifacts/hierarchy-v1/wide-movement-fixture-01/evaluation/ExecutionV1SmoothContinuedFinal01/A/report.json": "ddd591dab266a410c955e69d569eb9cd10d668ce60d014b54c105d5aee106d7c",
+    "artifacts/hierarchy-v1/wide-movement-fixture-01/evaluation/ExecutionV1SmoothContinuedFinal01/A/summary.json": "80100b45dd862288685694e5db716288fc4aa82bcdb9e65479de4f02c022d555",
+    "artifacts/hierarchy-v1/wide-movement-fixture-01/evaluation/ExecutionV1SmoothContinuedFinal01/A/model-identity.json": "ded45ee5d1bedb247f7b8e05f472f808a5b25dd2b8a3338007609c3e7db521c3"
+  },
+  "evaluationPlanHash": "2ae6adbd39f8dd411e19faa7d0ec0e5219091d97f85e47ab6e9d3b2461d678fe",
+  "analysisHash": "25fb2177d36d2b8a10100a8f11b4353679685bfe64ca04100029c3e5a619afc1",
+  "preparationScriptSha256": "baae4b559d3dc46721742a3f27e0767eb43b41e385322fec30e9ca37281b5beb",
+  "finalSeedsConsumed": false,
+  "masteryAccepted": false,
+  "ledgerHash": "6f5b55eba71a7384c2a692f826606722827ce4b8cadffedcce0e29ecc8b74272",
+  "ledgerRequirement": "Same reserved wide campaign and reset cases reused for diagnostic recording; no new allocation or ledger modification.",
+  "captureTemplateSha256": "28dbd7b63dfe7d5fcc91cc5243e0a06e701b39bf5d3e2776c9b32c4f54ca7b64",
+  "captureScriptSha256": "fb321c89fe5b31184aa9d4ef64f2b1532e3679e0fbd53d3adf31810830b5dd54",
+  "retryOf": "C:\\Users\\Admin\\Documents\\Codex\\2026-09-07\\https-unity-com-blog-meet-the-7\\outputs\\wide-movement-review-01",
+  "retryReason": "Terminal exporter read before evidence writer disposal; simulation completed512, original failure preserved. Identical selected seeds, recipe, source, model and frame sampling.",
+  "originalManifestSha256": "47591e94fc4c69a5130c167bc062247bd91e5c232e72e56d6accdc032307df14",
+  "originalErrorSha256": "7d6b9e2bae64c5e109569f6bbbcbdecbe83add08d637a4c06ff73d6172a176e6"
+}

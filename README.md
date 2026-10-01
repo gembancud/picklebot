@@ -20,7 +20,7 @@ Recorded policy actions from the same historical checkpoint. Paired play is an u
 | Bounded shoulder, elbow, wrist and body controls | Reliable transitions between shots |
 | Parallel drills, paired practice and self-play infrastructure | Sustained learned 2v2 play |
 
-**Latest evaluation:** all four compared models kept **64/64 serves** and **64/64 on each central-return test**. A critic-clipping correction did **not** improve the main varied-return metric. [Measured results](docs/research/critic-key-comparison.md)
+**Latest evaluation, 24M-step executor:** 224/224 narrow rally returns, 260/384 wide rally returns, 352/448 randomized rally returns, and 64/64 serves in the wide battery (target A). These are repeated development tests, not full-game acceptance. [Checkpoint results and downloads](docs/TRAINED_CHECKPOINT.md)
 
 ## Try it
 
@@ -30,7 +30,7 @@ Open the project in **Unity 6000.5.5f1**. Trained ONNX models and preview scenes
 
 ## Next
 
-**Strategy → execution:** a proposed two-policy design for choosing goals and coordinating movement with the swing. This checkpoint preserves the current single-actor system before that work begins.
+**Strategy → execution:** the goal-conditioned executor is trained; the learned strategy policy and reliable 2v2 coordination remain future work. [Design](docs/HIERARCHICAL_CONTROL.md)
 
 Physics and body motion remain simplified. This is a learning prototype; match-level acceptance is still open.
 

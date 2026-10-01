@@ -1,0 +1,109 @@
+{
+  "version": "wide-movement-diagnostic-01",
+  "createdAt": "2026-09-12T06:27:43.933696+00:00",
+  "sourceIdentity": "5f8c4a10a777ea4c69c0a2ef01831163252a3614bddaaedfe2ab4024d04831c9",
+  "firstSeed": 1109849,
+  "seedCount": 512,
+  "models": [
+    "ExecutionV1Initial",
+    "ExecutionV1SmoothContinuedFinal01"
+  ],
+  "modelIdentities": {
+    "ExecutionV1Initial": {
+      "modelHash": "bc6f8be16b791a2cd253b150b3f4c4c2492cdc0e65f94fa305ab4addefe78d51",
+      "checkpointHash": "2c1dcfab6c32d3e98dfd334863f5670c09cef2edfb8bf51483bba4abe683cb9f",
+      "step": 0,
+      "checkpoint": "training/snapshots/execution-v1-initial.pt",
+      "model": "ExecutionV1Initial",
+      "assetPath": "Assets/Picklebot/PlayerLearning/Models/ExecutionV1Initial.onnx",
+      "sourceIdentity": "5f8c4a10a777ea4c69c0a2ef01831163252a3614bddaaedfe2ab4024d04831c9"
+    },
+    "ExecutionV1SmoothContinuedFinal01": {
+      "modelHash": "40047704eaf92ae933e861abfbe4c6f262a4595685ca985e3c1a185804ed13cb",
+      "checkpointHash": "93029a5bfe5a13815f47d1487ff15c3e9455516ee3b5609d9e38f0c0f82e778d",
+      "step": 1048609,
+      "checkpoint": "training/snapshots/execution-v1-smooth-continued-final-01.pt",
+      "model": "ExecutionV1SmoothContinuedFinal01",
+      "assetPath": "Assets/Picklebot/PlayerLearning/Models/ExecutionV1SmoothContinuedFinal01.onnx",
+      "sourceIdentity": "5f8c4a10a777ea4c69c0a2ef01831163252a3614bddaaedfe2ab4024d04831c9"
+    }
+  },
+  "conditions": [
+    "A",
+    "B"
+  ],
+  "evaluationRewardMode": "linear-radius",
+  "diagnosticOnly": true,
+  "physicalRecipe": {
+    "task": "movement-maintenance",
+    "maximumReturnDifficulty": 0.25,
+    "movementRange": 0.25,
+    "movementPattern": "axes",
+    "movementRehearsalRange": 0,
+    "movementRecoveryMix": false,
+    "interleavedRecovery": false,
+    "movementTiming": 0,
+    "movementStartVariation": 0,
+    "movementPositionReward": 0,
+    "fixedServeSides": "both"
+  },
+  "fixture": {
+    "batchSize": 64,
+    "batchOrdinals": [
+      0,
+      64,
+      128,
+      192,
+      256,
+      320,
+      384,
+      448
+    ],
+    "outputPattern": "fixture/wide-fixture-{ordinal:04d}.json",
+    "templateSha256": "32bb598367e55d3be4e24180ca849577c5272457bf41be075461385557902fc7",
+    "templatePath": "C:\\Users\\Admin\\Documents\\Codex\\2026-09-07\\https-unity-com-blog-meet-the-7\\work\\hierarchy-v1\\wide_movement_fixture.cs",
+    "requirement": "Inspect all initialized physical resets before policy outcomes; no actions or simulation ticks. Record violations, overlaps and sparse coverage. Do not replace hard cases based on outcomes."
+  },
+  "expectedSchedule": {
+    "fixedServes": 64,
+    "requiredBounceReceives": 64,
+    "familiarAir": 64,
+    "familiarBounce": 64,
+    "axisAir": 128,
+    "axisBounce": 128,
+    "directions": [
+      "left",
+      "right",
+      "shallow",
+      "deep"
+    ],
+    "nominalShiftCm": [
+      25,
+      50,
+      75,
+      100
+    ],
+    "interpretation": "Local nominal feed shift from the initial paddle face, not actual contact displacement or necessary root travel; sampled axes can leave sparse joint cells."
+  },
+  "analysis": {
+    "primary": [
+      "Legal return rate per drill/direction/distance and player",
+      "Measured root path before contact and net contact displacement",
+      "Paired target assignment gain and actual landing matrix",
+      "Within-battery physical observation duplicates",
+      "Current candidate minus initializer on matched resets; retain every attempt"
+    ],
+    "uncertainty": "Pointwise paired bootstrap and descriptive sparse-cell counts; no new mastery threshold or automatic promotion."
+  },
+  "freshness": {
+    "scope": "Unused within current V3 ledger only; older V1/V2 freshness unverified",
+    "ledgerBeforeHash": "b165f94eb91918533cd9e125c3beaecbaa8a90c34dadef59ec47c4719d865562"
+  },
+  "provenance": {
+    "modelSelectionPlan": "artifacts/hierarchy-v1/fresh-placement-01/plan.json",
+    "modelSelectionPlanHash": "25296cf77aebfd38a3a0e164dea05474f86f7dc57d15cb798fa6a8d016794fb6"
+  },
+  "finalSeedsConsumed": false,
+  "masteryAccepted": false,
+  "automaticPromotion": false
+}

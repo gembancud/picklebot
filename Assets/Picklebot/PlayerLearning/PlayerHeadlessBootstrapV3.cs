@@ -25,7 +25,8 @@ namespace Picklebot.PlayerLearning
         {
             public string version="player-worker-startup-v1",status,manifestPath,manifestHash,sourceIdentity,expectedBuildIdentity,modelHash,evidenceDirectory,unityVersion,error;
             public int workerId,firstSeed,seedCount,arenas,processId;
-            public bool trainerRequired;
+            public bool trainerRequired,movementForwardProgressReward,precontactAlignmentReward;
+            public float precontactGamma;
             public double elapsedSeconds;
         }
         private WorkerRecord record;
@@ -57,7 +58,7 @@ namespace Picklebot.PlayerLearning
                 if(FindObjectsByType<PlayerMlDrillsV3>(FindObjectsInactive.Include,FindObjectsSortMode.None).Length!=0||FindObjectsByType<PlayerMlTeamsV3>(FindObjectsInactive.Include,FindObjectsSortMode.None).Length!=0)throw new InvalidOperationException("Bootstrap requires an otherwise empty learning scene.");
                 Directory.CreateDirectory(plan.EvidenceDirectory);
                 using var hash=SHA256.Create();
-                record=new WorkerRecord{status="configured",manifestPath=Path.GetFullPath(path),manifestHash=BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-","").ToLowerInvariant(),sourceIdentity=BuiltSourceIdentity,expectedBuildIdentity=manifest.buildIdentity,modelHash=plan.RequireTrainer?null:BuiltModelHash,evidenceDirectory=plan.EvidenceDirectory,unityVersion=Application.unityVersion,workerId=plan.WorkerId,firstSeed=plan.FirstSeed,seedCount=plan.SeedCount,arenas=manifest.arenasPerWorker,processId=Process.GetCurrentProcess().Id,trainerRequired=plan.RequireTrainer};
+                record=new WorkerRecord{status="configured",manifestPath=Path.GetFullPath(path),manifestHash=BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-","").ToLowerInvariant(),sourceIdentity=BuiltSourceIdentity,expectedBuildIdentity=manifest.buildIdentity,modelHash=plan.RequireTrainer?null:BuiltModelHash,evidenceDirectory=plan.EvidenceDirectory,unityVersion=Application.unityVersion,workerId=plan.WorkerId,firstSeed=plan.FirstSeed,seedCount=plan.SeedCount,arenas=manifest.arenasPerWorker,processId=Process.GetCurrentProcess().Id,trainerRequired=plan.RequireTrainer,movementForwardProgressReward=manifest.movementForwardProgressReward,precontactAlignmentReward=manifest.precontactAlignmentReward,precontactGamma=manifest.precontactGamma};
                 // Atomic claim prevents worker restarts or duplicate IDs from overwriting evidence.
                 CreateJson(Path.Combine(plan.EvidenceDirectory,"worker-startup.json"),record);claimed=true;
                 clock.Start();Application.runInBackground=true;

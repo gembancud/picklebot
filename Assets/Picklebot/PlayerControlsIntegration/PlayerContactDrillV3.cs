@@ -17,6 +17,10 @@ namespace Picklebot.PlayerControlsIntegration
         public readonly string MovementPattern;
         public readonly float MovementPositionRewardScale;
         private PlayerMovementPositionRewardV3 movementPositionReward;
+        public readonly bool MovementForwardProgressRewardEnabled;
+        private readonly PlayerMovementFlightRewardV3 movementForwardProgress;
+        public float MovementForwardProgressReward=>movementForwardProgress?.TotalReward??0;
+        public int MovementForwardProgressRewardedSteps=>movementForwardProgress?.RewardedSteps??0;
         public float MovementPositionReward=>movementPositionReward?.TotalReward??0;
         private Vector3[] initialRoots,previousRoots;
         public float[] TravelBeforeContact {get;private set;}
@@ -56,6 +60,17 @@ namespace Picklebot.PlayerControlsIntegration
         public bool Done {get;private set;}
         public string Outcome {get;private set;}
         public float Reward {get;private set;}
+        public float MeasurePrecontactPotential()
+        {
+            if(FaceContact||Done)return 0;
+            var world=Match.World;var face=world.Players[Player].Paddle.transform.Find("RoundedHittingFace");
+            if(face==null)throw new InvalidOperationException("Missing physical striking face.");
+            return PlayerPrecontactPotentialV3.Measure(world.Ball.position,face.position,face.rotation,world.Configuration.PaddleFaceSize,Picklebot.Core.CourtGeometryV1.PaddleCornerRadius,world.Configuration.BallDiameter*.5f);
+        }
+        public float FaceContactTime => faceTime;
+        // Match the first accepted collider contact, not a later/better strike.
+        public float FaceContactNormalAlignment => !FaceContact?-1:
+            Match.World.Contacts.FirstOrDefault(c=>c.player==Hitter&&c.surface=="RoundedHittingFace"&&c.time==faceTime)?.faceNormalAlignment??-1;
         private float distance;
         private PlayerReturnProgressV3 returnProgress;
         private PlayerDropApproachV3 dropApproach;
@@ -63,19 +78,23 @@ namespace Picklebot.PlayerControlsIntegration
         public static bool ValidTask(string task)=>IsRallyFeed(task)||(task=="receive-serve"||task=="receive-feed")||task=="stationary-flight"||IsFixedServeTask(task)||(task=="stationary-contact"||task=="falling-contact")||task=="contact"||task=="reaction-contact"||task=="reaction-return"||task=="near-return"||task=="easy-return"||task=="varied-return"||task=="low-return"||IsDropTask(task);
         public static bool[] ActionMask(int seat,int learner,string task="contact",bool cooperative=false)
         {if(!ValidTask(task))throw new ArgumentException("Unknown drill task.");var mask=new bool[PlayerActionV3.Count];if(seat==learner||cooperative&&seat/2==learner/2)for(int i=0;i<PlayerActionV3.Count;i++)mask[i]=i!=4&&(i!=16||IsDropTask(task));return mask;}
-        public PlayerContactDrillV3(int seed,int player,string task="contact",float maximumReturnDifficulty=1,float feedLowering=0,float feedLateralOffset=0,float initialHoldLift=0,bool serveFromLeft=false,int? rallyServer=null,bool rallyServerOnRight=true,int? matchContextSeed=null,bool cooperative=false,float movementRange=-1,float movementTiming=0,float movementStartVariation=0,float movementPositionReward=0,string movementPattern="court")
+        public PlayerContactDrillV3(int seed,int player,string task="contact",float maximumReturnDifficulty=1,float feedLowering=0,float feedLateralOffset=0,float initialHoldLift=0,bool serveFromLeft=false,int? rallyServer=null,bool rallyServerOnRight=true,int? matchContextSeed=null,bool cooperative=false,float movementRange=-1,float movementTiming=0,float movementStartVariation=0,float movementPositionReward=0,string movementPattern="court",bool movementForwardProgressReward=false)
         {
             if(player<0||player>3)throw new ArgumentOutOfRangeException(nameof(player));
             if(cooperative&&!IsRallyFeed(task)&&task!="receive-feed"&&!IsFixedServeTask(task))throw new ArgumentException("Paired practice supports fixed serves, opening feeds and rally feeds.");
             Cooperative=cooperative;
             if(!float.IsFinite(movementRange)||(movementRange!=-1&&(movementRange<0||movementRange>1))||!float.IsFinite(movementTiming)||movementTiming<0||movementTiming>1||!float.IsFinite(movementStartVariation)||movementStartVariation<0||movementStartVariation>1)throw new ArgumentOutOfRangeException("Invalid movement reset fractions.");
             if(movementRange>=0&&!IsRallyFeed(task)||movementRange<0&&(movementTiming!=0||movementStartVariation!=0))throw new ArgumentException("Movement reset requires an explicit rally feed.");
+            if(movementForwardProgressReward&&(cooperative||movementRange<=0||!IsRallyFeed(task)))
+                throw new ArgumentException("Forward flight reward requires a solo positive-range movement rally feed.");
+            MovementForwardProgressRewardEnabled=movementForwardProgressReward;
+            if(movementForwardProgressReward)movementForwardProgress=new PlayerMovementFlightRewardV3();
             PlayerMovementPositionRewardV3.ValidateBudget(movementPositionReward);
             if(movementPositionReward>0&&(movementRange<=0||!IsRallyFeed(task)||cooperative))throw new ArgumentException("Position reward requires a solo movement challenge.");
             PlayerMovementPatternV3.Validate(movementPattern,movementRange,!cooperative&&IsRallyFeed(task)&&movementRange>=0);
             MovementPattern=movementPattern;MovementPositionRewardScale=movementPositionReward;
             MovementRange=movementRange;MovementTiming=movementTiming;MovementStartVariation=movementStartVariation;
-            if(!((seed>=1000000&&seed<1100000)||(seed>=1100000&&seed<1200000)||(seed>=1300000&&seed<1400000)))
+            if(!((seed>=1000000&&seed<1100000)||(seed>=1100000&&seed<1200000)||(seed>=1300000&&seed<1400000)||(seed>=2000000&&seed<3000000)||(seed>=4000000&&seed<4100000)))
                 throw new ArgumentException("Drills cannot consume final-evaluation seeds.");
             if(!ValidTask(task))throw new ArgumentException("Unknown drill task.");
             if(float.IsNaN(maximumReturnDifficulty)||maximumReturnDifficulty<0||maximumReturnDifficulty>1)throw new ArgumentOutOfRangeException(nameof(maximumReturnDifficulty));
@@ -222,6 +241,11 @@ namespace Picklebot.PlayerControlsIntegration
             // Root-only feedback ends at the first accepted face contact or any rule fault.
             if(movementPositionReward!=null&&!FaceContact&&!rules.Dead)Reward+=movementPositionReward.Advance(Match.World.Players[Player].Position,Match.World.Ball.position);
             bool legalLanding=FaceContact&&NetCrossed&&rules.Events.Any(e=>e.kind=="bounce"&&e.time>faceTime&&e.position.z*(Player<2?1:-1)>0);
+            // Reward accounting only: actual flight after an accepted face contact.
+            // The first legal landing closes this signal even if volley momentum
+            // keeps the physical drill alive; later faults still determine success.
+            if(movementForwardProgress!=null)Reward+=movementForwardProgress.Advance(
+                Match.World.Ball.position.z*(Player<2?1:-1),FaceContact,rules.Dead,Done||Match.Tick>=7200,legalLanding);
             if(rules.Dead&&rules.Winner!=Player/2){Finish("receive_fault",-1);return;}
             // A legal landing cannot erase an outstanding volley-momentum duty.
             // Continue physical stepping until balance returns or a fault occurs.
@@ -245,7 +269,7 @@ namespace Picklebot.PlayerControlsIntegration
             if(Match.Tick>=7200)Finish("time_limit",-1);
         }
 
-        private void Finish(string outcome,float reward){Done=true;Outcome=outcome;Reward+=reward;}
+        private void Finish(string outcome,float reward){movementForwardProgress?.Stop();Done=true;Outcome=outcome;Reward+=reward;}
         public void Dispose()=>Match.Dispose();
     }
 }

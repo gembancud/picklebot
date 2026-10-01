@@ -1,0 +1,17 @@
+{
+  "purpose": "Verify mixed maintenance plus fixed25cm rightward reset contract with frozen common parent; no PPO updates",
+  "seeds": "1000000..1000511, already-used training seeds",
+  "episodesPerProbe": 512,
+  "courts": 16,
+  "worker": 0,
+  "conditions": [
+    "deterministic"
+  ],
+  "onlyDifference": "Reset curriculum relative to previous training",
+  "shaping": false,
+  "finalSeedsConsumed": false,
+  "promotion": false,
+  "sourceIdentity": "de8bda54ce1aad9fcb545226c91a92a115f08b41e57dc036b6f9431e15b1ed4e",
+  "runnerHash": "191d87a20831ad7b70c890c66f973a35e3817b167b0e1e4a81abbf82b02beb0e",
+  "expectedShutdown": "Worker reaches512 resets and exits3; this is documented bounded probe termination, not a successful training run."
+}
