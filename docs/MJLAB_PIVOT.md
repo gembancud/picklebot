@@ -49,7 +49,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
   - momentum conserved with the paddle impulse;
   - the face angle steers the outgoing direction.
 - [x] MuJoCo integration on the GPU: court spec plus a non-colliding ball body plus a driven paddle rig in an mjlab env. Each step reads the paddle state from sim, advances the ball sim, writes the ball pose for rendering, and applies the reaction to the paddle via `xfrc_applied`. Scripted swing hits fed balls; record a short video.
-- [ ] **Gate:** physics report (`mjlab/results/stage1-physics.md`) shows:
+- [x] **Gate:** physics report (`mjlab/results/stage1-physics.md`) shows:
   - phase-independent bounce in the official band;
   - flight vs RK4;
   - net stops balls and lets clear balls pass;
@@ -143,3 +143,4 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
   - **Bugs fixed on the way:** the mocap writer needs explicit env ids; the camera follows env 0's court; court markings are geom group 3; video recording skips the warm-up; the paddle no longer starts underground.
   - **GPU smoke test** `tests/test_rig_env.py`; suite 90 pass + 13 xfails.
   - **Limitations:** the paddle is kinematic, so the reaction impulse is accumulated but not yet applied to a dynamic body (that comes with the G1 wrist in Stage 2). The ball sim costs about 26 ms per physics step at 4096 envs: many small kernels and host syncs in the sub-step loop. Optimisation candidates: branch-free masks without `.any()` syncs, CUDA graphs or `torch.compile`.
+- 2026-10-02 — **Stage 1 gate PASS** (`mjlab/results/stage1-physics.md`). All criteria were met with measured evidence: phase-independent official drop band (provisional court), no energy gain, flight vs RK4, net and posts, paddle PBCoR 0.40 ≤ 0.43, no tunnelling, momentum, GPU rig at 100 % hits and 38k env steps/s (38× Unity). Caveats carried into Stage 2: throughput with the G1 is unmeasured (ball sim ~26 ms per physics step at 4096 envs is the main cost); the reaction impulse is not yet applied to a dynamic body; simplified kinematic paddle; provisional court bounce. **Stage 1 complete.**
