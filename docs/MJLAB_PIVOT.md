@@ -25,7 +25,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 5. Keep artifacts (logs, checkpoints, videos) under `mjlab/artifacts/`, which is gitignored. Commit only compact summaries.
 
 ## Stage 0 — toolchain and throughput trial
-- [ ] Record decision D-038 (switch to mjlab, G1 with wrist paddle, Unity frozen) in `docs/DECISIONS.md`, append-only.
+- [x] Record decision D-038 (switch to mjlab, G1 with wrist paddle, Unity frozen) in `docs/DECISIONS.md`, append-only.
 - [ ] Verify WSL2 sees the GPU (`nvidia-smi` inside Ubuntu); record CUDA and driver versions.
 - [ ] Install `uv` in WSL user space; create the env under `~/envs/picklebot-mj`; install mjlab (pin the exact version or commit).
 - [ ] Run mjlab's G1 velocity example for a short run; confirm it trains.
@@ -55,3 +55,4 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
 
 ## Log
 - 2026-10-02 — Plan created; worktree and branch set up from `main` `256d7db`.
+- 2026-10-02 — D-038 appended to `docs/DECISIONS.md`; D-001 status marked as superseded for new work. No other decision text changed.

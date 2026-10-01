@@ -22,7 +22,7 @@ reinterpretation. Accepted decisions remain visible even when superseded.
 ### D-001 — Unity owns simulation and presentation
 
 - Date: 2026-07-26
-- Status: Accepted
+- Status: Accepted; superseded for new work by D-038 (2026-10-02). It still governs the frozen Unity reference.
 
 Unity supplies 3D physics, collision handling, scenes, debugging, and
 visualization. Training processes consume a project-owned environment contract;
@@ -788,7 +788,7 @@ config/windows-tooling-migration.json; the original manifest remains immutable.
 The Windows Python/C# source-hash discrepancy is unresolved, so this is tooling
 readiness, not authorization or readiness for a new training run.
 
-### D-031 � Portable source identity with preserved checkpoint provenance
+### D-031 � Portable source identity with preserved checkpoint provenance
 
 - Date: 2026-09-08
 - Status: Accepted and verified on Windows.
@@ -825,7 +825,7 @@ passes all 32 cases with maximum error 0.000003814697265625. Evidence is under
 artifacts/windows-source-migration and artifacts/windows-hash-*. Original
 checkpoints and evidence were checked byte-for-byte against Git.
 
-### D-032 � Continue 2v2 goal with independent shared-weight players and staged controls
+### D-032 � Continue 2v2 goal with independent shared-weight players and staged controls
 
 - Date: 2026-09-08
 - Status: Accepted direction; implementation in progress.
@@ -1027,3 +1027,19 @@ config/player-controls-v2-wrist.json and player-controls-v2-wrist-tests.json.
 ## Snapshot before hierarchical control (2026-09-11)
 
 Preserve the current ML-Agents player system before implementing strategy and execution policies. The latest critic-key comparison completed without passing its improvement screen; no candidate was promoted. Current capabilities, limitations and the proposed two-policy direction are recorded in [CURRENT_STATE.md](CURRENT_STATE.md). Demo clips are historical recordings with explicit checkpoint identities. The prior long README is preserved in the archive. Source, scenes, ONNX models, five full checkpoints and compact research evidence are included; generated environments, builds and raw rollouts remain local.
+
+### D-038 — Move new training work to mjlab with a paddle-holding G1
+
+- Date: 2026-10-02
+- Status: Accepted (user-directed); stage gates in [MJLAB_PIVOT.md](MJLAB_PIVOT.md) are still open
+- Supersedes: D-001 for new work. The Unity/ML-Agents system remains the frozen reference under D-001.
+
+Decision: New learning work moves to mjlab: MuJoCo Warp GPU-parallel physics, its Isaac Lab-style task API, and rsl_rl PPO. It runs in WSL2 Ubuntu on the local RTX 4070. The player is mjlab's bundled Unitree G1 with a rigid pickleball paddle fixed to the right wrist. There is no grip or finger model and no scaling or limb edits. A body-less driven paddle rig exists only as a physics test fixture. Code lives in `mjlab/` (package `picklebot_mj`) on branch `feat/mjlab-pivot`. Unity code, scenes, models and evidence are kept unchanged.
+
+Evidence: The 24M-step execution-v1 run (randomized-scale-24m) saturated narrow legality but did not establish target following. Unity CPU physics on 8 cores gives roughly 1,000 policy steps/s (right-acquisition run: ~1.05M steps in 1,007 s). Comparable humanoid and racket-sport work trains with thousands of GPU environments and 10^8–10^9 samples (mjlab G1 velocity: 4096 envs, [512,256,128] ELU actor/critic). Asymmetric critics, LayerNorm/residual networks and teacher→student distillation are native to that tooling but need trainer patches in ML-Agents 1.x. The literature summary is in the 2026-10-02 session notes; the per-project numbers will be rechecked against sources when they are used.
+
+Trade-offs: Unity-specific rules, feeds, curricula and evaluation code must be reimplemented in Python. Ball aerodynamics and fast paddle contacts under MuJoCo soft contact are unvalidated (Stage 1 gate). A balancing humanoid is harder than the previous constrained body. The G1 (~1.3 m) may limit reach and swing speed (Stage 2 measurement). mjlab is Linux-first, so it runs under WSL2. Comparisons with Unity results are qualitative only, because physics and bodies differ.
+
+Migration and compatibility: Nothing is deleted. Seed discipline carries over: training, development and final ranges are disjoint, and final seeds stay unused until a frozen acceptance candidate exists. So do per-skill reporting, fixed-endpoint selection and no automatic promotion. D-006 remains respected: G1 locomotion uses mjlab's established velocity-tracking recipe as the base, rather than a new locomotion research program. Stage 0 must show at least 10× the Unity throughput before Stage 1 proceeds.
+
+Affected roadmap/spec sections: ROADMAP.md and CURRENT_STATE.md gain an mjlab track when Stage 0 completes. The HIERARCHICAL_CONTROL.md goals carry over conceptually; the 136-observation contract does not.
