@@ -157,3 +157,17 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
   - **Frame mapping:** Unity z → x and Unity x → −y, which preserves left/right handedness. `begin_from_feed` supports drill starts (rally or must-bounce context).
   - **Not ported** (not needed for Stage 2): scoring/side-out/server rotation, serve-motion rules and continuous-stroke contact.
   - **Tests:** 24, mirroring 19 Unity rally-level cases by name, plus batching and drill feeds. Suite 118 pass + 13 xfails.
+- 2026-10-02 — Task `Picklebot-Return-Stand-G1` (`picklebot_mj/tasks/return_stand.py`), registered through the `mjlab.tasks` entry point so mjlab's `train`/`play` CLIs work unchanged.
+  - **Base:** mjlab's flat G1 velocity config (proprioception, joint-position actions with G1 scales, upright/pose/action-rate/limit rewards, fell_over), with a zero velocity command (standing), no pushes, and a pose prior that leaves the right arm free.
+  - **Scene:** G1 + wrist paddle at court-local (−5.6, 0.35), facing the net; mocap ball and court; env spacing 20 m.
+  - **Ball:** a 0-dim `BallPhysicsAction` term advances `BallSim` on every physics step via the action manager's per-substep hook. It reads the paddle pose and velocity from the robot, applies the reaction impulse to the paddle body through `xfrc_applied`, drives `RallyRules`, and writes the ball mocap. Body contact is approximated by pelvis/torso spheres (0.17 m).
+  - **Feed:** one per 3 s episode from the far side, in receive context (must bounce; a volley is an EARLY_VOLLEY fault). Ranges tuned offline (`scripts/tune_feed.py`): 100% bounce exactly once; 80% pass the contact plane at 0.55–1.15 m (p10–p90 0.52–0.66 m); 0.30–0.65 m to the robot's right.
+  - **Observations:** ball position and velocity in the base frame, ball relative to the paddle, rally flags (critic also gets spin). Actor 110 / critic 125 dims; 29 actions.
+  - **Rewards:** approach shaping exp(−(d/0.25)²) after the bounce and before contact (weight 2); first legal paddle contact +1; legal return (first bounce after the hit lands in the far court) +5; plus the base balance terms.
+  - **Terminations:** fell_over, drill_over (rally dead or legal return), time_out.
+  - **Seeds** (`picklebot_mj/seeds.py`): train 1–999, dev eval 4,200,000–4,200,999, final 9,200,000–9,200,999 (reserved, unused).
+  - **Verification:**
+    - Zero-action smoke (64 envs × 400 steps): before tuning, 141 SECOND_BOUNCE endings showed the feed fell short; after tuning, 145 crossings at 0.37–0.66 m.
+    - Zero-action G1 falls in this task just as in mjlab's stock velocity task (27 vs 28 falls in 16 envs × 3 s), so balance must be learned.
+    - `train` CLI smoke (1024 envs × 5 iterations): runs; contact/approach rewards appear; **4.5–6.3 s per iteration ≈ 5k steps/s at 1024 envs**, to be measured at 4096 before the run.
+  - Tests: +2 (seed ranges; GPU build/step/rules/mocap). Suite 120 pass + 13 xfails.
