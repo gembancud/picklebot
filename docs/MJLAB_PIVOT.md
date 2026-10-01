@@ -57,7 +57,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
   - GPU throughput with ball and paddle still ≥ 10× the Unity baseline at a usable env count.
 
 ## Stage 2 — standing G1 hits a fed ball
-- [ ] G1 plus a paddle fixed to the right wrist in the scene; reach and swing-speed envelope measured with scripted joint sweeps.
+- [x] G1 plus a paddle fixed to the right wrist in the scene; reach and swing-speed envelope measured with scripted joint sweeps.
 - [ ] Rules and legality module (net clearance, in/out, kitchen) ported from the Unity rules, with tests.
 - [ ] Task: G1 standing (balance required), ball fed toward its forehand, reward for contact then a legal return; dev and train seed ranges defined.
 - [ ] First training run (≤ 2 h) plus evaluation on dev seeds; video of successes and misses.
@@ -144,3 +144,11 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
   - **GPU smoke test** `tests/test_rig_env.py`; suite 90 pass + 13 xfails.
   - **Limitations:** the paddle is kinematic, so the reaction impulse is accumulated but not yet applied to a dynamic body (that comes with the G1 wrist in Stage 2). The ball sim costs about 26 ms per physics step at 4096 envs: many small kernels and host syncs in the sub-step loop. Optimisation candidates: branch-free masks without `.any()` syncs, CUDA graphs or `torch.compile`.
 - 2026-10-02 — **Stage 1 gate PASS** (`mjlab/results/stage1-physics.md`). All criteria were met with measured evidence: phase-independent official drop band (provisional court), no energy gain, flight vs RK4, net and posts, paddle PBCoR 0.40 ≤ 0.43, no tunnelling, momentum, GPU rig at 100 % hits and 38k env steps/s (38× Unity). Caveats carried into Stage 2: throughput with the G1 is unmeasured (ball sim ~26 ms per physics step at 4096 envs is the main cost); the reaction impulse is not yet applied to a dynamic body; simplified kinematic paddle; provisional court bounce. **Stage 1 complete.**
+- 2026-10-02 — Stage 2 step 1: `picklebot_mj/g1_paddle.py` attaches a 0.22 kg paddle body to `right_wrist_yaw_link`.
+  - **Grip:** handshake; the handle is centred on the `right_palm` site, the face runs along the hand axis, and its normal is the palm normal. The body origin is the face centre, with axes matching `PaddleState`. Visual-only geoms.
+  - **Tests:** 4 new (parent, mass, exact axes and offset in the wrist frame, non-colliding geoms, fixed-base actuator mapping). Suite 94 pass + 13 xfails.
+  - **Envelope** (`scripts/stage2_envelope.py`, fixed pelvis at 0.76 m, mjlab actuators):
+    - reach of the face centre up to 0.89 m horizontal (95th percentile 0.70), heights 0.30–1.73 m;
+    - peak face speed 14.0 m/s (95th percentile 10.3, median 5.7), up to 12.0 m/s along the face normal, about a 17 m/s ball exit.
+  - **Caveats:** random pose-pair swings are lower bounds on skill but upper bounds on dynamics (fixed base); joint velocity limits not verified; no paddle self-collision.
+  - Report: `mjlab/results/stage2-envelope.md`. No blocker.
