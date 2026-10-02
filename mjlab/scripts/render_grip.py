@@ -14,7 +14,9 @@ from mjlab.asset_zoo.robots.unitree_g1 import g1_constants as g1
 from picklebot_mj.g1_paddle import PADDLE_BODY, WRIST_BODY, get_spec
 
 out = sys.argv[1]
-spec = get_spec()
+from picklebot_mj import g1_paddle
+grip = {"v1": g1_paddle.GRIP_V1, "v2": g1_paddle.GRIP_V2}[sys.argv[2] if len(sys.argv) > 2 else "v1"]
+spec = get_spec(grip)
 spec.worldbody.add_light(pos=[0, 0, 3], dir=[0, 0, -1], diffuse=[0.8, 0.8, 0.8])
 spec.worldbody.add_geom(type=mujoco.mjtGeom.mjGEOM_PLANE, size=[3, 3, 0.1], rgba=[0.3, 0.35, 0.45, 1])
 spec.visual.global_.offwidth = 960
@@ -38,6 +40,6 @@ for name, az, el, dist in (("grip_side", 270, -10, 0.9), ("grip_front", 180, -15
     cam.lookat[:] = look if name != "full_body" else d.xpos[1]
     cam.azimuth, cam.elevation, cam.distance = az, el, dist
     r.update_scene(d, cam)
-    mediapy.write_image(f"{out}/{name}.png", r.render())
+    mediapy.write_image(f"{out}/{grip.name}-{name}.png", r.render())
     print("wrote", name)
 print("wrist->face centre (m):", np.round(paddle - hand, 3))

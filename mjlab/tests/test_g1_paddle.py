@@ -50,3 +50,29 @@ def test_fixed_base_model_and_actuators():
     for j in ARM:
         assert m.joint(j).id in act
     assert m.nq == m.njnt  # no free joint: all hinges
+
+
+def test_grip_v1_unchanged_and_v2_clears_hand():
+    from fit_grip import face_intrusions, hand_vertices
+
+    from picklebot_mj import g1_paddle
+
+    verts = hand_vertices()
+    assert face_intrusions(g1_paddle.GRIP_V1, verts, 0.0) > 0  # the documented v1 overlap
+    assert face_intrusions(g1_paddle.GRIP_V2, verts, 0.003) == 0  # v2 clears every hand vertex
+    # v1 pose is bit-for-bit the Stage 2 mount (model_700 compatibility).
+    pos, quat = g1_paddle.paddle_pose_in_wrist(g1_paddle.GRIP_V1)
+    assert np.allclose(pos, [g1_paddle.FACE_CENTRE_X, 0, 0]) and abs(np.dot(quat, [0.5, -0.5, -0.5, -0.5])) == pytest.approx(1.0)  # q and -q: same rotation
+    assert g1_paddle.DEFAULT_GRIP is g1_paddle.GRIP_V1  # switched to v2 at the Stage 4 grip step
+
+
+def test_grip_v2_tilts_toward_thumb():
+    from picklebot_mj import g1_paddle
+
+    m = g1_paddle.get_spec(g1_paddle.GRIP_V2).compile()
+    d = mujoco.MjData(m)
+    mujoco.mj_kinematics(m, d)
+    rw = d.xmat[m.body(WRIST_BODY).id].reshape(3, 3)
+    rp = d.xmat[m.body(PADDLE_BODY).id].reshape(3, 3)
+    length = (rw.T @ rp)[:, 1]
+    assert np.degrees(np.arctan2(length[2], length[0])) == pytest.approx(35.0, abs=1e-6)

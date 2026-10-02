@@ -16,8 +16,11 @@ paddle-vs-floor collisions are not modelled yet.
 from __future__ import annotations
 
 import copy
+import math
+from dataclasses import dataclass
 
 import mujoco
+import numpy as np
 
 from mjlab.asset_zoo.robots.unitree_g1 import g1_constants as g1
 from mjlab.entity import EntityCfg
@@ -28,16 +31,58 @@ PADDLE_MASS = 0.22  # kg; typical composite paddle (USA Pickleball has no mass l
 HANDLE_LENGTH = 0.127  # Unity CourtGeometryV1.PaddleHandleLength
 HANDLE_RADIUS = 0.016
 PALM_X = 0.08  # right_palm site in right_wrist_yaw_link
-FACE_CENTRE_X = PALM_X + HANDLE_LENGTH / 2 + PADDLE_HALF[1]  # handle centred in the palm
-# Paddle local (x=width, y=length, z=normal) -> wrist frame (z, x, y): a -120 deg turn about (1,1,1).
-PADDLE_QUAT_IN_WRIST = (0.5, -0.5, -0.5, -0.5)
 WRIST_BODY = "right_wrist_yaw_link"
 PADDLE_BODY = "paddle"
 
 
-def attach_paddle(spec: mujoco.MjSpec) -> mujoco.MjsBody:
+@dataclass(frozen=True)
+class GripCfg:
+    """Where the paddle sits in the hand (right_wrist_yaw_link frame).
+
+    The hand axis is wrist +x, the palm faces wrist +y and the thumb side is wrist +z.
+    The handle axis is tilted by `tilt_deg` from the hand axis toward the thumb, within
+    the palm plane. `handle_centre` is the handle midpoint; the face starts at the
+    handle's outer end. The face normal is the palm normal (wrist +y).
+    """
+
+    name: str
+    tilt_deg: float
+    handle_centre: tuple[float, float, float]
+
+
+# v1: Stage 2 mount (handle centred on the palm site, in line with the hand). Close-ups showed
+# the face starting ~4 cm inside the fingers and the paddle in line with the forearm.
+GRIP_V1 = GripCfg("v1-inline", 0.0, (PALM_X, 0.0, 0.0))
+FACE_CENTRE_X = PALM_X + HANDLE_LENGTH / 2 + PADDLE_HALF[1]  # v1 face centre along the hand axis
+# v2: handshake grip. The handle crosses the palm 35 deg toward the thumb, held in the finger curl
+# (+y) and slid out so the face clears every hand-mesh vertex by >= 3 mm
+# (scripts/fit_grip.py, 2026-10-02).
+GRIP_V2 = GripCfg("v2-handshake", 35.0, (0.1084, 0.025, 0.0129))
+DEFAULT_GRIP = GRIP_V1
+
+
+def _axes(grip: GripCfg):
+    t = math.radians(grip.tilt_deg)
+    length = np.array([math.cos(t), 0.0, math.sin(t)])  # handle/paddle long axis
+    normal = np.array([0.0, 1.0, 0.0])  # palm normal
+    width = np.cross(length, normal)
+    return width, length, normal
+
+
+def paddle_pose_in_wrist(grip: GripCfg):
+    """(face-centre position, quaternion) of the paddle body in the wrist frame."""
+    width, length, normal = _axes(grip)
+    centre = np.array(grip.handle_centre) + length * (HANDLE_LENGTH / 2 + PADDLE_HALF[1])
+    quat = np.zeros(4)
+    mujoco.mju_mat2Quat(quat, np.stack([width, length, normal], axis=1).flatten())
+    return centre, quat
+
+
+def attach_paddle(spec: mujoco.MjSpec, grip: GripCfg | None = None) -> mujoco.MjsBody:
+    grip = grip or DEFAULT_GRIP
+    pos, quat = paddle_pose_in_wrist(grip)
     wrist = spec.body(WRIST_BODY)
-    paddle = wrist.add_body(name=PADDLE_BODY, pos=[FACE_CENTRE_X, 0.0, 0.0], quat=list(PADDLE_QUAT_IN_WRIST))
+    paddle = wrist.add_body(name=PADDLE_BODY, pos=pos.tolist(), quat=quat.tolist())
     # Inertia: face plate plus handle, lumped. The CoM sits slightly toward the handle.
     face_mass, handle_mass = 0.8 * PADDLE_MASS, 0.2 * PADDLE_MASS
     w, l, t = (2 * h for h in PADDLE_HALF)
@@ -61,9 +106,9 @@ def attach_paddle(spec: mujoco.MjSpec) -> mujoco.MjsBody:
     return paddle
 
 
-def get_spec() -> mujoco.MjSpec:
+def get_spec(grip: GripCfg | None = None) -> mujoco.MjSpec:
     spec = g1.get_spec()
-    attach_paddle(spec)
+    attach_paddle(spec, grip)
     return spec
 
 
