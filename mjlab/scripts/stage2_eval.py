@@ -24,6 +24,8 @@ from mjlab.rl import MjlabOnPolicyRunner, RslRlVecEnvWrapper
 from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
 
 from picklebot_mj import seeds
+from picklebot_mj.feeds import FAMILY_NAMES, FeedMix
+from picklebot_mj.g1_paddle import GRIP_V1, get_g1_paddle_cfg
 from picklebot_mj.rules import Fault
 from picklebot_mj.tasks import TASK_RETURN_STAND
 
@@ -45,6 +47,10 @@ def main():
     ap.add_argument("--seconds", type=float, default=9.0)
     ap.add_argument("--seed", type=int, default=seeds.DEV_EVAL_SEEDS[0])
     ap.add_argument("--video", default=None)
+    ap.add_argument("--families", default="easy_forehand",
+                    help="comma-separated feed families sampled uniformly, or 'all'")
+    ap.add_argument("--grip", choices=["default", "v1"], default="default",
+                    help="v1 = Stage 2 robot (inline grip, square face) for old checkpoints")
     ap.add_argument("--view", choices=["side", "behind"], default="side")
     ap.add_argument("--slowmo", type=float, default=1.0, help="playback slow-down factor for the video")
     ap.add_argument("--json", default=None)
@@ -56,6 +62,12 @@ def main():
     cfg.seed = args.seed
     cfg.actions["ball"].seed = args.seed
     cfg.observations["actor"].enable_corruption = False
+    fams = list(FAMILY_NAMES) if args.families == "all" else args.families.split(",")
+    cfg.actions["ball"].feed_mix = FeedMix({f: 1.0 for f in fams})
+    if args.grip == "v1":
+        robot = cfg.scene.entities["robot"]
+        robot.spec_fn = get_g1_paddle_cfg(GRIP_V1).spec_fn
+        cfg.actions["ball"].paddle_corner_radius = 0.0
     if args.video:
         cfg.viewer.width, cfg.viewer.height = 960, 540
         # Side-on view from the robot's right, wide enough to follow the ball over the net.
@@ -74,6 +86,7 @@ def main():
 
     term = env.action_manager.get_term("ball")
     term.fault_counts.zero_()
+    term.ep_family.zero_()
     for v in term.ep.values():
         v.zero_()
     obs = venv.get_observations()
@@ -95,7 +108,16 @@ def main():
         "legal_return_rate": round(rets / max(episodes, 1), 4), "legal_return_ci95": wilson(rets, episodes),
         "fall_rate": round(falls / max(episodes, 1), 4), "fall_ci95": wilson(falls, episodes),
         "hits": hits, "legal_returns": rets, "falls": falls, "rally_endings": endings,
+        "grip": args.grip, "families": fams,
     }
+    table = {}
+    for i, name in enumerate(FAMILY_NAMES):
+        n_ep, c, r, f = (int(v) for v in term.ep_family[i].tolist())
+        if n_ep:
+            table[name] = {"episodes": n_ep, "contact": round(c / n_ep, 4), "contact_ci95": wilson(c, n_ep),
+                           "legal_return": round(r / n_ep, 4), "legal_return_ci95": wilson(r, n_ep),
+                           "fall": round(f / n_ep, 4), "fall_ci95": wilson(f, n_ep)}
+    out["per_family"] = table
     d = {k: float(v) for k, v in term.diag.items()}
     nc, nl = max(d["n_contact"], 1.0), max(d["n_land"], 1.0)
     out["contact_diagnostics"] = {
@@ -113,6 +135,10 @@ def main():
         "landing_abs_y_mean": round(d["land_y_abs"] / nl, 3),
     }
     print(json.dumps(out, indent=1))
+    print(f"{'family':14s} {'episodes':>8s} {'contact':>8s} {'legal return [95% CI]':>24s} {'fall':>6s}")
+    for name, r in table.items():
+        ci = r['legal_return_ci95']
+        print(f"{name:14s} {r['episodes']:8d} {r['contact']:8.3f} {r['legal_return']:8.3f} [{ci[0]:.3f}, {ci[1]:.3f}] {r['fall']:6.3f}")
     if args.json:
         json.dump(out, open(args.json, "w"), indent=1)
     if args.video:

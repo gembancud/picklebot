@@ -74,6 +74,8 @@ class BallPhysicsActionCfg(ActionTermCfg):
     ball_substeps: int = 6
     # torch.compile the fixed-sub-step ball step (9x faster; ~50 s compile once per process).
     compile_ball: bool = True
+    # Analytic paddle face corner radius; matches the drawn paddle. 0 = the Stage 2 square face.
+    paddle_corner_radius: float = PADDLE_CORNER_RADIUS
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -85,7 +87,7 @@ class BallPhysicsAction(ActionTerm):
     def __init__(self, cfg: BallPhysicsActionCfg, env):
         super().__init__(cfg, env)
         n, dev = env.num_envs, env.device
-        params = BallParams(paddle_corner_radius=PADDLE_CORNER_RADIUS)  # match the drawn paddle
+        params = BallParams(paddle_corner_radius=cfg.paddle_corner_radius)
         self.sim = CompiledBallSim(params, mode="default") if cfg.compile_ball else BallSim(params)
         z = lambda: torch.zeros(n, 3, device=dev)
         self.ball = BallState(z(), z(), z())

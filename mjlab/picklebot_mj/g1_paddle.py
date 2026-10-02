@@ -16,6 +16,7 @@ paddle-vs-floor collisions are not modelled yet.
 from __future__ import annotations
 
 import copy
+import functools
 import math
 from dataclasses import dataclass
 
@@ -215,8 +216,8 @@ def get_spec(grip: GripCfg | None = None) -> mujoco.MjSpec:
     return spec
 
 
-def get_g1_paddle_cfg() -> EntityCfg:
+def get_g1_paddle_cfg(grip: GripCfg | None = None) -> EntityCfg:
     cfg = g1.get_g1_robot_cfg()
     cfg = copy.copy(cfg)
-    cfg.spec_fn = get_spec
+    cfg.spec_fn = get_spec if grip is None else functools.partial(get_spec, grip)
     return cfg

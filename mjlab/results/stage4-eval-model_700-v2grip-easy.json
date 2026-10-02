@@ -1,0 +1,69 @@
+{
+ "checkpoint": "artifacts/stage2/logs/picklebot_return_stand/2026-10-02_20-05-51_return-stand-02/model_700.pt",
+ "seed": 4200011,
+ "envs": 512,
+ "sim_seconds": 9.0,
+ "episodes": 1541,
+ "contact_rate": 0.9994,
+ "contact_ci95": [
+  0.9963,
+  0.9999
+ ],
+ "legal_return_rate": 0.9098,
+ "legal_return_ci95": [
+  0.8945,
+  0.9231
+ ],
+ "fall_rate": 0.0,
+ "fall_ci95": [
+  -0.0,
+  0.0025
+ ],
+ "hits": 1540,
+ "legal_returns": 1402,
+ "falls": 0,
+ "rally_endings": {
+  "SECOND_BOUNCE": 1,
+  "OUT": 80,
+  "WRONG_SIDE": 13,
+  "LOST": 28
+ },
+ "grip": "default",
+ "families": [
+  "easy_forehand"
+ ],
+ "per_family": {
+  "easy_forehand": {
+   "episodes": 1541,
+   "contact": 0.9994,
+   "contact_ci95": [
+    0.9963,
+    0.9999
+   ],
+   "legal_return": 0.9098,
+   "legal_return_ci95": [
+    0.8945,
+    0.9231
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    -0.0,
+    0.0025
+   ]
+  }
+ },
+ "contact_diagnostics": {
+  "first_contacts": 1861,
+  "paddle_speed_mean": 6.83,
+  "paddle_speed_std": 0.19,
+  "ball_speed_in_mean": 3.315,
+  "ball_speed_out_mean": 10.525,
+  "contact_height_mean": 0.654,
+  "net_crossings": 1537,
+  "net_clearance_mean_m": 1.302,
+  "legal_landings": 1402,
+  "landing_x_mean": 3.885,
+  "landing_x_std": 0.982,
+  "landing_abs_y_mean": 1.21
+ }
+}
