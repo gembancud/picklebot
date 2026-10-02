@@ -118,6 +118,8 @@ class BallPhysicsAction(ActionTerm):
         self.placement_now = torch.zeros(n, device=dev)
         # Per-family episode tallies [family, (episodes, contact, legal_return, fall)].
         self.ep_family = torch.zeros(len(FAMILY_NAMES), 4, dtype=torch.long, device=dev)
+        # Per-family legal-landing tallies [family, (in A, in B, on the assigned target)].
+        self.land_family = torch.zeros(len(FAMILY_NAMES), 3, dtype=torch.long, device=dev)
         # Per-episode flags read by rewards/observations/terminations.
         b = lambda: torch.zeros(n, dtype=torch.bool, device=dev)
         self.hit_done, self.hit_now = b(), b()
@@ -293,6 +295,8 @@ class BallPhysicsAction(ActionTerm):
             self.diag["land_in_A"] += ((dA <= TARGET_RADIUS).float() * r).sum()
             self.diag["land_in_B"] += ((dB <= TARGET_RADIUS).float() * r).sum()
             self.diag["target_hit"] += ((dT <= TARGET_RADIUS).float() * r).sum()
+            lands = torch.stack([dA <= TARGET_RADIUS, dB <= TARGET_RADIUS, dT <= TARGET_RADIUS], -1) & ret.unsqueeze(-1)
+            self.land_family.index_add_(0, self.family, lands.long())
             bonus = PLACEMENT_MAX * (1.0 - dT / PLACEMENT_RANGE).clamp(min=0.0) * r  # legal landings only
             self.diag["placement"] += bonus.sum()
             if self.cfg.targets:

@@ -1,0 +1,124 @@
+{
+ "checkpoint": "artifacts/train/logs/picklebot_return_stand/2026-10-03_05-44-20_aim-b01/model_5300.pt",
+ "seed": 4200050,
+ "envs": 1024,
+ "sim_seconds": 16.0,
+ "episodes": 6897,
+ "contact_rate": 0.8907,
+ "contact_ci95": [
+  0.8831,
+  0.8978
+ ],
+ "legal_return_rate": 0.8868,
+ "legal_return_ci95": [
+  0.8791,
+  0.894
+ ],
+ "fall_rate": 0.0,
+ "fall_ci95": [
+  0.0,
+  0.0006
+ ],
+ "hits": 6143,
+ "legal_returns": 6116,
+ "falls": 0,
+ "rally_endings": {
+  "SECOND_BOUNCE": 1,
+  "OUT": 12,
+  "WRONG_SIDE": 3,
+  "LOST": 186
+ },
+ "grip": "default",
+ "families": [
+  "easy_forehand",
+  "wide_forehand",
+  "backhand"
+ ],
+ "task": "Picklebot-Aim-Lateral-G1",
+ "target": "A",
+ "robot_episodes": 2048,
+ "robot_falls": 0,
+ "robot_fall_rate_per_episode": 0.0,
+ "per_family": {
+  "easy_forehand": {
+   "episodes": 2328,
+   "contact": 0.8913,
+   "contact_ci95": [
+    0.878,
+    0.9033
+   ],
+   "legal_return": 0.8879,
+   "legal_return_ci95": [
+    0.8744,
+    0.9001
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0016
+   ],
+   "landings_in_A": 1799,
+   "landings_in_B": 0,
+   "target_hits": 1799
+  },
+  "wide_forehand": {
+   "episodes": 2273,
+   "contact": 0.8922,
+   "contact_ci95": [
+    0.8788,
+    0.9043
+   ],
+   "legal_return": 0.8847,
+   "legal_return_ci95": [
+    0.871,
+    0.8972
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    -0.0,
+    0.0017
+   ],
+   "landings_in_A": 1852,
+   "landings_in_B": 0,
+   "target_hits": 1852
+  },
+  "backhand": {
+   "episodes": 2296,
+   "contact": 0.8885,
+   "contact_ci95": [
+    0.875,
+    0.9007
+   ],
+   "legal_return": 0.8876,
+   "legal_return_ci95": [
+    0.8741,
+    0.8999
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0017
+   ],
+   "landings_in_A": 1320,
+   "landings_in_B": 1,
+   "target_hits": 1320
+  }
+ },
+ "contact_diagnostics": {
+  "first_contacts": 6143,
+  "paddle_speed_mean": 7.027,
+  "paddle_speed_std": 0.349,
+  "ball_speed_in_mean": 3.322,
+  "ball_speed_out_mean": 12.655,
+  "contact_height_mean": 0.654,
+  "net_crossings": 6140,
+  "net_clearance_mean_m": 0.568,
+  "legal_landings": 6116,
+  "landing_x_mean": 4.54,
+  "landing_x_std": 0.53,
+  "landing_abs_y_mean": 1.473,
+  "landings_in_A": 4971,
+  "landings_in_B": 1,
+  "target_hits": 4971
+ }
+}

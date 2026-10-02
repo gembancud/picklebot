@@ -93,6 +93,7 @@ def main():
     term = env.action_manager.get_term("ball")
     term.fault_counts.zero_()
     term.ep_family.zero_()
+    term.land_family.zero_()
     for v in term.ep.values():
         v.zero_()
     obs = venv.get_observations()
@@ -125,6 +126,8 @@ def main():
             table[name] = {"episodes": n_ep, "contact": round(c / n_ep, 4), "contact_ci95": wilson(c, n_ep),
                            "legal_return": round(r / n_ep, 4), "legal_return_ci95": wilson(r, n_ep),
                            "fall": round(f / n_ep, 4), "fall_ci95": wilson(f, n_ep)}
+            la, lb, lt = (int(v) for v in term.land_family[i].tolist())
+            table[name].update({"landings_in_A": la, "landings_in_B": lb, "target_hits": lt})
     out["per_family"] = table
     d = {k: float(v) for k, v in term.diag.items()}
     nc, nl = max(d["n_contact"], 1.0), max(d["n_land"], 1.0)
