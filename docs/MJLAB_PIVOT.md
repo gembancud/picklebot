@@ -67,7 +67,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 
 ## Stage 3 — training throughput (ball term)
 Baseline: `return-stand` task at about 10k env steps/s at 4096 envs (~9.7 s per iteration). GPU is ~33 % busy; the Python `BallSim` term dominates.
-- [ ] Profile one training iteration (ball term vs MuJoCo step vs PPO update). Write `mjlab/results/stage3-profile.md` with the time split.
+- [x] Profile one training iteration (ball term vs MuJoCo step vs PPO update). Write `mjlab/results/stage3-profile.md` with the time split.
 - [ ] Remove host syncs from `BallSim` (`.any()`/`.item()`/`float()` branches → branch-free masks; fixed sub-step count per physics step chosen from config, not from data). Keep all existing tests green; add a test that the step makes no host syncs (e.g. `torch.cuda.set_sync_debug_mode("error")`).
 - [ ] Try CUDA graphs or `torch.compile` on the ball step if still dominant; keep only what is measurably faster and exactly equivalent (compare against the uncompiled step on a fixed batch).
 - [ ] **Gate:** ≥ 2× the baseline env steps/s on `Picklebot-Return-Stand-G1` at 4096 envs, with all physics tests passing and `model_700` dev evaluation unchanged (legal return within its 95 % interval on seed 4,200,000). Report `mjlab/results/stage3-throughput.md`.
@@ -77,6 +77,11 @@ Each new variable gets its own training run (≤ 2 h each), warm-started from th
 - [ ] **Grip fix (user request, 2026-10-02).** Close-up renders (`scripts/render_grip.py`) showed the paddle face starting ~4 cm inside the G1 fingers (handle hidden in the hand mesh) and the paddle pointing straight along the forearm line. Fix `picklebot_mj/g1_paddle.py`:
   - the face starts beyond the fingertips, and the visible handle sits in the palm;
   - the handle is angled about 35° across the palm, like a real handshake grip, so the paddle is not a straight extension of the forearm.
+
+  Visual parts were done early on request (`561cd7b`, `163f3f4`): `GRIP_V2` (35°, fitted to clear the hand mesh by ≥ 3 mm), a visual closed fist, and a standard 16 × 8 in paddle look (rounded face, edge guard, throat, wrapped grip, butt cap). Remaining here:
+  - switch `DEFAULT_GRIP` to v2;
+  - make the analytic paddle contact use the rounded-corner face (1 in radius, matching the visual), with tests;
+  - re-measure the envelope.
 
   Keep the paddle body origin at the face centre with `PaddleState` axes. Re-render the close-ups (side, front, top) for the user, update tests, and re-measure the envelope (`stage2_envelope.py`). Stage 2 results (`model_700`) stay as the old-grip record. Stage 4 runs train on the new grip; run A may warm-start from `model_700` (same observation space, documented), and the easy-feed retention baseline is re-established on the new grip.
 - [ ] Feed curriculum module: named feed families (`easy_forehand` = current; `wide_forehand` 0.65–1.0 m; `backhand` −0.30 to −0.65 m on the left; `deep` / `short` bounce points; `high` / `low` contact heights; `fast` incoming speed; `topspin` / `backspin`) and a sampler mixing them by weights. Offline feed checks (like `tune_feed.py`) per family. Tests.
@@ -212,3 +217,5 @@ Movement plus hitting (footwork using the walking policy as a base or teacher), 
   - **Caveats:** one narrow feed family, a stereotyped high loft, reused dev seeds, misses not yet on video.
   - Suite 121 pass + 13 xfails.
 - 2026-10-02 — **Stage 2 gate PASS** (`mjlab/results/stage2-gate.md`): legal returns on easy feeds at about 96 % on dev seeds, with balance and a real stroke. Carried forward: single feed family, stereotyped loft without aiming, single training seed and reused dev seeds, misses not filmed, simplified paddle and body contact, ~10k steps/s limited by the Python ball term. **Stage 2 complete; loop ends here per its instruction.** Next steps are for the user to choose (see the gate report).
+- 2026-10-02 — User asked for a better grip and paddle look: grip v2 (35° handshake, fitted to the hand mesh), a visual closed fist and a standard 16 × 8 in paddle look, built early (`561cd7b`, `163f3f4`), visual only; v1 remains the default until Stage 4. Stages 3–5 planned (`02e31ba`); loop restarted to Stage 5.
+- 2026-10-02 — Stage 3 profile (`mjlab/results/stage3-profile.md`). Env step at 4096 envs with random actions: 185 ms, of which the **ball term is 68 %** (125 ms), MuJoCo 16 % and other managers 16 %. Training run 02: collection 97 % (9.29 s per iteration), PPO 0.26 s; collection grew 5.4 → 11.2 s as the swing sped up. Cause: batch-max adaptive sub-steps with host syncs and many small kernels. Plan: sync-free fixed sub-steps, fewer kernels, then CUDA graphs or `torch.compile`.
