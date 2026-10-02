@@ -6,14 +6,14 @@ import numpy as np
 import pytest
 
 from picklebot_mj.ball_sim import PADDLE_HALF
-from picklebot_mj.g1_paddle import FACE_CENTRE_X, PADDLE_BODY, PADDLE_MASS, WRIST_BODY, get_spec
+from picklebot_mj.g1_paddle import FACE_CENTRE_X, GRIP_V1, PADDLE_BODY, PADDLE_MASS, WRIST_BODY, get_spec
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 
 @pytest.fixture(scope="module")
 def model():
-    return get_spec().compile()
+    return get_spec(GRIP_V1).compile()  # v1-specific frame checks below
 
 
 def test_paddle_attached_to_right_wrist(model):
@@ -63,7 +63,7 @@ def test_grip_v1_unchanged_and_v2_clears_hand():
     # v1 pose is bit-for-bit the Stage 2 mount (model_700 compatibility).
     pos, quat = g1_paddle.paddle_pose_in_wrist(g1_paddle.GRIP_V1)
     assert np.allclose(pos, [g1_paddle.FACE_CENTRE_X, 0, 0]) and abs(np.dot(quat, [0.5, -0.5, -0.5, -0.5])) == pytest.approx(1.0)  # q and -q: same rotation
-    assert g1_paddle.DEFAULT_GRIP is g1_paddle.GRIP_V1  # switched to v2 at the Stage 4 grip step
+    assert g1_paddle.DEFAULT_GRIP is g1_paddle.GRIP_V2  # switched at the Stage 4 grip step
 
 
 def test_grip_v2_tilts_toward_thumb():

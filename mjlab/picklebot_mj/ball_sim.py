@@ -42,6 +42,7 @@ PADDLE_HALF = (0.2032 / 2, (0.4064 - 0.127) / 2, 0.016 / 2)
 # Normal COR against a rigid, kinematic paddle; this is the PBCoR surrogate (limit 0.43).
 PADDLE_COR = 0.40  # Unity PaddleRestitution
 PADDLE_FRICTION = 0.2  # Unity PaddleDynamicFriction
+PADDLE_CORNER_RADIUS = 0.0254  # 1 in rounded face corners (Unity PaddleCornerRadius; drawn by g1_paddle)
 
 
 @dataclass
@@ -56,6 +57,7 @@ class BallParams:
     net_friction: float = NET_FRICTION
     paddle_cor: float = PADDLE_COR
     paddle_friction: float = PADDLE_FRICTION
+    paddle_corner_radius: float = 0.0  # 0 = square box face; tasks set PADDLE_CORNER_RADIUS
     aero: AeroParams = AeroParams()
 
 
@@ -209,6 +211,17 @@ class BallSim:
         half = self._const("paddle_half", PADDLE_HALF, x)
         local = ((x - ppos).unsqueeze(-2) @ prot).squeeze(-2)  # R^T (x - c)
         q_local = torch.maximum(torch.minimum(local, half), -half)
+        rc = p.paddle_corner_radius
+        if rc > 0.0:
+            # Rounded-corner face: in the face plane, the closest point of a rectangle with
+            # corner radius rc is the inner (rc-shrunk) rectangle's closest point pushed out by rc.
+            inner = self._const("paddle_inner", [PADDLE_HALF[0] - rc, PADDLE_HALF[1] - rc], x)
+            lxy = local[..., :2]
+            qxy = torch.maximum(torch.minimum(lxy, inner), -inner)
+            dxy = lxy - qxy
+            dn = dxy.norm(dim=-1, keepdim=True)
+            qxy = qxy + dxy * torch.clamp(rc / dn.clamp_min(1e-12), max=1.0)
+            q_local = torch.cat([qxy, q_local[..., 2:]], -1)
         d_local = local - q_local
         dist = d_local.norm(dim=-1, keepdim=True)
         inside = dist.squeeze(-1) < 1e-9

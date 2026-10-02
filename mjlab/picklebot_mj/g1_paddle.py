@@ -25,7 +25,7 @@ import numpy as np
 from mjlab.asset_zoo.robots.unitree_g1 import g1_constants as g1
 from mjlab.entity import EntityCfg
 
-from picklebot_mj.ball_sim import PADDLE_HALF
+from picklebot_mj.ball_sim import PADDLE_CORNER_RADIUS, PADDLE_HALF
 
 PADDLE_MASS = 0.22  # kg; typical composite paddle (USA Pickleball has no mass limit)
 HANDLE_LENGTH = 0.127  # Unity CourtGeometryV1.PaddleHandleLength
@@ -59,7 +59,7 @@ FACE_CENTRE_X = PALM_X + HANDLE_LENGTH / 2 + PADDLE_HALF[1]  # v1 face centre al
 # (+y) and slid out so the face clears every hand-mesh vertex by >= 3 mm
 # (scripts/fit_grip.py, 2026-10-02).
 GRIP_V2 = GripCfg("v2-handshake", 35.0, (0.1084, 0.025, 0.0129), closed_hand=True)
-DEFAULT_GRIP = GRIP_V1
+DEFAULT_GRIP = GRIP_V2  # switched at the Stage 4 grip step (2026-10-02)
 
 
 def _axes(grip: GripCfg):
@@ -81,7 +81,6 @@ def paddle_pose_in_wrist(grip: GripCfg):
 
 HAND_RGBA = [0.13, 0.13, 0.13, 1.0]
 HIDDEN_GROUP = 5  # not drawn by the default viewers/renderers (groups 0-3)
-PADDLE_CORNER_RADIUS = 0.0254  # Unity CourtGeometryV1.PaddleCornerRadius (1 in)
 EDGE_GUARD = 0.008  # visible edge-guard band width
 FACE_RGBA = [0.08, 0.28, 0.75, 1.0]
 GUARD_RGBA = [0.06, 0.06, 0.07, 1.0]
@@ -107,8 +106,8 @@ def add_paddle_visual(paddle) -> None:
     """Standard-shape paddle look (16 x 8 in overall, 5 in handle): rounded face, edge guard,
     throat, wrapped grip with overgrip bands and a butt cap. Visual only.
 
-    The analytic ball contact still uses the face box (PADDLE_HALF); the rounded corners
-    remove ~1 % of the face area, which only matters for corner hits.
+    Tasks set BallParams.paddle_corner_radius = PADDLE_CORNER_RADIUS so the analytic
+    ball contact uses this same rounded face.
     """
     hw, hl, ht = PADDLE_HALF
     r = PADDLE_CORNER_RADIUS

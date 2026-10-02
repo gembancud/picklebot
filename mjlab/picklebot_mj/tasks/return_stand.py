@@ -33,7 +33,8 @@ from mjlab.tasks.velocity.mdp import UniformVelocityCommandCfg
 
 from picklebot_mj import court
 from picklebot_mj.ball import BALL_RADIUS
-from picklebot_mj.ball_sim import BallSim, BallState, CompiledBallSim, PaddleState
+from picklebot_mj.ball_sim import (PADDLE_CORNER_RADIUS, BallParams, BallSim, BallState, CompiledBallSim,
+                                   PaddleState)
 from picklebot_mj.g1_paddle import PADDLE_BODY, get_g1_paddle_cfg
 from picklebot_mj.rules import Fault, Phase, RallyRules, in_bounds
 
@@ -99,7 +100,8 @@ class BallPhysicsAction(ActionTerm):
     def __init__(self, cfg: BallPhysicsActionCfg, env):
         super().__init__(cfg, env)
         n, dev = env.num_envs, env.device
-        self.sim = CompiledBallSim(mode="default") if cfg.compile_ball else BallSim()
+        params = BallParams(paddle_corner_radius=PADDLE_CORNER_RADIUS)  # match the drawn paddle
+        self.sim = CompiledBallSim(params, mode="default") if cfg.compile_ball else BallSim(params)
         z = lambda: torch.zeros(n, 3, device=dev)
         self.ball = BallState(z(), z(), z())
         self.rules = RallyRules(n, dev)

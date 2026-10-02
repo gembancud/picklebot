@@ -171,3 +171,20 @@ def test_training_step_makes_no_host_syncs():
             s, _ = sim.step(s, 0.005, 6, pd, adaptive=False)
     finally:
         torch.cuda.set_sync_debug_mode("default")
+
+
+def test_rounded_corner_matches_drawn_paddle():
+    from picklebot_mj.ball_sim import PADDLE_CORNER_RADIUS
+
+    # Ball falling just off the face corner diagonal: touches a square face, misses the rounded one.
+    hw, hl = PADDLE_HALF[0], PADDLE_HALF[1]
+    start = [hw + 0.02, hl + 0.02, 1.0 + 0.15]
+    square = BallParams(aero=NOAERO.aero)
+    rounded = BallParams(aero=NOAERO.aero, paddle_corner_radius=PADDLE_CORNER_RADIUS)
+    _, hit_sq, _ = run(ball(start, [0, 0, -5.0]), paddle([0, 0, 1.0]), steps=12, params=square)
+    _, hit_rd, _ = run(ball(start, [0, 0, -5.0]), paddle([0, 0, 1.0]), steps=12, params=rounded)
+    assert hit_sq.all() and not hit_rd.any()
+    # Centre hits are identical with or without rounding.
+    a, _, _ = run(ball([0.03, 0.05, 1.3], [0, 0, -10.0]), paddle([0, 0, 1.0]), steps=12, params=square)
+    b, _, _ = run(ball([0.03, 0.05, 1.3], [0, 0, -10.0]), paddle([0, 0, 1.0]), steps=12, params=rounded)
+    assert torch.allclose(a.vel, b.vel) and torch.allclose(a.pos, b.pos)
