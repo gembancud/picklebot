@@ -45,6 +45,8 @@ def main():
     ap.add_argument("--seconds", type=float, default=9.0)
     ap.add_argument("--seed", type=int, default=seeds.DEV_EVAL_SEEDS[0])
     ap.add_argument("--video", default=None)
+    ap.add_argument("--view", choices=["side", "behind"], default="side")
+    ap.add_argument("--slowmo", type=float, default=1.0, help="playback slow-down factor for the video")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
@@ -57,7 +59,10 @@ def main():
     if args.video:
         cfg.viewer.width, cfg.viewer.height = 960, 540
         # Side-on view from the robot's right, wide enough to follow the ball over the net.
-        cfg.viewer.distance, cfg.viewer.elevation, cfg.viewer.azimuth = 6.5, -8.0, 270.0
+        if args.view == "side":
+            cfg.viewer.distance, cfg.viewer.elevation, cfg.viewer.azimuth = 6.5, -8.0, 270.0
+        else:  # behind the robot, looking down the court toward the net
+            cfg.viewer.distance, cfg.viewer.elevation, cfg.viewer.azimuth = 4.5, -14.0, 0.0
         cfg.viewer.geom_group = (1, 1, 1, 1, 0, 0)  # group 3 = court markings
         cfg.viewer.max_extra_envs = 0
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda", render_mode="rgb_array" if args.video else None)
@@ -114,7 +119,7 @@ def main():
         import imageio_ffmpeg
         import mediapy
         mediapy.set_ffmpeg(imageio_ffmpeg.get_ffmpeg_exe())
-        mediapy.write_video(args.video, frames, fps=int(round(1 / env.step_dt)))
+        mediapy.write_video(args.video, frames, fps=max(1, int(round(1 / env.step_dt / args.slowmo))))
         stem = args.video.rsplit(".", 1)[0]
         for i in range(0, len(frames), 25):
             mediapy.write_image(f"{stem}_{i:03d}.png", frames[i])

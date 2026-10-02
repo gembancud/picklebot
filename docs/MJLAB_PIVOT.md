@@ -21,6 +21,8 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
    - deleting anything;
    - a stage go/no-go decision that fails or is ambiguous;
    - any training run expected to take longer than 2 hours.
+6. Long runs: launch as an independent Windows process (`Start-Process wsl ... scripts/stage2_train.sh`) with the app's keep-awake on, and watch for the `.exit.json` record. Host sleep killed run return-stand-01.
+7. Model selection is always a fixed endpoint (the last checkpoint before the cap); never pick a peak by evaluation. Evaluation uses development seeds only; final seeds stay unused.
 4. If blocked, record the blocker under **Open questions** and stop the loop instead of guessing.
 5. Keep artifacts (logs, checkpoints, videos) under `mjlab/artifacts/`, which is gitignored. Commit only compact summaries.
 
@@ -63,8 +65,31 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 - [x] First training run (≤ 2 h) plus evaluation on dev seeds; video of successes and misses.
 - [x] **Gate:** learns legal returns on easy feeds; report written.
 
-## Stage 3+ — later (detail when Stage 2 passes)
-Movement plus hitting (using the walking policy as a base or teacher), target-conditioned returns, privileged teacher → student distillation, both service sides, then 2v2.
+## Stage 3 — training throughput (ball term)
+Baseline: `return-stand` task at about 10k env steps/s at 4096 envs (~9.7 s per iteration). GPU is ~33 % busy; the Python `BallSim` term dominates.
+- [ ] Profile one training iteration (ball term vs MuJoCo step vs PPO update). Write `mjlab/results/stage3-profile.md` with the time split.
+- [ ] Remove host syncs from `BallSim` (`.any()`/`.item()`/`float()` branches → branch-free masks; fixed sub-step count per physics step chosen from config, not from data). Keep all existing tests green; add a test that the step makes no host syncs (e.g. `torch.cuda.set_sync_debug_mode("error")`).
+- [ ] Try CUDA graphs or `torch.compile` on the ball step if still dominant; keep only what is measurably faster and exactly equivalent (compare against the uncompiled step on a fixed batch).
+- [ ] **Gate:** ≥ 2× the baseline env steps/s on `Picklebot-Return-Stand-G1` at 4096 envs, with all physics tests passing and `model_700` dev evaluation unchanged (legal return within its 95 % interval on seed 4,200,000). Report `mjlab/results/stage3-throughput.md`.
+
+## Stage 4 — wider feeds and aiming (one shared policy)
+Each new variable gets its own training run (≤ 2 h each), warm-started from the latest accepted checkpoint where the observation space is unchanged. Evaluate every feed family **separately** on dev seeds, alongside the original easy feed (retention: no more than 5 percentage points of legal-return loss on it).
+- [ ] Feed curriculum module: named feed families (`easy_forehand` = current; `wide_forehand` 0.65–1.0 m; `backhand` −0.30 to −0.65 m on the left; `deep` / `short` bounce points; `high` / `low` contact heights; `fast` incoming speed; `topspin` / `backspin`) and a sampler mixing them by weights. Offline feed checks (like `tune_feed.py`) per family. Tests.
+- [ ] Per-family dev evaluation: `stage2_eval.py` gains `--family`, reporting each family's rates in one table.
+- [ ] Training run A: lateral widening (easy + wide_forehand + backhand). Evaluate all families plus retention.
+- [ ] Target input: a landing-region goal (two regions, deep left / deep right in the far court, as in Unity two-region) added to observations, with a placement reward paid only on legal landings. The observation space changes, so this run is a fresh start or a documented warm-start that expands the network inputs. Placement metric: target hit rate and paired A/B assignment gain (same feeds, swapped targets) with intervals.
+- [ ] Training run B: targets on easy + lateral families. Evaluate legality, target hits and A/B gain per family.
+- [ ] Training run C: add depth, height, speed and spin families with targets. Evaluate everything per family.
+- [ ] **Gate:** a single checkpoint with legal return ≥ 85 % on every lateral family and ≥ 70 % on depth/height/speed/spin families, target-hit A/B gain with a 95 % interval above zero, and easy-feed retention within 5 points. If the gate is not met after run C, record per-family results and stop for the user (no automatic extension). Report `mjlab/results/stage4-gate.md`.
+
+## Stage 5 — robustness of the Stage 4 result
+- [ ] Repeat the final Stage 4 training recipe with 2 more training seeds (≤ 2 h each).
+- [ ] Evaluate all three on two fresh dev seeds; report per-seed and pooled results with intervals; flag any family whose result depends on the training seed.
+- [ ] Record review videos: successes and misses per family (render the env index of a known miss), side and behind views.
+- [ ] **Gate:** all three seeds meet the Stage 4 gate thresholds (or the deviations are documented and the user is asked). Report `mjlab/results/stage5-gate.md`.
+
+## Stage 6+ — later (detail when Stage 5 passes)
+Movement plus hitting (footwork using the walking policy as a base or teacher), privileged teacher → student distillation, serves on both sides, then 2v2.
 
 ## Open questions
 - ~~**BLOCKING (2026-10-02): how should ball contacts be simulated?**~~ **Resolved 2026-10-02: the user chose A → D-039.** Native MuJoCo soft contacts give impact-phase-dependent restitution: COR 0.1–2.9 at dt 1–2 ms, and still ±0.05 at 0.1 ms. At 5 ms the ball tunnels through the net. Evidence: `mjlab/results/stage1-bounce.md`. Options:
