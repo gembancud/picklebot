@@ -61,7 +61,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 - [x] Rules and legality module (net clearance, in/out, kitchen) ported from the Unity rules, with tests.
 - [x] Task: G1 standing (balance required), ball fed toward its forehand, reward for contact then a legal return; dev and train seed ranges defined.
 - [x] First training run (≤ 2 h) plus evaluation on dev seeds; video of successes and misses.
-- [ ] **Gate:** learns legal returns on easy feeds; report written.
+- [x] **Gate:** learns legal returns on easy feeds; report written.
 
 ## Stage 3+ — later (detail when Stage 2 passes)
 Movement plus hitting (using the walking policy as a base or teacher), target-conditioned returns, privileged teacher → student distillation, both service sides, then 2v2.
@@ -181,3 +181,4 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
   - **Evaluation fix:** rates now use per-episode tallies recorded at episode end (the first version divided events by finished episodes and could exceed 1).
   - **Caveats:** one narrow feed family, a stereotyped high loft, reused dev seeds, misses not yet on video.
   - Suite 121 pass + 13 xfails.
+- 2026-10-02 — **Stage 2 gate PASS** (`mjlab/results/stage2-gate.md`): legal returns on easy feeds at about 96 % on dev seeds, with balance and a real stroke. Carried forward: single feed family, stereotyped loft without aiming, single training seed and reused dev seeds, misses not filmed, simplified paddle and body contact, ~10k steps/s limited by the Python ball term. **Stage 2 complete; loop ends here per its instruction.** Next steps are for the user to choose (see the gate report).
