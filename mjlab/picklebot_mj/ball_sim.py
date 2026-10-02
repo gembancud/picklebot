@@ -335,3 +335,32 @@ def energy(s: BallState, p: BallParams) -> torch.Tensor:
     """Total mechanical energy per ball (translational + rotational + potential, ball centre)."""
     return (0.5 * p.mass * (s.vel**2).sum(-1) + 0.5 * p.inertia * (s.spin**2).sum(-1)
             + p.mass * p.gravity * s.pos[..., 2])
+
+
+def _step_tensors(sim: "BallSim", x, v, w, ppos, prot, pvel, pang, dt: float, substeps: int):
+    """Pure-tensor fixed-sub-step step (adaptive=False) for torch.compile."""
+    s, ev = BallSim.step(sim, BallState(x, v, w), dt, substeps, PaddleState(ppos, prot, pvel, pang), adaptive=False)
+    return (s.pos, s.vel, s.spin, ev.court_contact, ev.court_point, ev.net_contact, ev.post_contact,
+            ev.paddle_contact, ev.paddle_point, ev.paddle_impulse, ev.paddle_angular_impulse)
+
+
+class CompiledBallSim(BallSim):
+    """BallSim whose fixed-sub-step paddle step runs through torch.compile.
+
+    mode "default" fuses element-wise kernels; "reduce-overhead" also captures CUDA graphs.
+    Results match the eager step to float32 rounding (see tests/test_ball_compile.py).
+    """
+
+    def __init__(self, params: BallParams | None = None, mode: str = "default"):
+        super().__init__(params)
+        self.mode = mode
+        self._fn = torch.compile(lambda *a: _step_tensors(self, *a), mode=mode, dynamic=False, fullgraph=True)
+
+    def step(self, s, dt, substeps=10, paddle=None, adaptive=True):
+        if adaptive or paddle is None:
+            return super().step(s, dt, substeps, paddle, adaptive)
+        out = self._fn(s.pos, s.vel, s.spin, paddle.pos, paddle.rot, paddle.lin_vel, paddle.ang_vel, dt, substeps)
+        if self.mode == "reduce-overhead":  # CUDA-graph outputs are overwritten on the next replay
+            out = tuple(o.clone() for o in out)
+        x, v, w, cc, cp, nc, pc, padc, padp, padj, padl = out
+        return BallState(x, v, w), StepEvents(cc, cp, nc, pc, padc, padp, padj, padl)

@@ -33,7 +33,7 @@ from mjlab.tasks.velocity.mdp import UniformVelocityCommandCfg
 
 from picklebot_mj import court
 from picklebot_mj.ball import BALL_RADIUS
-from picklebot_mj.ball_sim import BallSim, BallState, PaddleState
+from picklebot_mj.ball_sim import BallSim, BallState, CompiledBallSim, PaddleState
 from picklebot_mj.g1_paddle import PADDLE_BODY, get_g1_paddle_cfg
 from picklebot_mj.rules import Fault, Phase, RallyRules, in_bounds
 
@@ -86,6 +86,8 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # sub-step under 0.9 ball radii at 35 m/s relative speed; the paddle target is 9 cm thick
     # (box + ball diameter), so there is no tunnelling.
     ball_substeps: int = 6
+    # torch.compile the fixed-sub-step ball step (9x faster; ~50 s compile once per process).
+    compile_ball: bool = True
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -97,7 +99,7 @@ class BallPhysicsAction(ActionTerm):
     def __init__(self, cfg: BallPhysicsActionCfg, env):
         super().__init__(cfg, env)
         n, dev = env.num_envs, env.device
-        self.sim = BallSim()
+        self.sim = CompiledBallSim(mode="default") if cfg.compile_ball else BallSim()
         z = lambda: torch.zeros(n, 3, device=dev)
         self.ball = BallState(z(), z(), z())
         self.rules = RallyRules(n, dev)
