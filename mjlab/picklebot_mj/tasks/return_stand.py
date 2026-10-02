@@ -42,7 +42,8 @@ from picklebot_mj.rules import Fault, Phase, RallyRules, in_bounds
 ROBOT_START = (-5.6, 0.35)  # court-local pelvis position, facing +x (the net)
 ROBOT_PLAYER = 0  # near team, player 0
 FEEDER_PLAYER = 2  # far team
-EPISODE_S = 4.0  # 3.0 until lateral-a01; +1 s so high returns can land within the episode
+EPISODE_S = 8.0  # several feeds per episode (feeding machine); 3 s until lateral-a01, 4 s in lateral-a02
+REFEED_DELAY_S = 0.5  # pause between the end of one rally and the next feed
 BODY_RADIUS = 0.17  # ball within this of the pelvis/torso origins counts as body contact
 
 
@@ -76,6 +77,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     compile_ball: bool = True
     # Analytic paddle face corner radius; matches the drawn paddle. 0 = the Stage 2 square face.
     paddle_corner_radius: float = PADDLE_CORNER_RADIUS
+    refeed_delay_s: float = REFEED_DELAY_S
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -116,10 +118,13 @@ class BallPhysicsAction(ActionTerm):
         self.return_count = torch.zeros((), dtype=torch.long, device=dev)
         self.hit_count = torch.zeros((), dtype=torch.long, device=dev)
         self._prev_dead = b()
-        # Per-episode outcome tallies, recorded when an episode ends (term reset), so rates are
-        # k / n over completed episodes. The initial reset (no steps taken) is not counted.
+        # Feeding machine: per-env countdown (s) to the next feed after a rally ends; -1 = idle.
+        self.refeed_timer = torch.full((n,), -1.0, device=dev)
+        self.tallied = b()  # this feed's outcome already counted
+        # Per-feed outcome tallies ("episodes" = feeds), recorded when each feed's rally ends, or at the
+        # env reset for a feed still in progress (a fall counts against it). Rates are k / n over feeds.
         self.ep = {k: torch.zeros((), dtype=torch.long, device=dev)
-                   for k in ("episodes", "contact", "legal_return", "fall")}
+                   for k in ("episodes", "contact", "legal_return", "fall", "env_episodes", "env_falls")}
         # Contact/landing diagnostics (sums for means; kept small and on-device).
         self.diag = {k: torch.zeros((), device=dev) for k in
                      ("n_contact", "paddle_speed", "paddle_speed_sq", "ball_in_speed", "ball_out_speed",
@@ -143,20 +148,51 @@ class BallPhysicsAction(ActionTerm):
         if len(env_ids) == 0:
             return
         if self._env.common_step_counter > 0:
-            self.ep["episodes"] += len(env_ids)
-            self.ep["contact"] += self.hit_done[env_ids].sum()
-            self.ep["legal_return"] += self.return_done[env_ids].sum()
             fell = self._env.termination_manager.get_term("fell_over")[env_ids]
-            self.ep["fall"] += fell.sum()
-            outcome = torch.stack([torch.ones_like(fell, dtype=torch.long), self.hit_done[env_ids].long(),
-                                   self.return_done[env_ids].long(), fell.long()], -1)
-            self.ep_family.index_add_(0, self.family[env_ids], outcome)
+            mask = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+            mask[env_ids] = True
+            fell_all = torch.zeros_like(mask)
+            fell_all[env_ids] = fell
+            self._tally(mask & ~self.tallied, fell_all)
+            self.ep["env_episodes"] += len(env_ids)  # robot episodes (several feeds each)
+            self.ep["env_falls"] += fell.sum()  # includes falls between feeds
         self._feed(env_ids)
         self.rules.begin_from_feed(env_ids, torch.full_like(env_ids, FEEDER_PLAYER), must_bounce=True)
-        for f in (self.hit_done, self.hit_now, self.return_done, self.return_now, self.lost_now, self._prev_dead):
+        for f in (self.hit_done, self.hit_now, self.return_done, self.return_now, self.lost_now, self._prev_dead,
+                  self.tallied):
             f[env_ids] = False
         self.wrench[env_ids] = 0.0
+        self.refeed_timer[env_ids] = -1.0
         self._write_mocap(env_ids)
+
+    @property
+    def num_envs(self) -> int:
+        return self.all_ids.shape[0]
+
+    def _tally(self, mask: torch.Tensor, fell: torch.Tensor) -> None:
+        """Count one finished feed for each env in mask (masked sums, no host sync)."""
+        m = mask.long()
+        outcome = torch.stack([m, (self.hit_done & mask).long(), (self.return_done & mask).long(),
+                               (fell & mask).long()], -1)
+        self.ep["episodes"] += outcome[:, 0].sum()
+        self.ep["contact"] += outcome[:, 1].sum()
+        self.ep["legal_return"] += outcome[:, 2].sum()
+        self.ep["fall"] += outcome[:, 3].sum()
+        self.ep_family.index_add_(0, self.family, outcome)
+
+    def _refeed(self, fire: torch.Tensor) -> None:
+        """New feed for envs in `fire` without resetting the robot (computed for all, selected by mask)."""
+        pos, vel, spin = self.ball.pos.clone(), self.ball.vel.clone(), self.ball.spin.clone()
+        fam_old = self.family.clone()
+        self._feed(self.all_ids)
+        m = fire.unsqueeze(-1)
+        self.ball = BallState(torch.where(m, self.ball.pos, pos), torch.where(m, self.ball.vel, vel),
+                              torch.where(m, self.ball.spin, spin))
+        self.family = torch.where(fire, self.family, fam_old)
+        self.rules.begin_from_feed_masked(fire, FEEDER_PLAYER, must_bounce=True)
+        for name in ("hit_done", "return_done", "tallied", "_prev_dead"):
+            setattr(self, name, getattr(self, name) & ~fire)
+        self.refeed_timer = torch.where(fire, torch.full_like(self.refeed_timer, -1.0), self.refeed_timer)
 
     def _range(self, name, fam):
         """(lo, hi) per env for FeedCfg attribute `name`, gathered by family index."""
@@ -248,6 +284,16 @@ class BallPhysicsAction(ActionTerm):
         self.return_count += ret.sum()
         self.hit_count += (legal_hit & ~was_hit).sum()
         self._prev_dead = self.rules.dead.clone()
+        # Feeding machine: count the finished rally, wait, then feed the next ball (no robot reset).
+        over = (self.rules.dead | self.return_done) & ~self.tallied
+        self._tally(over, torch.zeros_like(over))
+        self.tallied = self.tallied | over
+        self.refeed_timer = torch.where(over, torch.full_like(self.refeed_timer, self.cfg.refeed_delay_s),
+                                        self.refeed_timer)
+        waiting = self.refeed_timer >= 0.0
+        self.refeed_timer = torch.where(waiting, self.refeed_timer - dt, self.refeed_timer)
+        fire = waiting & (self.refeed_timer <= 0.0)
+        self._refeed(fire)
         # Reaction on the paddle for the next physics step (impulse -> force over dt).
         force = ev.paddle_impulse / dt
         com = data.body_com_pose_w[:, self.paddle_id, :3] - origins
@@ -401,11 +447,10 @@ def return_stand_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.rewards["approach_ball"] = RewardTermCfg(func=approach_ball, weight=2.0)
     cfg.rewards["paddle_contact"] = RewardTermCfg(func=paddle_contact, weight=1.0 / step_dt)
     cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=5.0 / step_dt)
-    # Rally end resets the drill but is treated as a time-out (PPO bootstraps the value), so ending
-    # a rally never forfeits the per-step balance rewards. As a true termination it made the
-    # policy avoid finishing rallies: run lateral-a01 learned sky-high lobs (4.2 m net clearance)
-    # that outlast the episode, and legal returns fell 100 % -> 0 % (results/stage4-run-a.md).
-    cfg.terminations["drill_over"] = TerminationTermCfg(func=drill_over, time_out=True)
+    # No termination on rally end: a feeding machine serves the next ball 0.5 s after each rally,
+    # within 8 s episodes that end only on a fall or the time limit. History: as a true termination
+    # (lateral-a01) the policy learned lobs that outlast the episode; as a bootstrapped time-out
+    # (lateral-a02) the inherited critic diverged (value loss 64) and the policy collapsed.
     cfg.episode_length_s = EPISODE_S if not play else 1e9
     cfg.viewer.body_name = "torso_link"
     return cfg

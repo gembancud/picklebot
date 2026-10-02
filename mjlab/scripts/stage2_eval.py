@@ -109,6 +109,8 @@ def main():
         "fall_rate": round(falls / max(episodes, 1), 4), "fall_ci95": wilson(falls, episodes),
         "hits": hits, "legal_returns": rets, "falls": falls, "rally_endings": endings,
         "grip": args.grip, "families": fams,
+        "robot_episodes": int(term.ep["env_episodes"]), "robot_falls": int(term.ep["env_falls"]),
+        "robot_fall_rate_per_episode": round(int(term.ep["env_falls"]) / max(int(term.ep["env_episodes"]), 1), 4),
     }
     table = {}
     for i, name in enumerate(FAMILY_NAMES):

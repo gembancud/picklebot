@@ -140,6 +140,17 @@ class RallyRules:
         self.hits[env_ids] = 1
         self.designated_receiver[env_ids] = -1  # any player of the receiving team (drill)
 
+    def begin_from_feed_masked(self, mask: torch.Tensor, feeder: int, must_bounce: bool = False):
+        """begin_from_feed for the envs in `mask` only, with no host sync (all envs computed, then selected)."""
+        names = [k for k, v in vars(self).items() if isinstance(v, torch.Tensor)]
+        old = {k: getattr(self, k).clone() for k in names}
+        ids = torch.arange(mask.shape[0], device=mask.device)
+        self.begin_from_feed(ids, torch.full_like(ids, feeder), must_bounce=must_bounce)
+        for k in names:
+            new = getattr(self, k)
+            m = mask.view(-1, *([1] * (new.dim() - 1)))
+            setattr(self, k, torch.where(m, new, old[k]))
+
     def _reset_common(self, env_ids, phase):
         self.phase[env_ids] = int(phase)
         self.fault[env_ids] = int(Fault.NONE)

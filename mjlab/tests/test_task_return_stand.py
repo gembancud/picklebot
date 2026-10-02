@@ -17,14 +17,48 @@ def test_command_stays_zero():
     assert cfg.commands["twist"].rel_standing_envs == 1.0 and not cfg.commands["twist"].heading_command
 
 
-def test_rally_end_is_a_time_out_not_a_termination():
-    """Regression (run lateral-a01): terminating on rally end taught the policy to avoid ending rallies."""
+def test_rally_end_does_not_end_the_episode():
+    """Regressions: lateral-a01 (rally end = termination -> lobs that outlast the episode) and
+    lateral-a02 (rally end = bootstrapped time-out -> critic divergence). Now a feeding machine."""
     from picklebot_mj.tasks.return_stand import EPISODE_S, return_stand_env_cfg
 
     cfg = return_stand_env_cfg()
-    assert cfg.terminations["drill_over"].time_out is True
-    assert cfg.terminations["fell_over"].time_out is False  # a fall is still a real failure
-    assert cfg.episode_length_s == EPISODE_S >= 4.0
+    assert "drill_over" not in cfg.terminations
+    assert cfg.terminations["fell_over"].time_out is False
+    assert cfg.episode_length_s == EPISODE_S >= 8.0
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA (mujoco_warp)")
+def test_feeding_machine_refeeds_after_delay():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.rules import Fault, Phase
+    from picklebot_mj.tasks import TASK_RETURN_STAND
+
+    cfg = load_env_cfg(TASK_RETURN_STAND)
+    cfg.scene.num_envs = 8
+    cfg.actions["ball"].compile_ball = False
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    term = env.action_manager.get_term("ball")
+    act = torch.zeros(8, 29, device="cuda")
+    env.step(act)
+    ep0 = int(term.ep["episodes"])
+    term.rules.fail(torch.ones(8, dtype=torch.bool, device="cuda"), torch.zeros(8, dtype=torch.long, device="cuda"),
+                    Fault.LOST)  # end every rally now
+    env.step(act)  # rally over -> tallied, countdown starts
+    assert int(term.ep["episodes"]) - ep0 == 8 and term.tallied.all()
+    assert (term.refeed_timer > 0).all()
+    for _ in range(int(0.45 / env.step_dt)):
+        env.step(act)
+    assert int(term.ep["episodes"]) - ep0 == 8  # still waiting (< 0.5 s), nothing double-counted
+    for _ in range(int(0.1 / env.step_dt) + 1):
+        env.step(act)
+    fresh = term.rules.phase == Phase.SERVE_FLIGHT
+    assert fresh.float().mean() >= 0.5  # new balls in flight (envs that fell meanwhile were reset instead)
+    assert not term.tallied[fresh].any()
 
 
 def test_seed_ranges_disjoint():
