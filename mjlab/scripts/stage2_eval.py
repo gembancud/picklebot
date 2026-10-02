@@ -49,6 +49,9 @@ def main():
     ap.add_argument("--video", default=None)
     ap.add_argument("--families", default="easy_forehand",
                     help="comma-separated feed families sampled uniformly, or 'all'")
+    ap.add_argument("--task", default=None, help="task id (default: Picklebot-Return-Stand-G1)")
+    ap.add_argument("--target", choices=["random", "A", "B"], default=None,
+                    help="aiming tasks: force the landing target (paired A/B evaluation)")
     ap.add_argument("--grip", choices=["default", "v1"], default="default",
                     help="v1 = Stage 2 robot (inline grip, square face) for old checkpoints")
     ap.add_argument("--view", choices=["side", "behind"], default="side")
@@ -57,7 +60,10 @@ def main():
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
 
-    cfg = load_env_cfg(TASK_RETURN_STAND)
+    task = args.task or TASK_RETURN_STAND
+    cfg = load_env_cfg(task)
+    if args.target is not None:
+        cfg.actions["ball"].target_mode = args.target
     cfg.scene.num_envs = args.envs
     cfg.seed = args.seed
     cfg.actions["ball"].seed = args.seed
@@ -78,7 +84,7 @@ def main():
         cfg.viewer.geom_group = (1, 1, 1, 1, 0, 0)  # group 3 = court markings
         cfg.viewer.max_extra_envs = 0
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda", render_mode="rgb_array" if args.video else None)
-    agent_cfg = load_rl_cfg(TASK_RETURN_STAND)
+    agent_cfg = load_rl_cfg(task)
     venv = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
     runner = MjlabOnPolicyRunner(venv, asdict(agent_cfg), device="cuda")
     runner.load(args.checkpoint, load_cfg={"actor": True}, strict=True, map_location="cuda")
@@ -108,7 +114,7 @@ def main():
         "legal_return_rate": round(rets / max(episodes, 1), 4), "legal_return_ci95": wilson(rets, episodes),
         "fall_rate": round(falls / max(episodes, 1), 4), "fall_ci95": wilson(falls, episodes),
         "hits": hits, "legal_returns": rets, "falls": falls, "rally_endings": endings,
-        "grip": args.grip, "families": fams,
+        "grip": args.grip, "families": fams, "task": task, "target": args.target,
         "robot_episodes": int(term.ep["env_episodes"]), "robot_falls": int(term.ep["env_falls"]),
         "robot_fall_rate_per_episode": round(int(term.ep["env_falls"]) / max(int(term.ep["env_episodes"]), 1), 4),
     }
@@ -135,6 +141,8 @@ def main():
         "landing_x_mean": round(d["land_x"] / nl, 3),
         "landing_x_std": round(math.sqrt(max(d["land_x_sq"] / nl - (d["land_x"] / nl) ** 2, 0)), 3),
         "landing_abs_y_mean": round(d["land_y_abs"] / nl, 3),
+        "landings_in_A": int(d["land_in_A"]), "landings_in_B": int(d["land_in_B"]),
+        "target_hits": int(d["target_hit"]),
     }
     print(json.dumps(out, indent=1))
     print(f"{'family':14s} {'episodes':>8s} {'contact':>8s} {'legal return [95% CI]':>24s} {'fall':>6s}")

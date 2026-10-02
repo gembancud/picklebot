@@ -44,6 +44,12 @@ ROBOT_PLAYER = 0  # near team, player 0
 FEEDER_PLAYER = 2  # far team
 EPISODE_S = 8.0  # several feeds per episode (feeding machine); 3 s until lateral-a01, 4 s in lateral-a02
 REFEED_DELAY_S = 0.5  # pause between the end of one rally and the next feed
+# Aiming targets (court-local, far court): A = deep left, B = deep right from the robot's view
+# (it faces +x, so its left is +y). Hit = legal landing within TARGET_RADIUS of the target.
+TARGET_CENTRES = ((4.5, 1.6), (4.5, -1.6))
+TARGET_RADIUS = 1.0
+PLACEMENT_MAX = 3.0  # bonus at the centre on a legal landing; linear to 0 at PLACEMENT_RANGE
+PLACEMENT_RANGE = 2.0
 BODY_RADIUS = 0.17  # ball within this of the pelvis/torso origins counts as body contact
 
 
@@ -78,6 +84,8 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # Analytic paddle face corner radius; matches the drawn paddle. 0 = the Stage 2 square face.
     paddle_corner_radius: float = PADDLE_CORNER_RADIUS
     refeed_delay_s: float = REFEED_DELAY_S
+    targets: bool = False  # sample a landing target per feed (aiming tasks)
+    target_mode: str = "random"  # "random" (50/50 per feed), "A" or "B" (forced; evaluation)
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -104,6 +112,10 @@ class BallPhysicsAction(ActionTerm):
         self._ranges = {a: torch.tensor([getattr(FAMILIES[f], a) for f in FAMILY_NAMES], device=dev)
                         for a in ("start_x", "start_z", "bounce_x", "lateral_y", "flight_time", "spin_y")}
         self.family = torch.zeros(n, dtype=torch.long, device=dev)
+        self.gen_target = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 104729)  # own stream
+        self.target = torch.zeros(n, dtype=torch.long, device=dev)  # 0 = A, 1 = B
+        self._target_xy = torch.tensor(TARGET_CENTRES, device=dev)
+        self.placement_now = torch.zeros(n, device=dev)
         # Per-family episode tallies [family, (episodes, contact, legal_return, fall)].
         self.ep_family = torch.zeros(len(FAMILY_NAMES), 4, dtype=torch.long, device=dev)
         # Per-episode flags read by rewards/observations/terminations.
@@ -128,7 +140,8 @@ class BallPhysicsAction(ActionTerm):
         # Contact/landing diagnostics (sums for means; kept small and on-device).
         self.diag = {k: torch.zeros((), device=dev) for k in
                      ("n_contact", "paddle_speed", "paddle_speed_sq", "ball_in_speed", "ball_out_speed",
-                      "contact_height", "n_cross", "n_land", "land_x", "land_x_sq", "land_y_abs", "net_clear")}
+                      "contact_height", "n_cross", "n_land", "land_x", "land_x_sq", "land_y_abs", "net_clear",
+                      "land_in_A", "land_in_B", "target_hit", "placement")}
 
     # ActionTerm API ---------------------------------------------------------------
     @property
@@ -183,12 +196,13 @@ class BallPhysicsAction(ActionTerm):
     def _refeed(self, fire: torch.Tensor) -> None:
         """New feed for envs in `fire` without resetting the robot (computed for all, selected by mask)."""
         pos, vel, spin = self.ball.pos.clone(), self.ball.vel.clone(), self.ball.spin.clone()
-        fam_old = self.family.clone()
+        fam_old, tgt_old = self.family.clone(), self.target.clone()
         self._feed(self.all_ids)
         m = fire.unsqueeze(-1)
         self.ball = BallState(torch.where(m, self.ball.pos, pos), torch.where(m, self.ball.vel, vel),
                               torch.where(m, self.ball.spin, spin))
         self.family = torch.where(fire, self.family, fam_old)
+        self.target = torch.where(fire, self.target, tgt_old)
         self.rules.begin_from_feed_masked(fire, FEEDER_PLAYER, must_bounce=True)
         for name in ("hit_done", "return_done", "tallied", "_prev_dead"):
             setattr(self, name, getattr(self, name) & ~fire)
@@ -207,6 +221,11 @@ class BallPhysicsAction(ActionTerm):
         k = len(env_ids)
         fam = torch.multinomial(self._mix, k, replacement=True, generator=self.gen)
         self.family[env_ids] = fam
+        if self.cfg.target_mode == "random":
+            tgt = (torch.rand(k, generator=self.gen_target, device=self.device) < 0.5).long()
+        else:
+            tgt = torch.full((k,), 0 if self.cfg.target_mode == "A" else 1, dtype=torch.long, device=self.device)
+        self.target[env_ids] = tgt
         x0, z0 = self._u("start_x", fam), self._u("start_z", fam)
         y = ROBOT_START[1] + self._u("lateral_y", fam)
         bx, t = self._u("bounce_x", fam), self._u("flight_time", fam)
@@ -268,6 +287,16 @@ class BallPhysicsAction(ActionTerm):
             self.diag["land_x"] += (lp[:, 0] * r).sum()
             self.diag["land_x_sq"] += (lp[:, 0] ** 2 * r).sum()
             self.diag["land_y_abs"] += (lp[:, 1].abs() * r).sum()
+            dA = (lp[:, :2] - self._target_xy[0]).norm(dim=-1)
+            dB = (lp[:, :2] - self._target_xy[1]).norm(dim=-1)
+            dT = torch.where(self.target == 0, dA, dB)
+            self.diag["land_in_A"] += ((dA <= TARGET_RADIUS).float() * r).sum()
+            self.diag["land_in_B"] += ((dB <= TARGET_RADIUS).float() * r).sum()
+            self.diag["target_hit"] += ((dT <= TARGET_RADIUS).float() * r).sum()
+            bonus = PLACEMENT_MAX * (1.0 - dT / PLACEMENT_RANGE).clamp(min=0.0) * r  # legal landings only
+            self.diag["placement"] += bonus.sum()
+            if self.cfg.targets:
+                self.placement_now = self.placement_now + bonus
         self.rules.permanent_object(ev.post_contact & live)
         # Ball touching the robot body (approximate: pelvis/torso spheres).
         body = data.body_link_pose_w[:, self.body_ids, :3] - origins.unsqueeze(1)
@@ -315,6 +344,7 @@ class BallPhysicsAction(ActionTerm):
         self.hit_now[:] = False
         self.return_now[:] = False
         self.lost_now[:] = False
+        self.placement_now.zero_()
 
 
 def _term(env) -> BallPhysicsAction:
@@ -346,6 +376,18 @@ def ball_from_paddle_b(env) -> torch.Tensor:
 def rally_flags(env) -> torch.Tensor:
     t = _term(env)
     return torch.stack([t.rules.bounced.float(), t.hit_done.float()], -1)
+
+
+def target_obs(env) -> torch.Tensor:
+    """Requested landing target (court-local, scaled to the court half-size)."""
+    t = _term(env)
+    xy = t._target_xy[t.target]
+    return xy / torch.tensor([court.HALF_LENGTH, court.HALF_WIDTH], device=xy.device)
+
+
+def placement(env) -> torch.Tensor:
+    """Placement bonus paid on legal landings (read before legal_return consumes the flags)."""
+    return _term(env).placement_now
 
 
 def ball_spin(env) -> torch.Tensor:
@@ -397,7 +439,7 @@ def _ball_spec() -> mujoco.MjSpec:
     return spec
 
 
-def return_stand_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+def return_stand_env_cfg(play: bool = False, targets: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = unitree_g1_flat_env_cfg(play=play)
     robot = get_g1_paddle_cfg()
     # New InitialStateCfg (the original is mjlab's shared keyframe constant). Court-local;
@@ -443,9 +485,15 @@ def return_stand_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
         terms["ball_from_paddle"] = ObservationTermCfg(func=ball_from_paddle_b)
         terms["rally_flags"] = ObservationTermCfg(func=rally_flags)
     cfg.observations["critic"].terms["ball_spin"] = ObservationTermCfg(func=ball_spin)
+    if targets:  # appended last in both groups (checkpoint expansion pads the trailing columns)
+        cfg.actions["ball"].targets = True
+        for group in ("actor", "critic"):
+            cfg.observations[group].terms["target"] = ObservationTermCfg(func=target_obs)
     step_dt = cfg.sim.mujoco.timestep * cfg.decimation
     cfg.rewards["approach_ball"] = RewardTermCfg(func=approach_ball, weight=2.0)
     cfg.rewards["paddle_contact"] = RewardTermCfg(func=paddle_contact, weight=1.0 / step_dt)
+    if targets:  # one-shot bonus; must come before legal_return, which clears the step flags
+        cfg.rewards["placement"] = RewardTermCfg(func=placement, weight=1.0 / step_dt)
     cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=5.0 / step_dt)
     # No termination on rally end: a feeding machine serves the next ball 0.5 s after each rally,
     # within 8 s episodes that end only on a fall or the time limit. History: as a true termination

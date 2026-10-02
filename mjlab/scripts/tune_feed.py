@@ -32,6 +32,9 @@ class _FakeTerm:
         self._ranges = {a: torch.tensor([getattr(FAMILIES[f], a) for f in FAMILY_NAMES])
                         for a in ("start_x", "start_z", "bounce_x", "lateral_y", "flight_time", "spin_y")}
         self.family = torch.zeros(n, dtype=torch.long)
+        self.cfg = type("Cfg", (), {"target_mode": "random"})()
+        self.gen_target = torch.Generator(device=device).manual_seed(seed + 1)
+        self.target = torch.zeros(n, dtype=torch.long)
 
     _range = BallPhysicsAction._range
     _u = BallPhysicsAction._u

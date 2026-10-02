@@ -36,3 +36,11 @@ register_mjlab_task(
     play_env_cfg=_with_mix(return_stand_env_cfg(play=True), LATERAL_MIX),
     rl_cfg=_rl_cfg(),  # same experiment name, so runs can warm-start from return-stand checkpoints
 )
+
+TASK_AIM_LATERAL = "Picklebot-Aim-Lateral-G1"  # Stage 4 run B: lateral mix + landing targets (deep left/right)
+register_mjlab_task(
+    task_id=TASK_AIM_LATERAL,
+    env_cfg=_with_mix(return_stand_env_cfg(targets=True), LATERAL_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, targets=True), LATERAL_MIX),
+    rl_cfg=_rl_cfg(),
+)

@@ -1,0 +1,116 @@
+{
+ "checkpoint": "artifacts/train/logs/picklebot_return_stand/parent-lateral-a03-aim112/model_3000.pt",
+ "seed": 4200040,
+ "envs": 1024,
+ "sim_seconds": 16.0,
+ "episodes": 6373,
+ "contact_rate": 0.9616,
+ "contact_ci95": [
+  0.9566,
+  0.966
+ ],
+ "legal_return_rate": 0.9212,
+ "legal_return_ci95": [
+  0.9144,
+  0.9276
+ ],
+ "fall_rate": 0.0002,
+ "fall_ci95": [
+  0.0,
+  0.0009
+ ],
+ "hits": 6128,
+ "legal_returns": 5871,
+ "falls": 1,
+ "rally_endings": {
+  "DOUBLE_HIT": 1,
+  "SECOND_BOUNCE": 16,
+  "OUT": 1,
+  "WRONG_SIDE": 45,
+  "LOST": 12
+ },
+ "grip": "default",
+ "families": [
+  "easy_forehand",
+  "wide_forehand",
+  "backhand"
+ ],
+ "task": "Picklebot-Aim-Lateral-G1",
+ "target": "A",
+ "robot_episodes": 2048,
+ "robot_falls": 1,
+ "robot_fall_rate_per_episode": 0.0005,
+ "per_family": {
+  "easy_forehand": {
+   "episodes": 2129,
+   "contact": 0.9652,
+   "contact_ci95": [
+    0.9566,
+    0.9722
+   ],
+   "legal_return": 0.9267,
+   "legal_return_ci95": [
+    0.9149,
+    0.937
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0018
+   ]
+  },
+  "wide_forehand": {
+   "episodes": 2044,
+   "contact": 0.9604,
+   "contact_ci95": [
+    0.951,
+    0.968
+   ],
+   "legal_return": 0.9266,
+   "legal_return_ci95": [
+    0.9145,
+    0.9371
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0019
+   ]
+  },
+  "backhand": {
+   "episodes": 2200,
+   "contact": 0.9591,
+   "contact_ci95": [
+    0.95,
+    0.9666
+   ],
+   "legal_return": 0.9109,
+   "legal_return_ci95": [
+    0.8983,
+    0.9221
+   ],
+   "fall": 0.0005,
+   "fall_ci95": [
+    0.0001,
+    0.0026
+   ]
+  }
+ },
+ "contact_diagnostics": {
+  "first_contacts": 6129,
+  "paddle_speed_mean": 6.356,
+  "paddle_speed_std": 0.302,
+  "ball_speed_in_mean": 3.321,
+  "ball_speed_out_mean": 11.648,
+  "contact_height_mean": 0.655,
+  "net_crossings": 6081,
+  "net_clearance_mean_m": 0.692,
+  "legal_landings": 5871,
+  "landing_x_mean": 4.219,
+  "landing_x_std": 0.487,
+  "landing_abs_y_mean": 0.748,
+  "landings_in_A": 2277,
+  "landings_in_B": 172,
+  "target_hits": 2277
+ }
+}
