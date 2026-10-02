@@ -35,6 +35,7 @@ from picklebot_mj import court
 from picklebot_mj.ball import BALL_RADIUS
 from picklebot_mj.ball_sim import (PADDLE_CORNER_RADIUS, BallParams, BallSim, BallState, CompiledBallSim,
                                    PaddleState)
+from picklebot_mj.feeds import FAMILIES, FAMILY_NAMES, FeedMix
 from picklebot_mj.g1_paddle import PADDLE_BODY, get_g1_paddle_cfg
 from picklebot_mj.rules import Fault, Phase, RallyRules, in_bounds
 
@@ -43,22 +44,6 @@ ROBOT_PLAYER = 0  # near team, player 0
 FEEDER_PLAYER = 2  # far team
 EPISODE_S = 3.0
 BODY_RADIUS = 0.17  # ball within this of the pelvis/torso origins counts as body contact
-
-
-@dataclass
-class FeedCfg:
-    """Ballistic aim (no drag) for the feed; aerodynamics then shortens it slightly."""
-
-    # Tuned with scripts/tune_feed.py (analytic ball alone): 100% bounce exactly once
-    # before the contact plane; 80% pass it at 0.55-1.15 m (p10-p90 height 0.52-0.66 m).
-    start_x: tuple[float, float] = (0.8, 1.2)
-    start_z: tuple[float, float] = (1.2, 1.6)
-    bounce_x: tuple[float, float] = (-4.6, -4.2)
-    # Forehand side (the robot's right is -y): clear of the hip (body-contact radius ~0.21 m)
-    # and inside the measured 0.86 m reach.
-    lateral_y: tuple[float, float] = (-0.65, -0.30)
-    flight_time: tuple[float, float] = (0.8, 0.95)
-    topspin: tuple[float, float] = (0.0, 30.0)  # rad/s; applied about -y (topspin for travel toward -x)
 
 
 # --------------------------------------------------------------------------------------
@@ -81,7 +66,7 @@ def _rotate_inv(q: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
 @dataclass(kw_only=True)
 class BallPhysicsActionCfg(ActionTermCfg):
     entity_name: str = "robot"
-    feed: FeedCfg = field(default_factory=FeedCfg)
+    feed_mix: FeedMix = field(default_factory=FeedMix)  # default: easy_forehand only (Stage 2 drill)
     seed: int = 0
     # Fixed ball sub-steps per physics step (no host syncs). 6 at dt 5 ms keeps travel per
     # sub-step under 0.9 ball radii at 35 m/s relative speed; the paddle target is 9 cm thick
@@ -111,6 +96,12 @@ class BallPhysicsAction(ActionTerm):
                                      device=dev, dtype=torch.long)
         self._fault_eye = torch.eye(len(Fault), dtype=torch.long, device=dev)
         self.all_ids = torch.arange(n, device=dev)
+        self._mix = torch.tensor(cfg.feed_mix.vector(), device=dev)
+        self._ranges = {a: torch.tensor([getattr(FAMILIES[f], a) for f in FAMILY_NAMES], device=dev)
+                        for a in ("start_x", "start_z", "bounce_x", "lateral_y", "flight_time", "spin_y")}
+        self.family = torch.zeros(n, dtype=torch.long, device=dev)
+        # Per-family episode tallies [family, (episodes, contact, legal_return, fall)].
+        self.ep_family = torch.zeros(len(FAMILY_NAMES), 4, dtype=torch.long, device=dev)
         # Per-episode flags read by rewards/observations/terminations.
         b = lambda: torch.zeros(n, dtype=torch.bool, device=dev)
         self.hit_done, self.hit_now = b(), b()
@@ -155,6 +146,9 @@ class BallPhysicsAction(ActionTerm):
             self.ep["legal_return"] += self.return_done[env_ids].sum()
             fell = self._env.termination_manager.get_term("fell_over")[env_ids]
             self.ep["fall"] += fell.sum()
+            outcome = torch.stack([torch.ones_like(fell, dtype=torch.long), self.hit_done[env_ids].long(),
+                                   self.return_done[env_ids].long(), fell.long()], -1)
+            self.ep_family.index_add_(0, self.family[env_ids], outcome)
         self._feed(env_ids)
         self.rules.begin_from_feed(env_ids, torch.full_like(env_ids, FEEDER_PLAYER), must_bounce=True)
         for f in (self.hit_done, self.hit_now, self.return_done, self.return_now, self.lost_now, self._prev_dead):
@@ -162,21 +156,28 @@ class BallPhysicsAction(ActionTerm):
         self.wrench[env_ids] = 0.0
         self._write_mocap(env_ids)
 
-    def _u(self, rng, k):
-        lo, hi = rng
-        return lo + (hi - lo) * torch.rand(k, generator=self.gen, device=self.device)
+    def _range(self, name, fam):
+        """(lo, hi) per env for FeedCfg attribute `name`, gathered by family index."""
+        t = self._ranges[name][fam]
+        return t[:, 0], t[:, 1]
+
+    def _u(self, name, fam):
+        lo, hi = self._range(name, fam)
+        return lo + (hi - lo) * torch.rand(fam.shape[0], generator=self.gen, device=self.device)
 
     def _feed(self, env_ids):
-        f, k = self.cfg.feed, len(env_ids)
-        x0, z0 = self._u(f.start_x, k), self._u(f.start_z, k)
-        y = ROBOT_START[1] + self._u(f.lateral_y, k)
-        bx, t = self._u(f.bounce_x, k), self._u(f.flight_time, k)
+        k = len(env_ids)
+        fam = torch.multinomial(self._mix, k, replacement=True, generator=self.gen)
+        self.family[env_ids] = fam
+        x0, z0 = self._u("start_x", fam), self._u("start_z", fam)
+        y = ROBOT_START[1] + self._u("lateral_y", fam)
+        bx, t = self._u("bounce_x", fam), self._u("flight_time", fam)
         vx = (bx - x0) / t
         vz = (BALL_RADIUS - z0 + 0.5 * 9.81 * t * t) / t
         self.ball.pos[env_ids] = torch.stack([x0, y, z0], -1)
         self.ball.vel[env_ids] = torch.stack([vx, torch.zeros_like(vx), vz], -1)
-        # Topspin for travel toward -x is spin about -y.
-        self.ball.spin[env_ids] = torch.stack([torch.zeros_like(vx), -self._u(f.topspin, k), torch.zeros_like(vx)], -1)
+        # spin_y > 0 is topspin for travel toward -x, i.e. world angular velocity about -y.
+        self.ball.spin[env_ids] = torch.stack([torch.zeros_like(vx), -self._u("spin_y", fam), torch.zeros_like(vx)], -1)
 
     def apply_actions(self) -> None:
         env = self._env
