@@ -6,6 +6,17 @@ import torch
 from picklebot_mj import seeds
 
 
+def test_command_stays_zero():
+    """Regression (run return-stand-01): the inherited velocity curriculum widened the command."""
+    from picklebot_mj.tasks.return_stand import return_stand_env_cfg
+
+    cfg = return_stand_env_cfg()
+    assert "command_vel" not in cfg.curriculum
+    r = cfg.commands["twist"].ranges
+    assert r.lin_vel_x == (0.0, 0.0) and r.lin_vel_y == (0.0, 0.0) and r.ang_vel_z == (0.0, 0.0)
+    assert cfg.commands["twist"].rel_standing_envs == 1.0 and not cfg.commands["twist"].heading_command
+
+
 def test_seed_ranges_disjoint():
     seeds.check_disjoint()
     assert min(seeds.FINAL_SEEDS) > max(seeds.DEV_EVAL_SEEDS) > max(seeds.TRAIN_SEEDS)

@@ -323,6 +323,10 @@ def return_stand_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     twist.ranges.ang_vel_z = (0.0, 0.0)
     twist.heading_command = False
     twist.ranges.heading = None
+    # The base config's velocity curriculum widens the command ranges during training
+    # (run return-stand-01 logged lin_vel_x_max 1.0, ang_vel_z_min -0.5); remove it so the
+    # command stays zero.
+    cfg.curriculum.pop("command_vel", None)
     # Small start-pose noise only.
     cfg.events["reset_base"].params["pose_range"] = {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "yaw": (-0.1, 0.1)}
     cfg.events.pop("push_robot", None)
