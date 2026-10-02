@@ -113,6 +113,14 @@ class BallPhysicsAction(ActionTerm):
         self.return_count = torch.zeros((), dtype=torch.long, device=dev)
         self.hit_count = torch.zeros((), dtype=torch.long, device=dev)
         self._prev_dead = b()
+        # Per-episode outcome tallies, recorded when an episode ends (term reset), so rates are
+        # k / n over completed episodes. The initial reset (no steps taken) is not counted.
+        self.ep = {k: torch.zeros((), dtype=torch.long, device=dev)
+                   for k in ("episodes", "contact", "legal_return", "fall")}
+        # Contact/landing diagnostics (sums for means; kept small and on-device).
+        self.diag = {k: torch.zeros((), device=dev) for k in
+                     ("n_contact", "paddle_speed", "paddle_speed_sq", "ball_in_speed", "ball_out_speed",
+                      "contact_height", "n_cross", "n_land", "land_x", "land_x_sq", "land_y_abs", "net_clear")}
 
     # ActionTerm API ---------------------------------------------------------------
     @property
@@ -131,6 +139,12 @@ class BallPhysicsAction(ActionTerm):
             env_ids = self.all_ids
         if len(env_ids) == 0:
             return
+        if self._env.common_step_counter > 0:
+            self.ep["episodes"] += len(env_ids)
+            self.ep["contact"] += self.hit_done[env_ids].sum()
+            self.ep["legal_return"] += self.return_done[env_ids].sum()
+            fell = self._env.termination_manager.get_term("fell_over")[env_ids]
+            self.ep["fall"] += fell.sum()
         self._feed(env_ids)
         self.rules.begin_from_feed(env_ids, torch.full_like(env_ids, FEEDER_PLAYER), must_bounce=True)
         for f in (self.hit_done, self.hit_now, self.return_done, self.return_now, self.lost_now, self._prev_dead):
@@ -174,13 +188,37 @@ class BallPhysicsAction(ActionTerm):
         was_hit = self.hit_done.clone()
         self.rules.hit(hit, torch.full_like(self.all_ids, ROBOT_PLAYER))
         legal_hit = hit & ~self.rules.dead & (self.rules.last_hitter == ROBOT_PLAYER)
-        self.hit_now |= legal_hit & ~was_hit
+        first = legal_hit & ~was_hit
+        if bool(first.any()):
+            f = first.float()
+            ps = paddle.lin_vel.norm(dim=-1)
+            d = self.diag
+            d["n_contact"] += f.sum()
+            d["paddle_speed"] += (ps * f).sum()
+            d["paddle_speed_sq"] += (ps * ps * f).sum()
+            d["ball_in_speed"] += (before.vel.norm(dim=-1) * f).sum()
+            d["ball_out_speed"] += (self.ball.vel.norm(dim=-1) * f).sum()
+            d["contact_height"] += (self.ball.pos[:, 2] * f).sum()
+        self.hit_now |= first
         self.hit_done |= legal_hit
+        # Height above the net when the returned ball crosses x = 0 (first crossing after the hit).
+        crossing = self.hit_done & (before.pos[:, 0] < 0) & (self.ball.pos[:, 0] >= 0)
+        if bool(crossing.any()):
+            clear = self.ball.pos[:, 2] - BALL_RADIUS - court.NET_CENTER_HEIGHT
+            self.diag["net_clear"] += (clear * crossing.float()).sum()
+            self.diag["n_cross"] += crossing.float().sum()
         bounce = ev.court_contact & live & ~self.rules.dead
         self.rules.bounce(bounce, ev.court_point[..., :2].nan_to_num(0.0))
         ret = bounce & self.hit_done & ~self.rules.dead & self.rules.bounced & (self.rules.expected_team == 1)
         self.return_now |= ret & ~self.return_done
         self.return_done |= ret
+        if bool(ret.any()):
+            r = ret.float()
+            lp = ev.court_point.nan_to_num(0.0)
+            self.diag["n_land"] += r.sum()
+            self.diag["land_x"] += (lp[:, 0] * r).sum()
+            self.diag["land_x_sq"] += (lp[:, 0] ** 2 * r).sum()
+            self.diag["land_y_abs"] += (lp[:, 1].abs() * r).sum()
         self.rules.permanent_object(ev.post_contact & live)
         # Ball touching the robot body (approximate: pelvis/torso spheres).
         body = data.body_link_pose_w[:, self.body_ids, :3] - origins.unsqueeze(1)

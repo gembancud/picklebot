@@ -56,7 +56,10 @@ def main():
     cfg.observations["actor"].enable_corruption = False
     if args.video:
         cfg.viewer.width, cfg.viewer.height = 960, 540
-        cfg.viewer.distance, cfg.viewer.elevation, cfg.viewer.azimuth = 4.0, -10.0, 135.0
+        # Side-on view from the robot's right, wide enough to follow the ball over the net.
+        cfg.viewer.distance, cfg.viewer.elevation, cfg.viewer.azimuth = 6.5, -8.0, 270.0
+        cfg.viewer.geom_group = (1, 1, 1, 1, 0, 0)  # group 3 = court markings
+        cfg.viewer.max_extra_envs = 0
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda", render_mode="rgb_array" if args.video else None)
     agent_cfg = load_rl_cfg(TASK_RETURN_STAND)
     venv = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
@@ -65,20 +68,20 @@ def main():
     policy = runner.get_inference_policy(device="cuda")
 
     term = env.action_manager.get_term("ball")
-    term.fault_counts.zero_(); term.hit_count.zero_(); term.return_count.zero_()
+    term.fault_counts.zero_()
+    for v in term.ep.values():
+        v.zero_()
     obs = venv.get_observations()
-    episodes = falls = 0
     frames = []
     steps = int(round(args.seconds / env.step_dt))
     with torch.inference_mode():
         for _ in range(steps):
             obs, _, dones, _ = venv.step(policy(obs))
-            done = dones.bool()
-            episodes += int(done.sum())
-            falls += int((env.termination_manager.get_term("fell_over") & done).sum())
             if args.video:
                 frames.append(env.render())
-    hits, rets = int(term.hit_count), int(term.return_count)
+    # Completed episodes only (outcomes tallied by the ball term at each episode end).
+    episodes = int(term.ep["episodes"])
+    hits, rets, falls = int(term.ep["contact"]), int(term.ep["legal_return"]), int(term.ep["fall"])
     endings = {Fault(i).name: int(c) for i, c in enumerate(term.fault_counts.tolist()) if c}
     out = {
         "checkpoint": args.checkpoint, "seed": args.seed, "envs": args.envs, "sim_seconds": args.seconds,
@@ -87,6 +90,22 @@ def main():
         "legal_return_rate": round(rets / max(episodes, 1), 4), "legal_return_ci95": wilson(rets, episodes),
         "fall_rate": round(falls / max(episodes, 1), 4), "fall_ci95": wilson(falls, episodes),
         "hits": hits, "legal_returns": rets, "falls": falls, "rally_endings": endings,
+    }
+    d = {k: float(v) for k, v in term.diag.items()}
+    nc, nl = max(d["n_contact"], 1.0), max(d["n_land"], 1.0)
+    out["contact_diagnostics"] = {
+        "first_contacts": int(d["n_contact"]),
+        "paddle_speed_mean": round(d["paddle_speed"] / nc, 3),
+        "paddle_speed_std": round(math.sqrt(max(d["paddle_speed_sq"] / nc - (d["paddle_speed"] / nc) ** 2, 0)), 3),
+        "ball_speed_in_mean": round(d["ball_in_speed"] / nc, 3),
+        "ball_speed_out_mean": round(d["ball_out_speed"] / nc, 3),
+        "contact_height_mean": round(d["contact_height"] / nc, 3),
+        "net_crossings": int(d["n_cross"]),
+        "net_clearance_mean_m": round(d["net_clear"] / max(d["n_cross"], 1.0), 3),
+        "legal_landings": int(d["n_land"]),
+        "landing_x_mean": round(d["land_x"] / nl, 3),
+        "landing_x_std": round(math.sqrt(max(d["land_x_sq"] / nl - (d["land_x"] / nl) ** 2, 0)), 3),
+        "landing_abs_y_mean": round(d["land_y_abs"] / nl, 3),
     }
     print(json.dumps(out, indent=1))
     if args.json:

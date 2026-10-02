@@ -60,7 +60,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 - [x] G1 plus a paddle fixed to the right wrist in the scene; reach and swing-speed envelope measured with scripted joint sweeps.
 - [x] Rules and legality module (net clearance, in/out, kitchen) ported from the Unity rules, with tests.
 - [x] Task: G1 standing (balance required), ball fed toward its forehand, reward for contact then a legal return; dev and train seed ranges defined.
-- [ ] First training run (≤ 2 h) plus evaluation on dev seeds; video of successes and misses.
+- [x] First training run (≤ 2 h) plus evaluation on dev seeds; video of successes and misses.
 - [ ] **Gate:** learns legal returns on easy feeds; report written.
 
 ## Stage 3+ — later (detail when Stage 2 passes)
@@ -171,3 +171,13 @@ Movement plus hitting (using the walking policy as a base or teacher), target-co
     - Zero-action G1 falls in this task just as in mjlab's stock velocity task (27 vs 28 falls in 16 envs × 3 s), so balance must be learned.
     - `train` CLI smoke (1024 envs × 5 iterations): runs; contact/approach rewards appear; **4.5–6.3 s per iteration ≈ 5k steps/s at 1024 envs**, to be measured at 4096 before the run.
   - Tests: +2 (seed ranges; GPU build/step/rules/mocap). Suite 120 pass + 13 xfails.
+- 2026-10-02 — First training run and dev evaluation (`mjlab/results/stage2-train.md`).
+  - **Run 01 invalid:** killed at iteration 229 when the host slept (WSL VM shut down), and trained under a config bug: the inherited `command_vel` curriculum widened the standing command. Fixed (`8b3c546`) with a regression test.
+  - **Run 02:** launched as an independent `wsl.exe` process with the app keeping the host awake. 4096 envs, completed to the 7,000 s cap at iteration 722 (~71M steps, ~9.7 s per iteration).
+  - **Selection:** fixed endpoint `model_700`.
+  - **Dev evaluation** (deterministic, 512 envs × 9 s, seeds 4,200,000 / 4,200,001): contact 100 %, **legal return 96.1 % [95.0, 97.0] / 96.0 % [94.9, 96.8]**, falls 0 %. Failures: 31/27 out, 6/8 wrong side. The untrained `model_0` scored 0 % legal returns with 81–83 % falls.
+  - **Stroke:** paddle 7.1 ± 0.2 m/s at contact; ball 3.3 → 11.2 m/s; net clearance 1.40 m; landing x 4.58 ± 0.93 m.
+  - **Video:** side view; frames show backswing, contact and the ball over the net (successes only so far).
+  - **Evaluation fix:** rates now use per-episode tallies recorded at episode end (the first version divided events by finished episodes and could exceed 1).
+  - **Caveats:** one narrow feed family, a stereotyped high loft, reused dev seeds, misses not yet on video.
+  - Suite 121 pass + 13 xfails.
