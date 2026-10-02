@@ -134,3 +134,40 @@ def test_no_energy_gain_in_paddle_frame_random():
     # Depenetration can only move the ball out along the normal by < 0.5 r per sub-step; allow that PE.
     slack = NOAERO.mass * NOAERO.gravity * 0.5 * R
     assert (ke(s) + pe(s) <= ke(s0) + pe(s0) + slack).all()
+
+
+def test_fixed_substeps_no_tunnelling_at_training_setting():
+    # Training uses adaptive=False with 6 sub-steps at dt 5 ms (task BallPhysicsActionCfg).
+    n = 40
+    offsets = torch.linspace(0.0, 30.0 * 0.005, n, dtype=D)
+    s = BallState(torch.stack([0.3 + offsets, torch.zeros(n, dtype=D), torch.full((n,), 1.0, dtype=D)], -1),
+                  torch.zeros(n, 3, dtype=D), torch.zeros(n, 3, dtype=D))
+    pd = paddle([0.0, 0, 1.0], rotvec=(0.0, math.pi / 2, 0.0), vel=(30.0, 0, 0), n=n)
+    sim, hit = BallSim(NOAERO), torch.zeros(n, dtype=torch.bool)
+    for _ in range(10):
+        s, ev = sim.step(s, 0.005, 6, pd, adaptive=False)
+        hit |= ev.paddle_contact
+        pd = PaddleState(pd.pos + pd.lin_vel * 0.005, pd.rot, pd.lin_vel, pd.ang_vel)
+    assert hit.all()
+    assert torch.allclose(s.vel[:, 0], torch.full((n,), (1 + PADDLE_COR) * 30.0, dtype=D), atol=0.3)
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+def test_training_step_makes_no_host_syncs():
+    n = 256
+    dev = "cuda"
+    g = torch.Generator(device=dev).manual_seed(0)
+    s = BallState(torch.rand(n, 3, device=dev, generator=g) + torch.tensor([-1.0, 0.0, 0.5], device=dev),
+                  (torch.rand(n, 3, device=dev, generator=g) - 0.5) * 20, torch.zeros(n, 3, device=dev))
+    rot = _rotvec_to_matrix(torch.zeros(n, 3, device=dev))
+    pd = PaddleState(torch.zeros(n, 3, device=dev) + torch.tensor([-0.5, 0, 1.0], device=dev), rot,
+                     torch.full((n, 3), 3.0, device=dev), torch.full((n, 3), 5.0, device=dev))
+    sim = BallSim()
+    sim.step(s, 0.005, 6, pd, adaptive=False)  # warm-up (allocations, cached constants)
+    torch.cuda.synchronize()
+    torch.cuda.set_sync_debug_mode("error")
+    try:
+        for _ in range(3):
+            s, _ = sim.step(s, 0.005, 6, pd, adaptive=False)
+    finally:
+        torch.cuda.set_sync_debug_mode("default")

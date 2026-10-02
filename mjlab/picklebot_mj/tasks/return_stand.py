@@ -82,6 +82,10 @@ class BallPhysicsActionCfg(ActionTermCfg):
     entity_name: str = "robot"
     feed: FeedCfg = field(default_factory=FeedCfg)
     seed: int = 0
+    # Fixed ball sub-steps per physics step (no host syncs). 6 at dt 5 ms keeps travel per
+    # sub-step under 0.9 ball radii at 35 m/s relative speed; the paddle target is 9 cm thick
+    # (box + ball diameter), so there is no tunnelling.
+    ball_substeps: int = 6
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -99,7 +103,9 @@ class BallPhysicsAction(ActionTerm):
         self.rules = RallyRules(n, dev)
         self.gen = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 7919)
         self.paddle_id = int(self._entity.find_bodies(PADDLE_BODY)[0][0])
-        self.body_ids = [int(i) for i in self._entity.find_bodies(("pelvis", "torso_link"))[0]]
+        self.body_ids = torch.tensor([int(i) for i in self._entity.find_bodies(("pelvis", "torso_link"))[0]],
+                                     device=dev, dtype=torch.long)
+        self._fault_eye = torch.eye(len(Fault), dtype=torch.long, device=dev)
         self.all_ids = torch.arange(n, device=dev)
         # Per-episode flags read by rewards/observations/terminations.
         b = lambda: torch.zeros(n, dtype=torch.bool, device=dev)
@@ -178,7 +184,7 @@ class BallPhysicsAction(ActionTerm):
         paddle = PaddleState(pose[:, :3] - origins, _quat_to_matrix(pose[:, 3:7]), vel[:, :3], vel[:, 3:6])
         live = ~self.rules.dead
         before = self.ball
-        self.ball, ev = self.sim.step(self.ball, dt, 1, paddle)
+        self.ball, ev = self.sim.step(self.ball, dt, self.cfg.ball_substeps, paddle, adaptive=False)
         # Freeze balls of finished rallies (they are reset with the episode).
         keep = (~live).unsqueeze(-1)
         self.ball = BallState(torch.where(keep, before.pos, self.ball.pos), torch.where(keep, before.vel, self.ball.vel),
@@ -189,7 +195,7 @@ class BallPhysicsAction(ActionTerm):
         self.rules.hit(hit, torch.full_like(self.all_ids, ROBOT_PLAYER))
         legal_hit = hit & ~self.rules.dead & (self.rules.last_hitter == ROBOT_PLAYER)
         first = legal_hit & ~was_hit
-        if bool(first.any()):
+        if True:  # no host sync: masked sums
             f = first.float()
             ps = paddle.lin_vel.norm(dim=-1)
             d = self.diag
@@ -203,7 +209,7 @@ class BallPhysicsAction(ActionTerm):
         self.hit_done |= legal_hit
         # Height above the net when the returned ball crosses x = 0 (first crossing after the hit).
         crossing = self.hit_done & (before.pos[:, 0] < 0) & (self.ball.pos[:, 0] >= 0)
-        if bool(crossing.any()):
+        if True:
             clear = self.ball.pos[:, 2] - BALL_RADIUS - court.NET_CENTER_HEIGHT
             self.diag["net_clear"] += (clear * crossing.float()).sum()
             self.diag["n_cross"] += crossing.float().sum()
@@ -212,7 +218,7 @@ class BallPhysicsAction(ActionTerm):
         ret = bounce & self.hit_done & ~self.rules.dead & self.rules.bounced & (self.rules.expected_team == 1)
         self.return_now |= ret & ~self.return_done
         self.return_done |= ret
-        if bool(ret.any()):
+        if True:
             r = ret.float()
             lp = ev.court_point.nan_to_num(0.0)
             self.diag["n_land"] += r.sum()
@@ -231,7 +237,7 @@ class BallPhysicsAction(ActionTerm):
         self.rules.lost(lost)
         self.lost_now |= lost
         newly_dead = self.rules.dead & ~self._prev_dead
-        self.fault_counts += torch.bincount(self.rules.fault[newly_dead], minlength=len(Fault))
+        self.fault_counts += (self._fault_eye[self.rules.fault] * newly_dead.long().unsqueeze(-1)).sum(0)
         self.return_count += ret.sum()
         self.hit_count += (legal_hit & ~was_hit).sum()
         self._prev_dead = self.rules.dead.clone()

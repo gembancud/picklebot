@@ -183,6 +183,14 @@ class StepEvents:
 class BallSim:
     def __init__(self, params: BallParams | None = None):
         self.p = params or BallParams()
+        self._consts: dict = {}
+
+    def _const(self, name, values, like: torch.Tensor) -> torch.Tensor:
+        """Small constant tensors cached per (device, dtype): no host-to-device copy per sub-step."""
+        key = (name, like.device, like.dtype)
+        if key not in self._consts:
+            self._consts[key] = torch.tensor(values, dtype=like.dtype, device=like.device)
+        return self._consts[key]
 
     def substeps_for(self, s: BallState, dt: float, substeps: int, paddle: PaddleState | None = None) -> int:
         """Raise the sub-step count so no ball moves more than MAX_TRAVEL * radius per sub-step,
@@ -198,7 +206,7 @@ class BallSim:
     def _paddle(self, x, v, w, ppos, prot, pvel, pang):
         """Sphere vs oriented box (paddle face). Returns updated (x, v, w), hit mask, impulse on ball, point."""
         p = self.p
-        half = torch.tensor(PADDLE_HALF, dtype=x.dtype, device=x.device)
+        half = self._const("paddle_half", PADDLE_HALF, x)
         local = ((x - ppos).unsqueeze(-2) @ prot).squeeze(-2)  # R^T (x - c)
         q_local = torch.maximum(torch.minimum(local, half), -half)
         d_local = local - q_local
@@ -217,7 +225,7 @@ class BallSim:
         hit = overlap & approaching
         vb, wb, j = sphere_impulse(v, w, n, surf_vel, p.paddle_cor, p.paddle_friction, p)
         q_surface = torch.where(inside.unsqueeze(-1),
-                                ppos + (prot @ (local * torch.tensor([1, 1, 0], dtype=x.dtype, device=x.device)).unsqueeze(-1)).squeeze(-1)
+                                ppos + (prot @ (local * self._const("xy_mask", [1.0, 1.0, 0.0], x)).unsqueeze(-1)).squeeze(-1)
                                 + n_inside * half[2], q_world)
         x_out = q_surface + n * p.radius
         o3, h3 = overlap.unsqueeze(-1), hit.unsqueeze(-1)
@@ -245,9 +253,17 @@ class BallSim:
         return x, torch.where(h3, vb, v), torch.where(h3, wb, w), hit, hit & is_post
 
     def step(self, s: BallState, dt: float, substeps: int = 10,
-             paddle: PaddleState | None = None) -> tuple[BallState, StepEvents]:
+             paddle: PaddleState | None = None, adaptive: bool = True) -> tuple[BallState, StepEvents]:
+        """Advance all balls by dt.
+
+        adaptive=True raises `substeps` from the batch's fastest ball/paddle (one host sync per
+        call; convenient for tests and tools). adaptive=False uses exactly `substeps` and makes
+        no host syncs. Training uses it with a count sized for the design speed (see the task).
+        The sub-step body is branch-free: every contact test is computed and masked.
+        """
         p = self.p
-        substeps = self.substeps_for(s, dt, substeps, paddle)
+        if adaptive:
+            substeps = self.substeps_for(s, dt, substeps, paddle)
         h = dt / substeps
         if paddle is not None:
             pad_hit = torch.zeros(s.pos.shape[0], dtype=torch.bool, device=s.pos.device)
@@ -258,45 +274,47 @@ class BallSim:
         x, v, w = s.pos, s.vel, s.spin
         n = torch.zeros_like(x)
         n[..., 2] = 1.0
+        zero3 = torch.zeros_like(x)
         contact = torch.zeros(x.shape[0], dtype=torch.bool, device=x.device)
         net_hit = torch.zeros_like(contact)
         post_hit = torch.zeros_like(contact)
         point = torch.full_like(x, float("nan"))
+        R = p.radius
+        reach = max(court.NET_THICKNESS / 2, court.NET_POST_RADIUS) + R
         for _ in range(substeps):
             x1, v1, w1 = flight_rk4(x, v, w, h, p)
-            hit = (x1[..., 2] < p.radius) & (v1[..., 2] < 0)
-            if bool(hit.any()):
-                # Time of impact inside the sub-step by linear interpolation of height.
-                z0, z1 = x[..., 2], x1[..., 2]
-                frac = ((z0 - p.radius) / (z0 - z1).clamp_min(1e-12)).clamp(0.0, 1.0)
-                frac = torch.where(z0 < p.radius, torch.zeros_like(frac), frac).unsqueeze(-1)
-                xc, vc, wc = flight_rk4(x, v, w, frac * h, p)
-                xc = xc.clone()
-                xc[..., 2] = p.radius
-                vb, wb, _ = sphere_impulse(vc, wc, n, torch.zeros_like(vc), p.court_cor, p.court_friction, p)
-                xr, vr, wr = flight_rk4(xc, vb, wb, (1.0 - frac) * h, p)
-                # Never end a sub-step below the court.
-                xr = xr.clone()
-                xr[..., 2] = xr[..., 2].clamp_min(p.radius)
-                m3 = hit.unsqueeze(-1)
-                first = hit & ~contact
-                point = torch.where(first.unsqueeze(-1), xc - p.radius * n, point)
-                contact = contact | hit
-                x1, v1, w1 = torch.where(m3, xr, x1), torch.where(m3, vr, v1), torch.where(m3, wr, w1)
+            # Court: time of impact by linear interpolation inside the sub-step, impulse at the
+            # contact state, then the rest of the sub-step with the sub-step's mean acceleration.
+            z0, z1 = x[..., 2], x1[..., 2]
+            hit = (z1 < R) & (v1[..., 2] < 0)
+            frac = ((z0 - R) / (z0 - z1).clamp_min(1e-12)).clamp(0.0, 1.0)
+            frac = torch.where(z0 < R, torch.zeros_like(frac), frac).unsqueeze(-1)
+            xc = x + frac * (x1 - x)
+            xc = torch.cat([xc[..., :2], torch.full_like(xc[..., 2:], R)], -1)
+            vc = v + frac * (v1 - v)
+            wc = w + frac * (w1 - w)
+            vb, wb, _ = sphere_impulse(vc, wc, n, zero3, p.court_cor, p.court_friction, p)
+            rem = (1.0 - frac) * h
+            acc = (v1 - v) / h
+            xr = xc + vb * rem + 0.5 * acc * rem * rem
+            vr = vb + acc * rem
+            xr = torch.cat([xr[..., :2], xr[..., 2:].clamp_min(R)], -1)
+            m3 = hit.unsqueeze(-1)
+            point = torch.where((hit & ~contact).unsqueeze(-1), xc - R * n, point)
+            contact = contact | hit
+            x1, v1, w1 = torch.where(m3, xr, x1), torch.where(m3, vr, v1), torch.where(m3, wb, w1)
             # Resting ball: hold on the surface without sinking.
-            resting = (x1[..., 2] <= p.radius + 1e-6) & (v1[..., 2].abs() <= REST_SPEED)
-            if bool(resting.any()):
-                x1 = x1.clone(); v1 = v1.clone()
-                x1[..., 2] = torch.where(resting, torch.full_like(x1[..., 2], p.radius), x1[..., 2])
-                v1[..., 2] = torch.where(resting, torch.zeros_like(v1[..., 2]), v1[..., 2])
-            reach = max(court.NET_THICKNESS / 2, court.NET_POST_RADIUS) + p.radius
-            near_net = (x1[..., 0].abs() < reach) & (x1[..., 2] < court.NET_SIDELINE_HEIGHT + p.radius)
-            if bool(near_net.any()):
-                xn, vn, wn, hn, hp = self._net(x1, v1, w1)
-                m3 = near_net.unsqueeze(-1)
-                x1, v1, w1 = torch.where(m3, xn, x1), torch.where(m3, vn, v1), torch.where(m3, wn, w1)
-                net_hit |= hn & near_net
-                post_hit |= hp & near_net
+            resting = (x1[..., 2] <= R + 1e-6) & (v1[..., 2].abs() <= REST_SPEED)
+            rz = resting.unsqueeze(-1)
+            x1 = torch.where(rz, torch.cat([x1[..., :2], torch.full_like(x1[..., 2:], R)], -1), x1)
+            v1 = torch.where(rz, torch.cat([v1[..., :2], torch.zeros_like(v1[..., 2:])], -1), v1)
+            # Net and posts (masked to balls near the net plane).
+            near_net = (x1[..., 0].abs() < reach) & (x1[..., 2] < court.NET_SIDELINE_HEIGHT + R)
+            xn, vn, wn, hn, hp = self._net(x1, v1, w1)
+            mn = near_net.unsqueeze(-1)
+            x1, v1, w1 = torch.where(mn, xn, x1), torch.where(mn, vn, v1), torch.where(mn, wn, w1)
+            net_hit |= hn & near_net
+            post_hit |= hp & near_net
             if paddle is not None:
                 k += 1
                 ppos, prot = paddle_at(paddle, k * h)
