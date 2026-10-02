@@ -74,6 +74,11 @@ Baseline: `return-stand` task at about 10k env steps/s at 4096 envs (~9.7 s per 
 
 ## Stage 4 — wider feeds and aiming (one shared policy)
 Each new variable gets its own training run (≤ 2 h each), warm-started from the latest accepted checkpoint where the observation space is unchanged. Evaluate every feed family **separately** on dev seeds, alongside the original easy feed (retention: no more than 5 percentage points of legal-return loss on it).
+- [ ] **Grip fix (user request, 2026-10-02).** Close-up renders (`scripts/render_grip.py`) showed the paddle face starting ~4 cm inside the G1 fingers (handle hidden in the hand mesh) and the paddle pointing straight along the forearm line. Fix `picklebot_mj/g1_paddle.py`:
+  - the face starts beyond the fingertips, and the visible handle sits in the palm;
+  - the handle is angled about 35° across the palm, like a real handshake grip, so the paddle is not a straight extension of the forearm.
+
+  Keep the paddle body origin at the face centre with `PaddleState` axes. Re-render the close-ups (side, front, top) for the user, update tests, and re-measure the envelope (`stage2_envelope.py`). Stage 2 results (`model_700`) stay as the old-grip record. Stage 4 runs train on the new grip; run A may warm-start from `model_700` (same observation space, documented), and the easy-feed retention baseline is re-established on the new grip.
 - [ ] Feed curriculum module: named feed families (`easy_forehand` = current; `wide_forehand` 0.65–1.0 m; `backhand` −0.30 to −0.65 m on the left; `deep` / `short` bounce points; `high` / `low` contact heights; `fast` incoming speed; `topspin` / `backspin`) and a sampler mixing them by weights. Offline feed checks (like `tune_feed.py`) per family. Tests.
 - [ ] Per-family dev evaluation: `stage2_eval.py` gains `--family`, reporting each family's rates in one table.
 - [ ] Training run A: lateral widening (easy + wide_forehand + backhand). Evaluate all families plus retention.
