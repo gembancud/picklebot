@@ -17,6 +17,16 @@ def test_command_stays_zero():
     assert cfg.commands["twist"].rel_standing_envs == 1.0 and not cfg.commands["twist"].heading_command
 
 
+def test_rally_end_is_a_time_out_not_a_termination():
+    """Regression (run lateral-a01): terminating on rally end taught the policy to avoid ending rallies."""
+    from picklebot_mj.tasks.return_stand import EPISODE_S, return_stand_env_cfg
+
+    cfg = return_stand_env_cfg()
+    assert cfg.terminations["drill_over"].time_out is True
+    assert cfg.terminations["fell_over"].time_out is False  # a fall is still a real failure
+    assert cfg.episode_length_s == EPISODE_S >= 4.0
+
+
 def test_seed_ranges_disjoint():
     seeds.check_disjoint()
     assert min(seeds.FINAL_SEEDS) > max(seeds.DEV_EVAL_SEEDS) > max(seeds.TRAIN_SEEDS)

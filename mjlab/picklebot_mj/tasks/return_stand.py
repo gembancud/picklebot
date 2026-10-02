@@ -42,7 +42,7 @@ from picklebot_mj.rules import Fault, Phase, RallyRules, in_bounds
 ROBOT_START = (-5.6, 0.35)  # court-local pelvis position, facing +x (the net)
 ROBOT_PLAYER = 0  # near team, player 0
 FEEDER_PLAYER = 2  # far team
-EPISODE_S = 3.0
+EPISODE_S = 4.0  # 3.0 until lateral-a01; +1 s so high returns can land within the episode
 BODY_RADIUS = 0.17  # ball within this of the pelvis/torso origins counts as body contact
 
 
@@ -401,7 +401,11 @@ def return_stand_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     cfg.rewards["approach_ball"] = RewardTermCfg(func=approach_ball, weight=2.0)
     cfg.rewards["paddle_contact"] = RewardTermCfg(func=paddle_contact, weight=1.0 / step_dt)
     cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=5.0 / step_dt)
-    cfg.terminations["drill_over"] = TerminationTermCfg(func=drill_over)
+    # Rally end resets the drill but is treated as a time-out (PPO bootstraps the value), so ending
+    # a rally never forfeits the per-step balance rewards. As a true termination it made the
+    # policy avoid finishing rallies: run lateral-a01 learned sky-high lobs (4.2 m net clearance)
+    # that outlast the episode, and legal returns fell 100 % -> 0 % (results/stage4-run-a.md).
+    cfg.terminations["drill_over"] = TerminationTermCfg(func=drill_over, time_out=True)
     cfg.episode_length_s = EPISODE_S if not play else 1e9
     cfg.viewer.body_name = "torso_link"
     return cfg
