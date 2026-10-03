@@ -65,3 +65,18 @@ def test_targets_sampled_and_forced():
     env2 = ManagerBasedRlEnv(cfg, device="cuda")
     env2.reset()
     assert (env2.action_manager.get_term("ball").target == 0).all()
+
+
+def test_aim_all_task_mixes_every_family_with_targets():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.feeds import FAMILY_NAMES
+    from picklebot_mj.tasks import TASK_AIM_ALL, TASK_AIM_LATERAL
+
+    cfg, lat = load_env_cfg(TASK_AIM_ALL), load_env_cfg(TASK_AIM_LATERAL)
+    ball = cfg.actions["ball"]
+    assert ball.targets and ball.target_mode == "random"
+    assert all(w == 1.0 for w in ball.feed_mix.vector()) and len(ball.feed_mix.vector()) == len(FAMILY_NAMES)
+    for g in ("actor", "critic"):  # same inputs as run B, so model_5300 warm-starts directly
+        assert list(cfg.observations[g].terms) == list(lat.observations[g].terms)
