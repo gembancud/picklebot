@@ -123,9 +123,10 @@ F1 and F2 showed the policy will not discover multi-step footwork from a standin
   - In hitting-rehearsal episodes the command is zero and the free-feet rules apply.
   - The movement direction mix is balanced and logged per direction.
   - Tests: command toward the spot, arrival detection, ready-stance reward, direction coverage, ball inactive in move episodes.
-- [ ] **Run D1:** move-to-spot plus hitting rehearsal from `model_12000`.
+- [x] **Run D1:** move-to-spot plus hitting rehearsal from `model_12000`.
   - Evaluate per direction (8 sectors) and distance band: arrival rate, time to arrive, final error, ready-stance rate, falls per robot episode, foot slip.
   - Also hitting retention on the Stage 4 families from the fixed start, versus `model_12000`.
+- [ ] **Run D1b (rule 8 follow-up 1):** oversample the right-side sectors ×2 in training (`Picklebot-Drill-Move-Right-G1`), from `drill-move-d01/model_13900`; evaluate as D1 on a fresh dev seed.
 - [ ] **Drill 1 gate:**
   - arrival ≥ 90 % within the time limit in **every** direction sector;
   - median final error ≤ 0.25 m;
@@ -430,3 +431,9 @@ Its measured capability envelope is published as a contract. It must hold across
   - reach_short bounces twice in front of it;
   - reach_deep is lost behind it.
 - 2026-10-06 — **User request:** hill-climb through the drills and on to a complete System 1. Loop rule 8 (bounded hill-climbing: at most two one-variable follow-up runs per failed step, then stop). Stage 6 rewritten as "System 1": continuous landing targets, a shot-type command (drive/dink/lob), runs S1 and S2, robustness over 3 seeds, teacher → student with noisy and delayed inputs, review videos, a System 1 contract document, and a gate (thresholds proposed, revisable by the user).
+- 2026-10-06 — **Run D1 (`drill-move-d01`) done** (`mjlab/results/stage5-run-d1.md`). From `model_12000`, 12,000 → 13,973 iterations; fixed endpoint `model_13900`.
+  - **The robot now walks to spots:** 91.0 % arrival overall (dev seed 4,200,100; 16,020 spots); forward, forward-left, left, back-left and back 94.5–99.6 %; median final error 0.175–0.225 m; ready stance 99.9 % of arrivals; 0 falls in 6,144 robot episodes.
+  - **Drill 1 gate not met:**
+    - right side weaker: back-right 63.0 %, right 82.6 %, forward-right 88.0 % (need ≥ 90 % each);
+    - hitting retention −2.0 points overall, but low −6.7, fast −7.0, backspin −7.6 per family (need within 5).
+  - **Rule 8, follow-up D1b:** right-side sectors ×2 in training spot sampling (evaluation uniform). Planned D1c if retention still fails: hitting rehearsal 25 % → 40 %.

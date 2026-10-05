@@ -70,6 +70,7 @@ def main():
         cfg.actions["ball"].target_mode = args.target
     if args.move_prob is not None:
         cfg.actions["ball"].move_prob = args.move_prob
+    cfg.actions["ball"].move_sector_weights = None  # evaluation samples spot directions uniformly
     if args.fixed_start:
         cfg.events["reset_base"].params["pose_range"] = {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "yaw": (-0.1, 0.1)}
         cfg.actions["ball"].feed_anchor = "start"

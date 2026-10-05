@@ -46,8 +46,11 @@ def _yaw(q: torch.Tensor) -> torch.Tensor:
 
 
 class MoveDrill:
-    def __init__(self, term, move_prob: float, seed: int):
+    def __init__(self, term, move_prob: float, seed: int, sector_weights=None):
         n, dev = term.num_envs, term.device
+        w = torch.ones(N_SECTORS) if sector_weights is None else torch.tensor(sector_weights, dtype=torch.float32)
+        assert w.shape == (N_SECTORS,) and (w > 0).all()
+        self.sector_w = (w / w.sum()).to(dev)
         self.t, self.n, self.dev, self.move_prob = term, n, dev, float(move_prob)
         self.gen = torch.Generator(device=dev).manual_seed(int(seed) + 271829)  # own stream
         self.move_ep = torch.zeros(n, dtype=torch.bool, device=dev)
@@ -90,7 +93,7 @@ class MoveDrill:
         """Issue a spot (balanced sectors, 0.5-3 m, inside SPOT_BOX) for envs in mask."""
         t = self.t
         here = t.pelvis_xy()
-        sec = torch.randint(0, N_SECTORS, (self.n,), generator=self.gen, device=self.dev)
+        sec = torch.multinomial(self.sector_w, self.n, replacement=True, generator=self.gen)
         ang = (sec.float() + torch.rand(self.n, generator=self.gen, device=self.dev)) * (2 * math.pi / N_SECTORS) \
             - math.pi / N_SECTORS
         dist = DIST_RANGE[0] + (DIST_RANGE[1] - DIST_RANGE[0]) * torch.rand(self.n, generator=self.gen, device=self.dev)

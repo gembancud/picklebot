@@ -101,6 +101,8 @@ class BallPhysicsActionCfg(ActionTermCfg):
     recovery: bool = False  # sample a recovery spot per feed (footwork tasks)
     recovery_mode: str = "random"  # "random" (RECOVERY_BOX) or "fixed" (RECOVERY_FIXED; evaluation)
     move_prob: float = 0.0  # Drill 1 (D-041): fraction of robot episodes that are move-to-spot episodes
+    # Drill 1 spot-direction weights per sector (0 = toward the net, counter-clockwise); None = uniform.
+    move_sector_weights: tuple | None = None
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -138,7 +140,7 @@ class BallPhysicsAction(ActionTerm):
         self.drill = None
         if cfg.move_prob > 0.0:
             from picklebot_mj.tasks.move_drill import MoveDrill
-            self.drill = MoveDrill(self, cfg.move_prob, cfg.seed)
+            self.drill = MoveDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights)
         # Per-family episode tallies [family, (episodes, contact, legal_return, fall)].
         self.ep_family = torch.zeros(len(FAMILY_NAMES), 4, dtype=torch.long, device=dev)
         # Per-family legal-landing tallies [family, (in A, in B, on the assigned target)].

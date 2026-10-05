@@ -21,6 +21,19 @@ def test_drill_task_config():
     assert tw.lin_vel_x == (0.0, 0.0) and tw.lin_vel_y == (0.0, 0.0) and tw.ang_vel_z == (0.0, 0.0)
 
 
+def test_d1b_only_changes_sector_weights():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.tasks import RIGHT_SIDE_X2, TASK_DRILL_MOVE, TASK_DRILL_MOVE_RIGHT
+
+    a, b = load_env_cfg(TASK_DRILL_MOVE), load_env_cfg(TASK_DRILL_MOVE_RIGHT)
+    assert a.actions["ball"].move_sector_weights is None
+    assert b.actions["ball"].move_sector_weights == RIGHT_SIDE_X2
+    assert set(a.rewards) == set(b.rewards) and all(a.rewards[k].weight == b.rewards[k].weight for k in a.rewards)
+    assert a.actions["ball"].move_prob == b.actions["ball"].move_prob
+
+
 @pytest.fixture(scope="module")
 def drill_env():
     from mjlab.envs import ManagerBasedRlEnv

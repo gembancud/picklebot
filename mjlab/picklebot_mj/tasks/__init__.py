@@ -81,3 +81,18 @@ register_mjlab_task(
     play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_D1), ALL_MIX),
     rl_cfg=_rl_cfg(),
 )
+
+# Drill 1 follow-up D1b (stage5-run-d1.md): oversample the right-side sectors (5 back-right, 6 right,
+# 7 forward-right) x2 in training. Evaluation is always uniform (stage2_eval.py).
+RIGHT_SIDE_X2 = (1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0)
+TASK_DRILL_MOVE_RIGHT = "Picklebot-Drill-Move-Right-G1"
+
+
+def _drill_right(play=False):
+    cfg = _with_mix(return_stand_env_cfg(play=play, **_D1), ALL_MIX)
+    cfg.actions["ball"].move_sector_weights = RIGHT_SIDE_X2
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_DRILL_MOVE_RIGHT, env_cfg=_drill_right(), play_env_cfg=_drill_right(True),
+                    rl_cfg=_rl_cfg())
