@@ -270,4 +270,9 @@ The executor learns to step to the ball and to recover to a commanded court spot
   - Stage 9: serves and 2v2.
 
   Footwork sits in the executor; court positioning sits in the strategy layer.
-- 2026-10-05 — Motion audit done (, ).  barely moves: per robot episode, pelvis max displacement p50 0.05 m / p90 0.14 m / max 0.41 m, foot path p50 0.11 m. Causes: (1)  and  (+2 each) pay for zero base motion under the zero command; (2)  always uses the tight standing leg tolerances; (3) the four foot-quality terms (clearance, swing height, slip, soft landing) are gated off by the zero command. Planned for stance release: remove both tracking terms, use the walking tolerances for legs and waist, and re-gate the foot terms on actual base speed. Keep the balance terms and the fall termination.
+- 2026-10-05 — Motion audit done (`mjlab/results/stage5-motion-audit.md`, `scripts/motion_audit.py`). `model_7600` barely moves: per robot episode, pelvis max displacement p50 0.05 m / p90 0.14 m / max 0.41 m, foot path p50 0.11 m. Causes:
+  1. `track_linear_velocity` and `track_angular_velocity` (+2 each) pay for zero base motion under the zero command.
+  2. `pose` always uses the tight standing leg tolerances.
+  3. The four foot-quality terms (clearance, swing height, slip, soft landing) are gated off by the zero command.
+
+  Planned for stance release: remove both tracking terms, use the walking tolerances for legs and waist, and re-gate the foot terms on actual base speed. Keep the balance terms and the fall termination.
