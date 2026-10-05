@@ -102,16 +102,64 @@ The executor learns to step to the ball and to recover to a commanded court spot
 - [x] **Stance release.** Apply the audit's changes: relax leg/waist pose terms, remove stand-still penalties and keep balance terms. Test that a zero action still stands and that a stepping policy is no longer penalised for base motion alone.
 - [x] **Training run F1:** the Stage 4 families from random starts, plus reach families, plus recovery commands, warm-started from the expanded `model_7600`. Evaluate per family (contact, legal, A/B gain), recovery error, falls per robot episode, and retention on the Stage 4 families from the original start.
 - [x] **Training run F2:** one change chosen from F1's failure analysis (documented before launch), or a fixed continuation if F1 is healthy but still improving.
-- [ ] **Review videos:** successes and misses per family (render the env index of a known miss), side and behind views, including footwork on reach feeds. Send them to the user.
-- [ ] **Gate:** a single checkpoint with:
-  - legal return ≥ 85 % on every Stage 4 family from random starts, and ≥ 75 % on every reach family;
-  - contact ≥ 92 % on Stage 4 families (versus 86–90 % standing);
+- [ ] **Review videos (F2 endpoint `footwork-f02/model_12000`):** successes and misses per family, side and behind views, including footwork on reach feeds. Send them to the user. Report `mjlab/results/stage5-f2-videos.md`.
+- [x] ~~**Gate after F2**~~ **Replaced by the drill plan (D-041, 2026-10-06).** F2 did not meet it (`stage5-run-f2.md`): reach left, short and deep were 0 %, recovery median 0.78 m and contact 84–88 %. The user chose dedicated movement drills instead of more ball training. The gate thresholds move to the end of Drill 3, unchanged.
+
+### Stage 5 drills (D-041): move first, then move-and-swing, then real balls
+F1 and F2 showed the policy will not discover multi-step footwork from a standing lineage. Teach it with drills in the **same single network**, so that the executor still takes "land here, be there" commands. Each drill has its own gate. One variable per run (≤ 2 h each), fixed endpoints, dev seeds only. Every drill run keeps **hitting rehearsal**: 25 % of robot episodes run the Stage 4 hitting drills, so hitting is not forgotten. Parent of Drill 1: `footwork-f02/model_12000`. If a drill's gate is not met after two runs, stop for the user.
+
+**Drill 1 — move to a spot, no ball.**
+- [ ] **Move-to-spot task.**
+  - Each robot episode issues a sequence of spots, a new one after each arrival or time-out, in every direction from the robot: left, right, forward, back and diagonal, at distances 0.5–3 m, inside the robot's half court.
+  - The ball is parked and inactive in these episodes.
+  - **Re-use the walking rewards as the teacher:** the twist command is no longer zero but points toward the spot (speed min(1.0 m/s, 1.2·d), heading command to face the net), so mjlab's own `track_linear_velocity` / `track_angular_velocity` and the command-gated foot-quality terms teach gaits.
+  - **Arrival:** within 0.25 m and below 0.2 m/s, held for 0.3 s. It pays an arrival bonus plus a **ready stance**: paddle up and in front (paddle centre 0.9–1.2 m high, 0.3–0.5 m in front of the pelvis), facing the net.
+  - In hitting-rehearsal episodes the command is zero and the free-feet rules apply.
+  - The movement direction mix is balanced and logged per direction.
+  - Tests: command toward the spot, arrival detection, ready-stance reward, direction coverage, ball inactive in move episodes.
+- [ ] **Run D1:** move-to-spot plus hitting rehearsal from `model_12000`.
+  - Evaluate per direction (8 sectors) and distance band: arrival rate, time to arrive, final error, ready-stance rate, falls per robot episode, foot slip.
+  - Also hitting retention on the Stage 4 families from the fixed start, versus `model_12000`.
+- [ ] **Drill 1 gate:**
+  - arrival ≥ 90 % within the time limit in **every** direction sector;
+  - median final error ≤ 0.25 m;
+  - ready stance on ≥ 80 % of arrivals;
+  - falls ≤ 1 % per robot episode;
+  - hitting retention within 5 points.
+
+  **Fallback if D1 cannot learn to walk:** train mjlab's standard G1 velocity policy (one run, ≤ 2 h) and use it as a leg teacher (action imitation on the legs during move episodes). Ask the user before starting it.
+
+**Drill 2 — move and shadow-swing, no ball.**
+- [ ] **Shadow-swing task.**
+  - A spot plus a virtual contact point and time (the contact geometry and timing of a sampled feed family, including reach families, but no ball).
+  - Rewards:
+    - the paddle face centre passing within the contact tolerance of the point at the right time;
+    - paddle velocity toward the net at that moment;
+    - the feet set (base speed < 0.3 m/s) just before contact;
+    - then recovery to the commanded spot.
+  - Forehand and backhand sides are balanced.
+  - Tests.
+- [ ] **Run D2:** shadow-swing plus Drill 1 maintenance plus hitting rehearsal, from the Drill 1 endpoint. Evaluate per family-geometry and side: contact-point error at the contact time, timing error, paddle speed, feet-set rate, recovery error, falls.
+- [ ] **Drill 2 gate:**
+  - median contact-point error ≤ 0.15 m with timing error ≤ 0.1 s on every family-geometry, including all four reach geometries;
+  - feet set on ≥ 70 %;
+  - median recovery error ≤ 0.5 m;
+  - falls ≤ 1 %;
+  - Drill 1 and hitting retention within 5 points.
+
+**Drill 3 — real balls, near to far.**
+- [ ] **Reach curriculum.** Reach families gain a distance scale that starts at just past arm reach and widens when a family's rolling legal-return rate exceeds 70 %, up to the full reach ranges. Logged per family. Evaluation is always at full range. Tests.
+- [ ] **Run D3:** real-ball reach curriculum plus Stage 4 families from random starts, aiming targets and the recovery command, with Drill 1 and 2 maintenance, from the Drill 2 endpoint.
+- [ ] **Review videos:** successes and misses per family, side and behind, including the move-to-swing transition. Send them to the user.
+- [ ] **Stage 5 gate** (unchanged thresholds): a single checkpoint with
+  - legal return ≥ 85 % on every Stage 4 family from random starts, and ≥ 75 % on every reach family at full range;
+  - contact ≥ 92 % on the Stage 4 families;
   - target A/B gain with a 95 % interval above zero on every family;
   - median recovery error ≤ 0.5 m;
   - falls ≤ 1 % per robot episode;
-  - retention within 5 points.
+  - retention within 5 points versus `model_7600` on the same feeds.
 
-  If it is not met after F2, record per-family results and stop for the user. Report `mjlab/results/stage5-gate.md`.
+  If it is not met after D3 plus one follow-up run, record per-family results and stop for the user. Report `mjlab/results/stage5-gate.md`.
 
 ## Stage 6 — robustness and distillation of the moving executor
 - [ ] Repeat the final Stage 5 recipe with 2 more training seeds (≤ 2 h each).
@@ -320,3 +368,9 @@ The executor learns to step to the ball and to recover to a commanded court spot
     - falls 0.09 %;
     - retention −0.1 points overall, worst −3.0; backhand recovered.
   - **Conclusion:** the shaping range was not the bottleneck. The robot has a single learned movement (lean and step right), because its lineage started from a standing policy, not from a walking one.
+- 2026-10-06 — **User decision (D-041):** teach footwork with movement drills before hitting on the move. Stage 5 is rewritten:
+  - Drill 1: move to a spot, no ball, with the velocity-tracking rewards re-used as the walking teacher and a ready stance on arrival;
+  - Drill 2: move and shadow-swing;
+  - Drill 3: real balls, near-to-far reach curriculum.
+
+  Each drill has its own gate; every run keeps 25 % hitting rehearsal; the parent is `footwork-f02/model_12000`. The Stage 5 gate thresholds are unchanged and move to the end of Drill 3. The F2 videos step stays first.

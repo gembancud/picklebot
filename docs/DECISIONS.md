@@ -1084,3 +1084,37 @@ Trade-offs: Stage 4's thresholds are not strictly met. The Stage 5 gate re-tests
 Migration and compatibility: The old Stage 5 (robustness of the standing result) is folded into the new Stage 6 for the moving executor. Nothing is deleted. Seed discipline and fixed-endpoint selection are unchanged.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 4 gate, Stages 5–9, Open questions.
+
+### D-041 — Teach footwork with movement drills before hitting on the move
+
+- Date: 2026-10-06
+- Status: Accepted (user-directed)
+- Amends: D-040 (Stage 5 method; the gate thresholds are unchanged)
+
+Decision: Stage 5 footwork is taught through three drills in the same single executor network, each with its own gate:
+1. **Move to a spot without a ball.** Balanced directions and distances up to 3 m, arrival in a ready stance with the paddle up. mjlab's own velocity-tracking and foot-quality rewards serve as the walking teacher, by pointing the twist command toward the spot instead of holding it at zero.
+2. **Move and shadow-swing** at a virtual contact point and time, with the feet set before contact and recovery afterwards.
+3. **Real balls with a near-to-far reach curriculum.**
+
+Every drill run rehearses the Stage 4 hitting drills (25 % of robot episodes) and maintains earlier drills. If walking does not emerge in Drill 1, the fallback is a separately trained mjlab G1 walking policy used as a leg teacher (user approval first). The Stage 5 gate thresholds from D-040 are unchanged and move to the end of Drill 3.
+
+Evidence:
+- Runs F1 and F2 (`mjlab/results/stage5-run-f1.md`, `stage5-run-f2.md`) trained hitting with free feet directly. The robot learned one movement, a lean and step to its right: reach_forehand ~74 % legal, while reach_backhand, reach_short and reach_deep stayed at 0 % contact.
+- Recovery error stayed at ~0.8 m median.
+- Widening the distance shaping to 1.5 m (F2) changed none of this.
+- The policy lineage starts from a standing policy, and PPO exploration around it does not find multi-step gaits.
+- The user's view, drawn from human coaching practice, is that repositioning is trained as its own skill before it is combined with the swing.
+- Comparable work trains locomotion or skills separately before combining them, e.g. DeepMind's humanoid soccer pretrains get-up and kicking skills.
+
+Trade-offs:
+- More runs: about 3–5 two-hour runs instead of one or two.
+- New task machinery: a spot sequence, a ready-stance reward, shadow-swing targets and a reach curriculum.
+- The twist command, removed as a stand-still incentive in D-040's stance release, returns as a movement teacher. It is active only in move episodes, and remains zero (with free feet) in hitting rehearsal.
+- Interference between drills is controlled by rehearsal and per-drill retention checks.
+
+Migration and compatibility:
+- F1 and F2 artifacts and reports stay as they are. `footwork-f02/model_12000` is the parent of Drill 1.
+- The Stage 5 steps already completed (motion audit, reach families, recovery command, stance release, F1, F2) remain valid infrastructure.
+- Seed discipline and fixed-endpoint selection are unchanged.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5 (drill plan), Open questions.
