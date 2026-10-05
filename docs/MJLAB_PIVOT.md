@@ -102,7 +102,7 @@ The executor learns to step to the ball and to recover to a commanded court spot
 - [x] **Stance release.** Apply the audit's changes: relax leg/waist pose terms, remove stand-still penalties and keep balance terms. Test that a zero action still stands and that a stepping policy is no longer penalised for base motion alone.
 - [x] **Training run F1:** the Stage 4 families from random starts, plus reach families, plus recovery commands, warm-started from the expanded `model_7600`. Evaluate per family (contact, legal, A/B gain), recovery error, falls per robot episode, and retention on the Stage 4 families from the original start.
 - [x] **Training run F2:** one change chosen from F1's failure analysis (documented before launch), or a fixed continuation if F1 is healthy but still improving.
-- [ ] **Review videos (F2 endpoint `footwork-f02/model_12000`):** successes and misses per family, side and behind views, including footwork on reach feeds. Send them to the user. Report `mjlab/results/stage5-f2-videos.md`.
+- [x] **Review videos (F2 endpoint `footwork-f02/model_12000`):** successes and misses per family, side and behind views, including footwork on reach feeds. Send them to the user. Report `mjlab/results/stage5-f2-videos.md`.
 - [x] ~~**Gate after F2**~~ **Replaced by the drill plan (D-041, 2026-10-06).** F2 did not meet it (`stage5-run-f2.md`): reach left, short and deep were 0 %, recovery median 0.78 m and contact 84–88 %. The user chose dedicated movement drills instead of more ball training. The gate thresholds move to the end of Drill 3, unchanged.
 
 ### Stage 5 drills (D-041): move first, then move-and-swing, then real balls
@@ -383,3 +383,8 @@ F1 and F2 showed the policy will not discover multi-step footwork from a standin
   - **Metrics:** per-sector issued/arrived/timed-out, mean time, median final error and ready rate (`stage2_eval.py --move-prob`).
   - **Inputs:** the same as F2, so `model_12000` warm-starts directly.
   - **Tests:** +4. Suite 163 pass + 13 xfails.
+- 2026-10-06 — F2 review videos done (`mjlab/results/stage5-f2-videos.md`; 12 clips sent to the user). Rendering overlapped the Drill 1 build at the user's request; the first render hit a 30-minute job limit and was resumed. The clips confirm the diagnosis:
+  - reach_forehand steps out right and crouches;
+  - on reach_backhand it stands upright at the start spot while the ball passes 1–2.5 m to its left;
+  - reach_short bounces twice in front of it;
+  - reach_deep is lost behind it.
