@@ -100,7 +100,7 @@ The executor learns to step to the ball and to recover to a commanded court spot
 - [x] **Reach feed families.** New families whose contact point needs travel (forehand and backhand 1.0–2.5 m lateral; deep and short contact points needing 0.5–1.5 m forward or back travel), plus a randomised robot start box on court (shuffled per robot episode) so that position is not memorised. Offline feed checks (`tune_feed.py --families`): one bounce, and contact plane and height reachable after moving. Tests.
 - [x] **Recovery command.** A commanded court spot (x, y) on the robot's half as two new observations, appended last (expanded checkpoint, identical actions at zero, as for targets). Rewarded for being near it between the hit and the next feed, never before the hit. Metric: recovery error at the next feed's launch (median and p90). In training the spot is sampled per feed from a box around the baseline centre; it is fixed during evaluation. Tests.
 - [x] **Stance release.** Apply the audit's changes: relax leg/waist pose terms, remove stand-still penalties and keep balance terms. Test that a zero action still stands and that a stepping policy is no longer penalised for base motion alone.
-- [ ] **Training run F1:** the Stage 4 families from random starts, plus reach families, plus recovery commands, warm-started from the expanded `model_7600`. Evaluate per family (contact, legal, A/B gain), recovery error, falls per robot episode, and retention on the Stage 4 families from the original start.
+- [x] **Training run F1:** the Stage 4 families from random starts, plus reach families, plus recovery commands, warm-started from the expanded `model_7600`. Evaluate per family (contact, legal, A/B gain), recovery error, falls per robot episode, and retention on the Stage 4 families from the original start.
 - [ ] **Training run F2:** one change chosen from F1's failure analysis (documented before launch), or a fixed continuation if F1 is healthy but still improving.
 - [ ] **Review videos:** successes and misses per family (render the env index of a known miss), side and behind views, including footwork on reach feeds. Send them to the user.
 - [ ] **Gate:** a single checkpoint with:
@@ -297,3 +297,16 @@ The executor learns to step to the ball and to recover to a commanded court spot
   - Balance terms, ball rewards and the fall termination are unchanged.
   - **Deviation from the step text:** "a zero action still stands" is not testable as written. A zero action falls after ~1.25 s in every variant, including the unchanged standing task (16/16 envs), because rewards do not change the dynamics. The test instead checks the reward terms: no stand-still terms remain, foot costs are off at rest and on when the base moves.
   - Suite 158 pass + 13 xfails.
+- 2026-10-06 — **Run F1 (`footwork-f01`) done** (`mjlab/results/stage5-run-f1.md`).
+  - **Run:** `Picklebot-Footwork-G1` warm-started from `model_7600`, expanded exactly to 118 / 133 inputs; 7,600 → 9,886 iterations to the cap; fixed endpoint `model_9800`. Falls 75 % → 0 within ~150 iterations.
+  - **Evaluation** (dev seed 4,200,080; paired A/B):
+    - Stage 4 families 70.6–84.9 % legal at 83–88 % contact;
+    - **reach_forehand 73.8 %, but reach_backhand, reach_short and reach_deep 0 % (no contact)**;
+    - A/B gain +0.391 overall (backspin +0.04);
+    - recovery error median 0.80 m / p90 1.35 m;
+    - falls 0.06 % of robot episodes;
+    - pelvis displacement p90 1.34 m (was 0.14 m).
+  - **Retention** (fixed start): −1.9 points overall, backhand −8.5.
+  - **Diagnosis:** the robot steps only to its right. `approach_ball` (std 0.25 m) and `recovery_reward` (std 0.5 m) carry no signal at 1–3 m.
+  - **F2 change, chosen before launch:** shaping range. Add `approach_far` (std 1.5 m, weight 1, bounce to hit) and widen `recovery_reward` to std 1.5 m; everything else is unchanged; warm-start from `model_9800`.
+  - `stage2_eval.py --fixed-start` was added for retention.

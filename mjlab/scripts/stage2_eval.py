@@ -56,6 +56,8 @@ def main():
                     help="v1 = Stage 2 robot (inline grip, square face) for old checkpoints")
     ap.add_argument("--view", choices=["side", "behind"], default="side")
     ap.add_argument("--slowmo", type=float, default=1.0, help="playback slow-down factor for the video")
+    ap.add_argument("--fixed-start", action="store_true",
+                    help="footwork tasks: start at ROBOT_START (Stage 4 pose box) with fixed-anchor feeds (retention)")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
@@ -64,6 +66,9 @@ def main():
     cfg = load_env_cfg(task)
     if args.target is not None:
         cfg.actions["ball"].target_mode = args.target
+    if args.fixed_start:
+        cfg.events["reset_base"].params["pose_range"] = {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "yaw": (-0.1, 0.1)}
+        cfg.actions["ball"].feed_anchor = "start"
     if cfg.actions["ball"].recovery:
         cfg.actions["ball"].recovery_mode = "fixed"  # evaluate recovery to the baseline centre
     cfg.scene.num_envs = args.envs
