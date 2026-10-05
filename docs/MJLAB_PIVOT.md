@@ -101,7 +101,7 @@ The executor learns to step to the ball and to recover to a commanded court spot
 - [x] **Recovery command.** A commanded court spot (x, y) on the robot's half as two new observations, appended last (expanded checkpoint, identical actions at zero, as for targets). Rewarded for being near it between the hit and the next feed, never before the hit. Metric: recovery error at the next feed's launch (median and p90). In training the spot is sampled per feed from a box around the baseline centre; it is fixed during evaluation. Tests.
 - [x] **Stance release.** Apply the audit's changes: relax leg/waist pose terms, remove stand-still penalties and keep balance terms. Test that a zero action still stands and that a stepping policy is no longer penalised for base motion alone.
 - [x] **Training run F1:** the Stage 4 families from random starts, plus reach families, plus recovery commands, warm-started from the expanded `model_7600`. Evaluate per family (contact, legal, A/B gain), recovery error, falls per robot episode, and retention on the Stage 4 families from the original start.
-- [ ] **Training run F2:** one change chosen from F1's failure analysis (documented before launch), or a fixed continuation if F1 is healthy but still improving.
+- [x] **Training run F2:** one change chosen from F1's failure analysis (documented before launch), or a fixed continuation if F1 is healthy but still improving.
 - [ ] **Review videos:** successes and misses per family (render the env index of a known miss), side and behind views, including footwork on reach feeds. Send them to the user.
 - [ ] **Gate:** a single checkpoint with:
   - legal return ≥ 85 % on every Stage 4 family from random starts, and ≥ 75 % on every reach family;
@@ -310,3 +310,13 @@ The executor learns to step to the ball and to recover to a commanded court spot
   - **Diagnosis:** the robot steps only to its right. `approach_ball` (std 0.25 m) and `recovery_reward` (std 0.5 m) carry no signal at 1–3 m.
   - **F2 change, chosen before launch:** shaping range. Add `approach_far` (std 1.5 m, weight 1, bounce to hit) and widen `recovery_reward` to std 1.5 m; everything else is unchanged; warm-start from `model_9800`.
   - `stage2_eval.py --fixed-start` was added for retention.
+- 2026-10-06 — **Run F2 (`footwork-f02`) done** (`mjlab/results/stage5-run-f2.md`).
+  - **Change:** shaping range only (`approach_far` std 1.5 m; recovery std 0.5 → 1.5 m). Warm-started from `footwork-f01/model_9800`, 9,800 → 12,050 iterations to the cap, fixed endpoint `model_12000`.
+  - **Evaluation** (dev seed 4,200,090):
+    - **reach_backhand, reach_short and reach_deep still 0 % contact**; reach_forehand 74.4 %;
+    - Stage 4 families 65.8–84.6 % legal at 84–88 % contact;
+    - A/B gain +0.481 (F1 +0.391);
+    - recovery median 0.78 m;
+    - falls 0.09 %;
+    - retention −0.1 points overall, worst −3.0; backhand recovered.
+  - **Conclusion:** the shaping range was not the bottleneck. The robot has a single learned movement (lean and step right), because its lineage started from a standing policy, not from a walking one.
