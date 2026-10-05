@@ -54,6 +54,11 @@ BODY_RADIUS = 0.17  # ball within this of the pelvis/torso origins counts as bod
 # Stage 5 start box (court-local offsets from ROBOT_START): x -6.3..-4.9, y -1.2..1.2, yaw +-0.3 rad.
 START_BOX = {"x": (-0.7, 0.7), "y": (-1.55, 0.85), "yaw": (-0.3, 0.3)}
 FEED_Y_MAX = court.HALF_WIDTH - 0.15  # anchored feeds are clamped inside the sidelines
+# Recovery command (Stage 5): a court spot to reach between the hit and the next feed.
+RECOVERY_BOX = ((-6.2, -5.0), (-1.5, 1.5))  # training: sampled per feed (x range, y range)
+RECOVERY_FIXED = (-5.6, 0.0)  # evaluation: baseline centre
+RECOVERY_STD = 0.5  # reward exp(-(d / std)^2)
+RECOVERY_BIN = 0.05  # error histogram bin width (m), 100 bins
 
 
 # --------------------------------------------------------------------------------------
@@ -92,6 +97,8 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # Feed geometry reference: "start" = fixed ROBOT_START (Stage 2-4); "pelvis" = the robot's
     # current pelvis position (footwork tasks), read from qpos so it is valid right after a reset.
     feed_anchor: str = "start"
+    recovery: bool = False  # sample a recovery spot per feed (footwork tasks)
+    recovery_mode: str = "random"  # "random" (RECOVERY_BOX) or "fixed" (RECOVERY_FIXED; evaluation)
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -122,6 +129,10 @@ class BallPhysicsAction(ActionTerm):
         self.target = torch.zeros(n, dtype=torch.long, device=dev)  # 0 = A, 1 = B
         self._target_xy = torch.tensor(TARGET_CENTRES, device=dev)
         self.placement_now = torch.zeros(n, device=dev)
+        self.gen_recover = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 130363)  # own stream
+        self.recover_xy = torch.tensor(RECOVERY_FIXED, device=dev).repeat(n, 1)
+        # Recovery error at the next feed's launch, for feeds the robot hit: histogram (no host sync).
+        self.recover_hist = torch.zeros(100, dtype=torch.long, device=dev)
         # Per-family episode tallies [family, (episodes, contact, legal_return, fall)].
         self.ep_family = torch.zeros(len(FAMILY_NAMES), 4, dtype=torch.long, device=dev)
         # Per-family legal-landing tallies [family, (in A, in B, on the assigned target)].
@@ -203,6 +214,11 @@ class BallPhysicsAction(ActionTerm):
 
     def _refeed(self, fire: torch.Tensor) -> None:
         """New feed for envs in `fire` without resetting the robot (computed for all, selected by mask)."""
+        if self.cfg.recovery:  # score the recovery of the feed that just ended (hit feeds only)
+            err = (self.pelvis_xy() - self.recover_xy).norm(dim=-1)
+            idx = (err / RECOVERY_BIN).long().clamp(max=self.recover_hist.shape[0] - 1)
+            self.recover_hist.index_add_(0, idx, (fire & self.hit_done).long())
+        rec_old = self.recover_xy.clone()
         pos, vel, spin = self.ball.pos.clone(), self.ball.vel.clone(), self.ball.spin.clone()
         fam_old, tgt_old = self.family.clone(), self.target.clone()
         self._feed(self.all_ids)
@@ -211,6 +227,7 @@ class BallPhysicsAction(ActionTerm):
                               torch.where(m, self.ball.spin, spin))
         self.family = torch.where(fire, self.family, fam_old)
         self.target = torch.where(fire, self.target, tgt_old)
+        self.recover_xy = torch.where(fire.unsqueeze(-1), self.recover_xy, rec_old)
         self.rules.begin_from_feed_masked(fire, FEEDER_PLAYER, must_bounce=True)
         for name in ("hit_done", "return_done", "tallied", "_prev_dead"):
             setattr(self, name, getattr(self, name) & ~fire)
@@ -225,14 +242,19 @@ class BallPhysicsAction(ActionTerm):
         lo, hi = self._range(name, fam)
         return lo + (hi - lo) * torch.rand(fam.shape[0], generator=self.gen, device=self.device)
 
+    def pelvis_xy(self, env_ids=None):
+        """Court-local pelvis (root) xy from qpos, valid right after a reset write."""
+        d = self._entity.data
+        ids = self.all_ids if env_ids is None else env_ids
+        return d.data.qpos[ids][:, d.indexing.free_joint_q_adr[:2]] - self._env.scene.env_origins[ids, :2]
+
     def _anchor(self, env_ids):
         """(x, y) court-local reference for feed geometry, per env in env_ids."""
         if self.cfg.feed_anchor == "start":
             k = len(env_ids)
             return (torch.full((k,), ROBOT_START[0], device=self.device),
                     torch.full((k,), ROBOT_START[1], device=self.device))
-        d = self._entity.data
-        q = d.data.qpos[env_ids][:, d.indexing.free_joint_q_adr[:2]] - self._env.scene.env_origins[env_ids, :2]
+        q = self.pelvis_xy(env_ids)
         return q[:, 0], q[:, 1]
 
     def _feed(self, env_ids):
@@ -244,6 +266,14 @@ class BallPhysicsAction(ActionTerm):
         else:
             tgt = torch.full((k,), 0 if self.cfg.target_mode == "A" else 1, dtype=torch.long, device=self.device)
         self.target[env_ids] = tgt
+        if self.cfg.recovery_mode == "fixed":
+            rec = torch.tensor(RECOVERY_FIXED, device=self.device).repeat(k, 1)
+        else:
+            u = torch.rand(k, 2, generator=self.gen_recover, device=self.device)
+            lo = torch.tensor([RECOVERY_BOX[0][0], RECOVERY_BOX[1][0]], device=self.device)
+            hi = torch.tensor([RECOVERY_BOX[0][1], RECOVERY_BOX[1][1]], device=self.device)
+            rec = lo + (hi - lo) * u
+        self.recover_xy[env_ids] = rec
         x0, z0 = self._u("start_x", fam), self._u("start_z", fam)
         ax, ay = self._anchor(env_ids)
         y = (ay + self._u("lateral_y", fam)).clamp(-FEED_Y_MAX, FEED_Y_MAX)
@@ -407,6 +437,30 @@ def target_obs(env) -> torch.Tensor:
     return xy / torch.tensor([court.HALF_LENGTH, court.HALF_WIDTH], device=xy.device)
 
 
+def court_pose_obs(env) -> torch.Tensor:
+    """Own court position and heading (pelvis xy scaled to the court half-size, cos/sin yaw)."""
+    t, robot = _term(env), env.scene["robot"]
+    xy = t.pelvis_xy() / torch.tensor([court.HALF_LENGTH, court.HALF_WIDTH], device=env.device)
+    w, x, y, z = robot.data.root_link_pose_w[:, 3:7].unbind(-1)
+    yaw = torch.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
+    return torch.cat([xy, torch.stack([torch.cos(yaw), torch.sin(yaw)], -1)], -1)
+
+
+def recovery_obs(env) -> torch.Tensor:
+    """Commanded recovery spot relative to the pelvis, in the body frame (metres / 3)."""
+    t, robot = _term(env), env.scene["robot"]
+    rel = torch.zeros(env.num_envs, 3, device=env.device)
+    rel[:, :2] = t.recover_xy - t.pelvis_xy()
+    return _rotate_inv(robot.data.root_link_pose_w[:, 3:7], rel)[:, :2] / 3.0
+
+
+def recovery_reward(env, std: float = RECOVERY_STD) -> torch.Tensor:
+    """Be near the recovery spot between the hit and the next feed (never before the hit)."""
+    t = _term(env)
+    d = (t.pelvis_xy() - t.recover_xy).norm(dim=-1)
+    return torch.exp(-(d / std) ** 2) * t.hit_done.float()
+
+
 def placement(env) -> torch.Tensor:
     """Placement bonus paid on legal landings (read before legal_return consumes the flags)."""
     return _term(env).placement_now
@@ -461,7 +515,8 @@ def _ball_spec() -> mujoco.MjSpec:
     return spec
 
 
-def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: bool = False) -> ManagerBasedRlEnvCfg:
+def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: bool = False,
+                         recovery: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = unitree_g1_flat_env_cfg(play=play)
     robot = get_g1_paddle_cfg()
     # New InitialStateCfg (the original is mjlab's shared keyframe constant). Court-local;
@@ -513,11 +568,18 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: b
         cfg.actions["ball"].targets = True
         for group in ("actor", "critic"):
             cfg.observations[group].terms["target"] = ObservationTermCfg(func=target_obs)
+    if recovery:  # appended last: own court pose (the robot now moves) and the recovery command
+        cfg.actions["ball"].recovery = True
+        for group in ("actor", "critic"):
+            cfg.observations[group].terms["court_pose"] = ObservationTermCfg(func=court_pose_obs)
+            cfg.observations[group].terms["recovery"] = ObservationTermCfg(func=recovery_obs)
     step_dt = cfg.sim.mujoco.timestep * cfg.decimation
     cfg.rewards["approach_ball"] = RewardTermCfg(func=approach_ball, weight=2.0)
     cfg.rewards["paddle_contact"] = RewardTermCfg(func=paddle_contact, weight=1.0 / step_dt)
     if targets:  # one-shot bonus; must come before legal_return, which clears the step flags
         cfg.rewards["placement"] = RewardTermCfg(func=placement, weight=1.0 / step_dt)
+    if recovery:
+        cfg.rewards["recovery"] = RewardTermCfg(func=recovery_reward, weight=1.0)
     cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=5.0 / step_dt)
     # No termination on rally end: a feeding machine serves the next ball 0.5 s after each rally,
     # within 8 s episodes that end only on a fall or the time limit. History: as a true termination

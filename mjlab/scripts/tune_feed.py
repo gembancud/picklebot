@@ -36,7 +36,9 @@ class _FakeTerm:
         self._ranges = {a: torch.tensor([getattr(FAMILIES[f], a) for f in FAMILY_NAMES])
                         for a in ("start_x", "start_z", "bounce_x", "lateral_y", "flight_time", "spin_y")}
         self.family = torch.zeros(n, dtype=torch.long)
-        self.cfg = type("Cfg", (), {"target_mode": "random"})()
+        self.cfg = type("Cfg", (), {"target_mode": "random", "recovery_mode": "random"})()
+        self.gen_recover = torch.Generator(device=device).manual_seed(seed + 2)
+        self.recover_xy = torch.zeros(n, 2)
         self.gen_target = torch.Generator(device=device).manual_seed(seed + 1)
         self.target = torch.zeros(n, dtype=torch.long)
         self.anchor_xy = ROBOT_START  # fixed anchor offline; tests may move it

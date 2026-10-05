@@ -64,6 +64,8 @@ def main():
     cfg = load_env_cfg(task)
     if args.target is not None:
         cfg.actions["ball"].target_mode = args.target
+    if cfg.actions["ball"].recovery:
+        cfg.actions["ball"].recovery_mode = "fixed"  # evaluate recovery to the baseline centre
     cfg.scene.num_envs = args.envs
     cfg.seed = args.seed
     cfg.actions["ball"].seed = args.seed
@@ -95,6 +97,7 @@ def main():
     term.fault_counts.zero_()
     term.ep_family.zero_()
     term.land_family.zero_()
+    term.recover_hist.zero_()
     for v in term.ep.values():
         v.zero_()
     obs = venv.get_observations()
@@ -148,6 +151,13 @@ def main():
         "landings_in_A": int(d["land_in_A"]), "landings_in_B": int(d["land_in_B"]),
         "target_hits": int(d["target_hit"]),
     }
+    if term.cfg.recovery:
+        h = term.recover_hist.cpu().double()
+        n_rec = int(h.sum())
+        cdf = h.cumsum(0) / max(n_rec, 1)
+        q = lambda p: round(float(((cdf < p).sum() + 0.5) * 0.05), 3) if n_rec else None
+        out["recovery"] = {"feeds_scored": n_rec, "error_median_m": q(0.5), "error_p90_m": q(0.9),
+                           "spot": "fixed baseline centre", "bin_m": 0.05}
     print(json.dumps(out, indent=1))
     print(f"{'family':14s} {'episodes':>8s} {'contact':>8s} {'legal return [95% CI]':>24s} {'fall':>6s}")
     for name, r in table.items():
