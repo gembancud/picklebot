@@ -94,3 +94,29 @@ def test_task_builds_and_runs():
     assert bounced.float().mean() >= 0.5  # the rules engine registers the feed bounce
     bid = env.scene["ball"].indexing.mocap_id
     assert torch.allclose(env.sim.data.mocap_pos[:, bid], term.ball.pos + env.scene.env_origins, atol=1e-5)
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA (mujoco_warp)")
+def test_start_box_and_pelvis_anchored_feeds():
+    """Stage 5: random start spots, and feeds aimed relative to the (fresh, not stale) pelvis position."""
+    from mjlab.envs import ManagerBasedRlEnv
+
+    from picklebot_mj.feeds import FeedMix
+    from picklebot_mj.tasks.return_stand import ROBOT_START, return_stand_env_cfg
+
+    cfg = return_stand_env_cfg(start_box=True)
+    cfg.scene.num_envs = 64
+    cfg.actions["ball"].compile_ball = False
+    cfg.actions["ball"].feed_mix = FeedMix({"easy_forehand": 1.0})
+    assert cfg.actions["ball"].feed_anchor == "pelvis"
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    term = env.action_manager.get_term("ball")
+    robot = env.scene["robot"]
+    pelvis = robot.data.body_link_pos_w[:, robot.body_names.index("pelvis"), :2] - env.scene.env_origins[:, :2]
+    env.step(torch.zeros(64, 29, device="cuda"))
+    pelvis = robot.data.body_link_pos_w[:, robot.body_names.index("pelvis"), :2] - env.scene.env_origins[:, :2]
+    assert float(pelvis[:, 0].std()) > 0.2 and float(pelvis[:, 1].std()) > 0.3  # spread over the start box
+    assert float((pelvis[:, 0] - ROBOT_START[0]).abs().max()) < 0.8
+    lat = term.ball.pos[:, 1] - pelvis[:, 1]  # ball moves only along x before the bounce (no side spin)
+    assert (lat > -0.65 - 0.05).all() and (lat < -0.30 + 0.05).all()

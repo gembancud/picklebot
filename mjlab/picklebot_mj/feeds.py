@@ -4,9 +4,16 @@ Each family is a FeedCfg: ranges for the ballistic aim (no drag; aerodynamics th
 shortens it slightly), the lateral offset from the robot's pelvis (its right is -y)
 and spin. `spin_y` is signed for travel toward -x: positive = topspin, negative = backspin.
 A FeedMix samples a family per episode by weight; tasks record the family index so
-evaluations can be reported per family. Every family is checked offline
+evaluations can be reported per family. Every Stage 4 family is checked offline
 (scripts/tune_feed.py --families): it bounces exactly once before the contact plane,
 arrives at a reachable height, and stays within reach (tests/test_feeds.py).
+
+Reach families (Stage 5, footwork) need the robot to move: their hittable window (after the
+bounce, before a second bounce, at paddle height) lies 1-2.5 m to the side, or in front of or
+behind the start spot. They are checked for the travel they require (tune_feed.py --reach).
+With a feed anchor (footwork tasks) bounce_x and lateral_y are relative to the robot's current
+pelvis position (bounce_x shifted by the anchor's offset from ROBOT_START), so each family keeps
+its meaning wherever the robot stands.
 """
 
 from __future__ import annotations
@@ -38,6 +45,20 @@ FAMILIES: dict[str, FeedCfg] = {
     "topspin": replace(EASY_FOREHAND, spin_y=(60.0, 120.0)),
     "backspin": replace(EASY_FOREHAND, spin_y=(-120.0, -60.0)),
 }
+STAGE4_FAMILIES: tuple[str, ...] = tuple(FAMILIES)
+BOUNCE_AIM_MIN = -7.5  # drag-corrected: aims beyond this land past the baseline  # the ten standing families (Stage 4 tasks)
+
+# Stage 5 reach families: longer, higher feeds so there is time to move (about 1.1-1.3 s flight).
+REACH_FAMILIES_CFG: dict[str, FeedCfg] = {
+    "reach_forehand": replace(EASY_FOREHAND, lateral_y=(-2.5, -1.0), start_z=(1.9, 2.3), flight_time=(1.15, 1.3)),
+    "reach_backhand": replace(EASY_FOREHAND, lateral_y=(1.0, 2.5), start_z=(1.9, 2.3), flight_time=(1.15, 1.3)),
+    "reach_short": replace(EASY_FOREHAND, bounce_x=(-3.0, -2.5), start_z=(1.3, 1.6), flight_time=(0.85, 1.0)),
+    # Aimed past the baseline: drag shortens these lobs by ~0.9 m, so they bounce behind the robot.
+    # Feeds clamp the aim at BOUNCE_AIM_MIN so that from deep start spots they still land in.
+    "reach_deep": replace(EASY_FOREHAND, bounce_x=(-8.0, -7.6), start_z=(2.2, 2.6), flight_time=(1.15, 1.3)),
+}
+FAMILIES.update(REACH_FAMILIES_CFG)
+REACH_FAMILIES: tuple[str, ...] = tuple(REACH_FAMILIES_CFG)
 FAMILY_NAMES: tuple[str, ...] = tuple(FAMILIES)
 
 

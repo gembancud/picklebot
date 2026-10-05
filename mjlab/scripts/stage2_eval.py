@@ -24,7 +24,7 @@ from mjlab.rl import MjlabOnPolicyRunner, RslRlVecEnvWrapper
 from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
 
 from picklebot_mj import seeds
-from picklebot_mj.feeds import FAMILY_NAMES, FeedMix
+from picklebot_mj.feeds import FAMILY_NAMES, REACH_FAMILIES, STAGE4_FAMILIES, FeedMix
 from picklebot_mj.g1_paddle import GRIP_V1, get_g1_paddle_cfg
 from picklebot_mj.rules import Fault
 from picklebot_mj.tasks import TASK_RETURN_STAND
@@ -48,7 +48,7 @@ def main():
     ap.add_argument("--seed", type=int, default=seeds.DEV_EVAL_SEEDS[0])
     ap.add_argument("--video", default=None)
     ap.add_argument("--families", default="easy_forehand",
-                    help="comma-separated feed families sampled uniformly, or 'all'")
+                    help="comma-separated feed families sampled uniformly, or 'all' (Stage 4 ten), 'reach' or 'every'")
     ap.add_argument("--task", default=None, help="task id (default: Picklebot-Return-Stand-G1)")
     ap.add_argument("--target", choices=["random", "A", "B"], default=None,
                     help="aiming tasks: force the landing target (paired A/B evaluation)")
@@ -68,7 +68,8 @@ def main():
     cfg.seed = args.seed
     cfg.actions["ball"].seed = args.seed
     cfg.observations["actor"].enable_corruption = False
-    fams = list(FAMILY_NAMES) if args.families == "all" else args.families.split(",")
+    groups = {"all": list(STAGE4_FAMILIES), "reach": list(REACH_FAMILIES), "every": list(FAMILY_NAMES)}
+    fams = groups.get(args.families) or args.families.split(",")
     cfg.actions["ball"].feed_mix = FeedMix({f: 1.0 for f in fams})
     if args.grip == "v1":
         robot = cfg.scene.entities["robot"]

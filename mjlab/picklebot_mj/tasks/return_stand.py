@@ -35,7 +35,7 @@ from picklebot_mj import court
 from picklebot_mj.ball import BALL_RADIUS
 from picklebot_mj.ball_sim import (PADDLE_CORNER_RADIUS, BallParams, BallSim, BallState, CompiledBallSim,
                                    PaddleState)
-from picklebot_mj.feeds import FAMILIES, FAMILY_NAMES, FeedMix
+from picklebot_mj.feeds import BOUNCE_AIM_MIN, FAMILIES, FAMILY_NAMES, FeedMix
 from picklebot_mj.g1_paddle import PADDLE_BODY, get_g1_paddle_cfg
 from picklebot_mj.rules import Fault, Phase, RallyRules, in_bounds
 
@@ -51,6 +51,9 @@ TARGET_RADIUS = 1.0
 PLACEMENT_MAX = 3.0  # bonus at the centre on a legal landing; linear to 0 at PLACEMENT_RANGE
 PLACEMENT_RANGE = 2.0
 BODY_RADIUS = 0.17  # ball within this of the pelvis/torso origins counts as body contact
+# Stage 5 start box (court-local offsets from ROBOT_START): x -6.3..-4.9, y -1.2..1.2, yaw +-0.3 rad.
+START_BOX = {"x": (-0.7, 0.7), "y": (-1.55, 0.85), "yaw": (-0.3, 0.3)}
+FEED_Y_MAX = court.HALF_WIDTH - 0.15  # anchored feeds are clamped inside the sidelines
 
 
 # --------------------------------------------------------------------------------------
@@ -86,6 +89,9 @@ class BallPhysicsActionCfg(ActionTermCfg):
     refeed_delay_s: float = REFEED_DELAY_S
     targets: bool = False  # sample a landing target per feed (aiming tasks)
     target_mode: str = "random"  # "random" (50/50 per feed), "A" or "B" (forced; evaluation)
+    # Feed geometry reference: "start" = fixed ROBOT_START (Stage 2-4); "pelvis" = the robot's
+    # current pelvis position (footwork tasks), read from qpos so it is valid right after a reset.
+    feed_anchor: str = "start"
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -219,6 +225,16 @@ class BallPhysicsAction(ActionTerm):
         lo, hi = self._range(name, fam)
         return lo + (hi - lo) * torch.rand(fam.shape[0], generator=self.gen, device=self.device)
 
+    def _anchor(self, env_ids):
+        """(x, y) court-local reference for feed geometry, per env in env_ids."""
+        if self.cfg.feed_anchor == "start":
+            k = len(env_ids)
+            return (torch.full((k,), ROBOT_START[0], device=self.device),
+                    torch.full((k,), ROBOT_START[1], device=self.device))
+        d = self._entity.data
+        q = d.data.qpos[env_ids][:, d.indexing.free_joint_q_adr[:2]] - self._env.scene.env_origins[env_ids, :2]
+        return q[:, 0], q[:, 1]
+
     def _feed(self, env_ids):
         k = len(env_ids)
         fam = torch.multinomial(self._mix, k, replacement=True, generator=self.gen)
@@ -229,8 +245,10 @@ class BallPhysicsAction(ActionTerm):
             tgt = torch.full((k,), 0 if self.cfg.target_mode == "A" else 1, dtype=torch.long, device=self.device)
         self.target[env_ids] = tgt
         x0, z0 = self._u("start_x", fam), self._u("start_z", fam)
-        y = ROBOT_START[1] + self._u("lateral_y", fam)
-        bx, t = self._u("bounce_x", fam), self._u("flight_time", fam)
+        ax, ay = self._anchor(env_ids)
+        y = (ay + self._u("lateral_y", fam)).clamp(-FEED_Y_MAX, FEED_Y_MAX)
+        bx = (self._u("bounce_x", fam) + (ax - ROBOT_START[0])).clamp(min=BOUNCE_AIM_MIN)
+        t = self._u("flight_time", fam)
         vx = (bx - x0) / t
         vz = (BALL_RADIUS - z0 + 0.5 * 9.81 * t * t) / t
         self.ball.pos[env_ids] = torch.stack([x0, y, z0], -1)
@@ -443,7 +461,7 @@ def _ball_spec() -> mujoco.MjSpec:
     return spec
 
 
-def return_stand_env_cfg(play: bool = False, targets: bool = False) -> ManagerBasedRlEnvCfg:
+def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = unitree_g1_flat_env_cfg(play=play)
     robot = get_g1_paddle_cfg()
     # New InitialStateCfg (the original is mjlab's shared keyframe constant). Court-local;
@@ -472,6 +490,8 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False) -> ManagerBa
     cfg.curriculum.pop("command_vel", None)
     # Small start-pose noise only.
     cfg.events["reset_base"].params["pose_range"] = {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "yaw": (-0.1, 0.1)}
+    if start_box:  # Stage 5: random start spot per robot episode; feeds follow the robot
+        cfg.events["reset_base"].params["pose_range"] = dict(START_BOX)
     cfg.events.pop("push_robot", None)
     # Posture: keep legs and waist near standing, leave the hitting arm free.
     cfg.rewards["pose"].params["std_standing"] = {
@@ -481,7 +501,7 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False) -> ManagerBa
         r"right_.*(shoulder|elbow|wrist).*": 3.0,
     }
     # Ball physics term after the joint-position term (both run every physics step).
-    cfg.actions["ball"] = BallPhysicsActionCfg(seed=0)
+    cfg.actions["ball"] = BallPhysicsActionCfg(seed=0, feed_anchor="pelvis" if start_box else "start")
     for group in ("actor", "critic"):
         terms = cfg.observations[group].terms
         terms["ball_pos"] = ObservationTermCfg(func=ball_pos_b)

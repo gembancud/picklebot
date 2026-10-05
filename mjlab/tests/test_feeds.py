@@ -6,18 +6,18 @@ from pathlib import Path
 import pytest
 import torch
 
-from picklebot_mj.feeds import FAMILIES, FAMILY_NAMES, FeedMix, only
+from picklebot_mj.feeds import FAMILIES, FAMILY_NAMES, REACH_FAMILIES, STAGE4_FAMILIES, FeedMix, only
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from tune_feed import _FakeTerm, evaluate  # noqa: E402
+from tune_feed import _FakeTerm, evaluate, evaluate_reach  # noqa: E402
 
 
 @pytest.fixture(scope="module")
 def stats():
-    return {name: evaluate(only(name), n=512) for name in FAMILY_NAMES}
+    return {name: evaluate(only(name), n=512) for name in STAGE4_FAMILIES}
 
 
-@pytest.mark.parametrize("name", FAMILY_NAMES)
+@pytest.mark.parametrize("name", STAGE4_FAMILIES)
 def test_family_is_single_bounce_and_reachable(stats, name):
     r = stats[name]
     assert r["one_bounce"] >= 0.99
@@ -55,3 +55,45 @@ def test_mix_sampling_and_validation():
         FeedMix({"nonsense": 1.0}).vector()
     with pytest.raises(ValueError):
         FeedMix({"easy_forehand": 0.0}).vector()
+
+
+@pytest.fixture(scope="module")
+def reach_stats():
+    return {name: evaluate_reach(only(name), n=256) for name in REACH_FAMILIES}
+
+
+@pytest.mark.parametrize("name", REACH_FAMILIES)
+def test_reach_family_needs_travel_but_is_feasible(reach_stats, name):
+    r = reach_stats[name]
+    assert r["hittable"] >= 0.99 and r["lands_in"] >= 0.99  # one bounce, then a paddle-height window
+    assert r["travel_p50"] >= 0.4  # beyond a comfortable reach from the default spot
+    assert r["speed_p95"] <= 1.2  # average speed needed to get there (G1 walks ~1-1.5 m/s)
+
+
+def test_reach_directions(reach_stats):
+    assert reach_stats["reach_forehand"]["lateral_p95"] <= -1.0
+    assert reach_stats["reach_backhand"]["lateral_p05"] >= 1.0
+    assert FAMILIES["reach_short"].bounce_x[0] > FAMILIES["short"].bounce_x[1]
+
+
+def test_feed_follows_anchor():
+    """Footwork tasks feed relative to the pelvis: lateral offset and bounce aim move with it."""
+    n = 512
+    t0, t1 = _FakeTerm(only("easy_forehand"), n, seed=3), _FakeTerm(only("easy_forehand"), n, seed=3)
+    t1.anchor_xy = (-4.9, -1.0)
+    t0._feed(torch.arange(n))
+    t1._feed(torch.arange(n))
+    lat = t1.ball.pos[:, 1] - (-1.0)
+    assert (lat >= -0.65 - 1e-5).all() and (lat <= -0.30 + 1e-5).all()
+    # Same launch point in x, so the shifted bounce aim shows up as a larger x speed.
+    assert torch.allclose(t0.ball.pos[:, 0], t1.ball.pos[:, 0])
+    assert (t1.ball.vel[:, 0] > t0.ball.vel[:, 0]).all()
+
+
+def test_anchored_feeds_stay_inside_sidelines():
+    from picklebot_mj.tasks.return_stand import FEED_Y_MAX
+
+    t = _FakeTerm(only("reach_forehand"), 256, seed=4)
+    t.anchor_xy = (-5.6, -1.2)
+    t._feed(torch.arange(256))
+    assert (t.ball.pos[:, 1].abs() <= FEED_Y_MAX + 1e-5).all()

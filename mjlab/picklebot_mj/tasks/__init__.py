@@ -3,7 +3,7 @@
 from mjlab.tasks.registry import register_mjlab_task
 from mjlab.tasks.velocity.config.g1.rl_cfg import unitree_g1_ppo_runner_cfg
 
-from picklebot_mj.feeds import FAMILY_NAMES, FeedMix
+from picklebot_mj.feeds import STAGE4_FAMILIES, FeedMix
 from picklebot_mj.tasks.return_stand import return_stand_env_cfg
 
 TASK_RETURN_STAND = "Picklebot-Return-Stand-G1"
@@ -45,7 +45,7 @@ register_mjlab_task(
     rl_cfg=_rl_cfg(),
 )
 
-ALL_MIX = FeedMix({name: 1.0 for name in FAMILY_NAMES})
+ALL_MIX = FeedMix({name: 1.0 for name in STAGE4_FAMILIES})  # the ten Stage 4 families
 TASK_AIM_ALL = "Picklebot-Aim-All-G1"  # Stage 4 run C: all ten feed families (equal weights) + landing targets
 register_mjlab_task(
     task_id=TASK_AIM_ALL,
