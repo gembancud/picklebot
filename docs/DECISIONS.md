@@ -1059,3 +1059,28 @@ Trade-offs: More project-owned physics code to validate. The ball does not take 
 Migration and compatibility: `court.add_ball_contacts` remains as a documented, invalid baseline and is not used in tasks. The aerodynamic model and its RK4 reference (`ball.py`) carry over unchanged. Acceptance remains the official drop band (provisional for the acrylic court), now required at every drop height and impact phase, plus no energy gain and PBCoR ≤ 0.43 for the paddle surrogate.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 1 steps.
+
+### D-040 — Accept Stage 4 with deviations; footwork in the executor, positioning in a strategy layer
+
+- Date: 2026-10-05
+- Status: Accepted (user-directed)
+- Amends: D-038 (mjlab roadmap stages after Stage 4)
+
+Decision: The Stage 4 gate result (`mjlab/results/stage4-gate.md`) is accepted with its documented deviations. `aim-all-c01/model_7600` misses three family thresholds by under 1 point (wide forehand 84.6 % and backhand 84.4 % vs 85 %; high 69.2 % vs 70 %) and passes aiming, retention and the other seven families. It is the accepted Stage 4 checkpoint. The roadmap is restructured around a two-level hierarchy:
+- **The execution policy (executor)** owns footwork: stepping to the ball, adjustment steps and recovering to a commanded court spot. It takes commands for a landing target, a recovery spot and later a shot type.
+- **A slower strategy policy** owns court positioning and shot choice from the game context (serve and return, partner and opponent positions, score). It issues those commands and is trained by self-play once the executor is robust.
+
+New stage order:
+- Stage 5: footwork;
+- Stage 6: robustness and teacher → student distillation;
+- Stage 7: two-robot rallies with a scripted strategy;
+- Stage 8: learned strategy with self-play;
+- Stage 9: serves and 2v2.
+
+Evidence: Contact is 86–90 % in every family from a fixed stance and has stayed in that band since run A3, while legality given contact is about 96 % on lateral feeds and aiming works (A/B gain +0.533 [0.528, 0.539]). The remaining misses are untouched balls, which more standing-only training is unlikely to remove, and match play needs footwork regardless.
+
+Trade-offs: Stage 4's thresholds are not strictly met. The Stage 5 gate re-tests the Stage 4 families (from random starts) at the same 85 % bar, plus contact ≥ 92 %. Releasing the stance risks balance regressions, so falls per robot episode become a gate metric.
+
+Migration and compatibility: The old Stage 5 (robustness of the standing result) is folded into the new Stage 6 for the moving executor. Nothing is deleted. Seed discipline and fixed-endpoint selection are unchanged.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 4 gate, Stages 5–9, Open questions.

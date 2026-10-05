@@ -92,19 +92,46 @@ Each new variable gets its own training run (≤ 2 h each), warm-started from th
 - [x] Target input: a landing-region goal (two regions, deep left / deep right in the far court, as in Unity two-region) added to observations, with a placement reward paid only on legal landings. The observation space changes, so this run is a fresh start or a documented warm-start that expands the network inputs. Placement metric: target hit rate and paired A/B assignment gain (same feeds, swapped targets) with intervals.
 - [x] Training run B: targets on easy + lateral families. Evaluate legality, target hits and A/B gain per family.
 - [x] Training run C: add depth, height, speed and spin families with targets. Evaluate everything per family.
-- [ ] **Gate:** a single checkpoint with legal return ≥ 85 % on every lateral family and ≥ 70 % on depth/height/speed/spin families, target-hit A/B gain with a 95 % interval above zero, and easy-feed retention within 5 points. If the gate is not met after run C, record per-family results and stop for the user (no automatic extension). Report `mjlab/results/stage4-gate.md`.
+- [x] **Gate:** a single checkpoint with legal return ≥ 85 % on every lateral family and ≥ 70 % on depth/height/speed/spin families, target-hit A/B gain with a 95 % interval above zero, and easy-feed retention within 5 points. If the gate is not met after run C, record per-family results and stop for the user (no automatic extension). Report `mjlab/results/stage4-gate.md`. **Not met by under 1 point on three families (wide 84.6 %, backhand 84.4 %, high 69.2 %); accepted with these documented deviations by the user on 2026-10-05 (D-040).** The standing-only constraint, not aiming, limits contact; footwork comes next. `aim-all-c01/model_7600` is the accepted Stage 4 checkpoint and the parent for Stage 5.
 
-## Stage 5 — robustness of the Stage 4 result
-- [ ] Repeat the final Stage 4 training recipe with 2 more training seeds (≤ 2 h each).
+## Stage 5 — footwork: move, hit, recover (one shared policy, D-040)
+The executor learns to step to the ball and to recover to a commanded court spot, so that a later strategy layer can command *where to land the ball* and *where to be after the shot*. Footwork belongs in the executor (fast, coupled to the swing). Court positioning (where to stand, who takes the ball) belongs to the later strategy layer. Same discipline as Stage 4: one variable per run (≤ 2 h each), fixed endpoints, dev seeds only, per-family reporting. Retention means no more than 5 points of legal-return loss on the Stage 4 families versus `model_7600` on the same feeds.
+- [ ] **Motion audit (no training).** List every inherited reward, termination and command term that penalises or prevents base motion: zero velocity command with tracking rewards, leg `std_standing` pose terms, the start-pose box and anything else. Measure how far `model_7600`'s feet and pelvis actually travel per feed. Report `mjlab/results/stage5-motion-audit.md` with the planned changes.
+- [ ] **Reach feed families.** New families whose contact point needs travel (forehand and backhand 1.0–2.5 m lateral; deep and short contact points needing 0.5–1.5 m forward or back travel), plus a randomised robot start box on court (shuffled per robot episode) so that position is not memorised. Offline feed checks (`tune_feed.py --families`): one bounce, and contact plane and height reachable after moving. Tests.
+- [ ] **Recovery command.** A commanded court spot (x, y) on the robot's half as two new observations, appended last (expanded checkpoint, identical actions at zero, as for targets). Rewarded for being near it between the hit and the next feed, never before the hit. Metric: recovery error at the next feed's launch (median and p90). In training the spot is sampled per feed from a box around the baseline centre; it is fixed during evaluation. Tests.
+- [ ] **Stance release.** Apply the audit's changes: relax leg/waist pose terms, remove stand-still penalties and keep balance terms. Test that a zero action still stands and that a stepping policy is no longer penalised for base motion alone.
+- [ ] **Training run F1:** the Stage 4 families from random starts, plus reach families, plus recovery commands, warm-started from the expanded `model_7600`. Evaluate per family (contact, legal, A/B gain), recovery error, falls per robot episode, and retention on the Stage 4 families from the original start.
+- [ ] **Training run F2:** one change chosen from F1's failure analysis (documented before launch), or a fixed continuation if F1 is healthy but still improving.
+- [ ] **Review videos:** successes and misses per family (render the env index of a known miss), side and behind views, including footwork on reach feeds. Send them to the user.
+- [ ] **Gate:** a single checkpoint with:
+  - legal return ≥ 85 % on every Stage 4 family from random starts, and ≥ 75 % on every reach family;
+  - contact ≥ 92 % on Stage 4 families (versus 86–90 % standing);
+  - target A/B gain with a 95 % interval above zero on every family;
+  - median recovery error ≤ 0.5 m;
+  - falls ≤ 1 % per robot episode;
+  - retention within 5 points.
+
+  If it is not met after F2, record per-family results and stop for the user. Report `mjlab/results/stage5-gate.md`.
+
+## Stage 6 — robustness and distillation of the moving executor
+- [ ] Repeat the final Stage 5 recipe with 2 more training seeds (≤ 2 h each).
 - [ ] Evaluate all three on two fresh dev seeds; report per-seed and pooled results with intervals; flag any family whose result depends on the training seed.
-- [ ] Record review videos: successes and misses per family (render the env index of a known miss), side and behind views.
-- [ ] **Gate:** all three seeds meet the Stage 4 gate thresholds (or the deviations are documented and the user is asked). Report `mjlab/results/stage5-gate.md`.
+- [ ] Teacher → student: distil the privileged teacher (critic-side ball spin and exact ball state) into a student with deployable observations only; report the gap per family.
+- [ ] **Gate:** all three seeds meet the Stage 5 gate thresholds (or the deviations are documented and the user is asked). Report `mjlab/results/stage6-gate.md`.
 
-## Stage 6+ — later (detail when Stage 5 passes)
-Movement plus hitting (footwork using the walking policy as a base or teacher), privileged teacher → student distillation, serves on both sides, then 2v2.
+## Stage 7+ — later (detail when Stage 6 passes)
+- **Stage 7, two robots rally.** One robot per side, each driven by the frozen executor plus a *scripted* strategy (land deep, recover to centre). Rally length and fault mix are the metrics. This tests the executor in real back-and-forth play before any strategy learning.
+- **Stage 8, learned strategy layer.**
+  - A slow policy (about once per shot) sees the game state: ball, own and opponent positions, score and serve.
+  - It outputs executor commands: landing target, recovery spot, later shot type.
+  - Trained by self-play against frozen past versions (a league), with the executor frozen; joint fine-tuning comes after.
+- **Stage 9, serves and 2v2.**
+  - Serve and return-of-serve skills on both sides.
+  - Four players, with partner coordination (whose ball, cover and stack) through the strategy layer's commands.
+  - Self-play in full games under the ported doubles rules.
 
 ## Open questions
-- **BLOCKING (2026-10-03): Stage 4 gate not met (narrowly).** `aim-all-c01/model_7600` misses three family thresholds by under 1 point each (wide 84.6 %, backhand 84.4 % vs 85 %; high 69.2 % vs 70 %). Aiming, retention and the other seven families pass. Evidence and options: `mjlab/results/stage4-gate.md`. Choose: (1) run D, a fixed ≤ 2 h continuation, then re-test on a fresh dev seed; (2) accept the deviations and go to Stage 5; (3) a contact-focused change first; (4) revise thresholds (not recommended).
+- ~~**BLOCKING (2026-10-03): Stage 4 gate not met (narrowly).**~~ **Resolved 2026-10-05: the user accepted the deviations and moved footwork forward → D-040.** `aim-all-c01/model_7600` misses three family thresholds by under 1 point each (wide 84.6 %, backhand 84.4 % vs 85 %; high 69.2 % vs 70 %). Aiming, retention and the other seven families pass. Evidence and options: `mjlab/results/stage4-gate.md`. Choose: (1) run D, a fixed ≤ 2 h continuation, then re-test on a fresh dev seed; (2) accept the deviations and go to Stage 5; (3) a contact-focused change first; (4) revise thresholds (not recommended).
 - ~~**BLOCKING (2026-10-02): how should ball contacts be simulated?**~~ **Resolved 2026-10-02: the user chose A → D-039.** Native MuJoCo soft contacts give impact-phase-dependent restitution: COR 0.1–2.9 at dt 1–2 ms, and still ±0.05 at 0.1 ms. At 5 ms the ball tunnels through the net. Evidence: `mjlab/results/stage1-bounce.md`. Options:
   - **A. Analytic ball model (recommended).** MuJoCo collisions for the ball are disabled. Flight and impacts (court plane, net, paddle) are integrated in batched torch on the GPU with sub-stepping and swept collision tests, using an explicit restitution/friction/spin impulse model, as in Unity's contact surrogates. The paddle pose and velocity are read from MuJoCo each step, and the reaction impulse goes back to the hand via `xfrc_applied`. Ball–robot-body touches are detected as faults. The robot keeps dt 5 ms and throughput.
   - **B. Native contacts at a fine timestep** (≤ 0.25 ms) for the whole scene. Roughly 20–50× slower, and COR is still phase-dependent (±0.05–0.1).
@@ -235,3 +262,11 @@ Movement plus hitting (footwork using the walking policy as a base or teacher), 
 - 2026-10-03 — **Run B (`aim-b01`) done** (`mjlab/results/stage4-run-b.md`).  - **Run:** warm-started from the expanded `lateral-a03/model_3000`, 2,358 iterations to the cap, healthy throughout. Fixed endpoint `model_5300`.  - **Paired A/B** (dev seed 4,200,050, ~6.8k feeds per condition): assignment gain **+0.697 [0.690, 0.705]** (parent −0.001). Per family: easy +0.745, wide +0.769, backhand +0.579, every interval far above 0. Target hits 72 % (A) and 67 % (B); almost no crossover.  - **Retention:** easy legal 90.0 % vs the parent's 93.3 % (−3.3 points pooled, −4.3 with target A), within 5. The cost is contact (96 → ~90 %, mostly untouched balls) from harder swings.  - **Untrained families (diagnostic, seed 4,200,051):** low 70 % and fast 68 % (from 15 % / 8 %), short 22 %, backspin 30 %, high 0 %.  - **Eval change:** per-family landing tallies added to the task term, `stage2_eval.py` and `aim_gain.py`; the per-family sums match the totals. Suite 145 pass + 13 xfails.
 - 2026-10-03 — **Run C (`aim-all-c01`) done** (`mjlab/results/stage4-run-c.md`).  - **Run:** all ten families with targets, warm-started from `aim-b01/model_5300`, 2,354 iterations to the cap, healthy (no falls). Fixed endpoint `model_7600`.  - **Dev evaluation** (seed 4,200,060; 2048 envs; paired A/B; ~2.7k feeds per family; pooled legal return): easy 85.1 %, wide 84.6 %, backhand 84.4 %, deep 84.6 %, short 75.8 %, high 69.2 % (from 1 %), low 86.8 %, fast 88.5 %, topspin 85.3 %, backspin 73.9 %. Every family beats the parent on the same feeds.  - **Aiming:** A/B gain +0.533 [0.528, 0.539], above 0 in every family, but with side biases (backhand rarely hits A; backspin gain only 0.10).  - **Contact:** 86–90 % in every family; misses are mostly untouched balls. First launch failed on the resume run name (log kept as `aim-all-c01-launchfail.*`). Test added for the new task registration.
 - 2026-10-03 — **Stage 4 gate NOT MET (narrowly); loop stopped for the user** (`mjlab/results/stage4-gate.md`). Candidate `aim-all-c01/model_7600`: aiming (gain +0.533, every family > 0), retention (+4.4 points) and seven families pass. Missed by under 1 point each: wide_forehand 84.6 %, backhand 84.4 % (threshold 85 %) and high 69.2 % (threshold 70 %). The binding limit is contact (86–90 %). Options are recorded under Open questions; the gate box stays unchecked.
+- 2026-10-05 — **User decision (D-040):** Stage 4 accepted with documented deviations (three families under their thresholds by < 1 point). `aim-all-c01/model_7600` is the accepted Stage 4 checkpoint. Reason: the standing-only constraint, not aiming, caps contact (86–90 %), and footwork is needed for match play anyway. Roadmap restructured:
+  - Stage 5: footwork (move, hit, recover to a commanded spot);
+  - Stage 6: robustness and teacher → student distillation;
+  - Stage 7: two-robot rallies with a scripted strategy;
+  - Stage 8: learned strategy layer with self-play;
+  - Stage 9: serves and 2v2.
+
+  Footwork sits in the executor; court positioning sits in the strategy layer.
