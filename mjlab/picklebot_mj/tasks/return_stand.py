@@ -515,8 +515,36 @@ def _ball_spec() -> mujoco.MjSpec:
     return spec
 
 
+# Stance release (Stage 5, stage5-motion-audit.md): leg and waist tolerances from mjlab's own
+# walking regime; arms as in the standing task (free right arm).
+FREE_FEET_POSE_STD = {
+    r".*hip_pitch.*": 0.3, r".*hip_roll.*": 0.15, r".*hip_yaw.*": 0.15, r".*knee.*": 0.35,
+    r".*ankle_pitch.*": 0.25, r".*ankle_roll.*": 0.1,
+    r".*waist_yaw.*": 0.4, r".*waist_(roll|pitch).*": 0.15,
+    r"left_.*(shoulder|elbow|wrist).*": 0.3,
+    r"right_.*(shoulder|elbow|wrist).*": 3.0,
+}
+
+
+def _release_stance(cfg) -> None:
+    """Remove the stand-still incentives; gate foot-quality costs on actual base motion."""
+    from picklebot_mj.tasks.footwork_rewards import GATED, SPEED_THRESHOLD
+
+    # (1) Under the zero command these pay for not moving the base (2 + 2 per step at rest).
+    cfg.rewards.pop("track_linear_velocity")
+    cfg.rewards.pop("track_angular_velocity")
+    # (2) The standing tolerances are always active (command 0); use walking tolerances for the legs.
+    cfg.rewards["pose"].params["std_standing"] = dict(FREE_FEET_POSE_STD)
+    # (3) Foot-quality terms: same weights and parameters, gated on base speed instead of the command.
+    for name, func in GATED.items():
+        term = cfg.rewards[name]
+        params = {k: v for k, v in term.params.items() if k not in ("command_name", "command_threshold")}
+        params["speed_threshold"] = SPEED_THRESHOLD
+        term.func, term.params = func, params
+
+
 def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: bool = False,
-                         recovery: bool = False) -> ManagerBasedRlEnvCfg:
+                         recovery: bool = False, free_feet: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = unitree_g1_flat_env_cfg(play=play)
     robot = get_g1_paddle_cfg()
     # New InitialStateCfg (the original is mjlab's shared keyframe constant). Court-local;
@@ -555,6 +583,8 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: b
         r"left_.*(shoulder|elbow|wrist).*": 0.3,
         r"right_.*(shoulder|elbow|wrist).*": 3.0,
     }
+    if free_feet:
+        _release_stance(cfg)
     # Ball physics term after the joint-position term (both run every physics step).
     cfg.actions["ball"] = BallPhysicsActionCfg(seed=0, feed_anchor="pelvis" if start_box else "start")
     for group in ("actor", "critic"):
