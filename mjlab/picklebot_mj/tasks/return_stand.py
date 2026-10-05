@@ -59,6 +59,7 @@ RECOVERY_BOX = ((-6.2, -5.0), (-1.5, 1.5))  # training: sampled per feed (x rang
 RECOVERY_FIXED = (-5.6, 0.0)  # evaluation: baseline centre
 RECOVERY_STD = 0.5  # reward exp(-(d / std)^2)
 RECOVERY_BIN = 0.05  # error histogram bin width (m), 100 bins
+WIDE_SHAPING_STD = 1.5  # run F2: approach_far and recovery kernels (m)
 
 
 # --------------------------------------------------------------------------------------
@@ -544,7 +545,8 @@ def _release_stance(cfg) -> None:
 
 
 def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: bool = False,
-                         recovery: bool = False, free_feet: bool = False) -> ManagerBasedRlEnvCfg:
+                         recovery: bool = False, free_feet: bool = False,
+                         wide_shaping: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = unitree_g1_flat_env_cfg(play=play)
     robot = get_g1_paddle_cfg()
     # New InitialStateCfg (the original is mjlab's shared keyframe constant). Court-local;
@@ -608,8 +610,11 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: b
     cfg.rewards["paddle_contact"] = RewardTermCfg(func=paddle_contact, weight=1.0 / step_dt)
     if targets:  # one-shot bonus; must come before legal_return, which clears the step flags
         cfg.rewards["placement"] = RewardTermCfg(func=placement, weight=1.0 / step_dt)
+    if wide_shaping:  # Stage 5 run F2: distance shaping that still informs at 1-3 m (stage5-run-f1.md)
+        cfg.rewards["approach_far"] = RewardTermCfg(func=approach_ball, weight=1.0, params={"std": WIDE_SHAPING_STD})
     if recovery:
-        cfg.rewards["recovery"] = RewardTermCfg(func=recovery_reward, weight=1.0)
+        cfg.rewards["recovery"] = RewardTermCfg(
+            func=recovery_reward, weight=1.0, params={"std": WIDE_SHAPING_STD if wide_shaping else RECOVERY_STD})
     cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=5.0 / step_dt)
     # No termination on rally end: a feeding machine serves the next ball 0.5 s after each rally,
     # within 8 s episodes that end only on a fall or the time limit. History: as a true termination

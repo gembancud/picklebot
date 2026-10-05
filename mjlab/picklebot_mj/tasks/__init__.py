@@ -63,3 +63,12 @@ register_mjlab_task(
                            FOOTWORK_MIX),
     rl_cfg=_rl_cfg(),
 )
+
+TASK_FOOTWORK_WIDE = "Picklebot-Footwork-Wide-G1"  # Stage 5 run F2: Footwork + wide distance shaping (1.5 m)
+_FW = dict(targets=True, start_box=True, recovery=True, free_feet=True, wide_shaping=True)
+register_mjlab_task(
+    task_id=TASK_FOOTWORK_WIDE,
+    env_cfg=_with_mix(return_stand_env_cfg(**_FW), FOOTWORK_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_FW), FOOTWORK_MIX),
+    rl_cfg=_rl_cfg(),
+)

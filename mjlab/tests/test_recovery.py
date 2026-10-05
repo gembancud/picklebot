@@ -56,3 +56,23 @@ def test_recovery_reward_gating_sampling_and_metric():
     t._refeed(fire)
     assert int(t.recover_hist.sum()) == n // 2 and int(t.recover_hist[0]) == n // 2
     assert not t.hit_done.any()  # cleared for the new feed
+
+
+def test_wide_shaping_is_the_only_f2_change():
+    """Run F2 changes only the distance-shaping range (stage5-run-f1.md)."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.tasks import TASK_FOOTWORK, TASK_FOOTWORK_WIDE
+    from picklebot_mj.tasks.return_stand import RECOVERY_STD, WIDE_SHAPING_STD
+
+    f1, f2 = load_env_cfg(TASK_FOOTWORK), load_env_cfg(TASK_FOOTWORK_WIDE)
+    assert set(f2.rewards) - set(f1.rewards) == {"approach_far"} and set(f1.rewards) <= set(f2.rewards)
+    far = f2.rewards["approach_far"]
+    assert far.func is f1.rewards["approach_ball"].func and far.params["std"] == WIDE_SHAPING_STD == 1.5
+    assert f1.rewards["recovery"].params["std"] == RECOVERY_STD and f2.rewards["recovery"].params["std"] == 1.5
+    for k in f1.rewards:
+        if k != "recovery":
+            assert f1.rewards[k].weight == f2.rewards[k].weight
+    for g in ("actor", "critic"):
+        assert list(f1.observations[g].terms) == list(f2.observations[g].terms)
