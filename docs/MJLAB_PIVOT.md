@@ -25,6 +25,12 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 7. Model selection is always a fixed endpoint (the last checkpoint before the cap); never pick a peak by evaluation. Evaluation uses development seeds only; final seeds stay unused.
 4. If blocked, record the blocker under **Open questions** and stop the loop instead of guessing.
 5. Keep artifacts (logs, checkpoints, videos) under `mjlab/artifacts/`, which is gitignored. Commit only compact summaries.
+8. **Bounded hill-climbing (user request, 2026-10-06).** When a training step or gate misses its thresholds, the loop may run up to **two follow-up runs for that step**. Each:
+   - is warm-started from the previous fixed endpoint;
+   - changes **one** variable chosen from the failure analysis, written in the report **before** launch;
+   - is evaluated on a fresh dev seed.
+
+   Add each follow-up as a new checklist step. If the thresholds are still missed after two follow-ups, or the fix would need a design change (new inputs or task structure beyond the step's scope, a new decision, or anything in rule 3), record it under Open questions and stop for the user. Never loosen a threshold to pass.
 
 ## Stage 0 — toolchain and throughput trial
 - [x] Record decision D-038 (switch to mjlab, G1 with wrist paddle, Unity frozen) in `docs/DECISIONS.md`, append-only.
@@ -161,11 +167,46 @@ F1 and F2 showed the policy will not discover multi-step footwork from a standin
 
   If it is not met after D3 plus one follow-up run, record per-family results and stop for the user. Report `mjlab/results/stage5-gate.md`.
 
-## Stage 6 — robustness and distillation of the moving executor
-- [ ] Repeat the final Stage 5 recipe with 2 more training seeds (≤ 2 h each).
-- [ ] Evaluate all three on two fresh dev seeds; report per-seed and pooled results with intervals; flag any family whose result depends on the training seed.
-- [ ] Teacher → student: distil the privileged teacher (critic-side ball spin and exact ball state) into a student with deployable observations only; report the gap per family.
-- [ ] **Gate:** all three seeds meet the Stage 5 gate thresholds (or the deviations are documented and the user is asked). Report `mjlab/results/stage6-gate.md`.
+## Stage 6 — System 1: the full executor command interface, robust and distilled
+System 1 is the fast executor that a later strategy layer (System 2, Stage 8) commands. By the end of this stage it must follow every command the strategy layer will use:
+- **where to land the ball** (any point in the far court, not just two regions);
+- **what kind of shot** (drive, dink or lob);
+- **where to be afterwards** (recovery spot).
+
+Its measured capability envelope is published as a contract. It must hold across training seeds and survive distillation to deployable inputs. Same discipline: one variable per run (≤ 2 h), fixed endpoints, dev seeds only, per-family and per-command reporting. Parent: the accepted Stage 5 checkpoint.
+- [ ] **Continuous landing targets.**
+  - Sample targets anywhere in the far court; the existing 2-value target input becomes continuous, so the inputs are unchanged.
+  - Placement bonus on legal landings as now.
+  - Metrics: landing error (median, p90) and hit-within-1 m per target region (3 depth × 2 side grid), plus paired gain on swapped targets.
+  - Tests.
+- [ ] **Shot-type command.**
+  - Classes drive / dink / lob as a 3-value one-hot input, appended last (exact checkpoint expansion).
+  - Each class has a band: net clearance and ball speed at the net crossing, plus landing depth.
+  - Reward on landing inside the commanded band.
+  - Metrics: in-band rate per class, and a confusion matrix of commanded vs produced class.
+  - Tests.
+- [ ] **Training run S1:** continuous targets on the Stage 5 recipe. Evaluate placement per region, legality per family and retention.
+- [ ] **Training run S2:** add shot types. Evaluate per class × family, placement and retention.
+- [ ] **Robustness:** repeat the final Stage 6 recipe with 2 more training seeds (≤ 2 h each). Evaluate all three on two fresh dev seeds, per seed and pooled with intervals; flag any result that depends on the training seed.
+- [ ] **Teacher → student:**
+  - Distil into a student with deployable inputs only: no exact ball spin; ball position and velocity with sensor noise and 20–40 ms latency; own pose from noisy estimates.
+  - Use DAgger-style action imitation plus PPO fine-tuning.
+  - Report the gap per family and command.
+- [ ] **Review videos:** each shot type, landing regions, reach footwork and recovery, side and behind. Send them to the user.
+- [ ] **System 1 contract** (`docs/SYSTEM1_CONTRACT.md`):
+  - inputs and outputs;
+  - command semantics and units;
+  - the measured envelope per command (what fraction of requests it can fulfil, from where, for which balls);
+  - known failure modes.
+
+  This is what the strategy layer will plan against.
+- [ ] **Gate:** for all three seeds and the student (or deviations documented and the user asked):
+  - the Stage 5 thresholds still hold;
+  - continuous targets: median landing error ≤ 1.0 m and hit-within-1 m ≥ 60 % in every region;
+  - shot types: ≥ 80 % in-band per class with < 10 % confusion into another class;
+  - the student is within 5 points of the teacher on every family and command.
+
+  Report `mjlab/results/stage6-gate.md`. These thresholds were proposed on 2026-10-06 and may be revised by the user before the stage starts.
 
 ## Stage 7+ — later (detail when Stage 6 passes)
 - **Stage 7, two robots rally.** One robot per side, each driven by the frozen executor plus a *scripted* strategy (land deep, recover to centre). Rally length and fault mix are the metrics. This tests the executor in real back-and-forth play before any strategy learning.
@@ -388,3 +429,4 @@ F1 and F2 showed the policy will not discover multi-step footwork from a standin
   - on reach_backhand it stands upright at the start spot while the ball passes 1–2.5 m to its left;
   - reach_short bounces twice in front of it;
   - reach_deep is lost behind it.
+- 2026-10-06 — **User request:** hill-climb through the drills and on to a complete System 1. Loop rule 8 (bounded hill-climbing: at most two one-variable follow-up runs per failed step, then stop). Stage 6 rewritten as "System 1": continuous landing targets, a shot-type command (drive/dink/lob), runs S1 and S2, robustness over 3 seeds, teacher → student with noisy and delayed inputs, review videos, a System 1 contract document, and a gate (thresholds proposed, revisable by the user).
