@@ -3,7 +3,7 @@
 from mjlab.tasks.registry import register_mjlab_task
 from mjlab.tasks.velocity.config.g1.rl_cfg import unitree_g1_ppo_runner_cfg
 
-from picklebot_mj.feeds import STAGE4_FAMILIES, FeedMix
+from picklebot_mj.feeds import REACH_FAMILIES, STAGE4_FAMILIES, FeedMix
 from picklebot_mj.tasks.return_stand import return_stand_env_cfg
 
 TASK_RETURN_STAND = "Picklebot-Return-Stand-G1"
@@ -51,5 +51,15 @@ register_mjlab_task(
     task_id=TASK_AIM_ALL,
     env_cfg=_with_mix(return_stand_env_cfg(targets=True), ALL_MIX),
     play_env_cfg=_with_mix(return_stand_env_cfg(play=True, targets=True), ALL_MIX),
+    rl_cfg=_rl_cfg(),
+)
+
+FOOTWORK_MIX = FeedMix({name: 1.0 for name in STAGE4_FAMILIES + REACH_FAMILIES})
+TASK_FOOTWORK = "Picklebot-Footwork-G1"  # Stage 5: free feet, random starts, reach feeds, targets + recovery
+register_mjlab_task(
+    task_id=TASK_FOOTWORK,
+    env_cfg=_with_mix(return_stand_env_cfg(targets=True, start_box=True, recovery=True, free_feet=True), FOOTWORK_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, targets=True, start_box=True, recovery=True, free_feet=True),
+                           FOOTWORK_MIX),
     rl_cfg=_rl_cfg(),
 )
