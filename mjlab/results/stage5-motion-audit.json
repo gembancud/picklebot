@@ -1,0 +1,163 @@
+{
+ "checkpoint": "artifacts/train/logs/picklebot_return_stand/2026-10-03_08-00-47_aim-all-c01/model_7600.pt",
+ "task": "Picklebot-Aim-All-G1",
+ "seed": 4200070,
+ "terms": {
+  "rewards": {
+   "track_linear_velocity": {
+    "weight": 2.0,
+    "func": "track_linear_velocity",
+    "params": "{'command_name': 'twist', 'std': 0.5}"
+   },
+   "track_angular_velocity": {
+    "weight": 2.0,
+    "func": "track_angular_velocity",
+    "params": "{'command_name': 'twist', 'std': 0.7071067811865476}"
+   },
+   "upright": {
+    "weight": 1.0,
+    "func": "upright",
+    "params": "{'std': 0.4472135954999579, 'asset_cfg': SceneEntityCfg(name='robot', joint_names=None, joint_ids=slice(None, None, None), body_names=('torso_link',), body_i..."
+   },
+   "pose": {
+    "weight": 1.0,
+    "func": "variable_posture",
+    "params": "{'asset_cfg': SceneEntityCfg(name='robot', joint_names=('.*',), joint_ids=slice(None, None, None), body_names=None, body_ids=slice(None, None, None), geom_na..."
+   },
+   "body_ang_vel": {
+    "weight": -0.05,
+    "func": "body_angular_velocity_penalty",
+    "params": "{'asset_cfg': SceneEntityCfg(name='robot', joint_names=None, joint_ids=slice(None, None, None), body_names=('torso_link',), body_ids=slice(None, None, None),..."
+   },
+   "angular_momentum": {
+    "weight": -0.02,
+    "func": "angular_momentum_penalty",
+    "params": "{'sensor_name': 'robot/root_angmom'}"
+   },
+   "dof_pos_limits": {
+    "weight": -1.0,
+    "func": "joint_pos_limits",
+    "params": "{}"
+   },
+   "action_rate_l2": {
+    "weight": -0.1,
+    "func": "action_rate_l2",
+    "params": "{}"
+   },
+   "air_time": {
+    "weight": 0.0,
+    "func": "feet_air_time",
+    "params": "{'sensor_name': 'feet_ground_contact', 'threshold_min': 0.05, 'threshold_max': 0.5, 'command_name': 'twist', 'command_threshold': 0.5}"
+   },
+   "foot_clearance": {
+    "weight": -2.0,
+    "func": "feet_clearance",
+    "params": "{'target_height': 0.1, 'height_sensor_name': 'foot_height_scan', 'command_name': 'twist', 'command_threshold': 0.05, 'asset_cfg': SceneEntityCfg(name='robot'..."
+   },
+   "foot_swing_height": {
+    "weight": -0.25,
+    "func": "feet_swing_height",
+    "params": "{'sensor_name': 'feet_ground_contact', 'height_sensor_name': 'foot_height_scan', 'target_height': 0.1, 'command_name': 'twist', 'command_threshold': 0.05}"
+   },
+   "foot_slip": {
+    "weight": -0.1,
+    "func": "feet_slip",
+    "params": "{'sensor_name': 'feet_ground_contact', 'command_name': 'twist', 'command_threshold': 0.05, 'asset_cfg': SceneEntityCfg(name='robot', joint_names=None, joint_..."
+   },
+   "soft_landing": {
+    "weight": -1e-05,
+    "func": "soft_landing",
+    "params": "{'sensor_name': 'feet_ground_contact', 'command_name': 'twist', 'command_threshold': 0.05}"
+   },
+   "self_collisions": {
+    "weight": -1.0,
+    "func": "self_collision_cost",
+    "params": "{'sensor_name': 'self_collision', 'force_threshold': 10.0}"
+   },
+   "approach_ball": {
+    "weight": 2.0,
+    "func": "approach_ball",
+    "params": "{}"
+   },
+   "paddle_contact": {
+    "weight": 50.0,
+    "func": "paddle_contact",
+    "params": "{}"
+   },
+   "placement": {
+    "weight": 50.0,
+    "func": "placement",
+    "params": "{}"
+   },
+   "legal_return": {
+    "weight": 250.0,
+    "func": "legal_return",
+    "params": "{}"
+   }
+  },
+  "terminations": {
+   "time_out": {
+    "func": "time_out",
+    "time_out": true,
+    "params": "{}"
+   },
+   "fell_over": {
+    "func": "bad_orientation",
+    "time_out": false,
+    "params": "{'limit_angle': 1.2217304763960306}"
+   }
+  },
+  "commands": {
+   "twist": "UniformVelocityCommandCfg(resampling_time_range=(3.0, 8.0), debug_vis=True, entity_name='robot', heading_command=False, heading_control_stiffness=0.5, rel_st..."
+  },
+  "events": {
+   "reset_base": {
+    "func": "reset_root_state_uniform",
+    "mode": "reset",
+    "params": "{'pose_range': {'x': (-0.05, 0.05), 'y': (-0.05, 0.05), 'yaw': (-0.1, 0.1)}, 'velocity_range': {}}"
+   },
+   "reset_robot_joints": {
+    "func": "reset_joints_by_offset",
+    "mode": "reset",
+    "params": "{'position_range': (0.0, 0.0), 'velocity_range': (0.0, 0.0), 'asset_cfg': SceneEntityCfg(name='robot', joint_names=('.*',), joint_ids=slice(None, None, None)..."
+   },
+   "foot_friction": {
+    "func": "geom_friction",
+    "mode": "startup",
+    "params": "{'asset_cfg': SceneEntityCfg(name='robot', joint_names=None, joint_ids=slice(None, None, None), body_names=None, body_ids=slice(None, None, None), geom_names..."
+   },
+   "encoder_bias": {
+    "func": "encoder_bias",
+    "mode": "startup",
+    "params": "{'asset_cfg': SceneEntityCfg(name='robot', joint_names=None, joint_ids=slice(None, None, None), body_names=None, body_ids=slice(None, None, None), geom_names..."
+   },
+   "base_com": {
+    "func": "body_com_offset",
+    "mode": "startup",
+    "params": "{'asset_cfg': SceneEntityCfg(name='robot', joint_names=None, joint_ids=slice(None, None, None), body_names=('torso_link',), body_ids=slice(None, None, None),..."
+   }
+  },
+  "curriculum": {}
+ },
+ "measured": {
+  "robot_episodes": 3072,
+  "pelvis_max_displacement_m": {
+   "p50": 0.051,
+   "p90": 0.142,
+   "p99": 0.27,
+   "max": 0.413
+  },
+  "pelvis_path_m": {
+   "p50": 0.453,
+   "p90": 0.65
+  },
+  "foot_path_m": {
+   "p50": 0.105,
+   "p90": 0.285,
+   "max": 0.936
+  },
+  "feeds": 6852,
+  "contact_rate": 0.8933,
+  "note": "episodes are up to 8.0 s; rollout 16.0 s"
+ }
+}
