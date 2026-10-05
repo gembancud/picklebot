@@ -100,6 +100,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     feed_anchor: str = "start"
     recovery: bool = False  # sample a recovery spot per feed (footwork tasks)
     recovery_mode: str = "random"  # "random" (RECOVERY_BOX) or "fixed" (RECOVERY_FIXED; evaluation)
+    move_prob: float = 0.0  # Drill 1 (D-041): fraction of robot episodes that are move-to-spot episodes
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -134,6 +135,10 @@ class BallPhysicsAction(ActionTerm):
         self.recover_xy = torch.tensor(RECOVERY_FIXED, device=dev).repeat(n, 1)
         # Recovery error at the next feed's launch, for feeds the robot hit: histogram (no host sync).
         self.recover_hist = torch.zeros(100, dtype=torch.long, device=dev)
+        self.drill = None
+        if cfg.move_prob > 0.0:
+            from picklebot_mj.tasks.move_drill import MoveDrill
+            self.drill = MoveDrill(self, cfg.move_prob, cfg.seed)
         # Per-family episode tallies [family, (episodes, contact, legal_return, fall)].
         self.ep_family = torch.zeros(len(FAMILY_NAMES), 4, dtype=torch.long, device=dev)
         # Per-family legal-landing tallies [family, (in A, in B, on the assigned target)].
@@ -196,6 +201,8 @@ class BallPhysicsAction(ActionTerm):
             f[env_ids] = False
         self.wrench[env_ids] = 0.0
         self.refeed_timer[env_ids] = -1.0
+        if self.drill is not None:
+            self.drill.reset(env_ids)
         self._write_mocap(env_ids)
 
     @property
@@ -376,6 +383,8 @@ class BallPhysicsAction(ActionTerm):
         self.refeed_timer = torch.where(waiting, self.refeed_timer - dt, self.refeed_timer)
         fire = waiting & (self.refeed_timer <= 0.0)
         self._refeed(fire)
+        if self.drill is not None:
+            self.drill.update(dt)
         # Reaction on the paddle for the next physics step (impulse -> force over dt).
         force = ev.paddle_impulse / dt
         com = data.body_com_pose_w[:, self.paddle_id, :3] - origins
@@ -546,7 +555,7 @@ def _release_stance(cfg) -> None:
 
 def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: bool = False,
                          recovery: bool = False, free_feet: bool = False,
-                         wide_shaping: bool = False) -> ManagerBasedRlEnvCfg:
+                         wide_shaping: bool = False, move_prob: float = 0.0) -> ManagerBasedRlEnvCfg:
     cfg = unitree_g1_flat_env_cfg(play=play)
     robot = get_g1_paddle_cfg()
     # New InitialStateCfg (the original is mjlab's shared keyframe constant). Court-local;
@@ -615,6 +624,13 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: b
     if recovery:
         cfg.rewards["recovery"] = RewardTermCfg(
             func=recovery_reward, weight=1.0, params={"std": WIDE_SHAPING_STD if wide_shaping else RECOVERY_STD})
+    if move_prob > 0.0:  # Drill 1 (D-041): walking teacher toward the spot, arrival and ready stance
+        from picklebot_mj.tasks import move_drill as md
+        cfg.actions["ball"].move_prob = move_prob
+        cfg.rewards["move_track_lin_vel"] = RewardTermCfg(func=md.move_track_lin_vel, weight=2.0)
+        cfg.rewards["move_track_yaw"] = RewardTermCfg(func=md.move_track_yaw, weight=2.0)
+        cfg.rewards["move_arrival"] = RewardTermCfg(func=md.move_arrival, weight=2.0 / step_dt)
+        cfg.rewards["ready_stance"] = RewardTermCfg(func=md.ready_stance, weight=1.0)
     cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=5.0 / step_dt)
     # No termination on rally end: a feeding machine serves the next ball 0.5 s after each rally,
     # within 8 s episodes that end only on a fall or the time limit. History: as a true termination

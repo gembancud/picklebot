@@ -72,3 +72,12 @@ register_mjlab_task(
     play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_FW), FOOTWORK_MIX),
     rl_cfg=_rl_cfg(),
 )
+
+TASK_DRILL_MOVE = "Picklebot-Drill-Move-G1"  # Stage 5 Drill 1 (D-041): 75 % move-to-spot, 25 % Stage 4 hitting
+_D1 = dict(_FW, move_prob=0.75)
+register_mjlab_task(
+    task_id=TASK_DRILL_MOVE,
+    env_cfg=_with_mix(return_stand_env_cfg(**_D1), ALL_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_D1), ALL_MIX),
+    rl_cfg=_rl_cfg(),
+)

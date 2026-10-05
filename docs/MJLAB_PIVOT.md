@@ -109,7 +109,7 @@ The executor learns to step to the ball and to recover to a commanded court spot
 F1 and F2 showed the policy will not discover multi-step footwork from a standing lineage. Teach it with drills in the **same single network**, so that the executor still takes "land here, be there" commands. Each drill has its own gate. One variable per run (≤ 2 h each), fixed endpoints, dev seeds only. Every drill run keeps **hitting rehearsal**: 25 % of robot episodes run the Stage 4 hitting drills, so hitting is not forgotten. Parent of Drill 1: `footwork-f02/model_12000`. If a drill's gate is not met after two runs, stop for the user.
 
 **Drill 1 — move to a spot, no ball.**
-- [ ] **Move-to-spot task.**
+- [x] **Move-to-spot task.**
   - Each robot episode issues a sequence of spots, a new one after each arrival or time-out, in every direction from the robot: left, right, forward, back and diagonal, at distances 0.5–3 m, inside the robot's half court.
   - The ball is parked and inactive in these episodes.
   - **Re-use the walking rewards as the teacher:** the twist command is no longer zero but points toward the spot (speed min(1.0 m/s, 1.2·d), heading command to face the net), so mjlab's own `track_linear_velocity` / `track_angular_velocity` and the command-gated foot-quality terms teach gaits.
@@ -374,3 +374,12 @@ F1 and F2 showed the policy will not discover multi-step footwork from a standin
   - Drill 3: real balls, near-to-far reach curriculum.
 
   Each drill has its own gate; every run keeps 25 % hitting rehearsal; the parent is `footwork-f02/model_12000`. The Stage 5 gate thresholds are unchanged and move to the end of Drill 3. The F2 videos step stays first.
+- 2026-10-06 — Drill 1 move-to-spot task built (`picklebot_mj/tasks/move_drill.py`, task `Picklebot-Drill-Move-G1`, `tests/test_move_drill.py`). Done in parallel with the F2 video render, at the user's request.
+  - **Episodes:** 75 % move episodes (ball parked, rally closed, no tallies); 25 % Stage 4 hitting rehearsal from random starts.
+  - **Spots:** in eight balanced sectors at 0.5–3 m inside x −6.4..−2.4, |y| ≤ 2.8, shown through the existing `recovery` input. A new spot follows each arrival (within 0.25 m, under 0.2 m/s, held 0.3 s) or time-out (1.5 s + 1.25 s/m).
+  - **Teacher:** mjlab's tracking formulas against an **internal** command toward the spot (min(1 m/s, 1.2·d), turning to face the net); weights 2 + 2.
+    - **Design choice:** the robot never observes this command (the twist command stays zero), so walking depends only on the spot input, as it will in play.
+  - **Arrival and stance:** arrival bonus 2 per arrival; `ready_stance` (paddle centre 0.3–0.5 m ahead, 0.9–1.2 m high) within 0.4 m of the spot, weight 1.
+  - **Metrics:** per-sector issued/arrived/timed-out, mean time, median final error and ready rate (`stage2_eval.py --move-prob`).
+  - **Inputs:** the same as F2, so `model_12000` warm-starts directly.
+  - **Tests:** +4. Suite 163 pass + 13 xfails.

@@ -58,6 +58,8 @@ def main():
     ap.add_argument("--slowmo", type=float, default=1.0, help="playback slow-down factor for the video")
     ap.add_argument("--fixed-start", action="store_true",
                     help="footwork tasks: start at ROBOT_START (Stage 4 pose box) with fixed-anchor feeds (retention)")
+    ap.add_argument("--move-prob", type=float, default=None,
+                    help="drill tasks: fraction of move-to-spot episodes (1 = move drill only, 0 = hitting only)")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
@@ -66,6 +68,8 @@ def main():
     cfg = load_env_cfg(task)
     if args.target is not None:
         cfg.actions["ball"].target_mode = args.target
+    if args.move_prob is not None:
+        cfg.actions["ball"].move_prob = args.move_prob
     if args.fixed_start:
         cfg.events["reset_base"].params["pose_range"] = {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "yaw": (-0.1, 0.1)}
         cfg.actions["ball"].feed_anchor = "start"
@@ -156,6 +160,8 @@ def main():
         "landings_in_A": int(d["land_in_A"]), "landings_in_B": int(d["land_in_B"]),
         "target_hits": int(d["target_hit"]),
     }
+    if term.drill is not None:
+        out["move_drill"] = term.drill.summary()
     if term.cfg.recovery:
         h = term.recover_hist.cpu().double()
         n_rec = int(h.sum())
