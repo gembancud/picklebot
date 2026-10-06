@@ -106,3 +106,23 @@ register_mjlab_task(
     play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_D1C), ALL_MIX),
     rl_cfg=_rl_cfg(),
 )
+
+# Stage 5 specialist teachers (D-042). Same observations as the footwork tasks, so Drill 1 / F2 endpoints warm-start.
+TASK_TEACHER_MOVE = "Picklebot-Teacher-Move-G1"  # move-to-spot episodes only, uniform sectors
+_TM = dict(_FW, move_prob=1.0)
+register_mjlab_task(
+    task_id=TASK_TEACHER_MOVE,
+    env_cfg=_with_mix(return_stand_env_cfg(**_TM), ALL_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_TM), ALL_MIX),
+    rl_cfg=_rl_cfg(),
+)
+
+# Hitting only: Stage 4 families + reach_forehand from random starts, targets, recovery, free feet (no move episodes).
+HIT_TEACHER_MIX = FeedMix({name: 1.0 for name in STAGE4_FAMILIES + ("reach_forehand",)})
+TASK_TEACHER_HIT = "Picklebot-Teacher-Hit-G1"
+register_mjlab_task(
+    task_id=TASK_TEACHER_HIT,
+    env_cfg=_with_mix(return_stand_env_cfg(**_FW), HIT_TEACHER_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_FW), HIT_TEACHER_MIX),
+    rl_cfg=_rl_cfg(),
+)
