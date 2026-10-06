@@ -100,7 +100,14 @@ def main():
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda", render_mode="rgb_array" if args.video else None)
     agent_cfg = load_rl_cfg(task)
     venv = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
-    runner = MjlabOnPolicyRunner(venv, asdict(agent_cfg), device="cuda")
+    rl = asdict(agent_cfg)
+    # Network sizes come from the checkpoint, so distilled students of any width load (D-042).
+    sd = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
+    for part in ("actor", "critic"):
+        ws = sorted((int(k.split(".")[1]), v.shape[0]) for k, v in sd[f"{part}_state_dict"].items()
+                    if k.startswith("mlp.") and k.endswith(".weight"))
+        rl[part]["hidden_dims"] = tuple(n for _, n in ws[:-1])
+    runner = MjlabOnPolicyRunner(venv, rl, device="cuda")
     runner.load(args.checkpoint, load_cfg={"actor": True}, strict=True, map_location="cuda")
     policy = runner.get_inference_policy(device="cuda")
 
