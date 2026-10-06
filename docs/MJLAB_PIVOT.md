@@ -126,7 +126,8 @@ F1 and F2 showed the policy will not discover multi-step footwork from a standin
 - [x] **Run D1:** move-to-spot plus hitting rehearsal from `model_12000`.
   - Evaluate per direction (8 sectors) and distance band: arrival rate, time to arrive, final error, ready-stance rate, falls per robot episode, foot slip.
   - Also hitting retention on the Stage 4 families from the fixed start, versus `model_12000`.
-- [ ] **Run D1b (rule 8 follow-up 1):** oversample the right-side sectors ×2 in training (`Picklebot-Drill-Move-Right-G1`), from `drill-move-d01/model_13900`; evaluate as D1 on a fresh dev seed.
+- [x] **Run D1b (rule 8 follow-up 1):** oversample the right-side sectors ×2 in training (`Picklebot-Drill-Move-Right-G1`), from `drill-move-d01/model_13900`; evaluate as D1 on a fresh dev seed.
+- [ ] **Run D1c (rule 8 follow-up 2):** from D1's endpoint `drill-move-d01/model_13900` (D1b regressed), hitting rehearsal 25 % → 40 % (`Picklebot-Drill-Move-Rehearse-G1`); evaluate as D1 on a fresh dev seed. Last permitted follow-up: if the Drill 1 gate still fails, stop for the user.
 - [ ] **Drill 1 gate:**
   - arrival ≥ 90 % within the time limit in **every** direction sector;
   - median final error ≤ 0.25 m;
@@ -437,3 +438,8 @@ Its measured capability envelope is published as a contract. It must hold across
     - right side weaker: back-right 63.0 %, right 82.6 %, forward-right 88.0 % (need ≥ 90 % each);
     - hitting retention −2.0 points overall, but low −6.7, fast −7.0, backspin −7.6 per family (need within 5).
   - **Rule 8, follow-up D1b:** right-side sectors ×2 in training spot sampling (evaluation uniform). Planned D1c if retention still fails: hitting rehearsal 25 % → 40 %.
+- 2026-10-06 — **Run D1b (`drill-move-d01b`) regressed** (`mjlab/results/stage5-run-d1b.md`). Right-side sectors ×2 in training; endpoint `model_15900` (dev seed 4,200,110).
+  - **Arrival 69.0 % overall** (D1 91.0 %): back-right 63 → 92 %, but forward 98 → 44 % and forward-left 99 → 39 %.
+  - **Ready stance** 88.9 %.
+  - **Retention** −6.7 points overall (backhand −12.1, low −12.6, fast −16.6, backspin −15.7).
+  - **Follow-up D1c (rule 8, last):** hill-climb from the better parent, D1's `model_13900` (a choice between completed endpoints, not a within-run peak; D1b is kept on record). One change: hitting rehearsal 25 % → 40 %.

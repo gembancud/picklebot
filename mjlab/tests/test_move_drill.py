@@ -130,3 +130,15 @@ def test_arrival_ready_stance_and_metrics(drill_env):
     assert torch.equal(ready_stance(env), torch.zeros(256, device="cuda"))
     s = dr.summary()
     assert len(s["sectors"]) == 8 and s["all"]["finished"] >= n_arr
+
+
+def test_d1c_only_changes_move_prob():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.tasks import TASK_DRILL_MOVE, TASK_DRILL_MOVE_REHEARSE
+
+    a, c = load_env_cfg(TASK_DRILL_MOVE), load_env_cfg(TASK_DRILL_MOVE_REHEARSE)
+    assert a.actions["ball"].move_prob == 0.75 and c.actions["ball"].move_prob == 0.60
+    assert c.actions["ball"].move_sector_weights is None
+    assert set(a.rewards) == set(c.rewards) and all(a.rewards[k].weight == c.rewards[k].weight for k in a.rewards)

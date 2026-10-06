@@ -96,3 +96,13 @@ def _drill_right(play=False):
 
 register_mjlab_task(task_id=TASK_DRILL_MOVE_RIGHT, env_cfg=_drill_right(), play_env_cfg=_drill_right(True),
                     rl_cfg=_rl_cfg())
+
+# Drill 1 follow-up D1c (stage5-run-d1b.md): from D1's endpoint, hitting rehearsal 25 % -> 40 % (move_prob 0.60).
+TASK_DRILL_MOVE_REHEARSE = "Picklebot-Drill-Move-Rehearse-G1"
+_D1C = dict(_FW, move_prob=0.60)
+register_mjlab_task(
+    task_id=TASK_DRILL_MOVE_REHEARSE,
+    env_cfg=_with_mix(return_stand_env_cfg(**_D1C), ALL_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_D1C), ALL_MIX),
+    rl_cfg=_rl_cfg(),
+)
