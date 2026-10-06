@@ -9,7 +9,7 @@ Date: 2026-10-06. Found while scoring the hitting teacher.
 - The bias depends on the policy's timing: more feeds per episode and longer rallies mean more cut-off feeds.
 - Training is unaffected: rewards never used these tallies.
 
-## Evidence (dev seed 4,200,141; Stage 4 families; target A; 1024 envs × 16 s; `artifacts/eval/censor_check.py`)
+## Evidence (dev seed 4,200,141; Stage 4 families; target A; 1024 envs × 16 s; `scripts/censor_check.py`)
 | Policy | Feeds | Contact (old) | Untouched feeds cut off by the time limit | Contact, completed feeds | Legal, completed feeds |
 |---|---:|---:|---:|---:|---:|
 | Hitting teacher `teacher-hit-01/model_14200` | 7,715 | 79.5 % | 1,568 (20.3 %) | 99.7 % | 97.2 % |
