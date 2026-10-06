@@ -1,0 +1,287 @@
+{
+ "checkpoint": "artifacts/train/logs/picklebot_return_stand/student-big-03/model_1500.pt",
+ "seed": 4200191,
+ "envs": 2048,
+ "sim_seconds": 16.0,
+ "episodes": 12192,
+ "contact_rate": 0.9883,
+ "contact_ci95": [
+  0.9862,
+  0.99
+ ],
+ "legal_return_rate": 0.9667,
+ "legal_return_ci95": [
+  0.9634,
+  0.9697
+ ],
+ "fall_rate": 0.0001,
+ "fall_ci95": [
+  0.0,
+  0.0005
+ ],
+ "hits": 12049,
+ "legal_returns": 11786,
+ "falls": 1,
+ "rally_endings": {
+  "SECOND_BOUNCE": 58,
+  "OUT": 80,
+  "WRONG_SIDE": 236,
+  "BODY_CONTACT": 3,
+  "LOST": 221
+ },
+ "grip": "default",
+ "families": [
+  "easy_forehand",
+  "wide_forehand",
+  "backhand",
+  "deep",
+  "short",
+  "high",
+  "low",
+  "fast",
+  "topspin",
+  "backspin"
+ ],
+ "task": "Picklebot-Teacher-Hit-G1",
+ "target": "A",
+ "robot_episodes": 4096,
+ "robot_falls": 1,
+ "censored_feeds": 2533,
+ "robot_fall_rate_per_episode": 0.0002,
+ "per_family": {
+  "easy_forehand": {
+   "episodes": 1215,
+   "contact": 0.9984,
+   "contact_ci95": [
+    0.994,
+    0.9995
+   ],
+   "legal_return": 0.9959,
+   "legal_return_ci95": [
+    0.9904,
+    0.9982
+   ],
+   "fall": 0.0008,
+   "fall_ci95": [
+    0.0001,
+    0.0046
+   ],
+   "landings_in_A": 757,
+   "landings_in_B": 1,
+   "target_hits": 757
+  },
+  "wide_forehand": {
+   "episodes": 1197,
+   "contact": 0.9983,
+   "contact_ci95": [
+    0.9939,
+    0.9995
+   ],
+   "legal_return": 0.9983,
+   "legal_return_ci95": [
+    0.9939,
+    0.9995
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0032
+   ],
+   "landings_in_A": 1094,
+   "landings_in_B": 0,
+   "target_hits": 1094
+  },
+  "backhand": {
+   "episodes": 1161,
+   "contact": 0.9836,
+   "contact_ci95": [
+    0.9746,
+    0.9895
+   ],
+   "legal_return": 0.9655,
+   "legal_return_ci95": [
+    0.9534,
+    0.9746
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0033
+   ],
+   "landings_in_A": 862,
+   "landings_in_B": 0,
+   "target_hits": 862
+  },
+  "deep": {
+   "episodes": 1183,
+   "contact": 0.9755,
+   "contact_ci95": [
+    0.965,
+    0.9829
+   ],
+   "legal_return": 0.9603,
+   "legal_return_ci95": [
+    0.9476,
+    0.97
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0032
+   ],
+   "landings_in_A": 869,
+   "landings_in_B": 0,
+   "target_hits": 869
+  },
+  "short": {
+   "episodes": 1253,
+   "contact": 0.996,
+   "contact_ci95": [
+    0.9907,
+    0.9983
+   ],
+   "legal_return": 0.9936,
+   "legal_return_ci95": [
+    0.9875,
+    0.9968
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0031
+   ],
+   "landings_in_A": 1105,
+   "landings_in_B": 0,
+   "target_hits": 1105
+  },
+  "high": {
+   "episodes": 1177,
+   "contact": 0.9924,
+   "contact_ci95": [
+    0.9855,
+    0.996
+   ],
+   "legal_return": 0.9915,
+   "legal_return_ci95": [
+    0.9844,
+    0.9954
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    -0.0,
+    0.0033
+   ],
+   "landings_in_A": 1005,
+   "landings_in_B": 0,
+   "target_hits": 1005
+  },
+  "low": {
+   "episodes": 1225,
+   "contact": 0.9722,
+   "contact_ci95": [
+    0.9615,
+    0.9801
+   ],
+   "legal_return": 0.9388,
+   "legal_return_ci95": [
+    0.9239,
+    0.9509
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0031
+   ],
+   "landings_in_A": 1013,
+   "landings_in_B": 0,
+   "target_hits": 1013
+  },
+  "fast": {
+   "episodes": 1284,
+   "contact": 0.9727,
+   "contact_ci95": [
+    0.9623,
+    0.9803
+   ],
+   "legal_return": 0.9393,
+   "legal_return_ci95": [
+    0.9248,
+    0.9511
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.003
+   ],
+   "landings_in_A": 1016,
+   "landings_in_B": 0,
+   "target_hits": 1016
+  },
+  "topspin": {
+   "episodes": 1262,
+   "contact": 1.0,
+   "contact_ci95": [
+    0.997,
+    1.0
+   ],
+   "legal_return": 0.9913,
+   "legal_return_ci95": [
+    0.9845,
+    0.9951
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.003
+   ],
+   "landings_in_A": 1039,
+   "landings_in_B": 0,
+   "target_hits": 1039
+  },
+  "backspin": {
+   "episodes": 1235,
+   "contact": 0.9935,
+   "contact_ci95": [
+    0.9873,
+    0.9967
+   ],
+   "legal_return": 0.8947,
+   "legal_return_ci95": [
+    0.8764,
+    0.9106
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0031
+   ],
+   "landings_in_A": 627,
+   "landings_in_B": 0,
+   "target_hits": 627
+  }
+ },
+ "contact_diagnostics": {
+  "first_contacts": 12221,
+  "paddle_speed_mean": 7.054,
+  "paddle_speed_std": 0.929,
+  "ball_speed_in_mean": 3.839,
+  "ball_speed_out_mean": 12.004,
+  "contact_height_mean": 0.63,
+  "net_crossings": 11920,
+  "net_clearance_mean_m": 0.649,
+  "legal_landings": 11786,
+  "landing_x_mean": 4.468,
+  "landing_x_std": 0.685,
+  "landing_abs_y_mean": 1.698,
+  "landings_in_A": 9387,
+  "landings_in_B": 1,
+  "target_hits": 9387
+ },
+ "recovery": {
+  "feeds_scored": 10490,
+  "error_median_m": 0.325,
+  "error_p90_m": 0.825,
+  "spot": "fixed baseline centre",
+  "bin_m": 0.05
+ }
+}

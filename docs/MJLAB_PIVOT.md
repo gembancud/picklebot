@@ -175,7 +175,7 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
 
 **Combine on the student** (RL fine-tune with a KL pull-back toward the routed teacher, coefficient decayed over the run)
 - [x] **Student follow-up S-b (rule 8, 1 of 2):** contact-weighted imitation (×10 for hit-episode states with the ball within 1 m of the paddle), continuing `student-big-01/model_1500` with β = 0; evaluate with the teachers re-scored on the same fresh dev seeds.
-- [ ] **Student follow-up S-c (rule 8, 2 of 2, last):** learning rate 3e-4 → 1e-4, continuing `student-big-02/model_1500` with the S-b recipe; evaluate with the teachers on fresh shared dev seeds. If the student gate is still missed, stop for the user.
+- [x] **Student follow-up S-c (rule 8, 2 of 2, last):** learning rate 3e-4 → 1e-4, continuing `student-big-02/model_1500` with the S-b recipe; evaluate with the teachers on fresh shared dev seeds. If the student gate is still missed, stop for the user.
 - [ ] **Multi-task check (D-044):** in the first student fine-tune, log per-skill returns. If walking or hitting drops by more than 5 points while the other rises, add separate critic heads per skill and per-task value normalisation (PopArt-style) before continuing; otherwise tick with the numbers.
 - [ ] **Shadow-swing task (Drill 2).**
   - A spot plus a virtual contact point and time (the contact geometry and timing of a sampled feed family, including reach families, but no ball).
@@ -561,3 +561,11 @@ Its measured capability envelope is published as a contract. It must hold across
   - A/B gain +0.846 vs +0.849, with easy, deep, high and topspin now within 0.025;
   - **reach_forehand gain −0.032**, just past the 0.03 limit, so the student gate is missed on that item only.
   - **Rule 8 S-c (last):** learning rate 1e-4.
+- 2026-10-07 — **Student gate PASSED after S-c** (`student-big-03/model_1500`, learning rate 1e-4; dev seeds 4,200,190/191 with the teachers re-scored on the same seeds; `mjlab/results/stage5-student.md`).
+  - Arrival 99.87 % (teacher 99.85 %), every sector within 0.3 points.
+  - Legal and contact within 0.4 points on every family.
+  - A/B gain within 0.026 on every family (reach_forehand −0.023, was −0.032).
+  - 0 falls.
+  - **One 1024-512-256 network now walks and hits at teacher level.**
+  - **Noted for the fine-tunes:** fixed-start retention on low and fast balls is −5.9 / −6.1 versus `model_7600` (the teacher's is −3.1 / −3.4).
+  - TensorBoard now includes the distillation runs (`scripts/distill_to_tb.py`).

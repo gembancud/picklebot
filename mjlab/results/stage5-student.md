@@ -58,3 +58,20 @@ Contact weighting closed the aiming gap on easy (−0.15 → +0.025), deep, high
 
 ## Follow-up S-c (loop rule 8, 2 of 2, the last), decided before launch
 **One change: learning rate 3e-4 → 1e-4**, as a fine-tuning pass. Continues `student-big-02/model_1500` with the S-b recipe (contact weight 10, β = 0), 1,500 iterations. Evaluated with the teachers on fresh shared dev seeds. If the student gate is still missed, the loop stops for the user.
+
+## Follow-up S-c result: student gate PASSED (`student-big-03/model_1500`; teachers re-scored on the same dev seeds 4,200,190 / 4,200,191)
+Learning rate 1e-4, continuing `student-big-02/model_1500` with contact weight 10 and β = 0 for 1,500 iterations. Final imitation MSE: move 0.0003, hit 0.0005.
+
+| | Teachers | S-c student | Largest gap |
+|---|---:|---:|---:|
+| Arrival, all / per sector | 99.85 % / 99.0–100 % | 99.87 % / 99.3–100 % | within 0.3 points in every sector |
+| Legal, 11 families | 98.9–100 % | 98.8–100 % | 0.4 |
+| Contact | 99.2–100 % | 98.9–100 % | 0.3 |
+| A/B gain, overall | +0.850 | +0.838 | −0.012 |
+| A/B gain per family | | | high −0.026, topspin −0.026, reach_forehand −0.023 (S-b: −0.032), short −0.018; the others within ±0.015 |
+| Falls | 1 in 6,144 robot episodes | 0 | |
+| Retention vs `model_7600` | 97.4 % | 96.7 % (low −5.9, fast −6.1) | not part of the student gate |
+
+**Student gate met:** within 3 points of the routed teacher on arrival in every sector and on legality, contact and A/B gain for every family. **Stage 5 student: `student-big-03/model_1500`** (1024-512-256). One network now walks to spots in every direction and hits every family at teacher level.
+
+**For the fine-tunes:** the student's fixed-start retention is 1.6–2.7 points weaker than the hitting teacher's on low and fast balls (−5.9 / −6.1 vs model_7600). This is outside the student gate, but the Stage 5 gate's retention check will see it.
