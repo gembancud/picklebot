@@ -51,6 +51,10 @@ class MoveDrill:
         w = torch.ones(N_SECTORS) if sector_weights is None else torch.tensor(sector_weights, dtype=torch.float32)
         assert w.shape == (N_SECTORS,) and (w > 0).all()
         self.sector_w = (w / w.sum()).to(dev)
+        self.sampler = None
+        if getattr(term.cfg, "adaptive_curriculum", False):
+            from picklebot_mj.curriculum import AdaptiveSampler
+            self.sampler = AdaptiveSampler(self.sector_w, device=dev)
         self.t, self.n, self.dev, self.move_prob = term, n, dev, float(move_prob)
         self.gen = torch.Generator(device=dev).manual_seed(int(seed) + 271829)  # own stream
         self.move_ep = torch.zeros(n, dtype=torch.bool, device=dev)
@@ -142,6 +146,9 @@ class MoveDrill:
         self.stats["timed_out"].index_add_(0, sec, timed_out.long())
         self.stats["ready"].index_add_(0, sec, (arrived & self.ready_mask()).long())
         self.time_sum.index_add_(0, sec, self.elapsed * arrived.float())
+        if self.sampler is not None:  # finished spots: success = arrival
+            self.sampler.update(sec, arrived, done)
+            self.sector_w = self.sampler.weights()
         b = (d / ERR_BIN).long().clamp(max=ERR_BINS - 1)
         self.err_hist.view(-1).index_add_(0, sec * ERR_BINS + b, done.long())
         self._new_spot(done)

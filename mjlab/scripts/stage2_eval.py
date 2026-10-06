@@ -71,6 +71,7 @@ def main():
     if args.move_prob is not None:
         cfg.actions["ball"].move_prob = args.move_prob
     cfg.actions["ball"].move_sector_weights = None  # evaluation samples spot directions uniformly
+    cfg.actions["ball"].adaptive_curriculum = False  # and never adapts the feed or sector mix
     if args.fixed_start:
         cfg.events["reset_base"].params["pose_range"] = {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "yaw": (-0.1, 0.1)}
         cfg.actions["ball"].feed_anchor = "start"

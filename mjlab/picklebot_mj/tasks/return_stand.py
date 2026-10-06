@@ -103,6 +103,9 @@ class BallPhysicsActionCfg(ActionTermCfg):
     move_prob: float = 0.0  # Drill 1 (D-041): fraction of robot episodes that are move-to-spot episodes
     # Drill 1 spot-direction weights per sector (0 = toward the net, counter-clockwise); None = uniform.
     move_sector_weights: tuple | None = None
+    # Adaptive curriculum (D-044): re-weight feed families (by legal return) and move sectors (by arrival)
+    # toward what is unmastered or still changing. Training only; evaluation turns it off.
+    adaptive_curriculum: bool = False
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -137,6 +140,10 @@ class BallPhysicsAction(ActionTerm):
         self.recover_xy = torch.tensor(RECOVERY_FIXED, device=dev).repeat(n, 1)
         # Recovery error at the next feed's launch, for feeds the robot hit: histogram (no host sync).
         self.recover_hist = torch.zeros(100, dtype=torch.long, device=dev)
+        self.fam_sampler = None
+        if cfg.adaptive_curriculum:
+            from picklebot_mj.curriculum import AdaptiveSampler
+            self.fam_sampler = AdaptiveSampler(self._mix, device=dev)
         self.drill = None
         if cfg.move_prob > 0.0:
             from picklebot_mj.tasks.move_drill import MoveDrill
@@ -227,6 +234,13 @@ class BallPhysicsAction(ActionTerm):
         self.ep["legal_return"] += outcome[:, 2].sum()
         self.ep["fall"] += outcome[:, 3].sum()
         self.ep_family.index_add_(0, self.family, outcome)
+        if self.fam_sampler is not None:  # finished feeds: success = legal return
+            self.fam_sampler.update(self.family, self.return_done & mask, mask)
+            self._mix = self.fam_sampler.weights()
+            log = self._env.extras.setdefault("log", {})
+            for i, name in enumerate(FAMILY_NAMES):
+                if self.fam_sampler.active[i]:
+                    log[f"Curriculum/{name}"] = self._mix[i]
 
     def _refeed(self, fire: torch.Tensor) -> None:
         """New feed for envs in `fire` without resetting the robot (computed for all, selected by mask)."""
