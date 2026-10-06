@@ -168,12 +168,13 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
   - Student network 1024-512-256 with LayerNorm; same observations as the teachers.
   - DAgger: roll out the student (β-mixed with the teacher early on), label every state with the action of the teacher for that episode type (move → walking teacher, hit → hitting teacher), and train with MSE on the action means plus the student's own exploration std.
   - Script `scripts/distill.py`, writing rsl_rl-compatible checkpoints. Tests: shapes, teacher routing per episode type, a tiny run that lowers the imitation loss.
-- [ ] **Distillation run:**
+- [x] **Distillation run:**
   - **≤ 2 h** on the Drill 1 mix with 50 % move and 50 % hit episodes.
   - **Gate:** the student is within 3 points of each teacher on the teacher's own evaluation: arrival per sector for the walking teacher, legal / contact / A/B gain per family for the hitting teacher.
   - **Also report:** the same evaluation for a same-size (512-256-128) student distilled the same way, to show whether capacity matters.
 
 **Combine on the student** (RL fine-tune with a KL pull-back toward the routed teacher, coefficient decayed over the run)
+- [ ] **Student follow-up S-b (rule 8, 1 of 2):** contact-weighted imitation (×10 for hit-episode states with the ball within 1 m of the paddle), continuing `student-big-01/model_1500` with β = 0; evaluate with the teachers re-scored on the same fresh dev seeds.
 - [ ] **Multi-task check (D-044):** in the first student fine-tune, log per-skill returns. If walking or hitting drops by more than 5 points while the other rises, add separate critic heads per skill and per-task value normalisation (PopArt-style) before continuing; otherwise tick with the numbers.
 - [ ] **Shadow-swing task (Drill 2).**
   - A spot plus a virtual contact point and time (the contact geometry and timing of a sampled feed family, including reach families, but no ball).
@@ -544,3 +545,12 @@ Its measured capability envelope is published as a contract. It must hold across
   - **Other steps ticked:**
     - the adaptive curriculum sampler (`62c66bd`; `picklebot_mj/curriculum.py`, opt-in `adaptive_curriculum`, logged weights, evaluation uniform, tests);
     - the distillation code (`d848ad8`; the student is a plain 1024-512-256 MLP because rsl_rl's MLPModel has no LayerNorm option, a recorded deviation from D-042).
+- 2026-10-06 — **Student distillation done** (`mjlab/results/stage5-student.md`). Students and teachers scored on the same dev seeds (4,200,170/171, corrected metric).
+  - **Big student** `student-big-01/model_1500` (1024-512-256):
+    - arrival 99.89 % (= walking teacher);
+    - legal 98.8–100 % (each family within 0.7 of the hitting teacher);
+    - 0 falls;
+    - A/B gain +0.823 vs +0.855, with misses on easy −0.15, deep −0.065, high −0.05, topspin −0.033.
+  - **Small control** (512-256-128): the same in-distribution scores but a worse fixed-start retention (95.4 % vs 96.7 %); the big student is kept.
+  - **Student gate not met (aiming only).** Both students lose aim on the same families, so the cause is the uniform objective rather than capacity.
+  - **Rule 8 S-b:** contact-weighted imitation (`distill.py --contact-weight`).

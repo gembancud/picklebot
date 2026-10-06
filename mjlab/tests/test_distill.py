@@ -19,7 +19,7 @@ HIT = LOGS / "2026-10-06_01-09-48_footwork-f02/model_12000.pt"
 def test_tiny_distillation(tmp_path):
     cmd = [sys.executable, str(ROOT / "scripts/distill.py"), "--move-teacher", str(MOVE), "--hit-teacher", str(HIT),
            "--out", str(tmp_path), "--envs", "64", "--iterations", "4", "--batch", "512", "--save-every", "4",
-           "--no-compile", "--hidden", "1024,512,256"]
+           "--no-compile", "--hidden", "1024,512,256", "--contact-weight", "10"]
     subprocess.run(cmd, check=True, cwd=ROOT, capture_output=True)
     log = json.load(open(tmp_path / "distill_log.json"))["log"]
     assert log[-1]["loss"] < log[0]["loss"]

@@ -76,6 +76,10 @@ def main():
     ap.add_argument("--epochs", type=int, default=4)
     ap.add_argument("--batch", type=int, default=16384)
     ap.add_argument("--lr", type=float, default=3e-4)
+    ap.add_argument("--init-student", default=None, help="continue from a student checkpoint (same --hidden)")
+    ap.add_argument("--contact-weight", type=float, default=1.0,
+                    help="MSE weight for hit-episode states with the ball within --contact-radius of the paddle")
+    ap.add_argument("--contact-radius", type=float, default=1.0)
     ap.add_argument("--max-seconds", type=float, default=6900.0, help="wall-clock cap (loop rule: <= 2 h)")
     ap.add_argument("--save-every", type=int, default=100)
     ap.add_argument("--no-compile", action="store_true", help="skip torch.compile of the ball (tests)")
@@ -88,7 +92,7 @@ def main():
     dev = "cuda"
     t_move = make_runner(venv, agent_cfg, dev, args.move_teacher).get_inference_policy(device=dev)
     t_hit = make_runner(venv, agent_cfg, dev, args.hit_teacher).get_inference_policy(device=dev)
-    student_runner = make_runner(venv, agent_cfg, dev, hidden=hidden)
+    student_runner = make_runner(venv, agent_cfg, dev, checkpoint=args.init_student, hidden=hidden)
     student = student_runner.alg.actor
     # Exploration std: mean of the teachers' (scalar-per-action std parameters).
     stds = [torch.load(c, map_location=dev, weights_only=False)["actor_state_dict"]["distribution.std_param"]
@@ -100,12 +104,13 @@ def main():
     term = env.action_manager.get_term("ball")
 
     obs = venv.get_observations()
-    buf_obs, buf_lab, buf_move = [], [], []
+    buf_obs, buf_lab, buf_move, buf_w = [], [], [], []
+    robot = env.scene["robot"]
     log = []
     t0 = time.time()
     for it in range(args.iterations):
         beta = max(0.0, 1.0 - it / max(1.0, args.beta_frac * args.iterations))
-        it_obs, it_lab, it_move = [], [], []
+        it_obs, it_lab, it_move, it_w = [], [], [], []
         with torch.no_grad():  # not inference_mode: buffers and stored obs are reused with autograd
             for _ in range(STEPS_PER_ITER):
                 mv = term.drill.move_ep.clone()
@@ -115,20 +120,25 @@ def main():
                 it_obs.append(obs["actor"].clone())
                 it_lab.append(a_t.clone())
                 it_move.append(mv)
+                paddle = robot.data.body_link_pose_w[:, term.paddle_id, :3] - env.scene.env_origins
+                near = ~mv & ((term.ball.pos - paddle).norm(dim=-1) < args.contact_radius)
+                it_w.append(1.0 + (args.contact_weight - 1.0) * near.float())
                 act = beta * a_t + (1.0 - beta) * a_s
                 obs, _, _, _ = venv.step(act)
         buf_obs.append(torch.cat(it_obs))
         buf_lab.append(torch.cat(it_lab))
         buf_move.append(torch.cat(it_move))
-        buf_obs, buf_lab, buf_move = buf_obs[-args.buffer:], buf_lab[-args.buffer:], buf_move[-args.buffer:]
-        X, Y, M = torch.cat(buf_obs), torch.cat(buf_lab), torch.cat(buf_move)
+        buf_w.append(torch.cat(it_w))
+        buf_obs, buf_lab, buf_move, buf_w = (b[-args.buffer:] for b in (buf_obs, buf_lab, buf_move, buf_w))
+        buf_obs, buf_lab, buf_move, buf_w = list(buf_obs), list(buf_lab), list(buf_move), list(buf_w)
+        X, Y, M, W = torch.cat(buf_obs), torch.cat(buf_lab), torch.cat(buf_move), torch.cat(buf_w)
         losses = []
         for _ in range(args.epochs):
             perm = torch.randperm(X.shape[0], device=dev)
             for i in range(0, X.shape[0], args.batch):
                 idx = perm[i:i + args.batch]
                 pred = student({"actor": X[idx]})
-                loss = ((pred - Y[idx]) ** 2).mean()
+                loss = (((pred - Y[idx]) ** 2).mean(-1) * W[idx]).sum() / W[idx].sum()
                 opt.zero_grad()
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(params, 1.0)
