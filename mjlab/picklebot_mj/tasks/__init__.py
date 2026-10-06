@@ -180,3 +180,15 @@ register_mjlab_task(
     play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_SW), HIT_TEACHER_MIX),
     rl_cfg=_student_finetune_rl_cfg(),
 )
+
+
+# Drill 2 follow-up S-D2b (stage5-run-sd2.md): show the predicted interception spot through the spot input during
+# swing episodes (footwork hint), plus the simulation blow-up guard (bug fix, applied to every later task).
+TASK_STUDENT_SWING_HINT = "Picklebot-Student-Swing-Hint-G1"
+_SWH = dict(_SW, swing_hint=True, blowup_guard=True)
+register_mjlab_task(
+    task_id=TASK_STUDENT_SWING_HINT,
+    env_cfg=_with_mix(return_stand_env_cfg(**_SWH), HIT_TEACHER_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_SWH), HIT_TEACHER_MIX),
+    rl_cfg=_student_finetune_rl_cfg(),
+)

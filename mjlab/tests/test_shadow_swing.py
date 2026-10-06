@@ -62,3 +62,48 @@ def test_ghost_ball_swing_reward_and_recovery():
     for _ in range(40):
         env.step(torch.zeros(n, 29, device="cuda"))
     assert int(t.ep["episodes"]) == ep0
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA (mujoco_warp)")
+def test_hint_shown_until_the_swing_then_true_recovery_spot_and_blowup_guard():
+    from mjlab.envs import ManagerBasedRlEnv
+
+    from picklebot_mj.feeds import FAMILY_NAMES, FeedMix
+    from picklebot_mj.tasks.return_stand import blew_up, return_stand_env_cfg
+    from picklebot_mj.tasks.shadow_swing import WINDOW_MAX_S
+
+    n = 32
+    cfg = return_stand_env_cfg(targets=True, start_box=True, recovery=True, free_feet=True, swing_prob=1.0,
+                               swing_mix=FeedMix({f: 1.0 for f in FAMILY_NAMES}), swing_hint=True,
+                               blowup_guard=True)
+    cfg.scene.num_envs = n
+    cfg.actions["ball"].compile_ball = False
+    assert "blew_up" in cfg.terminations
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    t = env.action_manager.get_term("ball")
+    sh = t.shadow
+    hint = t.recover_xy.clone()
+    assert not torch.allclose(hint, sh.recover_true)  # the spot input shows the interception hint, not recovery
+    # Close every window: the spot input returns to the true recovery spot.
+    sh.elapsed[:] = WINDOW_MAX_S + 1.0
+    no = torch.zeros(n, dtype=torch.bool, device="cuda")
+    z = torch.zeros(n, 3, device="cuda")
+    sh.step(0.005, no, t.ball.pos.clone(), z, torch.zeros(n, device="cuda"))
+    assert torch.allclose(t.recover_xy, sh.recover_true)
+    # Blow-up guard: an impossible base speed terminates.
+    assert not blew_up(env).any()
+    vel = torch.zeros(n, 6, device="cuda")
+    vel[:, 0] = 20.0
+    env.scene["robot"].write_root_link_velocity_to_sim(vel)
+    env.sim.forward()
+    assert blew_up(env).all()
+
+
+def test_histogram_bins_are_nan_safe():
+    """Regression (S-D2 crash at iteration 953): a NaN from a simulation blow-up became a negative index."""
+    from picklebot_mj.tasks.shadow_swing import D_BIN, D_BINS
+
+    d = torch.tensor([float("nan"), float("inf"), -1.0, 0.1])
+    b = (d.nan_to_num(nan=1e3, posinf=1e3, neginf=0.0) / D_BIN).clamp(0, D_BINS - 1).long()
+    assert int(b.min()) >= 0 and int(b.max()) <= D_BINS - 1

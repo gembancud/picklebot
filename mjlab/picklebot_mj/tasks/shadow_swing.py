@@ -30,12 +30,49 @@ WINDOW_MAX_S = 3.5
 RECOVER_S = 1.5
 FEET_SET_SPEED = 0.3
 FAR = 100.0
+# Footwork hint (follow-up S-D2b): an approximate interception point for each ghost-ball feed, shown through
+# the existing spot input (`recovery` observation) until the swing window closes. Drag-free flight with an
+# empirical shortfall, COR 0.64 bounce, 0.75 horizontal speed retention after the bounce; aim the paddle at the
+# point where the ball descends through HINT_Z (or its apex if lower). The robot should stand beside it.
+HINT_Z = 0.8
+HINT_SHORTFALL = 0.085  # bounce lands ~8.5 % of the horizontal flight distance short of the drag-free aim
+HINT_BEHIND = 0.3  # pelvis this far behind the contact point (toward the robot's baseline)
+HINT_SIDE_FH, HINT_SIDE_BH = 0.5, 0.4  # pelvis to the left of a forehand / right of a backhand contact
 D_BIN, D_BINS = 0.025, 80
 
 
+# Per-family (shortfall / drag-free flight distance, vx after bounce / launch vx, vz after bounce / drag-free vz at
+# the bounce), medians over sampled feeds of the analytic ball (artifacts/eval/hint_calib2.py, 2026-10-07).
+HINT_TABLE = {
+    "easy_forehand": (0.0827, 0.5505, 0.6047), "wide_forehand": (0.0827, 0.5505, 0.6047),
+    "backhand": (0.0827, 0.5505, 0.6047), "deep": (0.0926, 0.5286, 0.6019), "short": (0.074, 0.5368, 0.6011),
+    "high": (0.0804, 0.5277, 0.5953), "low": (0.0844, 0.6259, 0.6066), "fast": (0.0747, 0.6582, 0.6068),
+    "topspin": (0.1028, 0.701, 0.612), "backspin": (0.0515, 0.5547, 0.5942),
+    "reach_forehand": (0.0954, 0.5282, 0.5954), "reach_backhand": (0.0954, 0.5282, 0.5954),
+    "reach_short": (0.0632, 0.5692, 0.6086), "reach_deep": (0.1285, 0.4788, 0.5881),
+}
+
+
+def predict_intercept(p: torch.Tensor, v: torch.Tensor, fam: torch.Tensor):
+    """Approximate (x, y) where a just-launched feed descends through HINT_Z after its bounce (or its apex)."""
+    from picklebot_mj.ball import BALL_RADIUS
+    g, r = 9.81, BALL_RADIUS
+    k = torch.tensor([HINT_TABLE[f] for f in FAMILY_NAMES], device=p.device)[fam]
+    tb = (v[:, 2] + torch.sqrt((v[:, 2] ** 2 + 2 * g * (p[:, 2] - r)).clamp(min=0))) / g
+    dist = (v[:, 0] * tb).abs()
+    xb = p[:, 0] + v[:, 0] * tb - torch.sign(v[:, 0]) * k[:, 0] * dist  # lands short of the drag-free aim
+    vz1 = k[:, 2] * (g * tb - v[:, 2]).clamp(min=0)
+    vx1 = k[:, 1] * v[:, 0]
+    apex = r + vz1 ** 2 / (2 * g)
+    ti = torch.where(apex >= HINT_Z, (vz1 + torch.sqrt((vz1 ** 2 - 2 * g * (HINT_Z - r)).clamp(min=0))) / g, vz1 / g)
+    return xb + vx1 * ti, p[:, 1]
+
+
 class ShadowSwing:
-    def __init__(self, term, swing_prob: float, swing_mix, seed: int):
+    def __init__(self, term, swing_prob: float, swing_mix, seed: int, hint: bool = False):
         n, dev = term.num_envs, term.device
+        self.hint = bool(hint)
+        self.recover_true = term.recover_xy.clone()
         self.t, self.n, self.dev = term, n, dev
         self.swing_prob = float(swing_prob)
         self.gen = torch.Generator(device=dev).manual_seed(int(seed) + 314159)
@@ -74,6 +111,29 @@ class ShadowSwing:
         idx = torch.nonzero(fire & self.swing_ep).squeeze(-1)
         self._clear(idx)
         self.t.tallied |= self.swing_ep  # swing feeds are never tallied as hitting outcomes
+        self.after_feed(fire)
+
+    def after_feed(self, mask: torch.Tensor) -> None:
+        """New feeds in `mask`: remember the true recovery spot; show the interception hint for swing feeds."""
+        t = self.t
+        self.recover_true = torch.where(mask.unsqueeze(-1), t.recover_xy, self.recover_true)
+        if not self.hint:
+            return
+        m = mask & self.swing_ep
+        t.recover_xy = torch.where(m.unsqueeze(-1), self.intercept_spot(), t.recover_xy)
+
+    def intercept_spot(self) -> torch.Tensor:
+        """Approximate stance spot for intercepting each env's current (just launched) ball."""
+        from picklebot_mj.tasks.move_drill import SPOT_BOX
+        t = self.t
+        xi, yi = predict_intercept(t.ball.pos, t.ball.vel, t.family)
+        pel = t.pelvis_xy()
+        forehand = yi <= pel[:, 1]  # ball on the robot's right (-y) -> forehand
+        sy = torch.where(forehand, yi + HINT_SIDE_FH, yi - HINT_SIDE_BH)
+        sx = xi - HINT_BEHIND
+        lo = torch.tensor([SPOT_BOX[0][0], SPOT_BOX[1][0]], device=self.dev)
+        hi = torch.tensor([SPOT_BOX[0][1], SPOT_BOX[1][1]], device=self.dev)
+        return torch.stack([sx, sy], -1).clamp(lo, hi)
 
     def paddle_for_sim(self, paddle_pos: torch.Tensor) -> torch.Tensor:
         """Move the paddle out of the ball simulation for swing episodes (ghost ball)."""
@@ -108,9 +168,11 @@ class ShadowSwing:
         self.stats["within"].index_add_(0, fam, c * (self.dmin <= CONTACT_TOL).float())
         self.stats["vx_sum"].index_add_(0, fam, c * self.vx_at)
         self.stats["feet_set"].index_add_(0, fam, c * feet)
-        b = (self.dmin / D_BIN).long().clamp(max=D_BINS - 1)
+        b = (self.dmin.nan_to_num(nan=1e3, posinf=1e3, neginf=0.0) / D_BIN).clamp(0, D_BINS - 1).long()  # NaN-safe
         self.d_hist.view(-1).index_add_(0, fam * D_BINS + b, close.long())
-        # Close: recovery phase, then the next feed.
+        # Close: recovery phase (the spot input returns to the true recovery spot), then the next feed.
+        if self.hint:
+            t.recover_xy = torch.where(close.unsqueeze(-1), self.recover_true, t.recover_xy)
         self.closed |= close
         t.hit_done |= close
         t.refeed_timer = torch.where(close, torch.full_like(t.refeed_timer, RECOVER_S), t.refeed_timer)

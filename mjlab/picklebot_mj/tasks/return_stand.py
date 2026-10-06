@@ -109,6 +109,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # Drill 2 (shadow swing at a ghost ball): fraction of robot episodes, and the family mix they use.
     swing_prob: float = 0.0
     swing_mix: FeedMix | None = None
+    swing_hint: bool = False  # S-D2b: show the predicted interception spot through the spot input before the swing
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -154,7 +155,7 @@ class BallPhysicsAction(ActionTerm):
         self.shadow = None
         if cfg.swing_prob > 0.0:
             from picklebot_mj.tasks.shadow_swing import ShadowSwing
-            self.shadow = ShadowSwing(self, cfg.swing_prob, cfg.swing_mix or cfg.feed_mix, cfg.seed)
+            self.shadow = ShadowSwing(self, cfg.swing_prob, cfg.swing_mix or cfg.feed_mix, cfg.seed, cfg.swing_hint)
         # Per-family episode tallies [family, (episodes, contact, legal_return, fall)].
         self.ep_family = torch.zeros(len(FAMILY_NAMES), 4, dtype=torch.long, device=dev)
         # Per-family legal-landing tallies [family, (in A, in B, on the assigned target)].
@@ -231,6 +232,9 @@ class BallPhysicsAction(ActionTerm):
             if self.drill is not None:
                 self.shadow.drop_moves(self.drill.move_ep)
             self.tallied |= self.shadow.swing_ep  # ghost-ball feeds are never tallied
+            m = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+            m[env_ids] = True
+            self.shadow.after_feed(m)
         self._write_mocap(env_ids)
 
     @property
@@ -259,7 +263,7 @@ class BallPhysicsAction(ActionTerm):
         """New feed for envs in `fire` without resetting the robot (computed for all, selected by mask)."""
         if self.cfg.recovery:  # score the recovery of the feed that just ended (hit feeds only)
             err = (self.pelvis_xy() - self.recover_xy).norm(dim=-1)
-            idx = (err / RECOVERY_BIN).long().clamp(max=self.recover_hist.shape[0] - 1)
+            idx = (err.nan_to_num(nan=1e3, posinf=1e3, neginf=0.0) / RECOVERY_BIN).clamp(0, self.recover_hist.shape[0] - 1).long()
             self.recover_hist.index_add_(0, idx, (fire & self.hit_done).long())
         rec_old = self.recover_xy.clone()
         pos, vel, spin = self.ball.pos.clone(), self.ball.vel.clone(), self.ball.spin.clone()
@@ -554,6 +558,16 @@ def approach_ball(env, std: float = 0.25) -> torch.Tensor:
 # Terminations
 
 
+BLOWUP_LIN, BLOWUP_ANG = 8.0, 25.0  # m/s, rad/s: far beyond anything the G1 does on purpose
+
+
+def blew_up(env) -> torch.Tensor:
+    """Simulation blow-up guard: base speed or spin out of range, or non-finite state."""
+    d = env.scene["robot"].data
+    lin, ang = d.root_link_lin_vel_w.norm(dim=-1), d.root_link_ang_vel_w.norm(dim=-1)
+    return (lin > BLOWUP_LIN) | (ang > BLOWUP_ANG) | ~torch.isfinite(lin) | ~torch.isfinite(ang)
+
+
 def drill_over(env) -> torch.Tensor:
     t = _term(env)
     return t.rules.dead | t.return_done
@@ -602,7 +616,8 @@ def _release_stance(cfg) -> None:
 def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: bool = False,
                          recovery: bool = False, free_feet: bool = False,
                          wide_shaping: bool = False, move_prob: float = 0.0,
-                         swing_prob: float = 0.0, swing_mix: FeedMix | None = None) -> ManagerBasedRlEnvCfg:
+                         swing_prob: float = 0.0, swing_mix: FeedMix | None = None, swing_hint: bool = False,
+                         blowup_guard: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = unitree_g1_flat_env_cfg(play=play)
     robot = get_g1_paddle_cfg()
     # New InitialStateCfg (the original is mjlab's shared keyframe constant). Court-local;
@@ -682,8 +697,11 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: b
         from picklebot_mj.tasks.shadow_swing import shadow_swing_reward
         cfg.actions["ball"].swing_prob = swing_prob
         cfg.actions["ball"].swing_mix = swing_mix
+        cfg.actions["ball"].swing_hint = swing_hint
         cfg.rewards["shadow_swing"] = RewardTermCfg(func=shadow_swing_reward, weight=3.0 / step_dt)
     cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=5.0 / step_dt)
+    if blowup_guard:  # end an episode whose base moves or spins impossibly fast (simulation blow-up, S-D2)
+        cfg.terminations["blew_up"] = TerminationTermCfg(func=blew_up, time_out=False)
     # No termination on rally end: a feeding machine serves the next ball 0.5 s after each rally,
     # within 8 s episodes that end only on a fall or the time limit. History: as a true termination
     # (lateral-a01) the policy learned lobs that outlast the episode; as a bootstrapped time-out

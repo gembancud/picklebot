@@ -149,7 +149,7 @@ class MoveDrill:
         if self.sampler is not None:  # finished spots: success = arrival
             self.sampler.update(sec, arrived, done)
             self.sector_w = self.sampler.weights()
-        b = (d / ERR_BIN).long().clamp(max=ERR_BINS - 1)
+        b = (d.nan_to_num(nan=1e3, posinf=1e3, neginf=0.0) / ERR_BIN).clamp(0, ERR_BINS - 1).long()  # NaN-safe
         self.err_hist.view(-1).index_add_(0, sec * ERR_BINS + b, done.long())
         self._new_spot(done)
 
