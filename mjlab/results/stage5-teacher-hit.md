@@ -26,3 +26,17 @@ Date: 2026-10-06. Task `Picklebot-Teacher-Hit-G1`: hitting only, with the Stage 
 
 ## Follow-up HT-b (loop rule 8, follow-up 1), decided before launch
 **One change: backspin weight ×3 in the hitting-teacher feed mix.** The other ten families stay at weight 1, so backspin rises from 9 % to 23 % of feeds. Warm start from `teacher-hit-02/model_16400`; evaluation as above on a fresh dev seed.
+
+## Follow-up HT-b result: gate PASSED (`teacher-hit-b01/model_18600`, dev seed 4,200,160)
+Backspin weight ×3, warm-started from `teacher-hit-02/model_16400`, iterations 16,400 → 18,622.
+
+| | Run 2 | HT-b |
+|---|---:|---:|
+| Legal, backspin | 83.5 % | **99.1 %** |
+| Legal, all other families | 99.3–100 % | 99.2–100 % |
+| Contact | 99.4–100 % | 99.2–100 % |
+| A/B gain, overall / backspin | +0.807 / +0.102 | **+0.851 / +0.591** |
+| Retention vs `model_7600` | 95.2 % vs 97.5 % | **97.45 % vs 97.44 %**; every family within ±3.3 points (backspin +6.9) |
+| Falls | 0 | 0 |
+
+**Gate met** on every criterion: legal ≥ 85 %, contact ≥ 92 %, A/B gain > 0 and retention within 5 points, on every family. **Hitting teacher: `teacher-hit-b01/model_18600`.** Fixed-start retention also recovered, so the earlier deep/low/backspin retention misses were mostly unfinished training rather than the geometry effect noted above.

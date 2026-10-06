@@ -148,7 +148,7 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
   - Gate: arrival ≥ 95 % in every sector, median error ≤ 0.25 m, ready stance ≥ 90 %, falls ≤ 1 %.
   - If the right side still lags with no competing skill, report it as a body or stance limitation and stop for the user.
 - [x] **Hitting teacher task:** hitting only (no move episodes), Stage 4 families plus reach_forehand from random starts, aiming targets and the recovery command, free feet. Task `Picklebot-Teacher-Hit-G1`. Tests.
-- [ ] **Hitting teacher training:** from `footwork-f02/model_12000` (the best hitter), chained runs under rule 9.
+- [x] **Hitting teacher training:** from `footwork-f02/model_12000` (the best hitter), chained runs under rule 9.
   - Gate: legal ≥ 85 % on every Stage 4 family from random starts.
   - Contact ≥ 92 % on the Stage 4 families.
   - A/B gain interval > 0 per family.
@@ -156,15 +156,15 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
 
 **Student**
 - [x] **Hitting teacher chain run 2 (rule 9):** continue `teacher-hit-01/model_14200` with no changes; evaluate with the corrected metric (D-043). Run 1 (corrected): every family ≥ 98.4 % legal except backspin 83.6 %; contact ≥ 98.9 %; retention fails only on backspin (−13.6).
-- [ ] **Hitting teacher follow-up HT-b (rule 8, 1 of 2):** backspin weight ×3 in the feed mix (`Picklebot-Teacher-Hit-Backspin-G1`), from `teacher-hit-02/model_16400`; evaluate as before on a fresh dev seed.
-- [ ] **Adaptive curriculum sampler (user request, 2026-10-06).** Automatic curriculum learning (learning-progress / prioritized-replay style: Matiisen et al. 2017, Portelas et al. 2019–2020, Jiang et al. 2021 PLR):
+- [x] **Hitting teacher follow-up HT-b (rule 8, 1 of 2):** backspin weight ×3 in the feed mix (`Picklebot-Teacher-Hit-Backspin-G1`), from `teacher-hit-02/model_16400`; evaluate as before on a fresh dev seed.
+- [x] **Adaptive curriculum sampler (user request, 2026-10-06).** Automatic curriculum learning (learning-progress / prioritized-replay style: Matiisen et al. 2017, Portelas et al. 2019–2020, Jiang et al. 2021 PLR):
   - track a rolling success rate per sampling unit (feed family, move sector, later each command);
   - sample units in proportion to (1 − success) blended with absolute learning progress, with a floor (≥ 25 % of uniform) so mastered skills are rehearsed;
   - optionally widen difficulty ranges (reach distance, speed) on success;
   - sampling weights are logged every iteration; evaluation always samples uniformly.
 
   Used for every training run after it lands (teacher follow-ups, student fine-tunes, Stage 6). It is the planned HT-c if HT-b misses backspin. Tests: weights move toward failing units, the floor holds, evaluation stays uniform.
-- [ ] **Distillation code:**
+- [x] **Distillation code:**
   - Student network 1024-512-256 with LayerNorm; same observations as the teachers.
   - DAgger: roll out the student (β-mixed with the teacher early on), label every state with the action of the teacher for that episode type (move → walking teacher, hit → hitting teacher), and train with MSE on the action means plus the student's own exploration std.
   - Script `scripts/distill.py`, writing rsl_rl-compatible checkpoints. Tests: shapes, teacher routing per episode type, a tiny run that lowers the imitation loss.
@@ -536,3 +536,11 @@ Its measured capability envelope is published as a contract. It must hold across
   - evaluation discipline kept.
 
   Loop rule 10: downloads need the user. Stage order: 5 → 5B → 6.
+- 2026-10-06 — **Hitting teacher PASSED its gate after follow-up HT-b** (`teacher-hit-b01/model_18600`, dev seed 4,200,160, corrected metric; `mjlab/results/stage5-teacher-hit.md`).
+  - **Backspin** 83.5 → 99.1 % legal; every family 99.1–100 % legal, contact 99.2–100 %.
+  - **Aiming:** A/B gain +0.851 (backspin +0.59).
+  - **Retention** 97.45 % vs 97.44 % (every family within ±3.3); 0 falls.
+  - **Teachers:** walking `teacher-move-01/model_15900`, hitting `teacher-hit-b01/model_18600`.
+  - **Other steps ticked:**
+    - the adaptive curriculum sampler (`62c66bd`; `picklebot_mj/curriculum.py`, opt-in `adaptive_curriculum`, logged weights, evaluation uniform, tests);
+    - the distillation code (`d848ad8`; the student is a plain 1024-512-256 MLP because rsl_rl's MLPModel has no LayerNorm option, a recorded deviation from D-042).
