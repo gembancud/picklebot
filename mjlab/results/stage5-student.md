@@ -39,3 +39,22 @@ Date: 2026-10-06.
 - Continues from `student-big-01/model_1500`. β = 0 throughout: the student drives from the start, as at the end of the first run.
 - 1,500 iterations, same data mix, learning rate and seed.
 - Evaluated as above on fresh dev seeds, with the teachers re-scored on the same seeds.
+
+## Follow-up S-b result (`student-big-02/model_1500`; teachers re-scored on the same dev seeds 4,200,180 / 4,200,181)
+Contact-weighted imitation (×10 near contact), continuing from `student-big-01/model_1500` with β = 0 for 1,500 iterations. Final imitation MSE: move 0.0004, hit 0.0006 (student-big-01: 0.0005 / 0.0010).
+
+| | Teachers | S-b student | Gap |
+|---|---:|---:|---:|
+| Arrival, all | 99.86 % | 99.94 % | +0.08 |
+| Legal, 11 families | 98.7–100 % | 98.0–100 % | each within 0.7 points |
+| Contact | 99.1–100 % | 99.1–100 % | each within 0.6 |
+| A/B gain, overall | +0.849 | +0.846 | −0.003 |
+| A/B gain, easy / deep / high / topspin | +0.764 / +0.822 / +0.866 / +0.876 | +0.789 / +0.826 / +0.841 / +0.865 | +0.025 / +0.004 / −0.025 / −0.011 |
+| **A/B gain, reach_forehand** | +0.926 [0.915, 0.938] | +0.894 [0.881, 0.908] | **−0.032** |
+| Falls per robot episode | 0 | 0.02 % | |
+| Retention vs `model_7600` | 97.2 % | 96.3 % (low −6.4, fast −6.3) | |
+
+Contact weighting closed the aiming gap on easy (−0.15 → +0.025), deep, high and topspin. **The student gate is still missed on one item:** reach_forehand A/B gain is 0.2 points past the 3-point limit, and the intervals do not overlap.
+
+## Follow-up S-c (loop rule 8, 2 of 2, the last), decided before launch
+**One change: learning rate 3e-4 → 1e-4**, as a fine-tuning pass. Continues `student-big-02/model_1500` with the S-b recipe (contact weight 10, β = 0), 1,500 iterations. Evaluated with the teachers on fresh shared dev seeds. If the student gate is still missed, the loop stops for the user.

@@ -174,7 +174,8 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
   - **Also report:** the same evaluation for a same-size (512-256-128) student distilled the same way, to show whether capacity matters.
 
 **Combine on the student** (RL fine-tune with a KL pull-back toward the routed teacher, coefficient decayed over the run)
-- [ ] **Student follow-up S-b (rule 8, 1 of 2):** contact-weighted imitation (×10 for hit-episode states with the ball within 1 m of the paddle), continuing `student-big-01/model_1500` with β = 0; evaluate with the teachers re-scored on the same fresh dev seeds.
+- [x] **Student follow-up S-b (rule 8, 1 of 2):** contact-weighted imitation (×10 for hit-episode states with the ball within 1 m of the paddle), continuing `student-big-01/model_1500` with β = 0; evaluate with the teachers re-scored on the same fresh dev seeds.
+- [ ] **Student follow-up S-c (rule 8, 2 of 2, last):** learning rate 3e-4 → 1e-4, continuing `student-big-02/model_1500` with the S-b recipe; evaluate with the teachers on fresh shared dev seeds. If the student gate is still missed, stop for the user.
 - [ ] **Multi-task check (D-044):** in the first student fine-tune, log per-skill returns. If walking or hitting drops by more than 5 points while the other rises, add separate critic heads per skill and per-task value normalisation (PopArt-style) before continuing; otherwise tick with the numbers.
 - [ ] **Shadow-swing task (Drill 2).**
   - A spot plus a virtual contact point and time (the contact geometry and timing of a sampled feed family, including reach families, but no ball).
@@ -554,3 +555,9 @@ Its measured capability envelope is published as a contract. It must hold across
   - **Small control** (512-256-128): the same in-distribution scores but a worse fixed-start retention (95.4 % vs 96.7 %); the big student is kept.
   - **Student gate not met (aiming only).** Both students lose aim on the same families, so the cause is the uniform objective rather than capacity.
   - **Rule 8 S-b:** contact-weighted imitation (`distill.py --contact-weight`).
+- 2026-10-07 — **Student S-b** (`student-big-02/model_1500`, contact-weighted imitation; dev seeds 4,200,180/181, teachers re-scored on the same seeds):
+  - arrival 99.94 % (teacher 99.86 %);
+  - legal and contact within 0.7 points everywhere;
+  - A/B gain +0.846 vs +0.849, with easy, deep, high and topspin now within 0.025;
+  - **reach_forehand gain −0.032**, just past the 0.03 limit, so the student gate is missed on that item only.
+  - **Rule 8 S-c (last):** learning rate 1e-4.
