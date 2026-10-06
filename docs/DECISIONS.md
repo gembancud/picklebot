@@ -1174,3 +1174,38 @@ Trade-offs: Results before 2026-10-06 are not comparable to corrected ones witho
 Migration and compatibility: Historical JSON and reports are kept unchanged. Training is unaffected (rewards never used these tallies). Test `test_feed_cut_off_by_time_limit_is_censored_not_missed`.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md evaluation of all remaining gates.
+
+### D-044 — Adopt the recommended robot-learning upgrades: motion priors, adaptive curriculum, domain randomisation, multi-task fixes
+
+- Date: 2026-10-06
+- Status: Accepted (user-directed: "opt for what you would recommend")
+- Amends: D-042 (Stage 5 student fine-tunes), D-038 (roadmap: new Stage 5B; Stage 6 additions)
+
+Decision:
+1. **Human motion priors (new Stage 5B).**
+   - Survey open tennis and pickleball motion data (tennis approved), retarget it to the paddle-holding G1, and train a tracking teacher on mjlab's G1 motion-tracking task.
+   - Then add an AMP-style style reward, or tracking-teacher distillation, to the executor.
+   - Gate: Stage 5 performance kept, style clearly improved.
+2. **Adaptive curriculum sampler** for all later training (already planned, `a25c6c8`).
+3. **Domain randomisation and latency** in the teachers before the Stage 6 deployable student: mass and inertia, friction, motor strength, sensor noise and delay. The student inherits robustness.
+4. **Multi-task fixes** in the student fine-tunes if interference appears: separate critic heads per skill and per-task value normalisation (PopArt-style).
+5. **Evaluation discipline stays as is** (fixed seeds, held-out final seeds, intervals, fixed endpoints, metric audits).
+6. **Skill-latent hierarchies** (ASE/CALM) are noted as an option for the Stage 8 System 1/System 2 interface, not scheduled.
+
+Downloads of datasets or tools need the user's approval of name, source, size and licence (loop rule 10).
+
+Evidence:
+- The Stage 5 experience: hand-tuned oversampling (D1b, HT-b) is what adaptive curricula automate; shared-policy interference is what multi-task normalisation addresses.
+- Current humanoid practice gets natural motion from human data: DeepMimic, AMP/ASE, PHC, OmniH2O, BeyondMimic (whose method mjlab's tracking task follows), and broadcast-video tennis work.
+- Sim-to-real practice depends on domain randomisation and privileged teacher → student (RMA and later work).
+- The user asked for industry-standard methods rather than hand-built ones.
+
+Trade-offs:
+- Motion data needs licensing checks, retargeting, and a paddle that may not match the human racket.
+- AMP rewards can conflict with task rewards. Gated by the "no task regression" rule.
+- Domain randomisation lowers peak simulated performance in exchange for robustness.
+- More stages before matches.
+
+Migration and compatibility: Stage 5 proceeds as planned (D-042) and is not interrupted. Stage 5B follows the Stage 5 gate, and Stage 6 follows Stage 5B. All earlier artefacts are kept.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md loop rule 10, Stage 5 fine-tunes, new Stage 5B, Stage 6 (domain randomisation step), Stage 8 note.

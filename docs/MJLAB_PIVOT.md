@@ -32,6 +32,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
 
    Add each follow-up as a new checklist step. If the thresholds are still missed after two follow-ups, or the fix would need a design change (new inputs or task structure beyond the step's scope, a new decision, or anything in rule 3), record it under Open questions and stop for the user. Never loosen a threshold to pass.
 9. **Chained teacher training (D-042, 2026-10-06).** A teacher may train as a chain of fixed-endpoint runs (each ≤ 2 h, each continuing from the previous endpoint, up to **4 per teacher**). After each run, evaluate on a fresh dev seed. Stop chaining when the teacher's gate is met, or when it improves by less than 1 point on its main metric between runs; then the teacher's endpoint is that run's fixed endpoint. Chaining is not a rule 8 follow-up (no variable changes). If a teacher's gate is still missed when chaining stops, rule 8 follow-ups apply.
+10. **Downloads need the user (D-044, 2026-10-06).** Before downloading any dataset, model or tool, stop and ask the user, giving its name, source, size and licence. Research (reading pages, papers, licences) needs no approval.
 
 ## Stage 0 — toolchain and throughput trial
 - [x] Record decision D-038 (switch to mjlab, G1 with wrist paddle, Unity frozen) in `docs/DECISIONS.md`, append-only.
@@ -173,6 +174,7 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
   - **Also report:** the same evaluation for a same-size (512-256-128) student distilled the same way, to show whether capacity matters.
 
 **Combine on the student** (RL fine-tune with a KL pull-back toward the routed teacher, coefficient decayed over the run)
+- [ ] **Multi-task check (D-044):** in the first student fine-tune, log per-skill returns. If walking or hitting drops by more than 5 points while the other rises, add separate critic heads per skill and per-task value normalisation (PopArt-style) before continuing; otherwise tick with the numbers.
 - [ ] **Shadow-swing task (Drill 2).**
   - A spot plus a virtual contact point and time (the contact geometry and timing of a sampled feed family, including reach families, but no ball).
   - Rewards:
@@ -198,6 +200,23 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
 
   Rule 8 applies, then stop for the user. Report `mjlab/results/stage5-gate.md`.
 
+## Stage 5B — human motion priors (D-044)
+Natural strokes and footwork from human motion data instead of reward shaping alone. This is how current humanoid systems get natural movement: motion tracking (DeepMimic → PHC/OmniH2O/BeyondMimic) and adversarial motion priors (AMP, ASE). It builds on mjlab's own G1 motion-tracking task (`Mjlab-Tracking-Flat-Unitree-G1`, BeyondMimic-style). Tennis data is acceptable (user, 2026-10-06); pickleball data is preferred where available. Parent: the accepted Stage 5 student.
+- [ ] **Motion-data survey (research only, no downloads).** Find candidate open datasets:
+  - tennis or pickleball strokes and footwork: forehand, backhand, volley/dink, serve, split-step, shuffle, crossover, recovery;
+  - sources: mocap (e.g. AMASS subsets, CMU), video-derived sets (e.g. Motion-X, broadcast-tennis work such as Zhang et al. 2023), and retargeted G1 sets (e.g. LAFAN1 → G1);
+  - for each: licence, size, format, skeleton, clip list.
+  - Also retargeting tools to the G1 (e.g. GMR, PHC retargeting) and how to add the paddle in the right hand.
+
+  Report `mjlab/results/stage5b-motion-data.md` with a recommended set and **stop for the user to approve downloads** (rule 10).
+- [ ] **Download (after approval) and retarget** the approved clips to the paddle-holding G1. Check joint limits, foot contacts and paddle path, and render 4–6 retargeted clips for the user. Tests for the loader and retargeting checks.
+- [ ] **Tracking teacher:** train mjlab's motion-tracking task on the stroke and footwork clips (≤ 2 h runs, rule 9 chaining). Gate: per-clip tracking error and success rate (mjlab's metrics), falls ≤ 1 %; review videos.
+- [ ] **Style prior in the executor:** add an AMP-style discriminator reward (state transitions vs the retargeted clips), or distil the tracking teacher's footwork and strokes, to the Stage 5 student's fine-tune. One variable at a time.
+  - Gate: the Stage 5 gate still met (no task regression beyond 5 points);
+  - and a style score (discriminator or nearest-clip pose error) clearly better than before, confirmed by side-by-side videos sent to the user.
+- [ ] **Learning primer for the user:** `docs/RL_PRIMER.md`. The concepts behind this project (scale, curricula, teacher-student, domain randomisation, motion priors, skill latents, multi-task, self-play, world models, evaluation discipline), each with a short summary, where it appears in Picklebot, and 1–2 key references.
+- [ ] **Stage 5B gate:** the student plays with human-like strokes and footwork at Stage 5 task performance. Report `mjlab/results/stage5b-gate.md`.
+
 ## Stage 6 — System 1: the full executor command interface, robust and distilled
 System 1 is the fast executor that a later strategy layer (System 2, Stage 8) commands. By the end of this stage it must follow every command the strategy layer will use:
 - **where to land the ball** (any point in the far court, not just two regions);
@@ -219,6 +238,7 @@ Its measured capability envelope is published as a contract. It must hold across
 - [ ] **Training run S1:** continuous targets on the Stage 5 recipe. Evaluate placement per region, legality per family and retention.
 - [ ] **Training run S2:** add shot types. Evaluate per class × family, placement and retention.
 - [ ] **Robustness:** repeat the final Stage 6 recipe with 2 more training seeds (≤ 2 h each). Evaluate all three on two fresh dev seeds, per seed and pooled with intervals; flag any result that depends on the training seed.
+- [ ] **Domain randomisation and latency (D-044):** randomise link masses and inertia (±15 %), friction (0.5–1.25), motor strength (±10 %), observation noise, and 0–40 ms action/observation delay in teacher training. Retrain or fine-tune the System 1 teacher under randomisation. Gate: within 5 points of the non-randomised teacher on nominal physics, and report performance across the randomisation range.
 - [ ] **Teacher → student:**
   - Distil into a student with deployable inputs only: no exact ball spin; ball position and velocity with sensor noise and 20–40 ms latency; own pose from noisy estimates.
   - Use DAgger-style action imitation plus PPO fine-tuning.
@@ -241,7 +261,7 @@ Its measured capability envelope is published as a contract. It must hold across
 
 ## Stage 7+ — later (detail when Stage 6 passes)
 - **Stage 7, two robots rally.** One robot per side, each driven by the frozen executor plus a *scripted* strategy (land deep, recover to centre). Rally length and fault mix are the metrics. This tests the executor in real back-and-forth play before any strategy learning.
-- **Stage 8, learned strategy layer.**
+- **Stage 8, learned strategy layer.** (Option, D-044: a skill-latent interface, ASE/CALM-style, instead of hand-designed commands.)
   - A slow policy (about once per shot) sees the game state: ball, own and opponent positions, score and serve.
   - It outputs executor commands: landing target, recovery spot, later shot type.
   - Trained by self-play against frozen past versions (a league), with the executor frozen; joint fine-tuning comes after.
@@ -508,3 +528,11 @@ Its measured capability envelope is published as a contract. It must hold across
   - **Noted:** the fixed-start retention test may partly measure a geometry mismatch for a robot that recovers away from the fixed feed anchor.
   - **Rule 8 follow-up HT-b:** backspin ×3 in the mix.
 - 2026-10-06 — **User request:** add an automatic-curriculum (adaptive) sampler as infrastructure for all later training; it replaces hand-tuned oversampling (D1b, HT-b) from now on.
+- 2026-10-06 — **User decision (D-044):** adopt the recommended upgrades:
+  - human motion priors (new Stage 5B; tennis data approved in principle; mjlab ships `Mjlab-Tracking-Flat-Unitree-G1`);
+  - the adaptive curriculum sampler;
+  - domain randomisation and latency in Stage 6;
+  - a multi-task check in the student fine-tunes;
+  - evaluation discipline kept.
+
+  Loop rule 10: downloads need the user. Stage order: 5 → 5B → 6.
