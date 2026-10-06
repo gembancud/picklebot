@@ -142,7 +142,7 @@ F1 and F2 showed the policy will not discover multi-step footwork from a standin
 Each skill is trained by a **specialist teacher** with only its own rewards, so nothing interferes. The teachers are then **distilled** into one larger student, which is fine-tuned with RL on the combined drills under a pull-back penalty toward the teachers. Teacher training may chain fixed-endpoint 2-hour runs (loop rule 9). The final Stage 5 gate is unchanged.
 
 **Teachers**
-- [ ] **Walking teacher task:** move-to-spot episodes only (`move_prob` 1.0, uniform sectors), as in Drill 1. Task `Picklebot-Teacher-Move-G1`. Tests.
+- [x] **Walking teacher task:** move-to-spot episodes only (`move_prob` 1.0, uniform sectors), as in Drill 1. Task `Picklebot-Teacher-Move-G1`. Tests.
 - [ ] **Walking teacher training:** from the Drill 1 parent named above, chained runs under rule 9.
   - Gate: arrival ≥ 95 % in every sector, median error ≤ 0.25 m, ready stance ≥ 90 %, falls ≤ 1 %.
   - If the right side still lags with no competing skill, report it as a body or stance limitation and stop for the user.
@@ -476,3 +476,4 @@ Its measured capability envelope is published as a contract. It must hold across
     - ready 99.4 %, 0 falls.
   - **None of D1, D1b, D1c meets the Drill 1 thresholds.** Each follow-up traded one skill for another, which is the shared-policy trade-off that D-042 replaces.
   - **Walking-teacher parent: D1 `drill-move-d01/model_13900`** (best arrival 91.0 %, best right side, best retention).
+- 2026-10-06 — Walking and hitting teacher tasks registered (commit 81299f0, tests/test_teachers.py): Picklebot-Teacher-Move-G1 (move episodes only, uniform sectors) and Picklebot-Teacher-Hit-G1 (Stage 4 + reach_forehand, hitting only). Same inputs as the drill and footwork tasks.
