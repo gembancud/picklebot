@@ -154,6 +154,7 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
   - Retention within 5 points versus `model_7600` (fixed start).
 
 **Student**
+- [ ] **Hitting teacher chain run 2 (rule 9):** continue `teacher-hit-01/model_14200` with no changes; evaluate with the corrected metric (D-043). Run 1 (corrected): every family ≥ 98.4 % legal except backspin 83.6 %; contact ≥ 98.9 %; retention fails only on backspin (−13.6).
 - [ ] **Distillation code:**
   - Student network 1024-512-256 with LayerNorm; same observations as the teachers.
   - DAgger: roll out the student (β-mixed with the teacher early on), label every state with the action of the teacher for that episode type (move → walking teacher, hit → hitting teacher), and train with MSE on the action means plus the student's own exploration std.
@@ -483,3 +484,11 @@ Its measured capability envelope is published as a contract. It must hold across
   - **The right-side weakness was interference from sharing the policy with hitting**, which supports D-042. Chaining stops (rule 9).
   - **Walking teacher:** `teacher-move-01/model_15900`.
   - Hitting teacher task already registered and tested (`81299f0`); ticked.
+- 2026-10-06 — **Evaluation bug found and fixed (D-043, `mjlab/results/eval-censoring-fix.md`).** Feeds still in flight at a robot-episode time-out were counted as misses. On the same feeds, 20.3 % (hitting teacher) and 10.8 % (`model_7600`) of feeds were such cut-offs. Excluding them, contact is 99.7 % / 99.6 %: the "85–90 % contact ceiling" since Stage 4 run A3 was mostly this artefact. History is not relabelled; earlier gate outcomes may differ under the corrected metric (flagged to the user).
+  - **Hitting teacher run 1, corrected** (`teacher-hit-01/model_14200`, dev seed 4,200,140):
+    - legal 98.4–100 % on 10 of 11 families, backspin 83.6 %;
+    - contact 98.9–100 %;
+    - A/B gain +0.820 (every family > 0);
+    - retention 95.9 % vs 97.4 % (backspin −13.6, backhand −4.9);
+    - 0 falls.
+  - Gate missed only on backspin; rule 9 chain run 2.

@@ -1158,3 +1158,19 @@ Migration and compatibility:
 - Stage 6's teacher → student step reuses the same distillation code.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md loop rule 9, Stage 5 (teachers and student).
+
+### D-043 — Exclude feeds cut off by the episode time limit from evaluation rates
+
+- Date: 2026-10-06
+- Status: Accepted (measurement correction found by the loop; reported to the user for review)
+- Amends: the evaluation definitions behind Stage 4–5 gates (thresholds unchanged)
+
+Decision: In feeding-machine evaluations, a feed still in progress when a robot episode resets for its time limit (not tallied, not ended by a fall) is **censored**. It is excluded from contact, legal-return and placement rates and reported as `censored_feeds`. Feeds ended by a fall still count. Gate comparisons against earlier checkpoints re-evaluate those checkpoints with the corrected metric on the same feeds.
+
+Evidence: `mjlab/results/eval-censoring-fix.md`. On the same feeds, 20.3 % (hitting teacher) and 10.8 % (`model_7600`) of all feeds were untouched balls cut off at the time limit and counted as misses. Excluding them, contact is 99.7 % and 99.6 %: the "85–90 % contact ceiling" reported since Stage 4 run A3 was mostly this artefact.
+
+Trade-offs: Results before 2026-10-06 are not comparable to corrected ones without re-evaluation. Earlier gate outcomes (Stage 4 gate, F1/F2, Drill 1 retention) may differ under the corrected metric. They are not re-litigated automatically.
+
+Migration and compatibility: Historical JSON and reports are kept unchanged. Training is unaffected (rewards never used these tallies). Test `test_feed_cut_off_by_time_limit_is_censored_not_missed`.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md evaluation of all remaining gates.

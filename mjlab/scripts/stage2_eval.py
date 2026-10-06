@@ -131,6 +131,7 @@ def main():
         "hits": hits, "legal_returns": rets, "falls": falls, "rally_endings": endings,
         "grip": args.grip, "families": fams, "task": task, "target": args.target,
         "robot_episodes": int(term.ep["env_episodes"]), "robot_falls": int(term.ep["env_falls"]),
+        "censored_feeds": int(term.ep["censored"]),  # open at a time-out reset: excluded from all rates
         "robot_fall_rate_per_episode": round(int(term.ep["env_falls"]) / max(int(term.ep["env_episodes"]), 1), 4),
     }
     table = {}

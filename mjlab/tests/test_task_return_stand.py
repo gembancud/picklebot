@@ -120,3 +120,27 @@ def test_start_box_and_pelvis_anchored_feeds():
     assert float((pelvis[:, 0] - ROBOT_START[0]).abs().max()) < 0.8
     lat = term.ball.pos[:, 1] - pelvis[:, 1]  # ball moves only along x before the bounce (no side spin)
     assert (lat > -0.65 - 0.05).all() and (lat < -0.30 + 0.05).all()
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA (mujoco_warp)")
+def test_feed_cut_off_by_time_limit_is_censored_not_missed():
+    """Measurement fix (D-043): a feed still in flight when the episode times out has no outcome."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.tasks import TASK_RETURN_STAND
+
+    cfg = load_env_cfg(TASK_RETURN_STAND)
+    cfg.scene.num_envs = 8
+    cfg.actions["ball"].compile_ball = False
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    term = env.action_manager.get_term("ball")
+    env.step(torch.zeros(8, 29, device="cuda"))  # feeds in flight, untouched, not tallied
+    assert not term.tallied.any()
+    for v in term.ep.values():
+        v.zero_()
+    term.reset(torch.arange(8, device="cuda"))  # as at a time-out reset (no falls yet)
+    assert int(term.ep["episodes"]) == 0 and int(term.ep["censored"]) == 8
+    assert int(term.ep["env_episodes"]) == 8

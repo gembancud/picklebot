@@ -163,7 +163,8 @@ class BallPhysicsAction(ActionTerm):
         # Per-feed outcome tallies ("episodes" = feeds), recorded when each feed's rally ends, or at the
         # env reset for a feed still in progress (a fall counts against it). Rates are k / n over feeds.
         self.ep = {k: torch.zeros((), dtype=torch.long, device=dev)
-                   for k in ("episodes", "contact", "legal_return", "fall", "env_episodes", "env_falls")}
+                   for k in ("episodes", "contact", "legal_return", "fall", "env_episodes", "env_falls",
+                             "censored")}
         # Contact/landing diagnostics (sums for means; kept small and on-device).
         self.diag = {k: torch.zeros((), device=dev) for k in
                      ("n_contact", "paddle_speed", "paddle_speed_sq", "ball_in_speed", "ball_out_speed",
@@ -193,7 +194,12 @@ class BallPhysicsAction(ActionTerm):
             mask[env_ids] = True
             fell_all = torch.zeros_like(mask)
             fell_all[env_ids] = fell
-            self._tally(mask & ~self.tallied, fell_all)
+            # A feed still open at the reset has no outcome yet unless the robot fell: the episode time
+            # limit cut it off. Count it as censored, not as a miss (2026-10-06 measurement fix, D-043);
+            # feeds ended by a fall still count (as falls).
+            open_ = mask & ~self.tallied
+            self.ep["censored"] += (open_ & ~fell_all).sum()
+            self._tally(open_ & fell_all, fell_all)
             self.ep["env_episodes"] += len(env_ids)  # robot episodes (several feeds each)
             self.ep["env_falls"] += fell.sum()  # includes falls between feeds
         self._feed(env_ids)
