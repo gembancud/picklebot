@@ -128,8 +128,8 @@ F1 and F2 showed the policy will not discover multi-step footwork from a standin
   - Evaluate per direction (8 sectors) and distance band: arrival rate, time to arrive, final error, ready-stance rate, falls per robot episode, foot slip.
   - Also hitting retention on the Stage 4 families from the fixed start, versus `model_12000`.
 - [x] **Run D1b (rule 8 follow-up 1):** oversample the right-side sectors ×2 in training (`Picklebot-Drill-Move-Right-G1`), from `drill-move-d01/model_13900`; evaluate as D1 on a fresh dev seed.
-- [ ] **Run D1c (rule 8 follow-up 2):** from D1's endpoint `drill-move-d01/model_13900` (D1b regressed), hitting rehearsal 25 % → 40 % (`Picklebot-Drill-Move-Rehearse-G1`); evaluate as D1 on a fresh dev seed. Report `mjlab/results/stage5-run-d1c.md`.
-- [ ] **Drill 1 result (informational under D-042):** compare D1, D1b and D1c against the Drill 1 thresholds in `mjlab/results/stage5-drill1.md`:
+- [x] **Run D1c (rule 8 follow-up 2):** from D1's endpoint `drill-move-d01/model_13900` (D1b regressed), hitting rehearsal 25 % → 40 % (`Picklebot-Drill-Move-Rehearse-G1`); evaluate as D1 on a fresh dev seed. Reported in `mjlab/results/stage5-drill1.md`.
+- [x] **Drill 1 result (informational under D-042):** compare D1, D1b and D1c against the Drill 1 thresholds in `mjlab/results/stage5-drill1.md`:
   - arrival ≥ 90 % in every sector;
   - median error ≤ 0.25 m;
   - ready stance ≥ 80 %;
@@ -469,3 +469,10 @@ Its measured capability envelope is published as a contract. It must hold across
   - DAgger distillation into a 1024-512-256 LayerNorm student, with a same-size control;
   - shadow-swing and reach-curriculum fine-tunes on the student with a KL pull-back toward the teachers;
   - the Stage 5 gate is unchanged.
+- 2026-10-06 — **Run D1c (`drill-move-d01c`) and the Drill 1 comparison** (`mjlab/results/stage5-drill1.md`).
+  - **D1c** (hitting rehearsal 40 %, from D1; endpoint `model_15900`, dev seed 4,200,120):
+    - arrival 85.6 % (right side 56–75 %);
+    - retention −5.3 overall (low −15.3, fast −14.9);
+    - ready 99.4 %, 0 falls.
+  - **None of D1, D1b, D1c meets the Drill 1 thresholds.** Each follow-up traded one skill for another, which is the shared-policy trade-off that D-042 replaces.
+  - **Walking-teacher parent: D1 `drill-move-d01/model_13900`** (best arrival 91.0 %, best right side, best retention).
