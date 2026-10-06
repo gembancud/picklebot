@@ -1118,3 +1118,43 @@ Migration and compatibility:
 - Seed discipline and fixed-endpoint selection are unchanged.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5 (drill plan), Open questions.
+
+### D-042 — Specialist teachers distilled into one larger student instead of one policy trading skills
+
+- Date: 2026-10-06
+- Status: Accepted (user-directed)
+- Amends: D-041 (Stage 5 method after Drill 1; the gate thresholds are unchanged)
+
+Decision: Stage 5 skills are no longer traded off inside one 512-256-128 policy. Instead:
+- each skill is trained by a specialist teacher with only its own rewards, until its own gate is met or it plateaus:
+  - a walking teacher on move-to-spot only;
+  - a hitting teacher on hitting only, with aiming and recovery;
+- the teachers are distilled with DAgger into one larger student (1024-512-256 with LayerNorm), routed by episode type;
+- the student is then fine-tuned with RL on the combined drills (shadow-swing, then real balls with a near-to-far reach curriculum) under a KL pull-back toward the routed teacher.
+
+Teacher training may chain fixed-endpoint 2-hour runs (loop rule 9), up to 4 per teacher. The Drill 1 gate becomes informational; it names the walking-teacher parent.
+
+Evidence:
+- **Drill 1** (`stage5-run-d1.md`, `stage5-run-d1b.md`) trained walking and hitting in one policy with rehearsal. Each change moved the balance rather than raising both:
+  - D1: 91 % arrival with retention −2.0 overall, but −6.7 to −7.6 on three families;
+  - D1b: oversampling the right side cost forward movement (arrival 69 %) and retention (−6.7 overall);
+  - D1c: more hitting rehearsal raised the training hitting reward and lowered arrivals.
+- **Causes:**
+  - one small network and a shared value function serving rewards of very different scales (dense walking terms versus sparse hitting events);
+  - 2-hour runs that end before the skills settle.
+- **Established practice** for many skills in one controller: train specialists, then distil (policy distillation; DeepMind humanoid soccer). Imitation is supervised learning and does not have RL's reward tug-of-war. Larger, normalised networks help once training is stable (e.g. SimBa, BRO).
+- The user wants skills to saturate rather than settle at a shared ~80 %, and prefers a capable teacher distilled into a student.
+
+Trade-offs:
+- New code: distillation with DAgger and teacher routing, and a KL-regularised fine-tune.
+- Longer teacher training through chained runs.
+- The student starts from imitation, so the combined behaviour (the move-to-swing transition) is only learned in the fine-tunes.
+- A same-size student is also distilled as a control, so the effect of capacity is measured, not assumed.
+
+Migration and compatibility:
+- Drill tasks, reach feeds, the recovery command and eval scripts are reused as the teachers' training and evaluation tasks.
+- D1, D1b and D1c stay on record.
+- Seed discipline and fixed-endpoint selection are unchanged. Choosing a teacher parent between completed endpoints on dev seeds is documented as such.
+- Stage 6's teacher → student step reuses the same distillation code.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md loop rule 9, Stage 5 (teachers and student).

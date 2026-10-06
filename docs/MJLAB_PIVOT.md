@@ -31,6 +31,7 @@ Branch `feat/mjlab-pivot`, worktree `F:\dev\picklebot-mjlab` (WSL: `/mnt/f/dev/p
    - is evaluated on a fresh dev seed.
 
    Add each follow-up as a new checklist step. If the thresholds are still missed after two follow-ups, or the fix would need a design change (new inputs or task structure beyond the step's scope, a new decision, or anything in rule 3), record it under Open questions and stop for the user. Never loosen a threshold to pass.
+9. **Chained teacher training (D-042, 2026-10-06).** A teacher may train as a chain of fixed-endpoint runs (each ≤ 2 h, each continuing from the previous endpoint, up to **4 per teacher**). After each run, evaluate on a fresh dev seed. Stop chaining when the teacher's gate is met, or when it improves by less than 1 point on its main metric between runs; then the teacher's endpoint is that run's fixed endpoint. Chaining is not a rule 8 follow-up (no variable changes). If a teacher's gate is still missed when chaining stops, rule 8 follow-ups apply.
 
 ## Stage 0 — toolchain and throughput trial
 - [x] Record decision D-038 (switch to mjlab, G1 with wrist paddle, Unity frozen) in `docs/DECISIONS.md`, append-only.
@@ -127,37 +128,56 @@ F1 and F2 showed the policy will not discover multi-step footwork from a standin
   - Evaluate per direction (8 sectors) and distance band: arrival rate, time to arrive, final error, ready-stance rate, falls per robot episode, foot slip.
   - Also hitting retention on the Stage 4 families from the fixed start, versus `model_12000`.
 - [x] **Run D1b (rule 8 follow-up 1):** oversample the right-side sectors ×2 in training (`Picklebot-Drill-Move-Right-G1`), from `drill-move-d01/model_13900`; evaluate as D1 on a fresh dev seed.
-- [ ] **Run D1c (rule 8 follow-up 2):** from D1's endpoint `drill-move-d01/model_13900` (D1b regressed), hitting rehearsal 25 % → 40 % (`Picklebot-Drill-Move-Rehearse-G1`); evaluate as D1 on a fresh dev seed. Last permitted follow-up: if the Drill 1 gate still fails, stop for the user.
-- [ ] **Drill 1 gate:**
-  - arrival ≥ 90 % within the time limit in **every** direction sector;
-  - median final error ≤ 0.25 m;
-  - ready stance on ≥ 80 % of arrivals;
-  - falls ≤ 1 % per robot episode;
-  - hitting retention within 5 points.
+- [ ] **Run D1c (rule 8 follow-up 2):** from D1's endpoint `drill-move-d01/model_13900` (D1b regressed), hitting rehearsal 25 % → 40 % (`Picklebot-Drill-Move-Rehearse-G1`); evaluate as D1 on a fresh dev seed. Report `mjlab/results/stage5-run-d1c.md`.
+- [ ] **Drill 1 result (informational under D-042):** compare D1, D1b and D1c against the Drill 1 thresholds in `mjlab/results/stage5-drill1.md`:
+  - arrival ≥ 90 % in every sector;
+  - median error ≤ 0.25 m;
+  - ready stance ≥ 80 %;
+  - falls ≤ 1 %;
+  - hitting retention within 5 points per family.
 
-  **Fallback if D1 cannot learn to walk:** train mjlab's standard G1 velocity policy (one run, ≤ 2 h) and use it as a leg teacher (action imitation on the legs during move episodes). Ask the user before starting it.
+  This is no longer a stop: the same-network trade-off it measured is what D-042 replaces. Name the **walking-teacher parent**, the Drill 1 endpoint with the higher overall arrival rate (a choice between completed endpoints on dev seeds).
 
-**Drill 2 — move and shadow-swing, no ball.**
-- [ ] **Shadow-swing task.**
+### Stage 5 teachers and student (D-042): specialists to saturation, distilled into one larger student
+Each skill is trained by a **specialist teacher** with only its own rewards, so nothing interferes. The teachers are then **distilled** into one larger student, which is fine-tuned with RL on the combined drills under a pull-back penalty toward the teachers. Teacher training may chain fixed-endpoint 2-hour runs (loop rule 9). The final Stage 5 gate is unchanged.
+
+**Teachers**
+- [ ] **Walking teacher task:** move-to-spot episodes only (`move_prob` 1.0, uniform sectors), as in Drill 1. Task `Picklebot-Teacher-Move-G1`. Tests.
+- [ ] **Walking teacher training:** from the Drill 1 parent named above, chained runs under rule 9.
+  - Gate: arrival ≥ 95 % in every sector, median error ≤ 0.25 m, ready stance ≥ 90 %, falls ≤ 1 %.
+  - If the right side still lags with no competing skill, report it as a body or stance limitation and stop for the user.
+- [ ] **Hitting teacher task:** hitting only (no move episodes), Stage 4 families plus reach_forehand from random starts, aiming targets and the recovery command, free feet. Task `Picklebot-Teacher-Hit-G1`. Tests.
+- [ ] **Hitting teacher training:** from `footwork-f02/model_12000` (the best hitter), chained runs under rule 9.
+  - Gate: legal ≥ 85 % on every Stage 4 family from random starts.
+  - Contact ≥ 92 % on the Stage 4 families.
+  - A/B gain interval > 0 per family.
+  - Retention within 5 points versus `model_7600` (fixed start).
+
+**Student**
+- [ ] **Distillation code:**
+  - Student network 1024-512-256 with LayerNorm; same observations as the teachers.
+  - DAgger: roll out the student (β-mixed with the teacher early on), label every state with the action of the teacher for that episode type (move → walking teacher, hit → hitting teacher), and train with MSE on the action means plus the student's own exploration std.
+  - Script `scripts/distill.py`, writing rsl_rl-compatible checkpoints. Tests: shapes, teacher routing per episode type, a tiny run that lowers the imitation loss.
+- [ ] **Distillation run:**
+  - **≤ 2 h** on the Drill 1 mix with 50 % move and 50 % hit episodes.
+  - **Gate:** the student is within 3 points of each teacher on the teacher's own evaluation: arrival per sector for the walking teacher, legal / contact / A/B gain per family for the hitting teacher.
+  - **Also report:** the same evaluation for a same-size (512-256-128) student distilled the same way, to show whether capacity matters.
+
+**Combine on the student** (RL fine-tune with a KL pull-back toward the routed teacher, coefficient decayed over the run)
+- [ ] **Shadow-swing task (Drill 2).**
   - A spot plus a virtual contact point and time (the contact geometry and timing of a sampled feed family, including reach families, but no ball).
   - Rewards:
-    - the paddle face centre passing within the contact tolerance of the point at the right time;
-    - paddle velocity toward the net at that moment;
-    - the feet set (base speed < 0.3 m/s) just before contact;
+    - the paddle passing within tolerance of the point at the right time;
+    - paddle velocity toward the net;
+    - feet set (base speed < 0.3 m/s) just before contact;
     - then recovery to the commanded spot.
-  - Forehand and backhand sides are balanced.
-  - Tests.
-- [ ] **Run D2:** shadow-swing plus Drill 1 maintenance plus hitting rehearsal, from the Drill 1 endpoint. Evaluate per family-geometry and side: contact-point error at the contact time, timing error, paddle speed, feet-set rate, recovery error, falls.
-- [ ] **Drill 2 gate:**
-  - median contact-point error ≤ 0.15 m with timing error ≤ 0.1 s on every family-geometry, including all four reach geometries;
-  - feet set on ≥ 70 %;
-  - median recovery error ≤ 0.5 m;
-  - falls ≤ 1 %;
-  - Drill 1 and hitting retention within 5 points.
-
-**Drill 3 — real balls, near to far.**
-- [ ] **Reach curriculum.** Reach families gain a distance scale that starts at just past arm reach and widens when a family's rolling legal-return rate exceeds 70 %, up to the full reach ranges. Logged per family. Evaluation is always at full range. Tests.
-- [ ] **Run D3:** real-ball reach curriculum plus Stage 4 families from random starts, aiming targets and the recovery command, with Drill 1 and 2 maintenance, from the Drill 2 endpoint.
+  - Forehand and backhand balanced. Tests.
+- [ ] **Run S-D2:** student fine-tuned on shadow-swing plus move and hit maintenance.
+  - Gate: median contact-point error ≤ 0.15 m with timing error ≤ 0.1 s on every family-geometry, including all four reach geometries.
+  - Feet set ≥ 70 %; median recovery error ≤ 0.5 m; falls ≤ 1 %.
+  - Walking and hitting within 5 points of the student's post-distillation results.
+- [ ] **Reach curriculum (Drill 3).** Reach families gain a distance scale that starts just past arm reach and widens when a family's rolling legal rate exceeds 70 %, up to full range. Logged per family; evaluation always at full range. Tests.
+- [ ] **Run S-D3:** student fine-tuned on real balls (reach curriculum plus Stage 4 families from random starts, aiming, recovery), with move and shadow-swing maintenance.
 - [ ] **Review videos:** successes and misses per family, side and behind, including the move-to-swing transition. Send them to the user.
 - [ ] **Stage 5 gate** (unchanged thresholds): a single checkpoint with
   - legal return ≥ 85 % on every Stage 4 family from random starts, and ≥ 75 % on every reach family at full range;
@@ -167,7 +187,7 @@ F1 and F2 showed the policy will not discover multi-step footwork from a standin
   - falls ≤ 1 % per robot episode;
   - retention within 5 points versus `model_7600` on the same feeds.
 
-  If it is not met after D3 plus one follow-up run, record per-family results and stop for the user. Report `mjlab/results/stage5-gate.md`.
+  Rule 8 applies, then stop for the user. Report `mjlab/results/stage5-gate.md`.
 
 ## Stage 6 — System 1: the full executor command interface, robust and distilled
 System 1 is the fast executor that a later strategy layer (System 2, Stage 8) commands. By the end of this stage it must follow every command the strategy layer will use:
@@ -443,3 +463,9 @@ Its measured capability envelope is published as a contract. It must hold across
   - **Ready stance** 88.9 %.
   - **Retention** −6.7 points overall (backhand −12.1, low −12.6, fast −16.6, backspin −15.7).
   - **Follow-up D1c (rule 8, last):** hill-climb from the better parent, D1's `model_13900` (a choice between completed endpoints, not a within-run peak; D1b is kept on record). One change: hitting rehearsal 25 % → 40 %.
+- 2026-10-06 — **User decision (D-042):** specialist teachers distilled into one larger student. Stage 5 is restructured:
+  - D1c is finished and recorded; the Drill 1 result becomes informational and names the walking-teacher parent;
+  - walking teacher (move only) and hitting teacher (hit only), trained with loop rule 9 (up to 4 chained 2-hour runs per teacher);
+  - DAgger distillation into a 1024-512-256 LayerNorm student, with a same-size control;
+  - shadow-swing and reach-curriculum fine-tunes on the student with a KL pull-back toward the teachers;
+  - the Stage 5 gate is unchanged.
