@@ -154,7 +154,8 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
   - Retention within 5 points versus `model_7600` (fixed start).
 
 **Student**
-- [ ] **Hitting teacher chain run 2 (rule 9):** continue `teacher-hit-01/model_14200` with no changes; evaluate with the corrected metric (D-043). Run 1 (corrected): every family ≥ 98.4 % legal except backspin 83.6 %; contact ≥ 98.9 %; retention fails only on backspin (−13.6).
+- [x] **Hitting teacher chain run 2 (rule 9):** continue `teacher-hit-01/model_14200` with no changes; evaluate with the corrected metric (D-043). Run 1 (corrected): every family ≥ 98.4 % legal except backspin 83.6 %; contact ≥ 98.9 %; retention fails only on backspin (−13.6).
+- [ ] **Hitting teacher follow-up HT-b (rule 8, 1 of 2):** backspin weight ×3 in the feed mix (`Picklebot-Teacher-Hit-Backspin-G1`), from `teacher-hit-02/model_16400`; evaluate as before on a fresh dev seed.
 - [ ] **Distillation code:**
   - Student network 1024-512-256 with LayerNorm; same observations as the teachers.
   - DAgger: roll out the student (β-mixed with the teacher early on), label every state with the action of the teacher for that episode type (move → walking teacher, hit → hitting teacher), and train with MSE on the action means plus the student's own exploration std.
@@ -492,3 +493,10 @@ Its measured capability envelope is published as a contract. It must hold across
     - retention 95.9 % vs 97.4 % (backspin −13.6, backhand −4.9);
     - 0 falls.
   - Gate missed only on backspin; rule 9 chain run 2.
+- 2026-10-06 — **Hitting teacher run 2** (`teacher-hit-02/model_16400`, dev seed 4,200,150, corrected metric; `mjlab/results/stage5-teacher-hit.md`).
+  - **Results:** legal 99.3–100 % on 10 families, **backspin 83.5 %** (run 1: 83.6 %); contact 99.4–100 %; A/B gain +0.807; 0 falls.
+  - **Retention:** 95.2 % vs 97.5 % (backspin −6.8, deep −6.6, low −6.6).
+  - **Chaining stops** (rule 9: < 1 point gain); the teacher endpoint is run 2.
+  - **Gate missed** on backspin legal and three retention families.
+  - **Noted:** the fixed-start retention test may partly measure a geometry mismatch for a robot that recovers away from the fixed feed anchor.
+  - **Rule 8 follow-up HT-b:** backspin ×3 in the mix.

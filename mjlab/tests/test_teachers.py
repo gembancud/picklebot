@@ -18,3 +18,17 @@ def test_teacher_tasks():
     for g in ("actor", "critic"):  # warm-start compatible with both parents
         names = list(f2.observations[g].terms)
         assert list(mv.observations[g].terms) == names and list(hit.observations[g].terms) == names
+
+
+def test_backspin_follow_up_only_changes_the_mix():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.feeds import FAMILY_NAMES
+    from picklebot_mj.tasks import TASK_TEACHER_HIT, TASK_TEACHER_HIT_BACKSPIN
+
+    a, b = load_env_cfg(TASK_TEACHER_HIT), load_env_cfg(TASK_TEACHER_HIT_BACKSPIN)
+    wa = dict(zip(FAMILY_NAMES, a.actions["ball"].feed_mix.vector()))
+    wb = dict(zip(FAMILY_NAMES, b.actions["ball"].feed_mix.vector()))
+    assert wb["backspin"] == 3.0 and all(wb[f] == wa[f] for f in FAMILY_NAMES if f != "backspin")
+    assert set(a.rewards) == set(b.rewards) and all(a.rewards[k].weight == b.rewards[k].weight for k in a.rewards)

@@ -126,3 +126,14 @@ register_mjlab_task(
     play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_FW), HIT_TEACHER_MIX),
     rl_cfg=_rl_cfg(),
 )
+
+# Hitting teacher follow-up HT-b (stage5-teacher-hit.md): backspin weight x3, everything else unchanged.
+HIT_TEACHER_BACKSPIN_MIX = FeedMix({name: (3.0 if name == "backspin" else 1.0)
+                                    for name in STAGE4_FAMILIES + ("reach_forehand",)})
+TASK_TEACHER_HIT_BACKSPIN = "Picklebot-Teacher-Hit-Backspin-G1"
+register_mjlab_task(
+    task_id=TASK_TEACHER_HIT_BACKSPIN,
+    env_cfg=_with_mix(return_stand_env_cfg(**_FW), HIT_TEACHER_BACKSPIN_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_FW), HIT_TEACHER_BACKSPIN_MIX),
+    rl_cfg=_rl_cfg(),
+)
