@@ -177,7 +177,7 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
 - [x] **Student follow-up S-b (rule 8, 1 of 2):** contact-weighted imitation (×10 for hit-episode states with the ball within 1 m of the paddle), continuing `student-big-01/model_1500` with β = 0; evaluate with the teachers re-scored on the same fresh dev seeds.
 - [x] **Student follow-up S-c (rule 8, 2 of 2, last):** learning rate 3e-4 → 1e-4, continuing `student-big-02/model_1500` with the S-b recipe; evaluate with the teachers on fresh shared dev seeds. If the student gate is still missed, stop for the user.
 - [ ] **Multi-task check (D-044):** in the first student fine-tune, log per-skill returns. If walking or hitting drops by more than 5 points while the other rises, add separate critic heads per skill and per-task value normalisation (PopArt-style) before continuing; otherwise tick with the numbers.
-- [ ] **Shadow-swing task (Drill 2).**
+- [x] **Shadow-swing task (Drill 2).**
   - A spot plus a virtual contact point and time (the contact geometry and timing of a sampled feed family, including reach families, but no ball).
   - Rewards:
     - the paddle passing within tolerance of the point at the right time;
@@ -569,3 +569,15 @@ Its measured capability envelope is published as a contract. It must hold across
   - **One 1024-512-256 network now walks and hits at teacher level.**
   - **Noted for the fine-tunes:** fixed-start retention on low and fast balls is −5.9 / −6.1 versus `model_7600` (the teacher's is −3.1 / −3.4).
   - TensorBoard now includes the distillation runs (`scripts/distill_to_tb.py`).
+- 2026-10-07 — **Fine-tune machinery and the shadow-swing task built.**
+  - **`picklebot_mj/rl/reg_ppo.py` (RegPPO):** rsl_rl PPO with a pull-back toward a frozen reference policy (the distilled student; equivalent in intent to D-042's routed-teacher pull-back and needing no routing), plus a critic warm-up with the actor frozen.
+    - Uses rsl_rl's symmetry hook and the `PICKLEBOT_REF_*` env vars.
+    - Full-scale check (4096 envs, 60 iterations): the pull-back is ~0 during warm-up. At unfreezing it spiked (pull-back 35, falls 2.5 per episode), then recovered to 0.008 with falls back near 0 by iteration 60.
+    - The fine-tunes therefore use a 100-iteration warm-up, learning rate 1e-4 and desired KL 0.005.
+  - **`picklebot_mj/tasks/shadow_swing.py` (Drill 2):** real feeds of all 14 families fly their real paths as **ghost balls** (the paddle is moved out of the ball simulation; never tallied).
+    - The closest paddle approach is tracked between the first and second bounce.
+    - One-shot reward exp(−(d/0.15)²)·(0.5 + 0.5·v_x/3)·(0.7 + 0.3·feet set), then recovery.
+    - Per-family metrics: median d_min, share within 0.15 m, paddle v_x, feet-set rate.
+    - **Deviation:** timing is not a separate metric; an early or late swing shows as a larger d_min.
+  - **Task `Picklebot-Student-Swing-G1`:** 25 % move, 50 % swing, 25 % real hitting; 1024-512-256 student; RegPPO.
+  - **Tests:** +2. Suite 175 pass + 13 xfails.

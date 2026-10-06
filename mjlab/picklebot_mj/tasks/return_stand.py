@@ -106,6 +106,9 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # Adaptive curriculum (D-044): re-weight feed families (by legal return) and move sectors (by arrival)
     # toward what is unmastered or still changing. Training only; evaluation turns it off.
     adaptive_curriculum: bool = False
+    # Drill 2 (shadow swing at a ghost ball): fraction of robot episodes, and the family mix they use.
+    swing_prob: float = 0.0
+    swing_mix: FeedMix | None = None
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -148,6 +151,10 @@ class BallPhysicsAction(ActionTerm):
         if cfg.move_prob > 0.0:
             from picklebot_mj.tasks.move_drill import MoveDrill
             self.drill = MoveDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights)
+        self.shadow = None
+        if cfg.swing_prob > 0.0:
+            from picklebot_mj.tasks.shadow_swing import ShadowSwing
+            self.shadow = ShadowSwing(self, cfg.swing_prob, cfg.swing_mix or cfg.feed_mix, cfg.seed)
         # Per-family episode tallies [family, (episodes, contact, legal_return, fall)].
         self.ep_family = torch.zeros(len(FAMILY_NAMES), 4, dtype=torch.long, device=dev)
         # Per-family legal-landing tallies [family, (in A, in B, on the assigned target)].
@@ -209,6 +216,8 @@ class BallPhysicsAction(ActionTerm):
             self._tally(open_ & fell_all, fell_all)
             self.ep["env_episodes"] += len(env_ids)  # robot episodes (several feeds each)
             self.ep["env_falls"] += fell.sum()  # includes falls between feeds
+        if self.shadow is not None:
+            self.shadow.assign(env_ids, self.cfg.move_prob)
         self._feed(env_ids)
         self.rules.begin_from_feed(env_ids, torch.full_like(env_ids, FEEDER_PLAYER), must_bounce=True)
         for f in (self.hit_done, self.hit_now, self.return_done, self.return_now, self.lost_now, self._prev_dead,
@@ -218,6 +227,10 @@ class BallPhysicsAction(ActionTerm):
         self.refeed_timer[env_ids] = -1.0
         if self.drill is not None:
             self.drill.reset(env_ids)
+        if self.shadow is not None:
+            if self.drill is not None:
+                self.shadow.drop_moves(self.drill.move_ep)
+            self.tallied |= self.shadow.swing_ep  # ghost-ball feeds are never tallied
         self._write_mocap(env_ids)
 
     @property
@@ -290,6 +303,8 @@ class BallPhysicsAction(ActionTerm):
     def _feed(self, env_ids):
         k = len(env_ids)
         fam = torch.multinomial(self._mix, k, replacement=True, generator=self.gen)
+        if self.shadow is not None:
+            fam = self.shadow.family(env_ids, fam)
         self.family[env_ids] = fam
         if self.cfg.target_mode == "random":
             tgt = (torch.rand(k, generator=self.gen_target, device=self.device) < 0.5).long()
@@ -324,9 +339,13 @@ class BallPhysicsAction(ActionTerm):
         pose = data.body_link_pose_w[:, self.paddle_id]
         vel = data.body_link_vel_w[:, self.paddle_id]
         paddle = PaddleState(pose[:, :3] - origins, _quat_to_matrix(pose[:, 3:7]), vel[:, :3], vel[:, 3:6])
+        sim_paddle = paddle
+        if self.shadow is not None:  # ghost ball: the paddle cannot touch it in swing episodes
+            sim_paddle = PaddleState(self.shadow.paddle_for_sim(paddle.pos), paddle.rot, paddle.lin_vel,
+                                     paddle.ang_vel)
         live = ~self.rules.dead
         before = self.ball
-        self.ball, ev = self.sim.step(self.ball, dt, self.cfg.ball_substeps, paddle, adaptive=False)
+        self.ball, ev = self.sim.step(self.ball, dt, self.cfg.ball_substeps, sim_paddle, adaptive=False)
         # Freeze balls of finished rallies (they are reset with the episode).
         keep = (~live).unsqueeze(-1)
         self.ball = BallState(torch.where(keep, before.pos, self.ball.pos), torch.where(keep, before.vel, self.ball.vel),
@@ -395,6 +414,9 @@ class BallPhysicsAction(ActionTerm):
         self.return_count += ret.sum()
         self.hit_count += (legal_hit & ~was_hit).sum()
         self._prev_dead = self.rules.dead.clone()
+        if self.shadow is not None:
+            self.shadow.step(dt, ev.court_contact & live, paddle.pos, paddle.lin_vel,
+                             data.root_link_lin_vel_b[:, :2].norm(dim=-1))
         # Feeding machine: count the finished rally, wait, then feed the next ball (no robot reset).
         over = (self.rules.dead | self.return_done) & ~self.tallied
         self._tally(over, torch.zeros_like(over))
@@ -405,6 +427,8 @@ class BallPhysicsAction(ActionTerm):
         self.refeed_timer = torch.where(waiting, self.refeed_timer - dt, self.refeed_timer)
         fire = waiting & (self.refeed_timer <= 0.0)
         self._refeed(fire)
+        if self.shadow is not None:
+            self.shadow.after_refeed(fire)
         if self.drill is not None:
             self.drill.update(dt)
         # Reaction on the paddle for the next physics step (impulse -> force over dt).
@@ -577,7 +601,8 @@ def _release_stance(cfg) -> None:
 
 def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: bool = False,
                          recovery: bool = False, free_feet: bool = False,
-                         wide_shaping: bool = False, move_prob: float = 0.0) -> ManagerBasedRlEnvCfg:
+                         wide_shaping: bool = False, move_prob: float = 0.0,
+                         swing_prob: float = 0.0, swing_mix: FeedMix | None = None) -> ManagerBasedRlEnvCfg:
     cfg = unitree_g1_flat_env_cfg(play=play)
     robot = get_g1_paddle_cfg()
     # New InitialStateCfg (the original is mjlab's shared keyframe constant). Court-local;
@@ -653,6 +678,11 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: b
         cfg.rewards["move_track_yaw"] = RewardTermCfg(func=md.move_track_yaw, weight=2.0)
         cfg.rewards["move_arrival"] = RewardTermCfg(func=md.move_arrival, weight=2.0 / step_dt)
         cfg.rewards["ready_stance"] = RewardTermCfg(func=md.ready_stance, weight=1.0)
+    if swing_prob > 0.0:  # Drill 2: one-shot shadow-swing reward at the close of each ghost-ball window
+        from picklebot_mj.tasks.shadow_swing import shadow_swing_reward
+        cfg.actions["ball"].swing_prob = swing_prob
+        cfg.actions["ball"].swing_mix = swing_mix
+        cfg.rewards["shadow_swing"] = RewardTermCfg(func=shadow_swing_reward, weight=3.0 / step_dt)
     cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=5.0 / step_dt)
     # No termination on rally end: a feeding machine serves the next ball 0.5 s after each rally,
     # within 8 s episodes that end only on a fall or the time limit. History: as a true termination

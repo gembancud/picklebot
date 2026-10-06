@@ -137,3 +137,46 @@ register_mjlab_task(
     play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_FW), HIT_TEACHER_BACKSPIN_MIX),
     rl_cfg=_rl_cfg(),
 )
+
+
+# Student fine-tunes (D-042): the 1024-512-256 student network and RegPPO (pull-back + critic warm-up,
+# configured through PICKLEBOT_REF_* env vars; see picklebot_mj/rl/reg_ppo.py).
+STUDENT_HIDDEN = (1024, 512, 256)
+
+
+def _student_rl_cfg():
+    cfg = _rl_cfg()
+    cfg.actor.hidden_dims = STUDENT_HIDDEN
+    cfg.critic.hidden_dims = STUDENT_HIDDEN
+    cfg.algorithm.class_name = "picklebot_mj.rl.reg_ppo:RegPPO"
+    return cfg
+
+
+TASK_STUDENT_DRILL_MOVE = "Picklebot-Student-Drill-Move-G1"  # Drill 1 mix on the student (smoke/maintenance)
+register_mjlab_task(
+    task_id=TASK_STUDENT_DRILL_MOVE,
+    env_cfg=_with_mix(return_stand_env_cfg(**_D1), ALL_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_D1), ALL_MIX),
+    rl_cfg=_student_rl_cfg(),
+)
+
+
+# Stage 5 Drill 2 on the student (D-041/D-042): 25 % move-to-spot, 50 % shadow swing at a ghost ball over all
+# fourteen families (reach included), 25 % real hitting on the hitting teacher's families.
+TASK_STUDENT_SWING = "Picklebot-Student-Swing-G1"
+_SW = dict(_FW, move_prob=0.25, swing_prob=0.5, swing_mix=FOOTWORK_MIX)
+
+
+def _student_finetune_rl_cfg():
+    cfg = _student_rl_cfg()
+    cfg.algorithm.learning_rate = 1e-4  # gentle fine-tune (see stage5-finetune notes)
+    cfg.algorithm.desired_kl = 0.005
+    return cfg
+
+
+register_mjlab_task(
+    task_id=TASK_STUDENT_SWING,
+    env_cfg=_with_mix(return_stand_env_cfg(**_SW), HIT_TEACHER_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_SW), HIT_TEACHER_MIX),
+    rl_cfg=_student_finetune_rl_cfg(),
+)

@@ -39,6 +39,7 @@ class _FakeTerm:
         self.cfg = type("Cfg", (), {"target_mode": "random", "recovery_mode": "random"})()
         self.gen_recover = torch.Generator(device=device).manual_seed(seed + 2)
         self.recover_xy = torch.zeros(n, 2)
+        self.shadow = None
         self.gen_target = torch.Generator(device=device).manual_seed(seed + 1)
         self.target = torch.zeros(n, dtype=torch.long)
         self.anchor_xy = ROBOT_START  # fixed anchor offline; tests may move it

@@ -60,6 +60,7 @@ def main():
                     help="footwork tasks: start at ROBOT_START (Stage 4 pose box) with fixed-anchor feeds (retention)")
     ap.add_argument("--move-prob", type=float, default=None,
                     help="drill tasks: fraction of move-to-spot episodes (1 = move drill only, 0 = hitting only)")
+    ap.add_argument("--swing-prob", type=float, default=None, help="drill tasks: fraction of shadow-swing episodes")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
@@ -70,6 +71,8 @@ def main():
         cfg.actions["ball"].target_mode = args.target
     if args.move_prob is not None:
         cfg.actions["ball"].move_prob = args.move_prob
+    if args.swing_prob is not None:
+        cfg.actions["ball"].swing_prob = args.swing_prob
     cfg.actions["ball"].move_sector_weights = None  # evaluation samples spot directions uniformly
     cfg.actions["ball"].adaptive_curriculum = False  # and never adapts the feed or sector mix
     if args.fixed_start:
@@ -172,6 +175,8 @@ def main():
     }
     if term.drill is not None:
         out["move_drill"] = term.drill.summary()
+    if term.shadow is not None:
+        out["shadow_swing"] = term.shadow.summary()
     if term.cfg.recovery:
         h = term.recover_hist.cpu().double()
         n_rec = int(h.sum())
