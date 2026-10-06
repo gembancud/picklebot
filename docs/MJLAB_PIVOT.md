@@ -143,10 +143,10 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
 
 **Teachers**
 - [x] **Walking teacher task:** move-to-spot episodes only (`move_prob` 1.0, uniform sectors), as in Drill 1. Task `Picklebot-Teacher-Move-G1`. Tests.
-- [ ] **Walking teacher training:** from the Drill 1 parent named above, chained runs under rule 9.
+- [x] **Walking teacher training:** from the Drill 1 parent named above, chained runs under rule 9.
   - Gate: arrival ≥ 95 % in every sector, median error ≤ 0.25 m, ready stance ≥ 90 %, falls ≤ 1 %.
   - If the right side still lags with no competing skill, report it as a body or stance limitation and stop for the user.
-- [ ] **Hitting teacher task:** hitting only (no move episodes), Stage 4 families plus reach_forehand from random starts, aiming targets and the recovery command, free feet. Task `Picklebot-Teacher-Hit-G1`. Tests.
+- [x] **Hitting teacher task:** hitting only (no move episodes), Stage 4 families plus reach_forehand from random starts, aiming targets and the recovery command, free feet. Task `Picklebot-Teacher-Hit-G1`. Tests.
 - [ ] **Hitting teacher training:** from `footwork-f02/model_12000` (the best hitter), chained runs under rule 9.
   - Gate: legal ≥ 85 % on every Stage 4 family from random starts.
   - Contact ≥ 92 % on the Stage 4 families.
@@ -477,3 +477,9 @@ Its measured capability envelope is published as a contract. It must hold across
   - **None of D1, D1b, D1c meets the Drill 1 thresholds.** Each follow-up traded one skill for another, which is the shared-policy trade-off that D-042 replaces.
   - **Walking-teacher parent: D1 `drill-move-d01/model_13900`** (best arrival 91.0 %, best right side, best retention).
 - 2026-10-06 — Walking and hitting teacher tasks registered (commit 81299f0, tests/test_teachers.py): Picklebot-Teacher-Move-G1 (move episodes only, uniform sectors) and Picklebot-Teacher-Hit-G1 (Stage 4 + reach_forehand, hitting only). Same inputs as the drill and footwork tasks.
+- 2026-10-06 — **Walking teacher PASSED its gate in chain run 1** (`mjlab/results/stage5-teacher-move.md`). `teacher-move-01` from D1 `model_13900`; fixed endpoint `model_15900`; dev seed 4,200,130.
+  - **Arrival 99.84 %** over 17,791 spots, every sector ≥ 98.95 %, including the right side (back-right / right / forward-right 100 / 99.96 / 100 %, which D1 had at 63 / 83 / 88 %).
+  - Median error 0.175 m; ready stance 99.97 %; 0 falls.
+  - **The right-side weakness was interference from sharing the policy with hitting**, which supports D-042. Chaining stops (rule 9).
+  - **Walking teacher:** `teacher-move-01/model_15900`.
+  - Hitting teacher task already registered and tested (`81299f0`); ticked.
