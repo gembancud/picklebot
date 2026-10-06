@@ -176,7 +176,7 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
 **Combine on the student** (RL fine-tune with a KL pull-back toward the routed teacher, coefficient decayed over the run)
 - [x] **Student follow-up S-b (rule 8, 1 of 2):** contact-weighted imitation (×10 for hit-episode states with the ball within 1 m of the paddle), continuing `student-big-01/model_1500` with β = 0; evaluate with the teachers re-scored on the same fresh dev seeds.
 - [x] **Student follow-up S-c (rule 8, 2 of 2, last):** learning rate 3e-4 → 1e-4, continuing `student-big-02/model_1500` with the S-b recipe; evaluate with the teachers on fresh shared dev seeds. If the student gate is still missed, stop for the user.
-- [ ] **Multi-task check (D-044):** in the first student fine-tune, log per-skill returns. If walking or hitting drops by more than 5 points while the other rises, add separate critic heads per skill and per-task value normalisation (PopArt-style) before continuing; otherwise tick with the numbers.
+- [x] **Multi-task check (D-044):** in the first student fine-tune, log per-skill returns. If walking or hitting drops by more than 5 points while the other rises, add separate critic heads per skill and per-task value normalisation (PopArt-style) before continuing; otherwise tick with the numbers.
 - [x] **Shadow-swing task (Drill 2).**
   - A spot plus a virtual contact point and time (the contact geometry and timing of a sampled feed family, including reach families, but no ball).
   - Rewards:
@@ -185,10 +185,11 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
     - feet set (base speed < 0.3 m/s) just before contact;
     - then recovery to the commanded spot.
   - Forehand and backhand balanced. Tests.
-- [ ] **Run S-D2:** student fine-tuned on shadow-swing plus move and hit maintenance.
+- [x] **Run S-D2:** student fine-tuned on shadow-swing plus move and hit maintenance.
   - Gate: median contact-point error ≤ 0.15 m with timing error ≤ 0.1 s on every family-geometry, including all four reach geometries.
   - Feet set ≥ 70 %; median recovery error ≤ 0.5 m; falls ≤ 1 %.
   - Walking and hitting within 5 points of the student's post-distillation results.
+- [ ] **Run S-D2b (rule 8, 1 of 2):** footwork hint (the predicted interception stance shown through the spot input in swing episodes; `Picklebot-Student-Swing-Hint-G1`), from `student-swing-d2/model_900`; evaluate against the Drill 2 gate.
 - [ ] **Reach curriculum (Drill 3).** Reach families gain a distance scale that starts just past arm reach and widens when a family's rolling legal rate exceeds 70 %, up to full range. Logged per family; evaluation always at full range. Tests.
 - [ ] **Run S-D3:** student fine-tuned on real balls (reach curriculum plus Stage 4 families from random starts, aiming, recovery), with move and shadow-swing maintenance.
 - [ ] **Review videos:** successes and misses per family, side and behind, including the move-to-swing transition. Send them to the user.
@@ -581,3 +582,8 @@ Its measured capability envelope is published as a contract. It must hold across
     - **Deviation:** timing is not a separate metric; an early or late swing shows as a larger d_min.
   - **Task `Picklebot-Student-Swing-G1`:** 25 % move, 50 % swing, 25 % real hitting; 1024-512-256 student; RegPPO.
   - **Tests:** +2. Suite 175 pass + 13 xfails.
+- 2026-10-07 — **Run S-D2 (`student-swing-d2`) done; crashed at iteration 953** on a NaN histogram index after a simulation blow-up (fixed in `107c049`); endpoint `model_900` (`mjlab/results/stage5-run-sd2.md`).
+  - **Shadow swing:** 11 of 14 families have a median contact error of 4–9 cm. Reach backhand / short / deep are 0.39 / 0.81 / 0.94 m.
+  - **Feet set** below 70 % on 9 families; recovery 1.53 m; falls 16.9 % in swing episodes.
+  - **Multi-task check:** walking 99.95 % and hitting within 0.3 points of the distilled student, so no interference and no separate critic heads are needed.
+  - **Drill 2 gate not met.** Rule 8 S-D2b: footwork hint (calibrated interception spot via the spot input), plus bug fixes (NaN-safe histograms, `blew_up` termination).
