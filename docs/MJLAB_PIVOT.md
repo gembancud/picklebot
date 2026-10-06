@@ -156,6 +156,13 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
 **Student**
 - [x] **Hitting teacher chain run 2 (rule 9):** continue `teacher-hit-01/model_14200` with no changes; evaluate with the corrected metric (D-043). Run 1 (corrected): every family ≥ 98.4 % legal except backspin 83.6 %; contact ≥ 98.9 %; retention fails only on backspin (−13.6).
 - [ ] **Hitting teacher follow-up HT-b (rule 8, 1 of 2):** backspin weight ×3 in the feed mix (`Picklebot-Teacher-Hit-Backspin-G1`), from `teacher-hit-02/model_16400`; evaluate as before on a fresh dev seed.
+- [ ] **Adaptive curriculum sampler (user request, 2026-10-06).** Automatic curriculum learning (learning-progress / prioritized-replay style: Matiisen et al. 2017, Portelas et al. 2019–2020, Jiang et al. 2021 PLR):
+  - track a rolling success rate per sampling unit (feed family, move sector, later each command);
+  - sample units in proportion to (1 − success) blended with absolute learning progress, with a floor (≥ 25 % of uniform) so mastered skills are rehearsed;
+  - optionally widen difficulty ranges (reach distance, speed) on success;
+  - sampling weights are logged every iteration; evaluation always samples uniformly.
+
+  Used for every training run after it lands (teacher follow-ups, student fine-tunes, Stage 6). It is the planned HT-c if HT-b misses backspin. Tests: weights move toward failing units, the floor holds, evaluation stays uniform.
 - [ ] **Distillation code:**
   - Student network 1024-512-256 with LayerNorm; same observations as the teachers.
   - DAgger: roll out the student (β-mixed with the teacher early on), label every state with the action of the teacher for that episode type (move → walking teacher, hit → hitting teacher), and train with MSE on the action means plus the student's own exploration std.
@@ -500,3 +507,4 @@ Its measured capability envelope is published as a contract. It must hold across
   - **Gate missed** on backspin legal and three retention families.
   - **Noted:** the fixed-start retention test may partly measure a geometry mismatch for a robot that recovers away from the fixed feed anchor.
   - **Rule 8 follow-up HT-b:** backspin ×3 in the mix.
+- 2026-10-06 — **User request:** add an automatic-curriculum (adaptive) sampler as infrastructure for all later training; it replaces hand-tuned oversampling (D1b, HT-b) from now on.
