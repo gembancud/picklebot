@@ -107,3 +107,27 @@ def test_histogram_bins_are_nan_safe():
     d = torch.tensor([float("nan"), float("inf"), -1.0, 0.1])
     b = (d.nan_to_num(nan=1e3, posinf=1e3, neginf=0.0) / D_BIN).clamp(0, D_BINS - 1).long()
     assert int(b.min()) >= 0 and int(b.max()) <= D_BINS - 1
+
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA (mujoco_warp)")
+def test_follow_hint_rewards_walking_toward_the_hint_until_the_bounce():
+    from mjlab.envs import ManagerBasedRlEnv
+
+    from picklebot_mj.feeds import FAMILY_NAMES, FeedMix
+    from picklebot_mj.tasks.move_drill import _walk_mask
+    from picklebot_mj.tasks.return_stand import return_stand_env_cfg
+
+    n = 32
+    cfg = return_stand_env_cfg(targets=True, start_box=True, recovery=True, free_feet=True, move_prob=0.25,
+                               swing_prob=0.75, swing_mix=FeedMix({f: 1.0 for f in FAMILY_NAMES}), swing_hint=True,
+                               blowup_guard=True, swing_follow_hint=True)
+    cfg.scene.num_envs = n
+    cfg.actions["ball"].compile_ball = False
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    t = env.action_manager.get_term("ball")
+    m = _walk_mask(t.drill).bool()
+    assert torch.equal(m, t.drill.move_ep | t.shadow.swing_ep)  # every episode walks before the first bounce
+    t.shadow.bounced[:] = True
+    assert torch.equal(_walk_mask(t.drill).bool(), t.drill.move_ep)  # after the bounce: swing, not walk

@@ -110,6 +110,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     swing_prob: float = 0.0
     swing_mix: FeedMix | None = None
     swing_hint: bool = False  # S-D2b: show the predicted interception spot through the spot input before the swing
+    swing_follow_hint: bool = False  # S-D2c: walking-teacher reward toward the hint until the ghost ball bounces
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -617,7 +618,7 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: b
                          recovery: bool = False, free_feet: bool = False,
                          wide_shaping: bool = False, move_prob: float = 0.0,
                          swing_prob: float = 0.0, swing_mix: FeedMix | None = None, swing_hint: bool = False,
-                         blowup_guard: bool = False) -> ManagerBasedRlEnvCfg:
+                         blowup_guard: bool = False, swing_follow_hint: bool = False) -> ManagerBasedRlEnvCfg:
     cfg = unitree_g1_flat_env_cfg(play=play)
     robot = get_g1_paddle_cfg()
     # New InitialStateCfg (the original is mjlab's shared keyframe constant). Court-local;
@@ -698,6 +699,7 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: b
         cfg.actions["ball"].swing_prob = swing_prob
         cfg.actions["ball"].swing_mix = swing_mix
         cfg.actions["ball"].swing_hint = swing_hint
+        cfg.actions["ball"].swing_follow_hint = swing_follow_hint
         cfg.rewards["shadow_swing"] = RewardTermCfg(func=shadow_swing_reward, weight=3.0 / step_dt)
     cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=5.0 / step_dt)
     if blowup_guard:  # end an episode whose base moves or spins impossibly fast (simulation blow-up, S-D2)

@@ -60,3 +60,26 @@ Timing is not measured separately: an early or late swing shows as a larger d_mi
 - **Planned S-D2c if needed:** lower entropy bonus (0.01 → 0.002) to stop std drift.
 
 Files: `stage5-sd2-swing.json`, `stage5-sd2-w-move.json`, `stage5-sd2-wref-move.json`, `stage5-sd2-h-*.json`, `stage5-sd2-href-*.json`.
+
+## Follow-up S-D2b result: no gain (`student-swing-d2b/model_2400`, swing dev seed 4,200,210, move 4,200,211, hit 4,200,212)
+Footwork hint through the spot input, warm-started from `model_900`, iterations 900 → 2,4xx at the cap. Training was healthier: std 0.81 → 0.76, falls 4.7 → 3.4, blow-ups caught by `blew_up`.
+
+| | S-D2 `model_900` | S-D2b `model_2400` |
+|---|---:|---:|
+| reach_backhand / short / deep median d_min | 0.39 / 0.81 / 0.94 m | 0.36 / 0.79 / 0.94 m |
+| Within 0.15 m, the other 11 families | 70–98 % | 69–99 % |
+| Feet set ≥ 70 % | 5 of 14 families | 5 of 14 |
+| Falls in swing episodes | 16.9 % | 16.5 % |
+| Recovery error (median) | 1.53 m | 1.53 m |
+| Walking (reference 99.88 %) | 99.95 % | 99.91 % |
+| Hitting: A/B gain (reference +0.842) | +0.846 | **+0.860**, legal 98.7–100 %, 0 falls |
+
+A diagnostic at iteration 1,200 had reach short/deep at 0.66/0.76 m, but the gain did not hold to the endpoint. **The Drill 2 gate is still missed.**
+
+**Reading:** the hint alone is not used. In swing episodes only the swing outcome is rewarded, so nothing teaches the policy that the spot input means "go there now". It walks to spots only in move episodes, where the walking-teacher reward applies.
+
+## Follow-up S-D2c (loop rule 8, 2 of 2, the last), decided before launch
+**One change: reward following the hint.** The walking-teacher tracking rewards (`move_track_lin_vel`, `move_track_yaw`: command toward the spot, facing the net) also apply in swing episodes, toward the interception hint, until the ghost ball's first bounce (`swing_follow_hint`, task `Picklebot-Student-Swing-Follow-G1`).
+- **Why this instead of the lower entropy bonus planned earlier:** S-D2b showed the bottleneck is footwork guidance, not noise. Training std was already easing.
+- **Setup:** warm-started from `student-swing-d2b/model_2400`, with the same RegPPO reference and settings.
+- **If the Drill 2 gate is still missed, the loop stops for the user.**

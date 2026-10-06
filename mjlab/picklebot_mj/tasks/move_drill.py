@@ -221,6 +221,16 @@ def _drill(env) -> MoveDrill:
     return env.action_manager.get_term("ball").drill
 
 
+def _walk_mask(dr) -> torch.Tensor:
+    """Episodes where the walking teacher reward applies: move episodes, plus (S-D2c, `swing_follow_hint`) swing
+    episodes before the ghost ball's window opens, so the robot is rewarded for walking to the interception hint."""
+    m = dr.move_ep
+    sh = dr.t.shadow
+    if sh is not None and getattr(dr.t.cfg, "swing_follow_hint", False):
+        m = m | (sh.swing_ep & ~sh.bounced & ~sh.closed)
+    return m.float()
+
+
 def move_track_lin_vel(env, std: float = 0.5) -> torch.Tensor:
     """mjlab track_linear_velocity against the internal spot command (xy), move episodes only."""
     dr = _drill(env)
@@ -228,7 +238,7 @@ def move_track_lin_vel(env, std: float = 0.5) -> torch.Tensor:
         return torch.zeros(env.num_envs, device=env.device)
     v_cmd, _ = dr.command()
     v = dr.t._entity.data.root_link_lin_vel_b[:, :2]
-    return torch.exp(-((v_cmd - v) ** 2).sum(-1) / std ** 2) * dr.move_ep.float()
+    return torch.exp(-((v_cmd - v) ** 2).sum(-1) / std ** 2) * _walk_mask(dr)
 
 
 def move_track_yaw(env, std: float = math.sqrt(0.5)) -> torch.Tensor:
@@ -239,7 +249,7 @@ def move_track_yaw(env, std: float = math.sqrt(0.5)) -> torch.Tensor:
     _, wz = dr.command()
     w = dr.t._entity.data.root_link_ang_vel_b
     err = (wz - w[:, 2]) ** 2 + (w[:, :2] ** 2).sum(-1)
-    return torch.exp(-err / std ** 2) * dr.move_ep.float()
+    return torch.exp(-err / std ** 2) * _walk_mask(dr)
 
 
 def move_arrival(env) -> torch.Tensor:

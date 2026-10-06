@@ -192,3 +192,15 @@ register_mjlab_task(
     play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_SWH), HIT_TEACHER_MIX),
     rl_cfg=_student_finetune_rl_cfg(),
 )
+
+
+# Drill 2 follow-up S-D2c (stage5-run-sd2.md): the walking-teacher tracking rewards also apply in swing episodes,
+# toward the interception hint, until the ghost ball bounces (S-D2b showed the hint alone is ignored).
+TASK_STUDENT_SWING_FOLLOW = "Picklebot-Student-Swing-Follow-G1"
+_SWF = dict(_SWH, swing_follow_hint=True)
+register_mjlab_task(
+    task_id=TASK_STUDENT_SWING_FOLLOW,
+    env_cfg=_with_mix(return_stand_env_cfg(**_SWF), HIT_TEACHER_MIX),
+    play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_SWF), HIT_TEACHER_MIX),
+    rl_cfg=_student_finetune_rl_cfg(),
+)

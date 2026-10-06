@@ -189,7 +189,8 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
   - Gate: median contact-point error ≤ 0.15 m with timing error ≤ 0.1 s on every family-geometry, including all four reach geometries.
   - Feet set ≥ 70 %; median recovery error ≤ 0.5 m; falls ≤ 1 %.
   - Walking and hitting within 5 points of the student's post-distillation results.
-- [ ] **Run S-D2b (rule 8, 1 of 2):** footwork hint (the predicted interception stance shown through the spot input in swing episodes; `Picklebot-Student-Swing-Hint-G1`), from `student-swing-d2/model_900`; evaluate against the Drill 2 gate.
+- [x] **Run S-D2b (rule 8, 1 of 2):** footwork hint (the predicted interception stance shown through the spot input in swing episodes; `Picklebot-Student-Swing-Hint-G1`), from `student-swing-d2/model_900`; evaluate against the Drill 2 gate.
+- [ ] **Run S-D2c (rule 8, 2 of 2, last):** walking-teacher rewards toward the interception hint in swing episodes until the bounce (), from . If the Drill 2 gate is still missed, stop for the user.
 - [ ] **Reach curriculum (Drill 3).** Reach families gain a distance scale that starts just past arm reach and widens when a family's rolling legal rate exceeds 70 %, up to full range. Logged per family; evaluation always at full range. Tests.
 - [ ] **Run S-D3:** student fine-tuned on real balls (reach curriculum plus Stage 4 families from random starts, aiming, recovery), with move and shadow-swing maintenance.
 - [ ] **Review videos:** successes and misses per family, side and behind, including the move-to-swing transition. Send them to the user.
@@ -587,3 +588,4 @@ Its measured capability envelope is published as a contract. It must hold across
   - **Feet set** below 70 % on 9 families; recovery 1.53 m; falls 16.9 % in swing episodes.
   - **Multi-task check:** walking 99.95 % and hitting within 0.3 points of the distilled student, so no interference and no separate critic heads are needed.
   - **Drill 2 gate not met.** Rule 8 S-D2b: footwork hint (calibrated interception spot via the spot input), plus bug fixes (NaN-safe histograms, `blew_up` termination).
+- 2026-10-07 — **Run S-D2b** (): no gain on reach backhand/short/deep (0.36/0.79/0.94 m), falls 16.5 %, recovery 1.53 m, feet set unchanged. Hitting best yet (A/B gain +0.860), walking 99.91 %. **The hint alone is ignored**, because nothing rewards following it. **Rule 8 S-D2c (last):** reward following the hint (walking-teacher rewards toward it until the bounce); this replaces the lower-entropy plan, with the reason in .
