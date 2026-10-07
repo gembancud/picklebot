@@ -1264,3 +1264,22 @@ Evidence: S-D3 and S-D3b (`stage5-run-sd3.md`, `stage5-gate.md`):
 Trade-offs: Stage 5B proceeds from a parent that misses part of the Stage 5 gate. Its "Stage 5 gate still met" gate becomes "no regression beyond 5 points vs the provisional student, and the Stage 5 gate re-checked".
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5 gate, Open questions, Stage 5B.
+
+### D-047 — LAFAN1 footwork data: retarget from the official Ubisoft release (non-commercial)
+
+- Date: 2026-10-08
+- Status: Accepted (user: "yes go with option 1, its non-commercial")
+- Amends: D-046 (approved download list)
+
+Decision: Unitree's retargeted LAFAN1 dataset on Hugging Face no longer exists (the API's 401 was a not-found). Instead:
+- Download the original LAFAN1 BVH release, `lafan1.zip` (github.com/ubisoft/ubisoft-laforge-animation-dataset, 144 MB, CC BY-NC-ND 4.0).
+- Retarget it to the paddle G1 with GMR's LAFAN1 -> G1 mapping and this project's pipeline: capsule self-collision avoidance, warm start, grounding, quality filter.
+- Use it as general footwork style data (walks, runs, sidesteps, direction changes) for the tracking teacher and the style prior.
+
+The user confirmed the project is non-commercial research. LAFAN1 and everything derived from it (retargeted clips, motion files) stay in the git-ignored `mjlab/artifacts/motion/` and are never committed or pushed. A policy trained partly on it carries the same non-commercial restriction.
+
+Rejected:
+- the third-party Hugging Face re-upload of Unitree's files (redistribution of a no-redistribution dataset);
+- ember-lab-berkeley/LAFAN-G1 (its licence claim conflicts with the source, and it is in a different format).
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B (footwork data step).
