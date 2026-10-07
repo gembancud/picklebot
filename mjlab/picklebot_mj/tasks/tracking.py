@@ -66,15 +66,23 @@ class MultiClipMotionCommand(MotionCommand):
     def _end_of(self, t: torch.Tensor) -> torch.Tensor:
         return self.clip_ends[self.clip_of(t)]
 
+    def start_clips(self, env_ids: torch.Tensor, clip_ids: torch.Tensor):
+        """Put envs at the first frame of the given clips, robot on the reference (play / per-clip evaluation)."""
+        self.time_steps[env_ids] = self.clip_starts[clip_ids]
+        self._write_reference_state_to_sim(
+            env_ids, self.body_pos_w[env_ids, 0].clone(), self.body_quat_w[env_ids, 0].clone(),
+            self.body_lin_vel_w[env_ids, 0].clone(), self.body_ang_vel_w[env_ids, 0].clone(),
+            self.joint_pos[env_ids].clone(), self.joint_vel[env_ids].clone())
+        self.clip_index[env_ids] = clip_ids
+        self.clip_end[env_ids] = self.clip_ends[clip_ids]
+        self._pending_forward = True
+
     def _resample_command(self, env_ids: torch.Tensor):
         super()._resample_command(env_ids)
         if self.cfg.sampling_mode == "start" and self.cfg.play_clip is not None:
-            # Play/eval: start a named clip from its first frame (no randomisation in play mode).
-            self.time_steps[env_ids] = self.clip_starts[self.cfg.play_clip]
-            self._write_reference_state_to_sim(
-                env_ids, self.body_pos_w[env_ids, 0].clone(), self.body_quat_w[env_ids, 0].clone(),
-                self.body_lin_vel_w[env_ids, 0].clone(), self.body_ang_vel_w[env_ids, 0].clone(),
-                self.joint_pos[env_ids].clone(), self.joint_vel[env_ids].clone())
+            # Play: start a named clip from its first frame (no randomisation in play mode).
+            self.start_clips(env_ids, torch.full_like(env_ids, self.cfg.play_clip))
+            return
         # A sample on a clip's last frame would play straight into the next clip; step it back one frame.
         last = self.time_steps[env_ids] >= self._end_of(self.time_steps[env_ids]) - 1
         self.time_steps[env_ids] = torch.where(last, self.time_steps[env_ids] - 1, self.time_steps[env_ids])
