@@ -60,3 +60,35 @@ def test_clip_csv_layout_grounding_and_checks(tmp_path):
         assert wrist not in rep["joints_at_limit"]  # hands tracked by position only
     hum = np.load(tmp_path / "astrejos_Derecha_human.npz")
     assert hum["pos"].shape == (100, len(tr.MAP), 3)
+
+
+@pytest.mark.skipif(not tr.CAPSULES_JSON.exists(), reason="run scripts/motion/export_collision_geoms.py first")
+def test_ik_uses_the_paddle_g1_capsules_and_avoids_self_collision(tmp_path):
+    import subprocess
+
+    import mujoco as mj
+
+    xml = tr.capsule_model_xml(tmp_path / "g1_capsules.xml")
+    m = mj.MjModel.from_xml_path(str(xml))
+    caps = [g for g in range(m.ngeom) if m.geom_contype[g]]
+    assert caps and all((mj.mj_id2name(m, mj.mjtObj.mjOBJ_GEOM, g) or "").startswith("cap_") for g in caps)
+    assert m.body("paddle").id > 0
+    subprocess.run([sys.executable, str(ROOT / "scripts/motion/tennis_retarget.py"), str(BVH), "--max-seconds", "6",
+                    "--out", str(tmp_path)], check=True, capture_output=True, cwd=ROOT)
+    csv = np.loadtxt(tmp_path / "astrejos_Derecha.csv", delimiter=",")
+    d = mj.MjData(m)
+    arm = {m.body(b).id for b in tr.ARM_L + tr.ARM_R + ["paddle"]}
+    held = {m.body("paddle").id} | {m.body(b).id for b in tr.ARM_R}  # the paddle sits in the right hand
+    deep = 0
+    for row in csv:
+        d.qpos[:3], d.qpos[3:7], d.qpos[7:] = row[:3], row[[6, 3, 4, 5]], row[7:]
+        mj.mj_kinematics(m, d)
+        mj.mj_collision(m, d)
+        for c in d.contact[: d.ncon]:
+            b1, b2 = m.geom_bodyid[c.geom1], m.geom_bodyid[c.geom2]
+            if {b1, b2} <= held:
+                continue
+            if (b1 in arm or b2 in arm) and -c.dist > 0.02:
+                deep += 1
+                break
+    assert deep / len(csv) < 0.02  # frames with an arm/paddle overlap deeper than 2 cm

@@ -8,6 +8,6 @@ mkdir -p artifacts/videos/stage5b
 for c in Derecha:forehand Reves:backhand VDerecha:forehand_volley VReves:backhand_volley Servicio:serve Remate:smash; do
   src="${c%%:*}"; name="${c##*:}"
   MUJOCO_GL=egl python scripts/motion/render_retarget.py "$DIR/${P}_${src}.csv" \
-    "artifacts/videos/stage5b/retarget-${name}-${VIEW}.mp4" --view "$VIEW" --around-swing 4 --n-stills 8 \
+    "artifacts/videos/stage5b/retarget${TAG:-}-${name}-${VIEW}.mp4" --view "$VIEW" --around-swing 4 --n-stills 8 \
     --stills artifacts/videos/stage5b/stills 2>&1 | tail -1
 done

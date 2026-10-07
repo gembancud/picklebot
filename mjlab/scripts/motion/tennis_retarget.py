@@ -262,11 +262,64 @@ def warm_start(rt, frame, iters=50):
         rt.retarget(frame)
 
 
-def make_retargeter(rest, cfg_path):
+# Self-collision avoidance in the IK (stage5b-penetration.md): the human's arms pass closer to the body and to each
+# other than the bulkier G1 links allow (hand on hand at the grip, hands against the hips, elbows into the torso).
+ARM_L = ["left_elbow_link", "left_wrist_roll_link", "left_wrist_pitch_link", "left_wrist_yaw_link"]
+ARM_R = [b.replace("left", "right") for b in ARM_L]
+BODY = ["pelvis", "torso_link", "left_hip_roll_link", "left_hip_yaw_link", "left_knee_link", "right_hip_roll_link",
+        "right_hip_yaw_link", "right_knee_link"]
+COLLISION_MIN_DIST = 0.01
+
+
+CAPSULES_JSON = Path(__file__).resolve().parents[2] / "artifacts" / "motion" / "g1_collision_geoms.json"
+
+
+def capsule_model_xml(out_path):
+    """GMR's G1 with its mesh collisions off and the paddle G1's collision geoms (and paddle face) added.
+
+    The geoms come from export_collision_geoms.py (mjlab's capsules, identical body frames), so the IK avoids the
+    same shapes the physics will collide.
+    """
+    ref = json.loads(CAPSULES_JSON.read_text())
+    spec = mj.MjSpec.from_file(str(G1_XML))
+    spec.meshdir = str(Path(G1_XML).parent / spec.meshdir) if spec.meshdir else str(Path(G1_XML).parent)
+    for g in spec.geoms:
+        g.contype = g.conaffinity = 0
+    pad = ref["paddle"]
+    paddle = spec.body(pad["parent"]).add_body(name="paddle", pos=pad["pos"], quat=pad["quat"])
+    for g in ref["geoms"]:
+        body = paddle if g["body"] == "paddle" else spec.body(g["body"])
+        body.add_geom(name="cap_" + g["name"], type=mj.mjtGeom(g["type"]), size=g["size"], pos=g["pos"],
+                      quat=g["quat"], contype=1, conaffinity=1, group=3, rgba=[1, 0.5, 0, 0.3])
+    for b1, b2 in ref.get("exclude", []):  # the same body-pair exclusions as the paddle G1 (e.g. elbow-wrist)
+        spec.add_exclude(bodyname1=b1, bodyname2=b2)
+    Path(out_path).write_text(spec.to_xml())
+    return out_path
+
+
+def collision_limit(model):
+    def geoms(bodies):
+        ids = {model.body(b).id for b in bodies}
+        return [g for g in range(model.ngeom) if model.geom_bodyid[g] in ids and model.geom_contype[g]]
+
+    pairs = [(geoms(ARM_L), geoms(BODY)), (geoms(ARM_R), geoms(BODY)), (geoms(ARM_L), geoms(ARM_R)),
+             (geoms(["paddle"]), geoms(BODY + ARM_L))]
+    return mink.CollisionAvoidanceLimit(model, pairs, minimum_distance_from_collisions=COLLISION_MIN_DIST,
+                                        collision_detection_distance=0.05)
+
+
+def make_retargeter(rest, cfg_path, avoid_collisions=True):
     cfg_path = Path(cfg_path)
     cfg_path.write_text(json.dumps(build_config(rest), indent=1))
     gmr_params.IK_CONFIG_DICT["bvh_tennis"] = {"unitree_g1": cfg_path}
-    return GMR(src_human="bvh_tennis", tgt_robot="unitree_g1", actual_human_height=None, verbose=False)  # absolute
+    if avoid_collisions:
+        gmr_params.ROBOT_XML_DICT["unitree_g1"] = capsule_model_xml(cfg_path.with_name("g1_capsules.xml"))
+    else:
+        gmr_params.ROBOT_XML_DICT["unitree_g1"] = G1_XML
+    rt = GMR(src_human="bvh_tennis", tgt_robot="unitree_g1", actual_human_height=None, verbose=False)  # absolute
+    if avoid_collisions:
+        rt.ik_limits.append(collision_limit(rt.model))
+    return rt
 
 
 def retarget_rest(path, cfg_path):
@@ -287,6 +340,7 @@ def main():
     ap.add_argument("--out", default="artifacts/motion/retargeted")
     ap.add_argument("--fps", type=int, default=50, help="output rate (source is 100 Hz; mjlab tracking uses 50)")
     ap.add_argument("--max-seconds", type=float, default=None)
+    ap.add_argument("--no-collision-avoidance", action="store_true")
     args = ap.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -307,7 +361,7 @@ def retarget_clip(path, out, args):
         frames = frames[:: src_fps // args.fps]
         if args.max_seconds:
             frames = frames[: int(args.max_seconds * args.fps)]
-        rt = make_retargeter(rest, out / "bvh_tennis_to_g1.json")
+        rt = make_retargeter(rest, out / "bvh_tennis_to_g1.json", not args.no_collision_avoidance)
         qs, errs, human, pos_err = [], [], [], []
         bones = list(MAP_BONES)
         warm_start(rt, add_aliases(frames[0]))
