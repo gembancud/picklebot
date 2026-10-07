@@ -190,7 +190,7 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
   - Feet set ≥ 70 %; median recovery error ≤ 0.5 m; falls ≤ 1 %.
   - Walking and hitting within 5 points of the student's post-distillation results.
 - [x] **Run S-D2b (rule 8, 1 of 2):** footwork hint (the predicted interception stance shown through the spot input in swing episodes; `Picklebot-Student-Swing-Hint-G1`), from `student-swing-d2/model_900`; evaluate against the Drill 2 gate.
-- [ ] **Run S-D2c (rule 8, 2 of 2, last):** walking-teacher rewards toward the interception hint in swing episodes until the bounce (`Picklebot-Student-Swing-Follow-G1`), from `student-swing-d2b/model_2400`. If the Drill 2 gate is still missed, stop for the user.
+- [x] **Run S-D2c (rule 8, 2 of 2, last):** walking-teacher rewards toward the interception hint in swing episodes until the bounce (`Picklebot-Student-Swing-Follow-G1`), from `student-swing-d2b/model_2400`. If the Drill 2 gate is still missed, stop for the user.
 - [ ] **Reach curriculum (Drill 3).** Reach families gain a distance scale that starts just past arm reach and widens when a family's rolling legal rate exceeds 70 %, up to full range. Logged per family; evaluation always at full range. Tests.
 - [ ] **Run S-D3:** student fine-tuned on real balls (reach curriculum plus Stage 4 families from random starts, aiming, recovery), with move and shadow-swing maintenance.
 - [ ] **Review videos:** successes and misses per family, side and behind, including the move-to-swing transition. Send them to the user.
@@ -275,6 +275,14 @@ Its measured capability envelope is published as a contract. It must hold across
   - Self-play in full games under the ported doubles rules.
 
 ## Open questions
+- **BLOCKING (2026-10-07): Drill 2 gate not met after rule 8's two follow-ups** (`mjlab/results/stage5-run-sd2.md`).
+  - **What works:** the student swings accurately (median 4–9 cm) on 11 of 14 families, and walking and hitting are fully intact.
+  - **What is stuck in S-D2 / S-D2b / S-D2c:** reach backhand / short / deep stay at about 0.36 / 0.79 / 0.91 m, feet set is ≥ 70 % on only 5 families, falls are about 15 % in swing episodes, and recovery is 1.53 m.
+  - **Options:**
+    1. Accept Drill 2 with documented deviations and go to Drill 3, whose near-to-far reach curriculum targets exactly these balls.
+    2. Diagnose first from the videos (`artifacts/videos/stage5/sd2c-*`).
+    3. Bring Stage 5B motion priors (human footwork clips) forward.
+    4. Revisit the feet-set and recovery thresholds for ghost-ball swings.
 - ~~**BLOCKING (2026-10-03): Stage 4 gate not met (narrowly).**~~ **Resolved 2026-10-05: the user accepted the deviations and moved footwork forward → D-040.** `aim-all-c01/model_7600` misses three family thresholds by under 1 point each (wide 84.6 %, backhand 84.4 % vs 85 %; high 69.2 % vs 70 %). Aiming, retention and the other seven families pass. Evidence and options: `mjlab/results/stage4-gate.md`. Choose: (1) run D, a fixed ≤ 2 h continuation, then re-test on a fresh dev seed; (2) accept the deviations and go to Stage 5; (3) a contact-focused change first; (4) revise thresholds (not recommended).
 - ~~**BLOCKING (2026-10-02): how should ball contacts be simulated?**~~ **Resolved 2026-10-02: the user chose A → D-039.** Native MuJoCo soft contacts give impact-phase-dependent restitution: COR 0.1–2.9 at dt 1–2 ms, and still ±0.05 at 0.1 ms. At 5 ms the ball tunnels through the net. Evidence: `mjlab/results/stage1-bounce.md`. Options:
   - **A. Analytic ball model (recommended).** MuJoCo collisions for the ball are disabled. Flight and impacts (court plane, net, paddle) are integrated in batched torch on the GPU with sub-stepping and swept collision tests, using an explicit restitution/friction/spin impulse model, as in Unity's contact surrogates. The paddle pose and velocity are read from MuJoCo each step, and the reaction impulse goes back to the hand via `xfrc_applied`. Ball–robot-body touches are detected as faults. The robot keeps dt 5 ms and throughput.
@@ -592,3 +600,9 @@ Its measured capability envelope is published as a contract. It must hold across
   - Hitting best yet (A/B gain +0.860); walking 99.91 %.
   - **The hint alone is ignored**, because nothing rewards following it.
   - **Rule 8 S-D2c (last):** reward following the hint (walking-teacher rewards toward it until the bounce). This replaces the lower-entropy plan; the reason is in `mjlab/results/stage5-run-sd2.md`.
+- 2026-10-07 — **Run S-D2c** (`student-swing-d2c/model_3900`, walking rewards toward the interception hint before the bounce):
+  - reach backhand / short / deep 0.36 / 0.79 / 0.91 m;
+  - falls 14.8 %, recovery 1.53 m, feet set unchanged;
+  - walking 99.97 %, hitting A/B gain +0.851.
+
+  **Drill 2 gate not met after both rule 8 follow-ups; loop stopped for the user** (Open questions). Videos of reach swings are rendering for the decision.

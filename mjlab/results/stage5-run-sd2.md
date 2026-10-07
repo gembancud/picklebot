@@ -83,3 +83,27 @@ A diagnostic at iteration 1,200 had reach short/deep at 0.66/0.76 m, but the gai
 - **Why this instead of the lower entropy bonus planned earlier:** S-D2b showed the bottleneck is footwork guidance, not noise. Training std was already easing.
 - **Setup:** warm-started from `student-swing-d2b/model_2400`, with the same RegPPO reference and settings.
 - **If the Drill 2 gate is still missed, the loop stops for the user.**
+
+## Follow-up S-D2c result: Drill 2 gate NOT MET after rule 8's two follow-ups; the loop stops for the user
+`student-swing-d2c/model_3900` (walking rewards toward the hint before the bounce); swing dev seed 4,200,220, move 4,200,221, hit 4,200,222.
+
+| | S-D2 `model_900` | S-D2b `model_2400` | S-D2c `model_3900` |
+|---|---:|---:|---:|
+| reach_backhand / short / deep median d_min | 0.39 / 0.81 / 0.94 m | 0.36 / 0.79 / 0.94 m | 0.36 / 0.79 / 0.91 m |
+| Within 0.15 m, the other 11 families | 70–98 % | 69–99 % | 75–99 % |
+| Feet set ≥ 70 % (families) | 5 of 14 | 5 of 14 | 5 of 14 |
+| Falls in swing episodes | 16.9 % | 16.5 % | 14.8 % |
+| Recovery error (median) | 1.53 m | 1.53 m | 1.53 m |
+| Walking (reference ≈ 99.9 %) | 99.95 % | 99.91 % | 99.97 % |
+| Hitting A/B gain (reference ≈ +0.84) | +0.846 | +0.860 | +0.851, legal 98.3–100 %, 0 falls |
+
+**What holds across all three runs:**
+- **No forgetting:** walking and real hitting are fully intact.
+- **Accurate swings** (median 4–9 cm) on every family the robot already reaches.
+- **No change on reach backhand, short and deep.** Neither showing the interception stance nor rewarding walking to it moved them at the endpoint (mid-run diagnostics improved briefly, then regressed).
+- **Feet set, recovery and falls barely change.**
+
+**Open questions for the user** (also in `docs/MJLAB_PIVOT.md` → Open questions):
+1. Whether reach short/deep/backhand need a curriculum (Drill 3's near-to-far widening), motion priors (Stage 5B footwork clips), or a diagnosis from the videos first.
+2. Whether the Drill 2 feet-set (≥ 70 %) and recovery (≤ 0.5 m) thresholds suit ghost-ball swings. Real players often hit on the move for wide and fast balls. The recovery spot here is the baseline centre, measured 1.5 s after the window closes.
+3. Whether to accept Drill 2 with documented deviations and continue to Drill 3.
