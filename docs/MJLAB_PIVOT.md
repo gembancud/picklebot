@@ -208,7 +208,7 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
 
 ## Stage 5B — human motion priors (D-044)
 Natural strokes and footwork from human motion data instead of reward shaping alone. This is how current humanoid systems get natural movement: motion tracking (DeepMimic → PHC/OmniH2O/BeyondMimic) and adversarial motion priors (AMP, ASE). It builds on mjlab's own G1 motion-tracking task (`Mjlab-Tracking-Flat-Unitree-G1`, BeyondMimic-style). Tennis data is acceptable (user, 2026-10-06); pickleball data is preferred where available. Parent: the accepted Stage 5 student.
-- [ ] **Motion-data survey (research only, no downloads).** Find candidate open datasets:
+- [x] **Motion-data survey (research only, no downloads).** Find candidate open datasets:
   - tennis or pickleball strokes and footwork: forehand, backhand, volley/dink, serve, split-step, shuffle, crossover, recovery;
   - sources: mocap (e.g. AMASS subsets, CMU), video-derived sets (e.g. Motion-X, broadcast-tennis work such as Zhang et al. 2023), and retargeted G1 sets (e.g. LAFAN1 → G1);
   - for each: licence, size, format, skeleton, clip list.
@@ -617,3 +617,4 @@ Its measured capability envelope is published as a contract. It must hold across
   - **Ball-lost margin** behind the baseline is configurable (Drill 3: 2.5 m).
   - **Task mix:** 60 % real hitting over the Stage 4 + reach families (adaptive family mix), 15 % move, 25 % ghost swings (v2 hint, follow reward), blow-up guard.
   - **Tests:** +16. Suite 208 pass + 13 xfails.
+- 2026-10-07 - Motion-data survey done early, in parallel with Drill 3 at the user request (mjlab/results/stage5b-motion-data.md; research only, nothing downloaded). No pickleball dataset exists. Best open racket mocap: Tennis-MoCap (CC BY-SA 3.0, 100 BVH: forehand, backhand, both volleys, serve, smash). Generic locomotion: LAFAN1 retargeted to G1 (non-commercial, no redistribution). Retargeter: GMR (MIT). mjlab tracking expects one 50 Hz npz per motion (csv_to_npz.py). AMP is not in rsl_rl 5.4.2. Waiting for the user to approve the downloads (rule 10).
