@@ -1209,3 +1209,28 @@ Trade-offs:
 Migration and compatibility: Stage 5 proceeds as planned (D-042) and is not interrupted. Stage 5B follows the Stage 5 gate, and Stage 6 follows Stage 5B. All earlier artefacts are kept.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md loop rule 10, Stage 5 fine-tunes, new Stage 5B, Stage 6 (domain randomisation step), Stage 8 note.
+
+### D-045 — Accept Drill 2 with deviations; diagnose from videos, then the Drill 3 reach curriculum
+
+- Date: 2026-10-07
+- Status: Accepted (user-directed: "do 2 and 1 together")
+- Amends: D-041/D-042 (Stage 5 Drill 2 gate)
+
+Decision: Drill 2 is accepted with documented deviations.
+
+The student (`student-swing-d2c/model_3900`):
+- swings accurately on 11 of 14 families;
+- keeps walking and hitting intact;
+- does not reach the reach backhand / short / deep balls;
+- misses the feet-set, recovery and fall thresholds.
+
+Next steps:
+- Videos of the reach swings are reviewed first, and anything they show feeds the Drill 3 design.
+- Drill 3 (real balls with a near-to-far reach curriculum) starts from `student-swing-d2c/model_3900`.
+- The deviations are re-checked at the unchanged Stage 5 gate.
+
+Evidence: `mjlab/results/stage5-run-sd2.md`. Across S-D2, S-D2b (interception hint) and S-D2c (reward for following the hint), the reach families stayed at 0.36–0.39 / 0.79–0.81 / 0.91–0.94 m median distance with no forgetting elsewhere. A near-to-far curriculum is the standard remedy for targets too far to discover by exploration.
+
+Trade-offs: Drill 2's thresholds are not met. The risk moves to Drill 3 and the Stage 5 gate. If Drill 3 also stalls on these families, Stage 5B motion priors and the feet-set/recovery thresholds are the next options.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5 (Drill 2 result, S-D2c video step, Drill 3).

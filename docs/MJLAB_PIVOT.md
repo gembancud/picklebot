@@ -191,6 +191,8 @@ Each skill is trained by a **specialist teacher** with only its own rewards, so 
   - Walking and hitting within 5 points of the student's post-distillation results.
 - [x] **Run S-D2b (rule 8, 1 of 2):** footwork hint (the predicted interception stance shown through the spot input in swing episodes; `Picklebot-Student-Swing-Hint-G1`), from `student-swing-d2/model_900`; evaluate against the Drill 2 gate.
 - [x] **Run S-D2c (rule 8, 2 of 2, last):** walking-teacher rewards toward the interception hint in swing episodes until the bounce (`Picklebot-Student-Swing-Follow-G1`), from `student-swing-d2b/model_2400`. If the Drill 2 gate is still missed, stop for the user.
+- [x] **Drill 2 result: accepted with documented deviations (user, 2026-10-07, D-045).** `student-swing-d2c/model_3900` swings within 4–9 cm (median) on 11 of 14 families, and walking and hitting are intact. Missed: reach backhand / short / deep (0.36 / 0.79 / 0.91 m), feet set (5 of 14 families ≥ 70 %), falls about 15 % in swing episodes, recovery 1.53 m. These carry into Drill 3, whose near-to-far reach curriculum targets them, and are re-checked at the Stage 5 gate.
+- [ ] **S-D2c video diagnosis:** finish rendering `artifacts/videos/stage5/sd2c-<family>-<view>.mp4` (reach short, deep, backhand and easy forehand, side and behind). Watch stills and describe what the robot does on reach balls (wrong direction, too slow, falls, late swing). Send the clips to the user. Write `mjlab/results/stage5-sd2c-videos.md`, and record anything that should change the Drill 3 design before it is built (e.g. the starting reach distance or the time available).
 - [ ] **Reach curriculum (Drill 3).** Reach families gain a distance scale that starts just past arm reach and widens when a family's rolling legal rate exceeds 70 %, up to full range. Logged per family; evaluation always at full range. Tests.
 - [ ] **Run S-D3:** student fine-tuned on real balls (reach curriculum plus Stage 4 families from random starts, aiming, recovery), with move and shadow-swing maintenance.
 - [ ] **Review videos:** successes and misses per family, side and behind, including the move-to-swing transition. Send them to the user.
@@ -275,7 +277,7 @@ Its measured capability envelope is published as a contract. It must hold across
   - Self-play in full games under the ported doubles rules.
 
 ## Open questions
-- **BLOCKING (2026-10-07): Drill 2 gate not met after rule 8's two follow-ups** (`mjlab/results/stage5-run-sd2.md`).
+- ~~**BLOCKING (2026-10-07): Drill 2 gate not met after rule 8's two follow-ups**~~ **Resolved 2026-10-07: the user chose options 2 + 1 (videos, then Drill 3) → D-045.** (`mjlab/results/stage5-run-sd2.md`).
   - **What works:** the student swings accurately (median 4–9 cm) on 11 of 14 families, and walking and hitting are fully intact.
   - **What is stuck in S-D2 / S-D2b / S-D2c:** reach backhand / short / deep stay at about 0.36 / 0.79 / 0.91 m, feet set is ≥ 70 % on only 5 families, falls are about 15 % in swing episodes, and recovery is 1.53 m.
   - **Options:**
@@ -606,3 +608,4 @@ Its measured capability envelope is published as a contract. It must hold across
   - walking 99.97 %, hitting A/B gain +0.851.
 
   **Drill 2 gate not met after both rule 8 follow-ups; loop stopped for the user** (Open questions). Videos of reach swings are rendering for the decision.
+- 2026-10-07 — **User decision (D-045):** diagnose with the S-D2c videos, then continue to Drill 3. Drill 2 is accepted with its deviations documented; Drill 3 starts from `student-swing-d2c/model_3900`.
