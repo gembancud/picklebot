@@ -1234,3 +1234,33 @@ Evidence: `mjlab/results/stage5-run-sd2.md`. Across S-D2, S-D2b (interception hi
 Trade-offs: Drill 2's thresholds are not met. The risk moves to Drill 3 and the Stage 5 gate. If Drill 3 also stalls on these families, Stage 5B motion priors and the feet-set/recovery thresholds are the next options.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5 (Drill 2 result, S-D2c video step, Drill 3).
+
+### D-046 — Provisional Stage 5 student; start Stage 5B motion priors (downloads approved)
+
+- Date: 2026-10-07
+- Status: Accepted (user: "sure lets do what you recommend", replying to option 1 of `mjlab/results/stage5-gate.md`)
+- Amends: D-042/D-045 (Stage 5 gate), D-044 (Stage 5B parent)
+
+Decision: the Stage 5 gate is not met. The S-D3b student (`2026-10-07_11-51-32_student-drill3-d3b/model_6500`) becomes the **provisional** Stage 5 student, with documented deviations:
+- reach backhand / short / deep legal 22 / 2 / 2 %;
+- falls 5.7-6.9 % per robot episode;
+- median recovery 1.03 m;
+- fixed-start retention low -6.1 and fast -7.3 points vs `model_7600`.
+
+Stage 5B starts now with it as the parent. The Stage 5 gate thresholds are unchanged and are re-checked after Stage 5B. Rule 8 follow-up 2 was not run.
+
+Approved downloads (rule 10):
+- **Tennis-MoCap BVH** (github.com/jdpulgarin/Tennis-MoCap, ~209 MB, CC BY-SA 3.0).
+- **LAFAN1 retargeted to G1, `g1/*.csv`** (Unitree's Hugging Face dataset, ~90 MB). Derived from CC BY-NC-ND 4.0, so non-commercial research only and never redistributed: kept under the git-ignored `mjlab/artifacts/motion/` and never committed or pushed. The user approved this licence condition by accepting the recommendation.
+- **GMR retargeter** (github.com/YanjieZe/GMR, ~276 MB + Python dependencies, MIT), installed into the project venv only.
+
+Phase B data (GVHMR, SMPL-X) and AdaPT are not approved.
+
+Evidence: S-D3 and S-D3b (`stage5-run-sd3.md`, `stage5-gate.md`):
+- A gentler curriculum start and a 1.3-1.7x sampling share did not move the reach families.
+- Contact on deep balls is about 2 %.
+- The videos show lunging, tipping back and no balanced crossover. This is a movement-quality gap, which Stage 5B targets.
+
+Trade-offs: Stage 5B proceeds from a parent that misses part of the Stage 5 gate. Its "Stage 5 gate still met" gate becomes "no regression beyond 5 points vs the provisional student, and the Stage 5 gate re-checked".
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5 gate, Open questions, Stage 5B.
