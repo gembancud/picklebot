@@ -62,6 +62,7 @@ def main():
                     help="drill tasks: fraction of move-to-spot episodes (1 = move drill only, 0 = hitting only)")
     ap.add_argument("--swing-prob", type=float, default=None, help="drill tasks: fraction of shadow-swing episodes")
     ap.add_argument("--swing-families", default=None, help="comma-separated families for shadow-swing (ghost) feeds")
+    ap.add_argument("--no-hint", action="store_true", help="real-ball episodes without the stance hint (spot input = recovery)")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
@@ -74,6 +75,8 @@ def main():
         cfg.actions["ball"].move_prob = args.move_prob
     if args.swing_prob is not None:
         cfg.actions["ball"].swing_prob = args.swing_prob
+    if args.no_hint:
+        cfg.actions["ball"].hit_hint = False
     if args.swing_families:
         cfg.actions["ball"].swing_mix = FeedMix({f: 1.0 for f in args.swing_families.split(",")})
     cfg.actions["ball"].move_sector_weights = None  # evaluation samples spot directions uniformly

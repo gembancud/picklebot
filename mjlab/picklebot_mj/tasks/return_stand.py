@@ -35,7 +35,7 @@ from picklebot_mj import court
 from picklebot_mj.ball import BALL_RADIUS
 from picklebot_mj.ball_sim import (PADDLE_CORNER_RADIUS, BallParams, BallSim, BallState, CompiledBallSim,
                                    PaddleState)
-from picklebot_mj.feeds import BOUNCE_AIM_MIN, FAMILIES, FAMILY_NAMES, REACH_NEAR, FeedMix
+from picklebot_mj.feeds import BOUNCE_AIM_MIN, FAMILIES, FAMILY_NAMES, REACH_NEAR, REACH_NEAR_V2, FeedMix
 from picklebot_mj.g1_paddle import PADDLE_BODY, get_g1_paddle_cfg
 from picklebot_mj.rules import Fault, Phase, RallyRules, in_bounds
 
@@ -117,6 +117,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     hit_hint: bool = False  # real-ball episodes also show the stance hint until the first contact
     reach_curriculum: bool = False  # reach families start near (REACH_NEAR) and widen on success
     reach_start: float = 0.0  # initial curriculum scale (0 = near version, 1 = full family)
+    reach_near_set: str = "v1"  # "v1" (REACH_NEAR, S-D3) or "v2" (REACH_NEAR_V2, gentler, S-D3b)
     lost_back_margin: float = 0.5  # ball lost this far behind the baseline (Drill 3: room to play deep balls)
 
     def build(self, env) -> "BallPhysicsAction":
@@ -154,7 +155,8 @@ class BallPhysicsAction(ActionTerm):
         self.recover_hist = torch.zeros(100, dtype=torch.long, device=dev)
         self.fam_sampler = None
         # Drill 3 reach curriculum: per-family scale between the near version and the full family.
-        self._ranges_near = {a: torch.tensor([getattr(REACH_NEAR.get(f, FAMILIES[f]), a) for f in FAMILY_NAMES],
+        near_set = REACH_NEAR_V2 if getattr(cfg, "reach_near_set", "v1") == "v2" else REACH_NEAR
+        self._ranges_near = {a: torch.tensor([getattr(near_set.get(f, FAMILIES[f]), a) for f in FAMILY_NAMES],
                                              device=dev)
                              for a in ("start_x", "start_z", "bounce_x", "lateral_y", "flight_time", "spin_y")}
         self.reach_scale = torch.ones(len(FAMILY_NAMES), device=dev)

@@ -89,3 +89,12 @@ class FeedMix:
 
 def only(name: str) -> FeedMix:
     return FeedMix({name: 1.0})
+
+# Drill 3 follow-up S-D3b (stage5-run-sd3.md): gentler near versions that start where the robot already succeeds.
+REACH_NEAR_V2: dict[str, FeedCfg] = {
+    "reach_forehand": REACH_NEAR["reach_forehand"],
+    "reach_backhand": replace(REACH_FAMILIES_CFG["reach_backhand"], lateral_y=(0.55, 0.8)),
+    "reach_short": replace(REACH_FAMILIES_CFG["reach_short"], bounce_x=(-4.2, -3.9), start_z=(1.8, 2.2),
+                           flight_time=(0.95, 1.05)),
+    "reach_deep": replace(REACH_FAMILIES_CFG["reach_deep"], bounce_x=(-5.4, -5.1)),
+}

@@ -85,3 +85,19 @@ def test_curriculum_scale_feeds_promotion_hint_and_lost_margin():
         t._tally(mask, torch.zeros(n, dtype=torch.bool, device="cuda"))
     assert abs(float(t.reach_scale[rf]) - REACH_STEP) < 1e-6
     assert t.cfg.lost_back_margin == 2.5
+
+
+
+def test_gentle_near_set_starts_closer_and_is_the_only_change():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.feeds import REACH_NEAR_V2
+    from picklebot_mj.tasks import TASK_STUDENT_DRILL3, TASK_STUDENT_DRILL3_GENTLE
+
+    assert REACH_NEAR_V2["reach_backhand"].lateral_y[0] < REACH_NEAR["reach_backhand"].lateral_y[0]
+    assert REACH_NEAR_V2["reach_short"].bounce_x[0] < REACH_NEAR["reach_short"].bounce_x[0]
+    assert REACH_NEAR_V2["reach_deep"].bounce_x[0] > REACH_NEAR["reach_deep"].bounce_x[0]
+    a, b = load_env_cfg(TASK_STUDENT_DRILL3), load_env_cfg(TASK_STUDENT_DRILL3_GENTLE)
+    assert a.actions["ball"].reach_near_set == "v1" and b.actions["ball"].reach_near_set == "v2"
+    assert set(a.rewards) == set(b.rewards)

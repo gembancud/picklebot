@@ -225,3 +225,17 @@ def _drill3(play=False):
 
 register_mjlab_task(task_id=TASK_STUDENT_DRILL3, env_cfg=_drill3(), play_env_cfg=_drill3(True),
                     rl_cfg=_student_finetune_rl_cfg())
+
+
+# Drill 3 follow-up S-D3b (stage5-run-sd3.md): gentler reach curriculum start (REACH_NEAR_V2); everything else as S-D3.
+TASK_STUDENT_DRILL3_GENTLE = "Picklebot-Student-Drill3-Gentle-G1"
+
+
+def _drill3_gentle(play=False):
+    cfg = _drill3(play)
+    cfg.actions["ball"].reach_near_set = "v2"
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_STUDENT_DRILL3_GENTLE, env_cfg=_drill3_gentle(), play_env_cfg=_drill3_gentle(True),
+                    rl_cfg=_student_finetune_rl_cfg())
