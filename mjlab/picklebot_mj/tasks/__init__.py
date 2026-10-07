@@ -239,3 +239,26 @@ def _drill3_gentle(play=False):
 
 register_mjlab_task(task_id=TASK_STUDENT_DRILL3_GENTLE, env_cfg=_drill3_gentle(), play_env_cfg=_drill3_gentle(True),
                     rl_cfg=_student_finetune_rl_cfg())
+
+
+# Stage 5B tracking teacher (D-044/D-046): mjlab G1 motion tracking on the paddle G1, all accepted Tennis-MoCap clips.
+from pathlib import Path  # noqa: E402
+
+from mjlab.tasks.tracking.config.g1.rl_cfg import unitree_g1_tracking_ppo_runner_cfg  # noqa: E402
+from mjlab.tasks.tracking.rl import MotionTrackingOnPolicyRunner  # noqa: E402
+
+from picklebot_mj.tasks.tracking import paddle_tracking_env_cfg  # noqa: E402
+
+TASK_TRACKING_TENNIS = "Picklebot-Tracking-Tennis-G1"
+TENNIS_MOTION = str(Path(__file__).resolve().parents[2] / "artifacts" / "motion" / "tracking" / "tennis-v4.npz")
+
+
+def _tracking_rl_cfg():
+    cfg = unitree_g1_tracking_ppo_runner_cfg()
+    cfg.experiment_name = "picklebot_tracking"
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_TRACKING_TENNIS, env_cfg=paddle_tracking_env_cfg(TENNIS_MOTION),
+                    play_env_cfg=paddle_tracking_env_cfg(TENNIS_MOTION, play=True), rl_cfg=_tracking_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)
