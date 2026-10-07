@@ -6,9 +6,9 @@ import numpy as np
 import pytest
 import torch
 
-MOTION = Path(__file__).resolve().parents[1] / "artifacts" / "motion" / "tracking" / "tennis-v4.npz"
+MOTION = Path(__file__).resolve().parents[1] / "artifacts" / "motion" / "tracking" / "tennis-v5.npz"
 needs = pytest.mark.skipif(not (torch.cuda.is_available() and MOTION.exists()),
-                           reason="needs CUDA and artifacts/motion/tracking/tennis-v4.npz")
+                           reason="needs CUDA and artifacts/motion/tracking/tennis-v5.npz")
 
 
 def _small_motion(tmp_path, n_clips=3, frames=120):

@@ -243,6 +243,70 @@ def checks(model, qs, retargeter_errors, frames, fps):
     return out
 
 
+# Paddle face orientation (user, 2026-10-08: backhand paddle holding was wrong). The mocap has no racket and its hand
+# orientation is unreliable, so wrist angles were left near neutral and the paddle face followed the forearm: flat or
+# facing backwards on backhands. The paddle gets its own orientation target on its face normal only (paddle local z;
+# twist about the normal is free): during a swing (hand speed > SWING_SPEED) the normal follows the hand's direction of
+# travel, either face may lead (palm side on forehands, back side on backhands); between swings it faces the player's
+# forward direction (ready position) at a lower weight.
+PADDLE_ROT_COST = 20.0
+SWING_SPEED = 2.0  # m/s, right-hand speed above which a frame counts as swinging
+READY_WEIGHT = 0.0
+
+
+def paddle_normal_targets(frames, fps, smooth=0.3):
+    """Per frame: desired face normal (unit, world) and a cost weight in [0, 1]."""
+    hand = np.array([f["RightWrist"][0] for f in frames])
+    vel = np.gradient(hand, 1.0 / fps, axis=0)
+    speed = np.linalg.norm(vel, axis=1)
+    out_n, out_w, n_prev = [], [], None
+    for i, f in enumerate(frames):
+        fwd = R.from_quat(f["Hips"][1], scalar_first=True).apply([0.0, 0.0, 1.0])  # BVH +z = the human's facing
+        fwd[2] = 0.0
+        fwd /= max(np.linalg.norm(fwd), 1e-6)
+        if speed[i] > SWING_SPEED:
+            n, w = vel[i] / speed[i], 1.0
+        else:
+            n, w = fwd, READY_WEIGHT
+        if n_prev is not None:
+            if np.dot(n, n_prev) < 0:  # keep a continuous sign while smoothing; the face sign is chosen later
+                n = -n
+            n = (1 - smooth) * n_prev + smooth * n
+            n /= max(np.linalg.norm(n), 1e-6)
+        n_prev = n
+        out_n.append(n)
+        out_w.append(w)
+    return np.array(out_n), np.array(out_w), speed
+
+
+def paddle_task():
+    return mink.FrameTask("paddle", "body", position_cost=0.0, orientation_cost=[PADDLE_ROT_COST, PADDLE_ROT_COST, 0.0],
+                          lm_damping=1.0)
+
+
+def set_paddle_target(rt, task, n, w):
+    """Target rotation with z = +-n (whichever face is closer now); x, y from the current paddle (twist is free)."""
+    d = rt.configuration.data
+    b = rt.model.body("paddle").id
+    cur = d.xmat[b].reshape(3, 3)
+    z = n if np.dot(n, cur[:, 2]) >= 0 else -n
+    y = cur[:, 1] - np.dot(cur[:, 1], z) * z
+    if np.linalg.norm(y) < 1e-6:
+        y = np.cross(z, cur[:, 0])
+    y /= np.linalg.norm(y)
+    x = np.cross(y, z)
+    rot = np.stack([x, y, z], axis=1)
+    task.set_target(mink.SE3.from_rotation_and_translation(mink.SO3.from_matrix(rot), d.xpos[b].copy()))
+    c = PADDLE_ROT_COST * w
+    task.set_orientation_cost([c, c, 0.0])
+
+
+def paddle_normal_error_deg(model, data, n):
+    """Angle between the paddle face normal (either face) and n."""
+    z = data.xmat[model.body("paddle").id].reshape(3, 3)[:, 2]
+    return float(np.degrees(np.arccos(np.clip(abs(np.dot(z, n)), 0.0, 1.0))))
+
+
 def warm_start(rt, frame, iters=50):
     """Start the IK at the human's pose instead of the G1 zero pose facing +x.
 
@@ -269,6 +333,7 @@ ARM_R = [b.replace("left", "right") for b in ARM_L]
 BODY = ["pelvis", "torso_link", "left_hip_roll_link", "left_hip_yaw_link", "left_knee_link", "right_hip_roll_link",
         "right_hip_yaw_link", "right_knee_link"]
 COLLISION_MIN_DIST = 0.01
+PADDLE_MIN_DIST = 0.05
 
 
 CAPSULES_JSON = Path(__file__).resolve().parents[2] / "artifacts" / "motion" / "g1_collision_geoms.json"
@@ -302,10 +367,15 @@ def collision_limit(model):
         ids = {model.body(b).id for b in bodies}
         return [g for g in range(model.ngeom) if model.geom_bodyid[g] in ids and model.geom_contype[g]]
 
-    pairs = [(geoms(ARM_L), geoms(BODY)), (geoms(ARM_R), geoms(BODY)), (geoms(ARM_L), geoms(ARM_R)),
-             (geoms(["paddle"]), geoms(BODY + ARM_L))]
-    return mink.CollisionAvoidanceLimit(model, pairs, minimum_distance_from_collisions=COLLISION_MIN_DIST,
-                                        collision_detection_distance=0.05)
+    pairs = [(geoms(ARM_L), geoms(BODY)), (geoms(ARM_R), geoms(BODY)), (geoms(ARM_L), geoms(ARM_R))]
+    limits = [mink.CollisionAvoidanceLimit(model, pairs, minimum_distance_from_collisions=COLLISION_MIN_DIST,
+                                           collision_detection_distance=0.05)]
+    if model.body("paddle").id > 0:
+        # The paddle face sweeps fastest and is the one the orientation target turns; give it a wider margin.
+        limits.append(mink.CollisionAvoidanceLimit(model, [(geoms(["paddle"]), geoms(BODY + ARM_L))],
+                                                   minimum_distance_from_collisions=PADDLE_MIN_DIST,
+                                                   collision_detection_distance=0.10))
+    return limits
 
 
 def make_retargeter(rest, cfg_path, avoid_collisions=True):
@@ -318,7 +388,7 @@ def make_retargeter(rest, cfg_path, avoid_collisions=True):
         gmr_params.ROBOT_XML_DICT["unitree_g1"] = G1_XML
     rt = GMR(src_human="bvh_tennis", tgt_robot="unitree_g1", actual_human_height=None, verbose=False)  # absolute
     if avoid_collisions:
-        rt.ik_limits.append(collision_limit(rt.model))
+        rt.ik_limits.extend(collision_limit(rt.model))
     return rt
 
 
@@ -341,6 +411,7 @@ def main():
     ap.add_argument("--fps", type=int, default=50, help="output rate (source is 100 Hz; mjlab tracking uses 50)")
     ap.add_argument("--max-seconds", type=float, default=None)
     ap.add_argument("--no-collision-avoidance", action="store_true")
+    ap.add_argument("--no-paddle-orientation", action="store_true")
     args = ap.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -364,9 +435,20 @@ def retarget_clip(path, out, args):
         rt = make_retargeter(rest, out / "bvh_tennis_to_g1.json", not args.no_collision_avoidance)
         qs, errs, human, pos_err = [], [], [], []
         bones = list(MAP_BONES)
+        orient_paddle = not args.no_collision_avoidance and not args.no_paddle_orientation  # needs the paddle body
         warm_start(rt, add_aliases(frames[0]))
-        for f in frames:
+        if orient_paddle:  # added after the warm start, which settles the body first
+            normals, weights, hand_speed = paddle_normal_targets(frames, args.fps)
+            ptask = paddle_task()
+            set_paddle_target(rt, ptask, normals[0], weights[0])
+            rt.tasks2.append(ptask)
+        paddle_err = []
+        for i, f in enumerate(frames):
+            if orient_paddle:
+                set_paddle_target(rt, ptask, normals[i], weights[i])
             qs.append(rt.retarget(add_aliases(f)))
+            if orient_paddle and hand_speed[i] > SWING_SPEED:
+                paddle_err.append(paddle_normal_error_deg(rt.model, rt.configuration.data, normals[i]))
             errs.append(rt.error2())
             human.append([rt.scaled_human_data[b][0] for b in bones])
             robot = np.array([rt.configuration.data.xpos[rt.model.body(n).id] for n in POS_BODIES])
@@ -382,6 +464,10 @@ def retarget_clip(path, out, args):
         rep["pos_err_median_m"] = round(float(np.median(pe)), 4)
         rep["pos_err_p95_m"] = round(float(np.percentile(pe, 95)), 4)
         rep["pos_err_by_body_median_m"] = {n: round(float(np.median(pe[:, i])), 3) for i, n in enumerate(POS_BODIES)}
+        if paddle_err:
+            rep["paddle_normal_err_swing_median_deg"] = round(float(np.median(paddle_err)), 1)
+            rep["paddle_normal_err_swing_p90_deg"] = round(float(np.percentile(paddle_err, 90)), 1)
+            rep["swing_frames"] = len(paddle_err)
         (out / f"{path.stem}.json").write_text(json.dumps(rep, indent=1))
         print(json.dumps(rep))
 

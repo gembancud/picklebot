@@ -250,7 +250,7 @@ from mjlab.tasks.tracking.rl import MotionTrackingOnPolicyRunner  # noqa: E402
 from picklebot_mj.tasks.tracking import paddle_tracking_env_cfg  # noqa: E402
 
 TASK_TRACKING_TENNIS = "Picklebot-Tracking-Tennis-G1"
-TENNIS_MOTION = str(Path(__file__).resolve().parents[2] / "artifacts" / "motion" / "tracking" / "tennis-v4.npz")
+TENNIS_MOTION = str(Path(__file__).resolve().parents[2] / "artifacts" / "motion" / "tracking" / "tennis-v5.npz")
 
 
 def _tracking_rl_cfg():
