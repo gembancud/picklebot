@@ -204,3 +204,24 @@ register_mjlab_task(
     play_env_cfg=_with_mix(return_stand_env_cfg(play=True, **_SWF), HIT_TEACHER_MIX),
     rl_cfg=_student_finetune_rl_cfg(),
 )
+
+# Stage 5 Drill 3 (D-041/D-045, stage5-sd2c-videos.md): real balls with the near-to-far reach curriculum.
+# 60 % real hitting over the Stage 4 + reach families (adaptive family mix, reach curriculum, v2 stance hint until
+# contact), 15 % move-to-spot and 25 % ghost-ball swings (v2 hint, follow reward) as maintenance; deep balls may be
+# played from behind the baseline (lost margin 2.5 m).
+from picklebot_mj.feeds import REACH_FAMILIES  # noqa: E402
+
+DRILL3_MIX = FeedMix({name: 1.0 for name in STAGE4_FAMILIES + REACH_FAMILIES})
+TASK_STUDENT_DRILL3 = "Picklebot-Student-Drill3-G1"
+_D3 = dict(_FW, move_prob=0.15, swing_prob=0.25, swing_mix=FOOTWORK_MIX, swing_hint=True, swing_follow_hint=True,
+           blowup_guard=True, hint_v2=True, hit_hint=True, reach_curriculum=True, lost_back_margin=2.5)
+
+
+def _drill3(play=False):
+    cfg = _with_mix(return_stand_env_cfg(play=play, **_D3), DRILL3_MIX)
+    cfg.actions["ball"].adaptive_curriculum = True
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_STUDENT_DRILL3, env_cfg=_drill3(), play_env_cfg=_drill3(True),
+                    rl_cfg=_student_finetune_rl_cfg())

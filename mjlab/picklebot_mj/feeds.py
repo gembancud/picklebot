@@ -58,6 +58,15 @@ REACH_FAMILIES_CFG: dict[str, FeedCfg] = {
     "reach_deep": replace(EASY_FOREHAND, bounce_x=(-8.0, -7.6), start_z=(2.2, 2.6), flight_time=(1.15, 1.3)),
 }
 FAMILIES.update(REACH_FAMILIES_CFG)
+# Drill 3 reach curriculum (stage5-sd2c-videos.md): the "near" end of each reach family, just past arm reach.
+# A curriculum scale s in [0, 1] interpolates every range between this near version and the full family.
+REACH_NEAR: dict[str, FeedCfg] = {
+    "reach_forehand": replace(REACH_FAMILIES_CFG["reach_forehand"], lateral_y=(-1.1, -0.85)),
+    "reach_backhand": replace(REACH_FAMILIES_CFG["reach_backhand"], lateral_y=(0.75, 1.0)),
+    "reach_short": replace(REACH_FAMILIES_CFG["reach_short"], bounce_x=(-3.9, -3.6), start_z=(1.6, 2.0),
+                           flight_time=(0.95, 1.05)),
+    "reach_deep": replace(REACH_FAMILIES_CFG["reach_deep"], bounce_x=(-6.2, -5.9)),
+}
 REACH_FAMILIES: tuple[str, ...] = tuple(REACH_FAMILIES_CFG)
 FAMILY_NAMES: tuple[str, ...] = tuple(FAMILIES)
 

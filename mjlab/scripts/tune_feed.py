@@ -40,6 +40,8 @@ class _FakeTerm:
         self.gen_recover = torch.Generator(device=device).manual_seed(seed + 2)
         self.recover_xy = torch.zeros(n, 2)
         self.shadow = None
+        self.reach_scale = torch.ones(len(FAMILY_NAMES))
+        self._ranges_near = self._ranges
         self.gen_target = torch.Generator(device=device).manual_seed(seed + 1)
         self.target = torch.zeros(n, dtype=torch.long)
         self.anchor_xy = ROBOT_START  # fixed anchor offline; tests may move it

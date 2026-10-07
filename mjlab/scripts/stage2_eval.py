@@ -78,6 +78,7 @@ def main():
         cfg.actions["ball"].swing_mix = FeedMix({f: 1.0 for f in args.swing_families.split(",")})
     cfg.actions["ball"].move_sector_weights = None  # evaluation samples spot directions uniformly
     cfg.actions["ball"].adaptive_curriculum = False  # and never adapts the feed or sector mix
+    cfg.actions["ball"].reach_curriculum = False  # reach families are always evaluated at full range
     if args.fixed_start:
         cfg.events["reset_base"].params["pose_range"] = {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "yaw": (-0.1, 0.1)}
         cfg.actions["ball"].feed_anchor = "start"

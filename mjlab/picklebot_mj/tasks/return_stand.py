@@ -35,7 +35,7 @@ from picklebot_mj import court
 from picklebot_mj.ball import BALL_RADIUS
 from picklebot_mj.ball_sim import (PADDLE_CORNER_RADIUS, BallParams, BallSim, BallState, CompiledBallSim,
                                    PaddleState)
-from picklebot_mj.feeds import BOUNCE_AIM_MIN, FAMILIES, FAMILY_NAMES, FeedMix
+from picklebot_mj.feeds import BOUNCE_AIM_MIN, FAMILIES, FAMILY_NAMES, REACH_NEAR, FeedMix
 from picklebot_mj.g1_paddle import PADDLE_BODY, get_g1_paddle_cfg
 from picklebot_mj.rules import Fault, Phase, RallyRules, in_bounds
 
@@ -59,6 +59,7 @@ RECOVERY_BOX = ((-6.2, -5.0), (-1.5, 1.5))  # training: sampled per feed (x rang
 RECOVERY_FIXED = (-5.6, 0.0)  # evaluation: baseline centre
 RECOVERY_STD = 0.5  # reward exp(-(d / std)^2)
 RECOVERY_BIN = 0.05  # error histogram bin width (m), 100 bins
+REACH_PROMOTE, REACH_MIN_FEEDS, REACH_STEP = 0.7, 300, 0.1  # Drill 3 curriculum: widen at 70 % legal over 300+ feeds
 WIDE_SHAPING_STD = 1.5  # run F2: approach_far and recovery kernels (m)
 
 
@@ -111,6 +112,12 @@ class BallPhysicsActionCfg(ActionTermCfg):
     swing_mix: FeedMix | None = None
     swing_hint: bool = False  # S-D2b: show the predicted interception spot through the spot input before the swing
     swing_follow_hint: bool = False  # S-D2c: walking-teacher reward toward the hint until the ghost ball bounces
+    # Drill 3 (stage5-sd2c-videos.md):
+    hint_v2: bool = False  # interception near the top of the bounce; stance spots may be behind the baseline
+    hit_hint: bool = False  # real-ball episodes also show the stance hint until the first contact
+    reach_curriculum: bool = False  # reach families start near (REACH_NEAR) and widen on success
+    reach_start: float = 0.0  # initial curriculum scale (0 = near version, 1 = full family)
+    lost_back_margin: float = 0.5  # ball lost this far behind the baseline (Drill 3: room to play deep balls)
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -146,6 +153,18 @@ class BallPhysicsAction(ActionTerm):
         # Recovery error at the next feed's launch, for feeds the robot hit: histogram (no host sync).
         self.recover_hist = torch.zeros(100, dtype=torch.long, device=dev)
         self.fam_sampler = None
+        # Drill 3 reach curriculum: per-family scale between the near version and the full family.
+        self._ranges_near = {a: torch.tensor([getattr(REACH_NEAR.get(f, FAMILIES[f]), a) for f in FAMILY_NAMES],
+                                             device=dev)
+                             for a in ("start_x", "start_z", "bounce_x", "lateral_y", "flight_time", "spin_y")}
+        self.reach_scale = torch.ones(len(FAMILY_NAMES), device=dev)
+        self.reach_ema = torch.full((len(FAMILY_NAMES),), 0.5, device=dev)
+        self.reach_since = torch.zeros(len(FAMILY_NAMES), device=dev)
+        if cfg.reach_curriculum:
+            for f in REACH_NEAR:
+                self.reach_scale[FAMILY_NAMES.index(f)] = cfg.reach_start
+        self.hit_rec_true = torch.zeros(n, 2, device=dev)
+        self.hit_hint_on = torch.zeros(n, dtype=torch.bool, device=dev)
         if cfg.adaptive_curriculum:
             from picklebot_mj.curriculum import AdaptiveSampler
             self.fam_sampler = AdaptiveSampler(self._mix, device=dev)
@@ -156,7 +175,8 @@ class BallPhysicsAction(ActionTerm):
         self.shadow = None
         if cfg.swing_prob > 0.0:
             from picklebot_mj.tasks.shadow_swing import ShadowSwing
-            self.shadow = ShadowSwing(self, cfg.swing_prob, cfg.swing_mix or cfg.feed_mix, cfg.seed, cfg.swing_hint)
+            self.shadow = ShadowSwing(self, cfg.swing_prob, cfg.swing_mix or cfg.feed_mix, cfg.seed, cfg.swing_hint,
+                                      cfg.hint_v2)
         # Per-family episode tallies [family, (episodes, contact, legal_return, fall)].
         self.ep_family = torch.zeros(len(FAMILY_NAMES), 4, dtype=torch.long, device=dev)
         # Per-family legal-landing tallies [family, (in A, in B, on the assigned target)].
@@ -252,6 +272,22 @@ class BallPhysicsAction(ActionTerm):
         self.ep["legal_return"] += outcome[:, 2].sum()
         self.ep["fall"] += outcome[:, 3].sum()
         self.ep_family.index_add_(0, self.family, outcome)
+        if getattr(self.cfg, "reach_curriculum", False):  # widen a reach family once it is mastered at its scale
+            m = mask.float()
+            n_f = torch.zeros_like(self.reach_ema).index_add_(0, self.family, m)
+            s_f = torch.zeros_like(self.reach_ema).index_add_(0, self.family, (self.return_done & mask).float())
+            has = n_f > 0
+            a = (0.02 * n_f).clamp(max=0.5)
+            self.reach_ema = torch.where(has, self.reach_ema + a * (s_f / n_f.clamp(min=1) - self.reach_ema),
+                                         self.reach_ema)
+            self.reach_since = self.reach_since + n_f
+            up = (self.reach_ema > REACH_PROMOTE) & (self.reach_since >= REACH_MIN_FEEDS) & (self.reach_scale < 1.0)
+            self.reach_scale = torch.where(up, (self.reach_scale + REACH_STEP).clamp(max=1.0), self.reach_scale)
+            self.reach_ema = torch.where(up, torch.full_like(self.reach_ema, 0.4), self.reach_ema)
+            self.reach_since = torch.where(up, torch.zeros_like(self.reach_since), self.reach_since)
+            log = self._env.extras.setdefault("log", {})
+            for f in REACH_NEAR:
+                log[f"Curriculum/scale_{f}"] = self.reach_scale[FAMILY_NAMES.index(f)]
         if self.fam_sampler is not None:  # finished feeds: success = legal return
             self.fam_sampler.update(self.family, self.return_done & mask, mask)
             self._mix = self.fam_sampler.weights()
@@ -267,6 +303,7 @@ class BallPhysicsAction(ActionTerm):
             idx = (err.nan_to_num(nan=1e3, posinf=1e3, neginf=0.0) / RECOVERY_BIN).clamp(0, self.recover_hist.shape[0] - 1).long()
             self.recover_hist.index_add_(0, idx, (fire & self.hit_done).long())
         rec_old = self.recover_xy.clone()
+        hint_old, true_old = self.hit_hint_on.clone(), self.hit_rec_true.clone()
         pos, vel, spin = self.ball.pos.clone(), self.ball.vel.clone(), self.ball.spin.clone()
         fam_old, tgt_old = self.family.clone(), self.target.clone()
         self._feed(self.all_ids)
@@ -276,6 +313,8 @@ class BallPhysicsAction(ActionTerm):
         self.family = torch.where(fire, self.family, fam_old)
         self.target = torch.where(fire, self.target, tgt_old)
         self.recover_xy = torch.where(fire.unsqueeze(-1), self.recover_xy, rec_old)
+        self.hit_hint_on = torch.where(fire, self.hit_hint_on, hint_old)
+        self.hit_rec_true = torch.where(fire.unsqueeze(-1), self.hit_rec_true, true_old)
         self.rules.begin_from_feed_masked(fire, FEEDER_PLAYER, must_bounce=True)
         for name in ("hit_done", "return_done", "tallied", "_prev_dead"):
             setattr(self, name, getattr(self, name) & ~fire)
@@ -284,6 +323,9 @@ class BallPhysicsAction(ActionTerm):
     def _range(self, name, fam):
         """(lo, hi) per env for FeedCfg attribute `name`, gathered by family index."""
         t = self._ranges[name][fam]
+        if getattr(self.cfg, "reach_curriculum", False):  # interpolate near -> full by the family's scale
+            near = self._ranges_near[name][fam]
+            t = near + self.reach_scale[fam].unsqueeze(-1) * (t - near)
         return t[:, 0], t[:, 1]
 
     def _u(self, name, fam):
@@ -335,6 +377,15 @@ class BallPhysicsAction(ActionTerm):
         self.ball.vel[env_ids] = torch.stack([vx, torch.zeros_like(vx), vz], -1)
         # spin_y > 0 is topspin for travel toward -x, i.e. world angular velocity about -y.
         self.ball.spin[env_ids] = torch.stack([torch.zeros_like(vx), -self._u("spin_y", fam), torch.zeros_like(vx)], -1)
+        if getattr(self.cfg, "hit_hint", False):  # real-ball episodes: stance hint until the first contact
+            from picklebot_mj.tasks.shadow_swing import stance_spot
+            hit_ep = torch.ones(k, dtype=torch.bool, device=self.device)
+            if self.shadow is not None:
+                hit_ep &= ~self.shadow.swing_ep[env_ids]
+            spot = stance_spot(self, self.cfg.hint_v2)[env_ids]
+            self.hit_rec_true[env_ids] = rec
+            self.hit_hint_on[env_ids] = hit_ep
+            self.recover_xy[env_ids] = torch.where(hit_ep.unsqueeze(-1), spot, rec)
 
     def apply_actions(self) -> None:
         env = self._env
@@ -372,6 +423,10 @@ class BallPhysicsAction(ActionTerm):
             d["ball_out_speed"] += (self.ball.vel.norm(dim=-1) * f).sum()
             d["contact_height"] += (self.ball.pos[:, 2] * f).sum()
         self.hit_now |= first
+        if getattr(self.cfg, "hit_hint", False):  # after the contact the spot input is the recovery spot again
+            back = first & self.hit_hint_on
+            self.recover_xy = torch.where(back.unsqueeze(-1), self.hit_rec_true, self.recover_xy)
+            self.hit_hint_on &= ~first
         self.hit_done |= legal_hit
         # Height above the net when the returned ball crosses x = 0 (first crossing after the hit).
         crossing = self.hit_done & (before.pos[:, 0] < 0) & (self.ball.pos[:, 0] >= 0)
@@ -410,7 +465,7 @@ class BallPhysicsAction(ActionTerm):
         self.rules.body_contact(near_body & live, torch.full_like(self.all_ids, ROBOT_PLAYER))
         # Lost: behind the robot, wide, or long past the far baseline.
         p = self.ball.pos
-        lost = live & ~self.rules.dead & ((p[:, 0] < -court.HALF_LENGTH - 0.5) | (p[:, 1].abs() > court.HALF_WIDTH + 2.0)
+        lost = live & ~self.rules.dead & ((p[:, 0] < -court.HALF_LENGTH - self.cfg.lost_back_margin) | (p[:, 1].abs() > court.HALF_WIDTH + 2.0)
                                           | (p[:, 0] > court.HALF_LENGTH + 2.0))
         self.rules.lost(lost)
         self.lost_now |= lost
@@ -618,7 +673,9 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: b
                          recovery: bool = False, free_feet: bool = False,
                          wide_shaping: bool = False, move_prob: float = 0.0,
                          swing_prob: float = 0.0, swing_mix: FeedMix | None = None, swing_hint: bool = False,
-                         blowup_guard: bool = False, swing_follow_hint: bool = False) -> ManagerBasedRlEnvCfg:
+                         blowup_guard: bool = False, swing_follow_hint: bool = False, hint_v2: bool = False,
+                         hit_hint: bool = False, reach_curriculum: bool = False,
+                         lost_back_margin: float = 0.5) -> ManagerBasedRlEnvCfg:
     cfg = unitree_g1_flat_env_cfg(play=play)
     robot = get_g1_paddle_cfg()
     # New InitialStateCfg (the original is mjlab's shared keyframe constant). Court-local;
@@ -702,6 +759,8 @@ def return_stand_env_cfg(play: bool = False, targets: bool = False, start_box: b
         cfg.actions["ball"].swing_follow_hint = swing_follow_hint
         cfg.rewards["shadow_swing"] = RewardTermCfg(func=shadow_swing_reward, weight=3.0 / step_dt)
     cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=5.0 / step_dt)
+    b = cfg.actions["ball"]
+    b.hint_v2, b.hit_hint, b.reach_curriculum, b.lost_back_margin = hint_v2, hit_hint, reach_curriculum, lost_back_margin
     if blowup_guard:  # end an episode whose base moves or spins impossibly fast (simulation blow-up, S-D2)
         cfg.terminations["blew_up"] = TerminationTermCfg(func=blew_up, time_out=False)
     # No termination on rally end: a feeding machine serves the next ball 0.5 s after each rally,

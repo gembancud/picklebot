@@ -39,6 +39,10 @@ HINT_SHORTFALL = 0.085  # bounce lands ~8.5 % of the horizontal flight distance 
 HINT_BEHIND = 0.3  # pelvis this far behind the contact point (toward the robot's baseline)
 HINT_SIDE_FH, HINT_SIDE_BH = 0.5, 0.4  # pelvis to the left of a forehand / right of a backhand contact
 D_BIN, D_BINS = 0.025, 80
+# v2 hint (Drill 3, stage5-sd2c-videos.md): take the ball near the top of its bounce, at most HINT_TOP_Z high (on the
+# rise for high bounces), and allow stance spots behind the baseline, where players stand for deep balls.
+HINT_TOP_Z = 1.1
+HINT_BOX_V2 = ((-8.5, -2.4), (-3.5, 3.5))
 
 
 # Per-family (shortfall / drag-free flight distance, vx after bounce / launch vx, vz after bounce / drag-free vz at
@@ -53,8 +57,12 @@ HINT_TABLE = {
 }
 
 
-def predict_intercept(p: torch.Tensor, v: torch.Tensor, fam: torch.Tensor):
-    """Approximate (x, y) where a just-launched feed descends through HINT_Z after its bounce (or its apex)."""
+def predict_intercept(p: torch.Tensor, v: torch.Tensor, fam: torch.Tensor, mode: str = "descend"):
+    """Approximate (x, y) of the interception point of a just-launched feed.
+
+    mode "descend" (S-D2b/S-D2c): where it descends through HINT_Z after its bounce (or its apex if lower).
+    mode "top" (v2, Drill 3): its apex after the bounce, or where it rises through HINT_TOP_Z if the apex is higher.
+    """
     from picklebot_mj.ball import BALL_RADIUS
     g, r = 9.81, BALL_RADIUS
     k = torch.tensor([HINT_TABLE[f] for f in FAMILY_NAMES], device=p.device)[fam]
@@ -64,14 +72,33 @@ def predict_intercept(p: torch.Tensor, v: torch.Tensor, fam: torch.Tensor):
     vz1 = k[:, 2] * (g * tb - v[:, 2]).clamp(min=0)
     vx1 = k[:, 1] * v[:, 0]
     apex = r + vz1 ** 2 / (2 * g)
-    ti = torch.where(apex >= HINT_Z, (vz1 + torch.sqrt((vz1 ** 2 - 2 * g * (HINT_Z - r)).clamp(min=0))) / g, vz1 / g)
+    if mode == "top":
+        ti = torch.where(apex > HINT_TOP_Z, (vz1 - torch.sqrt((vz1 ** 2 - 2 * g * (HINT_TOP_Z - r)).clamp(min=0))) / g,
+                         vz1 / g)
+    else:
+        ti = torch.where(apex >= HINT_Z, (vz1 + torch.sqrt((vz1 ** 2 - 2 * g * (HINT_Z - r)).clamp(min=0))) / g,
+                         vz1 / g)
     return xb + vx1 * ti, p[:, 1]
 
 
+def stance_spot(term, v2: bool) -> torch.Tensor:
+    """Stance spot beside the predicted interception point of each env's current (just launched) ball."""
+    from picklebot_mj.tasks.move_drill import SPOT_BOX
+    xi, yi = predict_intercept(term.ball.pos, term.ball.vel, term.family, "top" if v2 else "descend")
+    pel = term.pelvis_xy()
+    forehand = yi <= pel[:, 1]  # ball on the robot's right (-y) -> forehand
+    sy = torch.where(forehand, yi + HINT_SIDE_FH, yi - HINT_SIDE_BH)
+    sx = xi - HINT_BEHIND
+    box = HINT_BOX_V2 if v2 else SPOT_BOX
+    lo = torch.tensor([box[0][0], box[1][0]], device=term.device)
+    hi = torch.tensor([box[0][1], box[1][1]], device=term.device)
+    return torch.stack([sx, sy], -1).clamp(lo, hi)
+
+
 class ShadowSwing:
-    def __init__(self, term, swing_prob: float, swing_mix, seed: int, hint: bool = False):
+    def __init__(self, term, swing_prob: float, swing_mix, seed: int, hint: bool = False, hint_v2: bool = False):
         n, dev = term.num_envs, term.device
-        self.hint = bool(hint)
+        self.hint, self.hint_v2 = bool(hint), bool(hint_v2)
         self.recover_true = term.recover_xy.clone()
         self.t, self.n, self.dev = term, n, dev
         self.swing_prob = float(swing_prob)
@@ -124,16 +151,7 @@ class ShadowSwing:
 
     def intercept_spot(self) -> torch.Tensor:
         """Approximate stance spot for intercepting each env's current (just launched) ball."""
-        from picklebot_mj.tasks.move_drill import SPOT_BOX
-        t = self.t
-        xi, yi = predict_intercept(t.ball.pos, t.ball.vel, t.family)
-        pel = t.pelvis_xy()
-        forehand = yi <= pel[:, 1]  # ball on the robot's right (-y) -> forehand
-        sy = torch.where(forehand, yi + HINT_SIDE_FH, yi - HINT_SIDE_BH)
-        sx = xi - HINT_BEHIND
-        lo = torch.tensor([SPOT_BOX[0][0], SPOT_BOX[1][0]], device=self.dev)
-        hi = torch.tensor([SPOT_BOX[0][1], SPOT_BOX[1][1]], device=self.dev)
-        return torch.stack([sx, sy], -1).clamp(lo, hi)
+        return stance_spot(self.t, self.hint_v2)
 
     def paddle_for_sim(self, paddle_pos: torch.Tensor) -> torch.Tensor:
         """Move the paddle out of the ball simulation for swing episodes (ghost ball)."""
