@@ -8,9 +8,13 @@ frame without a termination. A fall is the torso dropping below FALL_Z at any ti
 Metrics per clip (mjlab.tasks.tracking.mdp.metrics, averaged over the frames played): MPKPE, root-relative MPKPE,
 end-effector position error, joint velocity error; plus success, fall and the termination causes.
 
+With --per-stroke (D-048), the units are single-stroke segments (picklebot_mj.tasks.tracking.stroke_segments)
+instead of whole clips: each env starts on the reference at a segment's first frame and succeeds by reaching its
+last frame without a termination; per-stroke-type numbers average over segments.
+
 Usage (picklebot-mj venv):
     python scripts/motion/tracking_eval.py --checkpoint PATH [--task Picklebot-Tracking-Tennis-G1] [--repeats 4]
-        [--seed 4200300] [--json OUT]
+        [--seed 4200300] [--per-stroke] [--json OUT]
 """
 
 from __future__ import annotations
@@ -31,8 +35,19 @@ from mjlab.tasks.tracking.mdp.metrics import (compute_ee_position_error, compute
                                               compute_mpkpe, compute_root_relative_mpkpe)
 
 from picklebot_mj import seeds
+from picklebot_mj.tasks.tracking import stroke_segments
 
 FALL_Z = 0.5  # torso_link height (m)
+
+
+def scene_body_names(cfg):
+    """The robot entity's body order (as in the npz body arrays), from the compiled scene."""
+    import mujoco
+    from mjlab.scene import Scene
+
+    m = Scene(cfg.scene, device="cpu").compile()
+    names = [mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_BODY, i) for i in range(1, m.nbody)]
+    return [x.split("/", 1)[1] for x in names if x and x.startswith("robot/")]
 
 
 def main():
@@ -42,6 +57,8 @@ def main():
     ap.add_argument("--repeats", type=int, default=4, help="episodes per clip")
     ap.add_argument("--seed", type=int, default=4200300)
     ap.add_argument("--json", default=None)
+    ap.add_argument("--per-stroke", action="store_true",
+                    help="score single-stroke segments around right-hand speed peaks instead of whole clips (D-048)")
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
 
@@ -52,8 +69,19 @@ def main():
     cfg.events.pop("push_robot", None)
     cfg.observations["actor"].enable_corruption = False
     cfg.episode_length_s = 60.0  # longer than any clip: episodes end at the clip end or a termination
-    n_clips = len(np.load(mc.motion_file)["clip_starts"])
-    cfg.scene.num_envs = n_clips * args.repeats
+    motion = np.load(mc.motion_file)
+    clip_starts = motion["clip_starts"]
+    n_clips, total = len(clip_starts), len(motion["joint_pos"])
+    clip_ends = np.r_[clip_starts[1:], total]
+    body_names = scene_body_names(cfg)
+    if args.per_stroke:
+        hand = body_names.index("right_wrist_yaw_link")
+        speed = np.linalg.norm(motion["body_lin_vel_w"][:, hand], axis=-1)
+        units = stroke_segments(speed, clip_starts, total, float(motion["fps"][0]))  # (clip, start, end, peak)
+    else:
+        units = [(c, int(clip_starts[c]), int(clip_ends[c]), -1) for c in range(n_clips)]
+    n_units = len(units)
+    cfg.scene.num_envs = n_units * args.repeats
     cfg.seed = args.seed
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda")
     wrapped = RslRlVecEnvWrapper(env, clip_actions=load_rl_cfg(args.task).clip_actions)
@@ -63,11 +91,14 @@ def main():
     policy = runner.get_inference_policy(device="cuda")
 
     cmd = env.command_manager.get_term("motion")
+    assert list(env.scene["robot"].body_names) == body_names, "body order differs from the compiled scene"
     n = env.num_envs
     ids = torch.arange(n, device="cuda")
-    clip = ids % n_clips
+    unit = ids % n_units
+    u = torch.tensor(units, dtype=torch.long, device="cuda")
+    clip = u[unit, 0]
     env.reset()
-    cmd.start_clips(ids, clip)
+    cmd.start_at(ids, u[unit, 1])
     env.sim.forward()
     cmd.update_relative_body_poses()
     obs = wrapped.get_observations()
@@ -78,7 +109,7 @@ def main():
     cause = ["" for _ in range(n)]
     sums = defaultdict(lambda: torch.zeros(n, device="cuda"))
     frames = torch.zeros(n, device="cuda")
-    end = cmd.clip_ends[clip] - 1
+    end = u[unit, 2] - 1
     while not done.all():
         ref = SimpleNamespace(num_envs=n, device="cuda", cfg=cmd.cfg, body_pos_w=cmd.body_pos_w.clone(),
                               body_pos_relative_w=cmd.body_pos_relative_w.clone(),
@@ -104,18 +135,20 @@ def main():
         done |= term | (live & at_end)
     names = [str(s) for s in np.load(mc.motion_file)["clip_names"]]
     per_clip = []
-    for c in range(n_clips):
-        sel = (clip == c)
+    for k in range(n_units):
+        sel = (unit == k)
         f = frames[sel].clamp(min=1)
-        per_clip.append({"clip": names[c], "success": float(success[sel].float().mean()),
+        per_clip.append({"clip": names[units[k][0]], "start_s": round(units[k][1] / 50.0, 2),
+                         "success": float(success[sel].float().mean()),
                          "fall": float(fell[sel].float().mean()),
                          **{k: float((v[sel] / f).mean()) for k, v in sums.items()},
                          "causes": sorted({cause[i] for i in torch.where(sel)[0].tolist() if cause[i]})})
     f = frames.clamp(min=1)
     summary = {"checkpoint": args.checkpoint, "seed": args.seed, "episodes": n, "clips": n_clips,
+               "scoring": "per-stroke segments" if args.per_stroke else "whole clips", "units": n_units,
                "success_rate": float(success.float().mean()), "fall_rate": float(fell.float().mean()),
                **{k: float((v / f).mean()) for k, v in sums.items()},
-               "clips_all_success": int(sum(p["success"] == 1.0 for p in per_clip)),
+               "units_all_success": int(sum(p["success"] == 1.0 for p in per_clip)),
                "termination_causes": dict(sorted(defaultdict(int, {c: cause.count(c) for c in set(cause) if c})
                                                  .items(), key=lambda x: -x[1]))}
     by_stroke = defaultdict(list)
@@ -125,7 +158,7 @@ def main():
                                      ("VReves", "backhand_volley"), ("Derecha", "forehand"), ("Reves", "backhand"))
                       if tag.startswith(k))
         by_stroke[stroke].append(p)
-    summary["by_stroke"] = {s: {"clips": len(g), "success": float(np.mean([p["success"] for p in g])),
+    summary["by_stroke"] = {s: {"units": len(g), "success": float(np.mean([p["success"] for p in g])),
                                 "fall": float(np.mean([p["fall"] for p in g])),
                                 "mpkpe": float(np.mean([p["mpkpe"] for p in g]))} for s, g in by_stroke.items()}
     print(json.dumps({k: v for k, v in summary.items()}, indent=1))

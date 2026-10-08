@@ -68,13 +68,17 @@ class MultiClipMotionCommand(MotionCommand):
 
     def start_clips(self, env_ids: torch.Tensor, clip_ids: torch.Tensor):
         """Put envs at the first frame of the given clips, robot on the reference (play / per-clip evaluation)."""
-        self.time_steps[env_ids] = self.clip_starts[clip_ids]
+        self.start_at(env_ids, self.clip_starts[clip_ids])
+
+    def start_at(self, env_ids: torch.Tensor, frames: torch.Tensor):
+        """Put envs at the given global frames (e.g. a stroke segment's start), robot on the reference."""
+        self.time_steps[env_ids] = frames
         self._write_reference_state_to_sim(
             env_ids, self.body_pos_w[env_ids, 0].clone(), self.body_quat_w[env_ids, 0].clone(),
             self.body_lin_vel_w[env_ids, 0].clone(), self.body_ang_vel_w[env_ids, 0].clone(),
             self.joint_pos[env_ids].clone(), self.joint_vel[env_ids].clone())
-        self.clip_index[env_ids] = clip_ids
-        self.clip_end[env_ids] = self.clip_ends[clip_ids]
+        self.clip_index[env_ids] = self.clip_of(frames)
+        self.clip_end[env_ids] = self.clip_ends[self.clip_index[env_ids]]
         self._pending_forward = True
 
     def _resample_command(self, env_ids: torch.Tensor):
@@ -150,3 +154,29 @@ def add_motion_preview(cfg):
         cfg.observations[group].terms["motion_preview"] = ObservationTermCfg(
             func=motion_preview_joint_pos, params={"command_name": "motion"})
     return cfg
+
+
+# Per-stroke scoring (D-048): single-stroke segments around right-hand speed peaks. Fixed before evaluation.
+SEG_PEAK_SPEED = 3.0  # m/s, right-hand speed a swing must reach
+SEG_MIN_GAP_S = 1.0  # peaks closer than this are one swing (the higher one is kept)
+SEG_BEFORE_S, SEG_AFTER_S = 1.5, 1.0  # segment window around the peak
+SEG_MIN_LEN_S = 2.0  # windows clipped below this at a clip edge are dropped
+
+
+def stroke_segments(hand_speed: np.ndarray, clip_starts: np.ndarray, total: int, fps: float):
+    """[(clip_index, start_frame, end_frame_exclusive, peak_frame)] in global frames, one per swing."""
+    ends = np.r_[clip_starts[1:], total]
+    gap, before, after = int(SEG_MIN_GAP_S * fps), int(SEG_BEFORE_S * fps), int(SEG_AFTER_S * fps)
+    out = []
+    for c, (s0, s1) in enumerate(zip(clip_starts, ends)):
+        v = hand_speed[s0:s1]
+        cand = [i for i in range(1, len(v) - 1) if v[i] >= SEG_PEAK_SPEED and v[i] >= v[i - 1] and v[i] > v[i + 1]]
+        peaks = []
+        for i in sorted(cand, key=lambda i: -v[i]):  # greedy non-maximum suppression
+            if all(abs(i - j) >= gap for j in peaks):
+                peaks.append(i)
+        for i in sorted(peaks):
+            a, b = max(0, i - before), min(len(v), i + after)
+            if b - a >= SEG_MIN_LEN_S * fps:
+                out.append((c, s0 + a, s0 + b, s0 + i))
+    return out

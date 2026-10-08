@@ -101,3 +101,22 @@ The tentative follow-up 2 (adding LAFAN1) is replaced: it does not address the r
    - a mixture-of-experts tracker (as in recent multi-motion trackers);
    - per-stroke clip segmentation for training as well.
 3. **Accept tracking-06-wide/model_21300 as the provisional teacher** with documented deviations (58.9 % whole-take success, r-MPKPE 7.7 cm) and move on to the style prior, as with Stage 5 (D-046).
+
+## Per-stroke scoring (D-048): tracking-06-wide/model_21300
+**Setup:** dev seed 4,200,306; 697 single-stroke segments from the 90 clips (right-hand speed peaks ≥ 3 m/s, ≥ 1 s apart, window −1.5/+1.0 s; rule fixed before evaluation); each played twice, 1394 episodes (`stage5b-tracking-06-wide-perstroke.json`).
+
+| Stroke | Segments | Success | Gate (≥ 80 %) |
+|---|---:|---:|---|
+| forehand | 136 | 94.5 % | pass |
+| backhand | 110 | 90.9 % | pass |
+| forehand volley | 114 | 94.7 % | pass |
+| backhand volley | 115 | 93.0 % | pass |
+| smash | 147 | 85.0 % | pass |
+| serve | 75 | 82.7 % | pass |
+| **all** | 697 | **90.5 %** | pass (≥ 90 %, narrowly; about ±1.6 points) |
+
+- **Falls:** 0 % (pass).
+- **Root-relative MPKPE: 7.8 cm. FAIL** (gate ≤ 6 cm).
+- **Terminations:** almost all end-effector (122 of 133).
+
+**Verdict: the success and fall criteria are met per stroke; the tracking-error criterion is not.** The 6 cm bound was set on 2026-10-08 with the other thresholds. It is unchanged and needs the user's decision.

@@ -76,3 +76,18 @@ def test_motion_preview_is_trailing_and_never_reads_past_the_clip(tmp_path):
         # Close to a clip's end every preview frame is that clip's last frame, never the next clip.
         assert torch.allclose(prev[near_end, 0], last[near_end], atol=1e-5)
     env.close()
+
+
+def test_stroke_segments_one_per_swing_inside_the_clip():
+    from picklebot_mj.tasks.tracking import SEG_MIN_LEN_S, stroke_segments
+
+    fps = 50
+    t = np.arange(0, 20, 1 / fps)
+    speed = np.zeros_like(t)
+    for c in (3.0, 3.4, 8.0, 19.6):  # 3.0/3.4 are one swing (< 1 s apart); 19.6 is too close to the clip end
+        speed += 6.0 * np.exp(-((t - c) / 0.1) ** 2)
+    hand = np.r_[speed, speed]  # two identical 20 s clips back to back
+    segs = stroke_segments(hand, np.array([0, len(t)]), 2 * len(t), fps)
+    assert len(segs) == 4  # swings at ~3.2 and 8.0 s in each clip; the 19.6 s one is clipped below SEG_MIN_LEN_S
+    for c, a, b, p in segs:
+        assert c * len(t) <= a < p < b <= (c + 1) * len(t) and b - a >= SEG_MIN_LEN_S * fps

@@ -1283,3 +1283,28 @@ Rejected:
 - ember-lab-berkeley/LAFAN-G1 (its licence claim conflicts with the source, and it is in a different format).
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B (footwork data step).
+
+### D-048 — Tracking teacher gate scored per stroke
+
+- Date: 2026-10-08
+- Status: Accepted (user: "go with option 1, score per stroke")
+- Amends: the tracking-teacher gate definition set on 2026-10-08 (MJLAB_PIVOT.md Stage 5B)
+
+Decision: the tracking gate's success is measured on **single-stroke segments**, not on whole takes. The thresholds are unchanged:
+- success >= 90 % overall and >= 80 % for every stroke type;
+- root-relative MPKPE <= 6 cm;
+- falls <= 1 %.
+
+A segment is one swing, cut from each take around a right-hand speed peak (`scripts/motion/tracking_eval.py --per-stroke`). The robot starts on the reference at the segment start; the segment succeeds if it reaches the segment end with no termination.
+
+The candidate evaluated is the one named before the per-stroke numbers existed: tracking-06-wide/model_21300. The other fixed endpoints are reported for information only.
+
+Evidence (`mjlab/results/stage5b-tracking.md`):
+- 81 of 90 Tennis-MoCap clips are 20-30 s takes of about 10-15 repeated strokes, and whole-take success requires all of them without a single termination.
+- The best whole-take success (58.9 %) is about 96 % per stroke. A 90 % whole-take bar is close to a 99.3 % per-stroke requirement, far stricter than the per-clip success of BeyondMimic-style trackers on short clips, which the gate was meant to resemble.
+
+Trade-offs:
+- Per-stroke scoring does not test recovery across a long rally of strokes; the task-level gates (Stage 5/6) cover that.
+- Segment boundaries depend on a peak-detection rule, which is fixed and documented here before evaluation.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B tracking-teacher gate, Open questions.
