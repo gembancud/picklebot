@@ -262,3 +262,20 @@ def _tracking_rl_cfg():
 register_mjlab_task(task_id=TASK_TRACKING_TENNIS, env_cfg=paddle_tracking_env_cfg(TENNIS_MOTION),
                     play_env_cfg=paddle_tracking_env_cfg(TENNIS_MOTION, play=True), rl_cfg=_tracking_rl_cfg(),
                     runner_cls=MotionTrackingOnPolicyRunner)
+
+
+# Stage 5B tracking follow-up 1 (rule 8; stage5b-tracking.md): a wider network, 1024-512-256 actor and critic,
+# warm-started from the widened tracking-05 endpoint (scripts/widen_checkpoint.py). Everything else as above.
+TASK_TRACKING_TENNIS_BIG = "Picklebot-Tracking-Tennis-Big-G1"
+
+
+def _tracking_big_rl_cfg():
+    cfg = _tracking_rl_cfg()
+    cfg.actor.hidden_dims = (1024, 512, 256)
+    cfg.critic.hidden_dims = (1024, 512, 256)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_TRACKING_TENNIS_BIG, env_cfg=paddle_tracking_env_cfg(TENNIS_MOTION),
+                    play_env_cfg=paddle_tracking_env_cfg(TENNIS_MOTION, play=True), rl_cfg=_tracking_big_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)
