@@ -62,3 +62,42 @@ The tentative follow-up 2 (adding LAFAN1) is replaced: it does not address the r
 - **Warm start:** from tracking-06-wide/model_21300 with the 58 new inputs zero-weighted (`scripts/expand_checkpoint.py`, fixed for 1024-wide first layers; the optimizer state is padded). It starts exactly at model_21300's behaviour.
 - **Unchanged:** everything else.
 - **Run:** ≤ 2 h, fresh dev seed. **If the gate is still missed, the loop stops for the user** (rule 8).
+
+## Follow-up 2 result: tracking-07-preview
+**Run:** 3872 iterations to the cap. Endpoint `model_25200`, dev seed 4,200,305 (`stage5b-tracking-07-preview.json`).
+- **Success: 54.7 %** (−4.2 vs tracking-06-wide). Forehand 67, backhand 54, FH volley 64, BH volley 66, serve 50, smash 21 %.
+- **Other measures:** 34/90 clips always succeed; r-MPKPE 7.7 cm; falls 0.3 %.
+- **Preview helped serves** (38 → 50 %) but not overall.
+
+## Verdict: tracking gate NOT met after the chain and both rule-8 follow-ups → loop stopped for the user
+| Run | Change | Success | r-MPKPE |
+|---|---|---:|---:|
+| tracking-05 (chain end) | (none) | 51.9 % | 7.6 cm |
+| tracking-06-wide | 1024-512-256 network | **58.9 %** | 7.7 cm |
+| tracking-07-preview | + reference preview 0.1 / 0.2 s | 54.7 % | 7.7 cm |
+
+## Why the number looks worse than the tracking is
+81 of the 90 clips are 20–30 s takes with about 10–15 repeated strokes each. Success requires the whole take with no termination.
+
+| Clip length | Clips | tracking-06-wide | tracking-07-preview |
+|---|---:|---:|---:|
+| < 10 s | 3 | 92 % | 100 % |
+| 10–20 s | 6 | 79 % | 54 % |
+| 20–31 s | 81 | 56 % | 53 % |
+
+- If strokes fail independently, 56 % over about 15 strokes is about **96 % of strokes tracked without a termination**.
+- The 90 % whole-take threshold set on 2026-10-08 is therefore close to a **99.3 % per-stroke** requirement. That is much stricter than BeyondMimic-style per-clip success on short clips, which it was meant to resemble.
+- Failures are almost all end-effector terminations (a hand or foot more than 25 cm off its reference); falls are 0–0.3 %.
+- Run-to-run swings of ±4–7 points between evaluations also suggest seed and evaluation noise plus training oscillation (adaptive sampling).
+
+## Options for the user
+1. **Recommended: measure per stroke.** Cut the takes into single-stroke segments (about 2–3 s around each swing, from the hand-speed peaks) and evaluate success per segment, keeping the 90 % and per-stroke 80 % thresholds.
+   - This changes the gate's definition, not its threshold, so it is the user's decision.
+   - The current teacher (tracking-06-wide/model_21300) would then likely be close.
+   - The style-prior step can proceed with it.
+2. **Keep the whole-take gate** and authorise more tracking work beyond rule 8. Candidates:
+   - longer training of the wide network;
+   - a larger batch or more envs;
+   - a mixture-of-experts tracker (as in recent multi-motion trackers);
+   - per-stroke clip segmentation for training as well.
+3. **Accept tracking-06-wide/model_21300 as the provisional teacher** with documented deviations (58.9 % whole-take success, r-MPKPE 7.7 cm) and move on to the style prior, as with Stage 5 (D-046).
