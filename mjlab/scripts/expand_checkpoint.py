@@ -35,8 +35,9 @@ def main():
     ck = torch.load(a.src, map_location="cpu", weights_only=False)
     shapes = {}
     for key, dim in (("actor_state_dict", a.actor_dim), ("critic_state_dict", a.critic_dim)):
+        rows = ck[key]["mlp.0.weight"].shape[0]  # first hidden width (512, or 1024 after widen_checkpoint.py)
         old, extra = expand_net(ck[key], dim)
-        shapes[(512, old)] = extra
+        shapes[(rows, old)] = extra
     for st in ck["optimizer_state_dict"]["state"].values():
         for m in ("exp_avg", "exp_avg_sq"):
             t = st.get(m)

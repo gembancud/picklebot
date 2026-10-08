@@ -124,3 +124,29 @@ def paddle_tracking_env_cfg(motion_file: str, play: bool = False, play_clip: int
     kw["motion_file"] = motion_file
     cfg.commands["motion"] = MultiClipMotionCommandCfg(**kw, play_clip=play_clip)
     return cfg
+
+
+# Stage 5B tracking follow-up 2 (rule 8; stage5b-tracking.md): motion preview. The policy also sees the reference
+# joint positions PREVIEW_FRAMES ahead, as offsets from the current reference frame, clamped to the end of the env's
+# clip. Fast strokes (serves, smashes) failed most with only the current frame in view.
+PREVIEW_FRAMES = (5, 10)  # 0.1 s and 0.2 s at 50 Hz
+
+
+def motion_preview_joint_pos(env, command_name: str = "motion", frames: tuple[int, ...] = PREVIEW_FRAMES):
+    cmd = env.command_manager.get_term(command_name)
+    now = cmd.motion.joint_pos[cmd.time_steps]
+    out = []
+    for k in frames:
+        idx = torch.minimum(cmd.time_steps + k, cmd.clip_end - 1)
+        out.append(cmd.motion.joint_pos[idx] - now)
+    return torch.cat(out, dim=-1)
+
+
+def add_motion_preview(cfg):
+    """Append the preview term (trailing, so scripts/expand_checkpoint.py can widen a trained policy's inputs)."""
+    from mjlab.managers.observation_manager import ObservationTermCfg
+
+    for group in ("actor", "critic"):
+        cfg.observations[group].terms["motion_preview"] = ObservationTermCfg(
+            func=motion_preview_joint_pos, params={"command_name": "motion"})
+    return cfg

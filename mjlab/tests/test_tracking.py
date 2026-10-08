@@ -49,3 +49,30 @@ def test_paddle_face_collides_and_multi_clip_never_crosses_a_boundary(tmp_path):
         assert (t >= cmd.clip_starts[k]).all() and (t < cmd.clip_ends[k]).all()
         assert (cmd.clip_of(t) == k).all()
     env.close()
+
+
+@needs
+def test_motion_preview_is_trailing_and_never_reads_past_the_clip(tmp_path):
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+
+    from picklebot_mj.tasks.tracking import PREVIEW_FRAMES, add_motion_preview, paddle_tracking_env_cfg
+
+    base = paddle_tracking_env_cfg(str(_small_motion(tmp_path)))
+    cfg = add_motion_preview(paddle_tracking_env_cfg(str(_small_motion(tmp_path))))
+    assert list(cfg.observations["actor"].terms)[-1] == "motion_preview"
+    assert list(cfg.observations["actor"].terms)[:-1] == list(base.observations["actor"].terms)
+    cfg.scene.num_envs = 32
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    obs, _ = env.reset()
+    cmd = env.command_manager.get_term("motion")
+    act = torch.zeros(env.num_envs, env.action_manager.total_action_dim, device="cuda")
+    n = len(PREVIEW_FRAMES) * 29
+    for _ in range(150):
+        obs, *_ = env.step(act)
+        prev = obs["actor"][:, -n:].reshape(env.num_envs, len(PREVIEW_FRAMES), 29)
+        last = cmd.motion.joint_pos[cmd.clip_end - 1] - cmd.motion.joint_pos[cmd.time_steps]
+        near_end = (cmd.clip_end - 1 - cmd.time_steps) < PREVIEW_FRAMES[0]
+        # Close to a clip's end every preview frame is that clip's last frame, never the next clip.
+        assert torch.allclose(prev[near_end, 0], last[near_end], atol=1e-5)
+    env.close()

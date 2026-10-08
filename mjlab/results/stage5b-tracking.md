@@ -33,3 +33,32 @@ tracking-01 (v4 clips, wrong paddle orientation) was stopped and is not part of 
 - **Run:** ≤ 2 h; evaluated as above on a fresh dev seed.
 
 **Candidate for follow-up 2** if needed: the LAFAN1 footwork clips (D-047) join the motion set. That is a separate variable and only if follow-up 1 leaves the gate missed. Otherwise they join with the style-prior step.
+
+## Follow-up 1 result: tracking-06-wide
+**Run:** 2026-10-08, 4054 iterations to the 2 h cap. Endpoint `model_21300`, dev seed 4,200,304 (`stage5b-tracking-06-wide.json`).
+
+| Measure | tracking-05 | tracking-06-wide |
+|---|---:|---:|
+| Success | 51.9 % | **58.9 %** (+7.0) |
+| Forehand | 74 % | 68 % |
+| Backhand | 67 % | 63 % |
+| Forehand volley | 64 % | 78 % |
+| Backhand volley | 45 % | 63 % |
+| Serve | 23 % | 38 % |
+| Smash | 20 % | 32 % |
+| Clips that always succeed | 31 | 41 |
+| r-MPKPE | 7.6 cm | 7.7 cm |
+| Falls | 0.3 % | 0 % |
+
+- **Training reward plateaued from about iteration 18.5k**, so more time alone is unlikely to close the gap.
+- **Gate: still not met.** The fast strokes (serve, smash) fail most.
+
+## Follow-up 2 (rule 8, the last), decided before launch: tracking-07-preview
+The tentative follow-up 2 (adding LAFAN1) is replaced: it does not address the remaining failure. LAFAN1 joins with the style-prior step instead.
+
+**One change: motion preview** (task `Picklebot-Tracking-Tennis-Big-Preview-G1`).
+- The actor and critic also observe the reference joint positions 0.1 s and 0.2 s ahead, as offsets from the current reference frame, clamped to the env's clip end.
+- Reason: the policy saw only the current reference frame, and the fastest strokes failed most. Previewing upcoming targets is standard in multi-motion trackers.
+- **Warm start:** from tracking-06-wide/model_21300 with the 58 new inputs zero-weighted (`scripts/expand_checkpoint.py`, fixed for 1024-wide first layers; the optimizer state is padded). It starts exactly at model_21300's behaviour.
+- **Unchanged:** everything else.
+- **Run:** ≤ 2 h, fresh dev seed. **If the gate is still missed, the loop stops for the user** (rule 8).

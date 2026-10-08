@@ -279,3 +279,15 @@ def _tracking_big_rl_cfg():
 register_mjlab_task(task_id=TASK_TRACKING_TENNIS_BIG, env_cfg=paddle_tracking_env_cfg(TENNIS_MOTION),
                     play_env_cfg=paddle_tracking_env_cfg(TENNIS_MOTION, play=True), rl_cfg=_tracking_big_rl_cfg(),
                     runner_cls=MotionTrackingOnPolicyRunner)
+
+
+# Stage 5B tracking follow-up 2 (rule 8; stage5b-tracking.md): motion preview (reference joints 0.1 s and 0.2 s ahead)
+# on top of the wide network, warm-started from tracking-06-wide with the new inputs zero-weighted
+# (scripts/expand_checkpoint.py).
+from picklebot_mj.tasks.tracking import add_motion_preview  # noqa: E402
+
+TASK_TRACKING_TENNIS_PREVIEW = "Picklebot-Tracking-Tennis-Big-Preview-G1"
+register_mjlab_task(task_id=TASK_TRACKING_TENNIS_PREVIEW,
+                    env_cfg=add_motion_preview(paddle_tracking_env_cfg(TENNIS_MOTION)),
+                    play_env_cfg=add_motion_preview(paddle_tracking_env_cfg(TENNIS_MOTION, play=True)),
+                    rl_cfg=_tracking_big_rl_cfg(), runner_cls=MotionTrackingOnPolicyRunner)
