@@ -67,3 +67,32 @@ The robot's spread is 20–40 % of the clips' in many joints. The wrist gap can 
 - **Warm start:** policy from S-D3-style-b/model_9100; a fresh discriminator (its input changed); the weak pull-back as in follow-up 1.
 - **Unchanged:** everything else.
 - **If the style gate is still missed, the loop stops for the user.**
+
+## Follow-up 2 result: S-D3-style-c (`2026-10-08_22-42-14_student-drill3-style-c/model_10400`)
+- **Style score** (4,200,400): **4.84**, unchanged (target ≤ 3.86). **FAIL.**
+- **Training:** without the wrist cue the style reward lasted longer (0.23, then 0.09 by the end; D 0.83 on clips, −0.87 on robot), but posture did not move.
+- **Task** (4,200,280–282, no hint): the best executor so far.
+  - Stage 4 families 95.6–98.2 % legal and 96.5–99.1 % contact.
+  - Reach: FH 97.4, BH 29.0, short 4.6, deep 1.3 %.
+  - Falls 4.9–5.1 %; recovery 0.98 m.
+  - Fixed-start retention against model_7600: 97.9 % against 97.4 %, every family within 5 points.
+
+## Verdict: style gate NOT met after the run and both rule-8 follow-ups → loop stopped for the user
+| Run | Change | Style score (S-D3b 4.82; target ≤ 3.86) | Stage 4 legal (no hint) |
+|---|---|---:|---|
+| S-D3-style | style reward 0.5 | 4.85 | 92.6–97.1 % |
+| S-D3-style-b | + weak pull-back | 4.85 | 95.3–97.6 % |
+| S-D3-style-c | + discriminator without wrists | 4.84 | 95.6–98.2 % |
+
+**Why posture does not move:** the task still carries posture rewards that pull the other way.
+- `pose` (mjlab `variable_posture`, weight 1.0): every joint near the default standing posture.
+- `ready_stance` (weight 1.0).
+- The RegPPO pull-back toward the old student.
+
+The style reward (weight 0.5, and often near zero once D wins) is outweighed. The changes the clips ask for (forward trunk lean, raised free arm, wider and more varied joint motion) are exactly what `pose` penalises.
+
+## Options for the user
+1. **Recommended: make room for style.** Drop the posture-anchoring terms (`pose`, `ready_stance`) and raise the style weight to an even task/style split, as in AMP. Let the style prior take over the role those hand-made posture terms played. Authorise a short sequence: about 2–3 runs, one change each, same gate.
+2. **AMP from the start.** Train style jointly from early training: re-run the student fine-tune chain with the style reward from its first run. Joint training is how AMP is normally used; adding it late to a converged policy is harder.
+3. **A motion-prior controller.** Use the tracking teacher as a low-level skill controller that the executor commands with motion targets or a learned skill latent (ASE/CALM/PULSE-style). This is the most human-like result and the biggest redesign.
+4. **Accept S-D3-style-c as the executor**, task-best and style unchanged. Record style as not achieved and continue to Stage 6, revisiting style later.
