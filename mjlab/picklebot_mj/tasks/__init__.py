@@ -350,3 +350,20 @@ def _tracking_tennis_lafan(play=False):
 register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN, env_cfg=_tracking_tennis_lafan(),
                     play_env_cfg=_tracking_tennis_lafan(True), rl_cfg=_tracking_big_rl_cfg(),
                     runner_cls=MotionTrackingOnPolicyRunner)
+
+
+# Stage 5B H0 follow-up 1 (rule 8): the tennis + LAFAN1 tracker widened to 2048-1024-512 (capacity: the same 1024-wide
+# network held 90.5 % on tennis alone but about 77 % with LAFAN1 added). Warm-started from the widened endpoint.
+TASK_TRACKING_TENNIS_LAFAN_HUGE = "Picklebot-Tracking-TennisLafan-Huge-G1"
+
+
+def _tracking_huge_rl_cfg():
+    cfg = _tracking_rl_cfg()
+    cfg.actor.hidden_dims = (2048, 1024, 512)
+    cfg.critic.hidden_dims = (2048, 1024, 512)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN_HUGE, env_cfg=_tracking_tennis_lafan(),
+                    play_env_cfg=_tracking_tennis_lafan(True), rl_cfg=_tracking_huge_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)
