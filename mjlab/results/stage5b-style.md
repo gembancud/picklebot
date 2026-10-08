@@ -48,3 +48,22 @@ The alternative, distilling the tracking teacher, does not fit: that teacher act
 - **Warm start:** from S-D3-style/model_7800. The discriminator continues from its saved weights (`PICKLEBOT_STYLE_LOAD`).
 - **Unchanged:** everything else, including style weight 0.5.
 - **Evaluation:** as above, on fresh dev seeds; the style score on 4,200,400 for a like-for-like comparison.
+
+## Follow-up 1 result: S-D3-style-b (`2026-10-08_20-31-47_student-drill3-style-b/model_9100`)
+- **Style score** (4,200,400): **4.85**, unchanged (target ≤ 3.86). **FAIL.**
+- **Task** (4,200,270–272, no hint): Stage 4 families 95.3–97.6 % legal (better than S-D3b); reach FH 96.6, BH 25.7, short 5.0, deep 1.5 %; falls 5.5–6.0 %; recovery 0.98 m. Fixed-start retention against model_7600 is now within 5 points on every family (low −3.8, fast −4.5).
+- **Training:** the style reward fell to about 0.01. The discriminator separated robot from clips almost perfectly (D 0.98 on clips, −0.99 on robot, loss 0.03), so the reward carried no signal.
+
+**Feature analysis** (`artifacts/eval/style_gap.py`): the largest robot-vs-clip gaps are:
+- waist pitch: robot 0.00 against clips 0.34 rad (z −2.1);
+- the right **wrist** yaw, pitch and roll (z +1.8, +0.9, −0.65);
+- shoulder roll and yaw (the free arm hangs; the players hold it up);
+- hands relative to the pelvis.
+
+The robot's spread is 20–40 % of the clips' in many joints. The wrist gap can never close: the wrist aims the paddle for the task, and the clips' wrist angles are the retargeting's swing-direction heuristic, not racket data. So the discriminator always has an easy cue and the reward saturates at zero.
+
+## Follow-up 2 (rule 8, the last), decided before launch: S-D3-style-c
+**One change:** the discriminator does not see the six wrist joints (angles and velocities); task `Picklebot-Student-Drill3-Style-NoWrist-G1`, 2 × 74 features.
+- **Warm start:** policy from S-D3-style-b/model_9100; a fresh discriminator (its input changed); the weak pull-back as in follow-up 1.
+- **Unchanged:** everything else.
+- **If the style gate is still missed, the loop stops for the user.**

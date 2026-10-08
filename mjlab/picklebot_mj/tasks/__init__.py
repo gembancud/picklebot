@@ -317,3 +317,18 @@ def _drill3_style(play=False):
 
 register_mjlab_task(task_id=TASK_STUDENT_DRILL3_STYLE, env_cfg=_drill3_style(), play_env_cfg=_drill3_style(True),
                     rl_cfg=_student_finetune_rl_cfg())
+
+
+# Stage 5B style follow-up 2 (stage5b-style.md): the discriminator does not see the wrist joints (the paddle wrist
+# aims the paddle for the task; the clips' wrist angles are a heuristic). Everything else as Drill3-Style.
+TASK_STUDENT_DRILL3_STYLE_NOWRIST = "Picklebot-Student-Drill3-Style-NoWrist-G1"
+
+
+def _drill3_style_nowrist(play=False):
+    cfg = _drill3_style(play)
+    cfg.rewards["style"].params["cfg"].exclude_joints = (r".*_wrist_(roll|pitch|yaw)_joint",)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_STUDENT_DRILL3_STYLE_NOWRIST, env_cfg=_drill3_style_nowrist(),
+                    play_env_cfg=_drill3_style_nowrist(True), rl_cfg=_student_finetune_rl_cfg())

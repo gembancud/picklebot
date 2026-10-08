@@ -76,15 +76,30 @@ class StyleCfg:
     updates: int = 4  # gradient steps per update
     save_path: str | None = None  # discriminator weights are written here at each update (for metrics / resume)
     load_path: str | None = None
+    # Joints left out of the discriminator's input (angles and velocities), as regexes on joint names. The paddle
+    # wrist aims the paddle for the task, and the clips' wrist angles are a heuristic (stage5b-style.md follow-up 2).
+    exclude_joints: tuple[str, ...] = ()
     extra: dict = field(default_factory=dict)
 
 
+def feature_mask(joint_names, exclude) -> torch.Tensor:
+    """Indices of the 80 features kept when the joints matching `exclude` are dropped (from both halves of a pair)."""
+    import re
+
+    n = len(joint_names)
+    drop = {i for i, j in enumerate(joint_names) if any(re.fullmatch(p, j) for p in exclude)}
+    keep = [i for i in range(80) if not (i < n and i in drop) and not (n <= i < 2 * n and i - n in drop)]
+    return torch.tensor(keep + [80 + i for i in keep])
+
+
 class StyleDiscriminator:
-    def __init__(self, cfg: StyleCfg, body_names, device):
+    def __init__(self, cfg: StyleCfg, body_names, device, joint_names=None):
         self.cfg, self.device = cfg, device
         with torch.inference_mode(False):
             ea, eb = expert_transitions(cfg.motion_files, list(body_names), device)
-            self.expert = torch.cat([ea, eb], dim=-1)
+            self.keep = (feature_mask(list(joint_names), cfg.exclude_joints).to(device)
+                         if cfg.exclude_joints else torch.arange(160, device=device))
+            self.expert = torch.cat([ea, eb], dim=-1)[:, self.keep]
             self.mean = self.expert.mean(0)
             self.std = self.expert.std(0).clamp(min=1e-3)
             dims, layers = [self.expert.shape[1], *cfg.hidden], []
@@ -102,11 +117,13 @@ class StyleDiscriminator:
         return self.net((pair - self.mean) / self.std).squeeze(-1)
 
     def reward(self, pair: torch.Tensor) -> torch.Tensor:
+        """pair: full 160-dim (phi_t, phi_t+1); the excluded features are dropped here."""
         with torch.no_grad():
-            d = self.score(pair)
+            d = self.score(pair[:, self.keep])
         return torch.clamp(1.0 - 0.25 * (d - 1.0) ** 2, min=0.0)
 
     def add(self, pair: torch.Tensor):
+        pair = pair[:, self.keep]
         n = len(pair)
         idx = (self.ptr + torch.arange(n, device=self.device)) % self.cfg.buffer
         self.buf[idx] = pair.detach().clone()
@@ -149,7 +166,8 @@ def style_reward(env, cfg: StyleCfg, asset_name: str = "robot") -> torch.Tensor:
     robot = env.scene[asset_name]
     if st is None:
         key_ids = [list(robot.body_names).index(b) for b in KEY_BODIES]
-        st = {"disc": StyleDiscriminator(cfg, robot.body_names, env.device), "keys": key_ids, "prev": None}
+        st = {"disc": StyleDiscriminator(cfg, robot.body_names, env.device, robot.joint_names), "keys": key_ids,
+              "prev": None}
         env._picklebot_style = st
     phi = robot_features(robot, st["keys"])
     prev = st["prev"]

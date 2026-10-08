@@ -65,6 +65,7 @@ def test_discriminator_learns_to_prefer_expert_like_transitions(tmp_path):
     cfg = StyleCfg(hidden=(64, 64), lr=1e-3, batch=256, buffer=4096, update_every=1, updates=5)
     disc.cfg, disc.device = cfg, "cpu"
     disc.expert = torch.randn(4096, 8)
+    disc.keep = torch.arange(8)
     disc.mean, disc.std = disc.expert.mean(0), disc.expert.std(0)
     disc.net = torch.nn.Sequential(torch.nn.Linear(8, 64), torch.nn.ReLU(), torch.nn.Linear(64, 64),
                                    torch.nn.ReLU(), torch.nn.Linear(64, 1))
@@ -103,3 +104,14 @@ def test_style_task_gives_bounded_rewards_and_trains_the_discriminator():
     rew = disc.reward(disc.buf[:disc.n_buf])
     assert torch.isfinite(rew).all() and (rew >= 0).all() and (rew <= 1).all()
     env.close()
+
+
+def test_feature_mask_drops_the_excluded_joints_from_both_halves():
+    from picklebot_mj.style import feature_mask
+
+    joints = [f"j{i}" for i in range(26)] + ["right_wrist_roll_joint", "right_wrist_pitch_joint", "right_wrist_yaw_joint"]
+    keep = feature_mask(joints, (r".*_wrist_.*",)).tolist()
+    assert len(keep) == 2 * (80 - 6)
+    for i in (26, 27, 28, 29 + 26, 29 + 27, 29 + 28):  # wrist angles and velocities
+        assert i not in keep and 80 + i not in keep
+    assert 0 in keep and 58 in keep and 80 + 79 in keep  # other joints, pelvis height, last key-body feature
