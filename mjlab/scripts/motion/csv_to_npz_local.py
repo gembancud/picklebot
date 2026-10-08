@@ -63,12 +63,16 @@ def main():
     ap.add_argument("dir")
     ap.add_argument("out")
     ap.add_argument("--clips", default=None, help="comma-separated stems (default: DIR/accepted.json)")
+    ap.add_argument("--clips-json", default=None, help="a JSON list of stems (overrides DIR/accepted.json)")
     ap.add_argument("--input-fps", type=int, default=50)
     ap.add_argument("--output-fps", type=int, default=50)
     ap.add_argument("--device", default="cuda:0")
     args = ap.parse_args()
     root = Path(args.dir)
-    stems = args.clips.split(",") if args.clips else json.loads((root / "accepted.json").read_text())
+    if args.clips:
+        stems = args.clips.split(",")
+    else:
+        stems = json.loads(Path(args.clips_json or root / "accepted.json").read_text())
     sim_cfg = SimulationCfg()
     sim_cfg.mujoco.timestep = 1.0 / args.output_fps
     scene = Scene(paddle_tracking_env_cfg(motion_file="").scene, device=args.device)

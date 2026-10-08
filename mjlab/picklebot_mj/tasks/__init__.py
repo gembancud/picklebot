@@ -291,3 +291,29 @@ register_mjlab_task(task_id=TASK_TRACKING_TENNIS_PREVIEW,
                     env_cfg=add_motion_preview(paddle_tracking_env_cfg(TENNIS_MOTION)),
                     play_env_cfg=add_motion_preview(paddle_tracking_env_cfg(TENNIS_MOTION, play=True)),
                     rl_cfg=_tracking_big_rl_cfg(), runner_cls=MotionTrackingOnPolicyRunner)
+
+
+# Stage 5B style prior (stage5b-style.md): S-D3b's task plus an AMP-style discriminator reward (picklebot_mj/style.py)
+# against the Tennis-MoCap strokes (v5) and LAFAN1 footwork (24 clips). One change: the style reward, weight 0.5.
+import os  # noqa: E402
+
+from mjlab.managers.reward_manager import RewardTermCfg  # noqa: E402
+
+from picklebot_mj.style import StyleCfg, style_reward  # noqa: E402
+
+TASK_STUDENT_DRILL3_STYLE = "Picklebot-Student-Drill3-Style-G1"
+_MOTION_DIR = Path(__file__).resolve().parents[2] / "artifacts" / "motion" / "tracking"
+STYLE_WEIGHT = 0.5
+
+
+def _drill3_style(play=False):
+    cfg = _drill3_gentle(play)
+    style = StyleCfg(motion_files=(str(_MOTION_DIR / "tennis-v5.npz"), str(_MOTION_DIR / "lafan-g1.npz")),
+                     save_path=os.environ.get("PICKLEBOT_STYLE_SAVE"),
+                     load_path=os.environ.get("PICKLEBOT_STYLE_LOAD"))
+    cfg.rewards["style"] = RewardTermCfg(func=style_reward, weight=STYLE_WEIGHT, params={"cfg": style})
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_STUDENT_DRILL3_STYLE, env_cfg=_drill3_style(), play_env_cfg=_drill3_style(True),
+                    rl_cfg=_student_finetune_rl_cfg())
