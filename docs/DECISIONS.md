@@ -1328,3 +1328,30 @@ Rationale: the teacher is used as a style source (style prior or distillation) f
 The bound is unchanged and is reported again if the teacher is retrained.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B (tracking teacher), Open questions.
+
+### D-050 — Hierarchical motion-prior executor (low-level human-motion controller steered by a task policy)
+
+- Date: 2026-10-09
+- Status: Accepted (user: "The most latest one is in option three, right? ... Let's go for it then.")
+- Amends: D-044 (Stage 5B style prior), D-049 (use of the tracking teacher)
+
+Decision: the executor's natural motion comes from a **hierarchical motion prior** instead of a style reward on the existing executor (AMP failed after three runs; `mjlab/results/stage5b-style.md`):
+- A **low-level controller** built from the accepted tracking teacher (`tracking-06-wide/model_21300`) and the retargeted human clips (Tennis-MoCap strokes + LAFAN1 footwork). It can only produce human-like motion.
+- A **task-level policy** steers it to move, set up and return balls.
+
+This is the direction of current work on natural physics-based humanoids and racket sports (PULSE, MaskedMimic, Vid2Player3D and recent G1 tennis work).
+
+The exact variant (e.g. a PULSE-style latent skill space distilled from the tracker, or a MaskedMimic-style sparse-goal controller) is chosen from a short literature and library survey (`mjlab/results/stage5b-hierarchy-survey.md`) before anything is built. Stage 5B is rewritten into concrete steps with gates.
+
+**Unchanged:**
+- The Stage 5 task gates and the "no task regression beyond 5 points" rule, now measured against S-D3-style-c (the task-best executor: Stage 4 families 95.6-98.2 %, retention within 5 points everywhere).
+- The style score (median nearest-clip pose distance, target at least 20 % below the S-D3b baseline of 4.82).
+
+S-D3-style-c is kept as the fallback executor if the hierarchy cannot match its task performance.
+
+Trade-offs:
+- A larger redesign, with new training stages (controller distillation, then the task policy).
+- Task performance may at first fall below the flat executor's.
+- Ball-contact precision depends on how finely the low-level controller can be steered.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B (rewritten), Open questions.
