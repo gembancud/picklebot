@@ -1308,3 +1308,23 @@ Trade-offs:
 - Segment boundaries depend on a peak-detection rule, which is fixed and documented here before evaluation.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B tracking-teacher gate, Open questions.
+
+### D-049 — Accept the wide tracking teacher with a tracking-error deviation
+
+- Date: 2026-10-08
+- Status: Accepted (user: "go with option 1, accept it")
+- Amends: D-048 (tracking-teacher gate)
+
+Decision: `tracking-06-wide/model_21300` (task `Picklebot-Tracking-Tennis-Big-G1`, 1024-512-256) is the **provisional tracking teacher** for Stage 5B.
+
+Per-stroke (D-048, dev seed 4,200,306, 697 segments):
+- success 90.5 %, every stroke type 82.7-94.7 %;
+- falls 0.
+
+Documented deviation: root-relative MPKPE is 7.8 cm against the 6 cm bound.
+
+Rationale: the teacher is used as a style source (style prior or distillation) for the executor, where stroke completion matters more than a couple of centimetres of pose error. Part of the error is reference motion the G1 cannot reach (ankle roll, waist pitch and shoulder yaw limits; the retargeting already leaves 2.4-3.4 cm).
+
+The bound is unchanged and is reported again if the teacher is retrained.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B (tracking teacher), Open questions.
