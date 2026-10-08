@@ -27,3 +27,24 @@ The alternative, distilling the tracking teacher, does not fit: that teacher act
 3. **Side-by-side videos** of S-D3b and the style run, same families and seed, sent to the user.
 
 **Rule 8 applies** if the gate is missed.
+
+## Result: S-D3-style (`2026-10-08_18-22-58_student-drill3-style/model_7800`, 1300 iterations to the cap)
+- **Style score** (dev seed 4,200,400): nearest-clip pose distance median **4.85**, against S-D3b 4.82 (target ≤ 3.86). **No improvement. FAIL.** The human-to-human floor is 0.94.
+- **Task** (`s5_gate_eval.sh`, dev seeds 4,200,260–262, no hint), against S-D3b (4,200,240–242):
+
+| | Stage 4 families legal | reach FH / BH / short / deep legal | Falls | Recovery |
+|---|---|---|---|---|
+| S-D3b | 93.4–97.0 % | 96 / 22 / 2 / 2 % | 5.7–6.9 % | 1.03 m |
+| S-D3-style | 92.6–97.1 % | 96 / 25 / 2 / 1.5 % | 5.2–6.1 % | 1.03 m |
+
+  - No family regresses beyond 5 points against S-D3b.
+  - Fixed-start retention against model_7600 shows the S-D3b deviations (low −6.1, fast −6.7; also backhand −7.0, deep −5.4) and stays a documented Stage 5 deviation (D-046).
+- **Training:** the style reward fell from 0.30 to 0.06 per episode while the legal-return reward held (0.77 → 0.71). The discriminator kept improving; the policy did not move toward human states.
+
+**Diagnosis:** the RegPPO pull-back toward the old student (coefficient 10 decaying to 1 over 1500 updates, plus a 100-update critic warm-up) stayed strong through this short run and anchored the actor to its old motion.
+
+## Follow-up 1 (rule 8), decided before launch: S-D3-style-b
+**One change:** a weaker pull-back, `PICKLEBOT_REF_COEF=1`, `PICKLEBOT_REF_FINAL_COEF=0.1` (decay 1500 and warm-up 100 unchanged).
+- **Warm start:** from S-D3-style/model_7800. The discriminator continues from its saved weights (`PICKLEBOT_STYLE_LOAD`).
+- **Unchanged:** everything else, including style weight 0.5.
+- **Evaluation:** as above, on fresh dev seeds; the style score on 4,200,400 for a like-for-like comparison.
