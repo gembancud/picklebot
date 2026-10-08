@@ -12,6 +12,7 @@ Differences from `Mjlab-Tracking-Flat-Unitree-G1`:
 from __future__ import annotations
 
 import copy
+import math
 from dataclasses import dataclass, fields
 
 import numpy as np
@@ -59,6 +60,16 @@ class MultiClipMotionCommand(MotionCommand):
         self.clip_end = torch.full((self.num_envs,), total, dtype=torch.long, device=self.device)
         self.clip_index = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
         self.clip_end[:] = self._end_of(self.time_steps)
+        # Per-source sampling shares (H0): bins are grouped by the source of their clip; the adaptive (failure-weighted)
+        # distribution is renormalised within each source, then scaled to that source's share.
+        self.bin_source = None
+        if cfg.source_shares is not None and "clip_source" in data:
+            src_of_clip = torch.tensor(data["clip_source"], dtype=torch.long, device=self.device)
+            centre = ((torch.arange(self.bin_count, device=self.device) + 0.5) / self.bin_count
+                      * (total - 1)).long()
+            self.bin_source = src_of_clip[self.clip_of(centre)]
+            self.source_shares = torch.tensor(cfg.source_shares, dtype=torch.float, device=self.device)
+            assert len(self.source_shares) == int(src_of_clip.max()) + 1
 
     def clip_of(self, t: torch.Tensor) -> torch.Tensor:
         return torch.searchsorted(self.clip_starts, t, right=True) - 1
@@ -93,6 +104,36 @@ class MultiClipMotionCommand(MotionCommand):
         self.clip_index[env_ids] = self.clip_of(self.time_steps[env_ids])
         self.clip_end[env_ids] = self.clip_ends[self.clip_index[env_ids]]
 
+    def _adaptive_sampling(self, env_ids: torch.Tensor):
+        if self.bin_source is None:
+            return super()._adaptive_sampling(env_ids)
+        # As MotionCommand._adaptive_sampling, with the per-source shares applied before sampling.
+        episode_failed = self._env.termination_manager.terminated[env_ids]
+        if torch.any(episode_failed):
+            current_bin = torch.clamp((self.time_steps * self.bin_count) // max(self.motion.time_step_total, 1),
+                                      0, self.bin_count - 1)
+            self._current_bin_failed[:] = torch.bincount(current_bin[env_ids][episode_failed],
+                                                         minlength=self.bin_count)
+        p = self.bin_failed_count + self.cfg.adaptive_uniform_ratio / float(self.bin_count)
+        p = torch.nn.functional.pad(p.view(1, 1, -1), (0, self.cfg.adaptive_kernel_size - 1), mode="replicate")
+        p = torch.nn.functional.conv1d(p, self.kernel.view(1, 1, -1)).view(-1)
+        q = torch.zeros_like(p)
+        for k, share in enumerate(self.source_shares):
+            m = self.bin_source == k
+            q[m] = p[m] / p[m].sum() * share
+        q = q / q.sum()
+        bins = torch.multinomial(q, len(env_ids), replacement=True)
+        self.time_steps[env_ids] = ((bins + torch.rand(len(env_ids), device=self.device)) / self.bin_count
+                                    * (self.motion.time_step_total - 1)).long()
+        h = -(q * (q + 1e-12).log()).sum()
+        self.metrics["sampling_entropy"][:] = h / math.log(self.bin_count)
+        pmax, imax = q.max(dim=0)
+        self.metrics["sampling_top1_prob"][:] = pmax
+        self.metrics["sampling_top1_bin"][:] = imax.float() / self.bin_count
+        for k in range(len(self.source_shares)):
+            self.metrics[f"sampling_share_src{k}"] = torch.full((self.num_envs,), float(q[self.bin_source == k].sum()),
+                                                                device=self.device)
+
     def _update_command(self, env_ids: torch.Tensor | None = None):
         # As MotionCommand._update_command, but wrapping at the end of each env's clip, not of the whole file.
         if env_ids is None:
@@ -115,6 +156,7 @@ class MultiClipMotionCommand(MotionCommand):
 @dataclass(kw_only=True)
 class MultiClipMotionCommandCfg(MotionCommandCfg):
     play_clip: int | None = None  # play mode ("start" sampling): which clip to start
+    source_shares: tuple[float, ...] | None = None  # sampling share per clip source (merged motion files)
 
     def build(self, env):
         return MultiClipMotionCommand(self, env)

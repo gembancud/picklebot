@@ -332,3 +332,21 @@ def _drill3_style_nowrist(play=False):
 
 register_mjlab_task(task_id=TASK_STUDENT_DRILL3_STYLE_NOWRIST, env_cfg=_drill3_style_nowrist(),
                     play_env_cfg=_drill3_style_nowrist(True), rl_cfg=_student_finetune_rl_cfg())
+
+
+# Stage 5B H0 (D-050): the wide tracking teacher continued on tennis-v5 + LAFAN1 footwork (24 clips), sampled
+# half-and-half by source so the shorter tennis set keeps half of the episode starts.
+TASK_TRACKING_TENNIS_LAFAN = "Picklebot-Tracking-TennisLafan-Big-G1"
+TENNIS_LAFAN_MOTION = str(_MOTION_DIR / "tennis-lafan.npz")
+TENNIS_LAFAN_SHARES = (0.5, 0.5)
+
+
+def _tracking_tennis_lafan(play=False):
+    cfg = paddle_tracking_env_cfg(TENNIS_LAFAN_MOTION, play=play)
+    cfg.commands["motion"].source_shares = TENNIS_LAFAN_SHARES
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN, env_cfg=_tracking_tennis_lafan(),
+                    play_env_cfg=_tracking_tennis_lafan(True), rl_cfg=_tracking_big_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)

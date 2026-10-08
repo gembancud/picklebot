@@ -91,3 +91,34 @@ def test_stroke_segments_one_per_swing_inside_the_clip():
     assert len(segs) == 4  # swings at ~3.2 and 8.0 s in each clip; the 19.6 s one is clipped below SEG_MIN_LEN_S
     for c, a, b, p in segs:
         assert c * len(t) <= a < p < b <= (c + 1) * len(t) and b - a >= SEG_MIN_LEN_S * fps
+
+
+@needs
+def test_source_shares_split_episode_starts_between_motion_sources(tmp_path):
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+
+    from picklebot_mj.tasks.tracking import paddle_tracking_env_cfg
+
+    # Source 0: two clips of 120 frames; source 1: one clip of 600 frames (5x longer than either).
+    d = np.load(MOTION)
+    keep = np.concatenate([np.arange(s, s + n) for s, n in ((d["clip_starts"][0], 120), (d["clip_starts"][1], 120),
+                                                            (d["clip_starts"][2], 600))])
+    out = {k: d[k][keep] for k in ("joint_pos", "joint_vel", "body_pos_w", "body_quat_w", "body_lin_vel_w",
+                                   "body_ang_vel_w")}
+    out.update(fps=d["fps"], clip_starts=np.array([0, 120, 240]), clip_names=d["clip_names"][:3],
+               clip_source=np.array([0, 0, 1]))
+    np.savez(tmp_path / "m.npz", **out)
+    cfg = paddle_tracking_env_cfg(str(tmp_path / "m.npz"))
+    cfg.commands["motion"].source_shares = (0.5, 0.5)
+    cfg.scene.num_envs = 64
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    cmd = env.command_manager.get_term("motion")
+    ids = torch.arange(env.num_envs, device="cuda")
+    src0 = []
+    for _ in range(40):
+        cmd._adaptive_sampling(ids)
+        src0.append((cmd.time_steps < 240).float().mean().item())
+    assert abs(np.mean(src0) - 0.5) < 0.05  # about half the starts in the short source, not 240 / 840
+    env.close()

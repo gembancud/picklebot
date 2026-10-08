@@ -57,6 +57,7 @@ def main():
     ap.add_argument("--repeats", type=int, default=4, help="episodes per clip")
     ap.add_argument("--seed", type=int, default=4200300)
     ap.add_argument("--json", default=None)
+    ap.add_argument("--window-s", type=float, default=4.0, help="per-stroke mode: window length for non-tennis clips")
     ap.add_argument("--per-stroke", action="store_true",
                     help="score single-stroke segments around right-hand speed peaks instead of whole clips (D-048)")
     args = ap.parse_args()
@@ -77,7 +78,14 @@ def main():
     if args.per_stroke:
         hand = body_names.index("right_wrist_yaw_link")
         speed = np.linalg.norm(motion["body_lin_vel_w"][:, hand], axis=-1)
-        units = stroke_segments(speed, clip_starts, total, float(motion["fps"][0]))  # (clip, start, end, peak)
+        fps = float(motion["fps"][0])
+        source = motion["clip_source"] if "clip_source" in motion else np.zeros(n_clips, dtype=int)
+        tennis = [u for u in stroke_segments(speed, clip_starts, total, fps) if source[u[0]] == 0]
+        # Non-tennis clips (LAFAN1 footwork, H0): fixed windows of --window-s seconds.
+        win = int(args.window_s * fps)
+        other = [(c, int(a), int(a) + win, -1) for c in range(n_clips) if source[c] != 0
+                 for a in range(int(clip_starts[c]), int(clip_ends[c]) - win + 1, win)]
+        units = tennis + other  # (clip, start, end, peak)
     else:
         units = [(c, int(clip_starts[c]), int(clip_ends[c]), -1) for c in range(n_clips)]
     n_units = len(units)
@@ -154,6 +162,9 @@ def main():
     by_stroke = defaultdict(list)
     for p in per_clip:
         tag = p["clip"].split("_", 1)[1]
+        if tag.startswith("subject"):  # LAFAN1 clip: walk1_subject1 -> lafan_walk
+            by_stroke["lafan_" + p["clip"].split("_")[0].rstrip("0123456789")].append(p)
+            continue
         stroke = next(s for k, s in (("Servicio", "serve"), ("Remate", "smash"), ("VDerecha", "forehand_volley"),
                                      ("VReves", "backhand_volley"), ("Derecha", "forehand"), ("Reves", "backhand"))
                       if tag.startswith(k))
