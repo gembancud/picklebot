@@ -1376,3 +1376,20 @@ Decision:
 Evidence: `mjlab/results/stage5b-h0-tracking-12-huge.json`. Without these two clip types, the same model's LAFAN1 score is about 77 % on the reported per-type numbers.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H0, Open questions.
+
+### D-052 — Long-training block for the H0 teacher
+
+- Date: 2026-10-09
+- Status: Accepted (user: "yes, switch to the long-training block")
+- Amends: D-051 (replaces its "up to 2 more runs"), loop rule 9's 4-run chain limit for this teacher only
+
+Decision: the H0 teacher (2048-1024-512, task `Picklebot-Tracking-TennisLafan2-Huge-G1`) trains as a long block. The rules are fixed before the block:
+- **Length:** up to **10 chained <= 2 h runs** from tracking-12-huge/model_38300, tracking-13-huge being run 1, about 20 GPU-hours.
+- **Batch size:** after run 1, a short smoke at 8192 envs. If it fits in memory and gives >= 1.3x the samples per second of 4096 envs, runs 2+ use 8192 envs. Otherwise they stay at 4096. Both results are recorded.
+- **Evaluation:** every 2 runs, a per-stroke + LAFAN1 evaluation on a fresh dev seed (`tracking_eval.py --per-stroke`). The main metric is the mean of tennis overall and LAFAN1 overall success.
+- **Learning-rate decay:** the final 2 runs use a fixed, lower learning rate (1e-4, schedule fixed; the default is adaptive from 1e-3). They are runs 9-10, or the 2 runs right after the first evaluation that gains < 1 point on the main metric. After the decay runs the block ends.
+- **Gates:** the H0 gate (D-051) is unchanged. If it is missed at the end, D-051's provisional-acceptance rule applies (every item within 3 points). Otherwise the loop stops for the user.
+
+Evidence: the user's question whether training length, rather than method, is the limit. The tracker has had about 3.8e9 samples (about 21 GPU-hours); published trackers use several times more compute. The learning curves show diminishing returns but no hard plateau.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H0.
