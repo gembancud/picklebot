@@ -61,6 +61,8 @@ def main():
     ap.add_argument("--seed", type=int, default=4200300)
     ap.add_argument("--json", default=None)
     ap.add_argument("--window-s", type=float, default=4.0, help="per-stroke mode: window length for non-tennis clips")
+    ap.add_argument("--latent", action="store_true",
+                    help="--checkpoint is a latent controller (H1): act with encoder -> decoder (mean latent)")
     ap.add_argument("--per-stroke", action="store_true",
                     help="score single-stroke segments around right-hand speed peaks instead of whole clips (D-048)")
     args = ap.parse_args()
@@ -98,8 +100,16 @@ def main():
     wrapped = RslRlVecEnvWrapper(env, clip_actions=load_rl_cfg(args.task).clip_actions)
     runner_cls = load_runner_cls(args.task) or MjlabOnPolicyRunner
     runner = runner_cls(wrapped, asdict(load_rl_cfg(args.task)), device="cuda")
-    runner.load(args.checkpoint, map_location="cuda")
-    policy = runner.get_inference_policy(device="cuda")
+    if args.latent:
+        from picklebot_mj.latent import LatentController
+
+        lat = LatentController().cuda()
+        lat.load_state_dict(torch.load(args.checkpoint, map_location="cuda", weights_only=False)["model"])
+        lat.eval()
+        policy = lambda o: lat(o["actor"])  # noqa: E731
+    else:
+        runner.load(args.checkpoint, map_location="cuda")
+        policy = runner.get_inference_policy(device="cuda")
 
     cmd = env.command_manager.get_term("motion")
     assert list(env.scene["robot"].body_names) == body_names, "body order differs from the compiled scene"
