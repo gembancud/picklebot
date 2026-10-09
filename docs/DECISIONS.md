@@ -1355,3 +1355,24 @@ Trade-offs:
 - Ball-contact precision depends on how finely the low-level controller can be steered.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B (rewritten), Open questions.
+
+### D-051 — Drop LAFAN1 jumps and mixed actions from the teacher's motion set; bounded continuation of H0
+
+- Date: 2026-10-09
+- Status: Accepted (user: "go with option 1, drop those clips")
+- Amends: D-047 (LAFAN1 tracking set), the H0 gate scope (MJLAB_PIVOT.md Stage 5B)
+
+Decision:
+- **Smaller set.** `jumps1_*` and `multipleActions1_*` (6 clips) leave the LAFAN1 tracking set. 18 clips remain: walk, run, sprint, fight-and-sports. These clips are not pickleball footwork and caused most falls (7.7 % and 13.8 % of their windows).
+- **Same gate on the new set.** H0's thresholds are unchanged, now on the reduced LAFAN1 set: tennis >= 87.5 % overall and >= 77 % per stroke type, LAFAN1 >= 85 %, falls <= 1 %.
+- **Bounded continuation.** Up to 2 more chained <= 2 h runs from tracking-12-huge/model_38300 on the new set, each evaluated on a fresh dev seed.
+- **Provisional acceptance, fixed now.** If the gate is still missed, the last fixed endpoint is accepted as the provisional H0 teacher for H1 only if every item is within 3 points of its threshold:
+  - tennis >= 84.5 % overall;
+  - every stroke type >= 74 %;
+  - LAFAN1 >= 82 %;
+  - falls <= 2 %.
+  Otherwise the loop stops for the user.
+
+Evidence: `mjlab/results/stage5b-h0-tracking-12-huge.json`. Without these two clip types, the same model's LAFAN1 score is about 77 % on the reported per-type numbers.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H0, Open questions.
