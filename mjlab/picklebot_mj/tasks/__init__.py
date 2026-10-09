@@ -367,3 +367,19 @@ def _tracking_huge_rl_cfg():
 register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN_HUGE, env_cfg=_tracking_tennis_lafan(),
                     play_env_cfg=_tracking_tennis_lafan(True), rl_cfg=_tracking_huge_rl_cfg(),
                     runner_cls=MotionTrackingOnPolicyRunner)
+
+
+# Stage 5B H0 continuation (D-051): LAFAN1 without jumps1 and multipleActions1 (18 clips), same shares and network.
+TASK_TRACKING_TENNIS_LAFAN2_HUGE = "Picklebot-Tracking-TennisLafan2-Huge-G1"
+TENNIS_LAFAN2_MOTION = str(_MOTION_DIR / "tennis-lafan2.npz")
+
+
+def _tracking_tennis_lafan2(play=False):
+    cfg = paddle_tracking_env_cfg(TENNIS_LAFAN2_MOTION, play=play)
+    cfg.commands["motion"].source_shares = TENNIS_LAFAN_SHARES
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN2_HUGE, env_cfg=_tracking_tennis_lafan2(),
+                    play_env_cfg=_tracking_tennis_lafan2(True), rl_cfg=_tracking_huge_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)
