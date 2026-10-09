@@ -38,6 +38,9 @@ from picklebot_mj import seeds
 from picklebot_mj.tasks.tracking import stroke_segments
 
 FALL_Z = 0.5  # torso_link height (m)
+# A fall must be unintended: the reference torso is still above FALL_Z + REF_MARGIN when the robot's drops below FALL_Z.
+# (LAFAN1 walk3 clips crawl and lie down; the raw measure counted the robot following them as falls. 2026-10-09.)
+REF_MARGIN = 0.1
 
 
 def scene_body_names(cfg):
@@ -113,7 +116,8 @@ def main():
     ee = cfg.terminations["ee_body_pos"].params["body_names"]
     torso = env.scene["robot"].body_names.index("torso_link")
     done = torch.zeros(n, dtype=torch.bool, device="cuda")
-    success, fell = torch.zeros_like(done), torch.zeros_like(done)
+    success, fell, fell_raw = torch.zeros_like(done), torch.zeros_like(done), torch.zeros_like(done)
+    ref_torso = list(cmd.cfg.body_names).index("torso_link")
     cause = ["" for _ in range(n)]
     sums = defaultdict(lambda: torch.zeros(n, device="cuda"))
     frames = torch.zeros(n, device="cuda")
@@ -133,7 +137,9 @@ def main():
             sums[k] += torch.where(live, f(ref), 0.0)
         sums["ee_pos_error"] += torch.where(live, compute_ee_position_error(ref, ee), 0.0)
         frames += live.float()
-        fell |= live & (env.scene["robot"].data.body_link_pos_w[:, torso, 2] < FALL_Z)
+        low = live & (env.scene["robot"].data.body_link_pos_w[:, torso, 2] < FALL_Z)
+        fell_raw |= low
+        fell |= low & (ref.body_pos_w[:, ref_torso, 2] > FALL_Z + REF_MARGIN)
         term = env.termination_manager.terminated & live
         for i in torch.where(term)[0].tolist():
             active = [name for name in env.termination_manager.active_terms
@@ -148,13 +154,14 @@ def main():
         f = frames[sel].clamp(min=1)
         per_clip.append({"clip": names[units[k][0]], "start_s": round(units[k][1] / 50.0, 2),
                          "success": float(success[sel].float().mean()),
-                         "fall": float(fell[sel].float().mean()),
+                         "fall": float(fell[sel].float().mean()), "fall_raw": float(fell_raw[sel].float().mean()),
                          **{k: float((v[sel] / f).mean()) for k, v in sums.items()},
                          "causes": sorted({cause[i] for i in torch.where(sel)[0].tolist() if cause[i]})})
     f = frames.clamp(min=1)
     summary = {"checkpoint": args.checkpoint, "seed": args.seed, "episodes": n, "clips": n_clips,
                "scoring": "per-stroke segments" if args.per_stroke else "whole clips", "units": n_units,
                "success_rate": float(success.float().mean()), "fall_rate": float(fell.float().mean()),
+               "fall_rate_raw": float(fell_raw.float().mean()),
                **{k: float((v / f).mean()) for k, v in sums.items()},
                "units_all_success": int(sum(p["success"] == 1.0 for p in per_clip)),
                "termination_causes": dict(sorted(defaultdict(int, {c: cause.count(c) for c in set(cause) if c})
