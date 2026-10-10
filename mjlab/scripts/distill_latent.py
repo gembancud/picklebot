@@ -51,6 +51,9 @@ def main():
     ap.add_argument("--kl-start", type=float, default=0.01)
     ap.add_argument("--kl-end", type=float, default=0.001)
     ap.add_argument("--smooth", type=float, default=0.005)
+    ap.add_argument("--prior-rollout-frac", type=float, default=0.0,
+                    help="fraction of envs whose rollout action comes from the prior alone (z = mu_p + sigma_p*eps) "
+                         "instead of the encoder, so the prior is trained on states it visits itself (H2 follow-up 2)")
     ap.add_argument("--prior-bc", type=float, default=0.0,
                     help="weight of MSE(D(s, mu_p), a_teacher): the prior's own mean latent must also reproduce the "
                          "teacher (H2 follow-up 1; makes prior-only control a usable default)")
@@ -77,6 +80,7 @@ def main():
         if "opt" in ck:
             opt.load_state_dict(ck["opt"])
     obs = venv.get_observations()
+    prior_envs = torch.rand(args.envs, device="cuda") < args.prior_rollout_frac
     bufs = []
     log, t0 = [], time.time()
     it = args.start_it
@@ -91,6 +95,8 @@ def main():
                 model.norm.update(x)
                 a_t = teacher(obs)
                 a_s = model(x, sample=True)
+                if args.prior_rollout_frac > 0:
+                    a_s = torch.where(prior_envs.unsqueeze(-1), model.prior_action(x), a_s)
                 O.append(x.clone())
                 Y.append(a_t.clone())
                 obs, _, dones, _ = venv.step(beta * a_t + (1.0 - beta) * a_s)
