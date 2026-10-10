@@ -16,7 +16,7 @@ from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
 
 from picklebot_mj import seeds
 
-TASK = "Picklebot-Latent-Reach-G1"
+TASK = "Picklebot-Latent-Reach-G1"  # the reach task (any variant: same env; rewards differ only)
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--checkpoint", required=True)

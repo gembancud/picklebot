@@ -402,3 +402,18 @@ def _latent_reach_rl_cfg():
 register_mjlab_task(task_id=TASK_LATENT_REACH, env_cfg=latent_reach_env_cfg(LATENT_CONTROLLER, TENNIS_LAFAN2_MOTION),
                     play_env_cfg=latent_reach_env_cfg(LATENT_CONTROLLER, TENNIS_LAFAN2_MOTION, play=True),
                     rl_cfg=_latent_reach_rl_cfg())
+
+
+# Stage 5B H3 follow-up 1 (rule 8): the root-target reward widened from a 0.3 m to a 1.0 m Gaussian (at 0.3 m it gives no
+# gradient from 1 m away; reach-01 reached 2.3 % of root targets). Everything else as Picklebot-Latent-Reach-G1.
+TASK_LATENT_REACH_WIDE = "Picklebot-Latent-Reach-WideRoot-G1"
+
+
+def _latent_reach_wide(play=False):
+    cfg = latent_reach_env_cfg(LATENT_CONTROLLER, TENNIS_LAFAN2_MOTION, play=play)
+    cfg.rewards["root"].params = {"std": 1.0}
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_REACH_WIDE, env_cfg=_latent_reach_wide(), play_env_cfg=_latent_reach_wide(True),
+                    rl_cfg=_latent_reach_rl_cfg())
