@@ -20,16 +20,17 @@ TASK = "Picklebot-Latent-Reach-G1"  # the reach task (any variant: same env; rew
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--checkpoint", required=True)
+ap.add_argument("--task", default=TASK, help="reach task variant (its lambda must match the trained policy)")
 ap.add_argument("--envs", type=int, default=1024)
 ap.add_argument("--seconds", type=float, default=10.0)
 ap.add_argument("--seed", type=int, default=4200410)
 ap.add_argument("--json", default=None)
 a = ap.parse_args()
 assert a.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
-cfg = load_env_cfg(TASK)
+cfg = load_env_cfg(a.task)
 cfg.scene.num_envs, cfg.seed = a.envs, a.seed
 env = ManagerBasedRlEnv(cfg=cfg, device="cuda")
-agent = load_rl_cfg(TASK)
+agent = load_rl_cfg(a.task)
 venv = RslRlVecEnvWrapper(env, clip_actions=agent.clip_actions)
 runner = MjlabOnPolicyRunner(venv, asdict(agent), device="cuda")
 runner.load(a.checkpoint, load_cfg={"actor": True}, strict=True, map_location="cuda")

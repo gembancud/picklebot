@@ -417,3 +417,18 @@ def _latent_reach_wide(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_REACH_WIDE, env_cfg=_latent_reach_wide(), play_env_cfg=_latent_reach_wide(True),
                     rl_cfg=_latent_reach_rl_cfg())
+
+
+# Stage 5B H3 follow-up 2 (rule 8): the latent barrier widened, lambda 0.5 -> 1.0 (LATENT's value). With 0.5 the policy
+# can move z only half a prior std from the prior mean, and root targets stayed at about 3 %. Otherwise as WideRoot.
+TASK_LATENT_REACH_WIDE_L1 = "Picklebot-Latent-Reach-WideRoot-L1-G1"
+
+
+def _latent_reach_wide_l1(play=False):
+    cfg = latent_reach_env_cfg(LATENT_CONTROLLER, TENNIS_LAFAN2_MOTION, play=play, lam=1.0)
+    cfg.rewards["root"].params = {"std": 1.0}
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_REACH_WIDE_L1, env_cfg=_latent_reach_wide_l1(),
+                    play_env_cfg=_latent_reach_wide_l1(True), rl_cfg=_latent_reach_rl_cfg())
