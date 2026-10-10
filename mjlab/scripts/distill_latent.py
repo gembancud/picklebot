@@ -51,6 +51,9 @@ def main():
     ap.add_argument("--kl-start", type=float, default=0.01)
     ap.add_argument("--kl-end", type=float, default=0.001)
     ap.add_argument("--smooth", type=float, default=0.005)
+    ap.add_argument("--prior-bc", type=float, default=0.0,
+                    help="weight of MSE(D(s, mu_p), a_teacher): the prior's own mean latent must also reproduce the "
+                         "teacher (H2 follow-up 1; makes prior-only control a usable default)")
     ap.add_argument("--max-seconds", type=float, default=6900.0)
     ap.add_argument("--save-every", type=int, default=100)
     args = ap.parse_args()
@@ -95,6 +98,8 @@ def main():
         bufs.append((torch.stack(O), torch.stack(Y), torch.stack(D)))  # [T, N, ...]
         bufs = bufs[-args.buffer:]
         stats = {"mse": 0.0, "smooth": 0.0, "kl": 0.0}
+        if args.prior_bc > 0:
+            stats["prior_mse"] = 0.0
         n_steps = 0
         for _ in range(args.epochs):
             for O_, Y_, D_ in bufs:
@@ -120,6 +125,10 @@ def main():
                     else:
                         smooth = torch.zeros((), device="cuda")
                     loss = mse + args.smooth * smooth + kl_w * kl
+                    if args.prior_bc > 0:
+                        prior_mse = ((model.decode(o, mu_p) - y) ** 2).mean()
+                        loss = loss + args.prior_bc * prior_mse
+                        stats["prior_mse"] = stats.get("prior_mse", 0.0) + prior_mse.item()
                     opt.zero_grad()
                     loss.backward()
                     torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
