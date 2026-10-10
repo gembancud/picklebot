@@ -1393,3 +1393,27 @@ Decision: the H0 teacher (2048-1024-512, task `Picklebot-Tracking-TennisLafan2-H
 Evidence: the user's question whether training length, rather than method, is the limit. The tracker has had about 3.8e9 samples (about 21 GPU-hours); published trackers use several times more compute. The learning curves show diminishing returns but no hard plateau.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H0.
+
+### D-053 — H2 becomes a diagnostic; H3 with the prior-imitation latent controller
+
+- Date: 2026-10-11
+- Status: Accepted (user: "go with option 1, move on to H3")
+- Amends: D-050 (Stage 5B H2 gate), MJLAB_PIVOT.md H3
+
+Decision:
+- **H2 is a diagnostic, not a gate.** Its results stay recorded (`mjlab/results/stage5b-h2.md`). Prior-only rollouts fall 37-46 % (no noise / noise) from mid-motion starts. The controller is instead judged by H3 controllability and the H4 style score.
+- **Controller:** `latent-07/latent_10651`. It passes H1 (93.2 % tennis, 88.8 % LAFAN1) and was trained with the prior imitation loss.
+- **H3 action term:**
+  - z = mu_p + lambda * sigma_p * tanh(a_lat), with **lambda = 0.5** (smaller than the 1.0 first planned, because the prior is loose);
+  - plus a bounded right-wrist residual of +-0.3 rad;
+  - the prior and decoder are frozen.
+- **H3 gate, fixed before training:**
+  - a paddle target (0.3-0.7 m from the right shoulder) and a root target (within 1 m), both resampled every 2 s;
+  - a target counts as reached if it comes within 10 cm at any time in its 2 s window;
+  - >= 80 % of paddle targets and >= 80 % of root targets reached after one <= 2 h run;
+  - falls <= 5 % per episode;
+  - dev-seed evaluation.
+
+Evidence: H2 runs and diagnostics (`stage5b-h2.md`). In LATENT the high level is trained to choose z within the prior's barrier and never samples the prior at random.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H2, H3, Open questions.
