@@ -383,3 +383,22 @@ def _tracking_tennis_lafan2(play=False):
 register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN2_HUGE, env_cfg=_tracking_tennis_lafan2(),
                     play_env_cfg=_tracking_tennis_lafan2(True), rl_cfg=_tracking_huge_rl_cfg(),
                     runner_cls=MotionTrackingOnPolicyRunner)
+
+
+# Stage 5B H3 (D-053): steer the frozen H1 latent controller (latent-07/latent_10651) through its latent; paddle reach.
+from picklebot_mj.tasks.latent_reach import latent_reach_env_cfg  # noqa: E402
+
+TASK_LATENT_REACH = "Picklebot-Latent-Reach-G1"
+LATENT_CONTROLLER = str(Path(__file__).resolve().parents[2] / "artifacts" / "train" / "latent" / "latent-07"
+                        / "latent_10651.pt")
+
+
+def _latent_reach_rl_cfg():
+    cfg = _tracking_rl_cfg()
+    cfg.experiment_name = "picklebot_latent"
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_REACH, env_cfg=latent_reach_env_cfg(LATENT_CONTROLLER, TENNIS_LAFAN2_MOTION),
+                    play_env_cfg=latent_reach_env_cfg(LATENT_CONTROLLER, TENNIS_LAFAN2_MOTION, play=True),
+                    rl_cfg=_latent_reach_rl_cfg())
