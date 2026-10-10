@@ -237,6 +237,12 @@ Natural strokes and footwork from human motion data instead of reward shaping al
 - [ ] **H3. Latent action term and controllability.** An mjlab action term: [a_lat (32), a_wrist (3)] → q* = D(s, μ_p + λσ_p·tanh(a_lat)) with λ = 1, plus a bounded right-wrist residual (±0.3 rad). The prior and decoder are frozen.
   - **Check:** a simple paddle-reach task (the paddle centre to a random point within 0.3–0.7 m of the shoulder, plus a root target within 1 m, both resampled every 2 s).
   - **Gate:** ≥ 80 % of targets reached within 10 cm and 2 s, after one ≤ 2 h run, with falls ≤ 5 %.
+- [ ] **V1. CalTennis video pilot (D-054; side task, does not block H3/H4).**
+  - Install GVHMR, its venv and its checkpoints. The user supplies the SMPL-X and SMPL body models.
+  - Run GVHMR on the two side-view clips, resampled to 30 fps, with static camera (`-s`). Fix the root with the camera calibration (court plane).
+  - Retarget to the paddle G1 with GMR.
+  - Report per clip: a footwork-coverage heuristic, foot skating, jitter, and how it compares with the mocap. Render clips for the user.
+  - Decide whether to scale up.
 - [ ] **H4. Executor over the latent.** A fresh PPO executor in the H3 action space on the Drill 3 task, with the posture rewards (`pose`, `ready_stance`) and the style reward removed: style now comes from the decoder. Chained ≤ 2 h runs as the student fine-tunes were.
   - **Gate:**
     - no family's legal return falls more than 5 points below S-D3-style-c's (fixed-endpoint evaluation, `s5_gate_eval.sh`, every family reported, no averaging);
@@ -702,3 +708,4 @@ Its measured capability envelope is published as a contract. It must hold across
 - 2026-10-11 - **User decision (D-053):** H2 becomes a diagnostic. H3 uses latent-07/latent_10651 with lambda 0.5. H3 gate fixed: >= 80 % of paddle and root targets reached (within 10 cm at any time in their 2 s window), falls <= 5 %, after one <= 2 h run.
 - 2026-10-11 - H3 set up: picklebot_mj/tasks/latent_reach.py. LatentJointPositionAction: a = [a_lat 32, a_wrist 3]; z = mu_p + 0.5 sigma_p tanh(a_lat); targets = D(s, z) + 0.3 tanh(a_wrist) on the right wrist. The controller's proprioception is rebuilt by controller_proprio, tested equal to the tracking observation. ReachCommand: paddle target 0.3-0.7 m from the right shoulder plus a root target within 1 m, every 2 s, with a 10 cm reach tally. Rewards: paddle/root tracking, alive, fall -50, action rate; standing start, 10 s episodes. Task Picklebot-Latent-Reach-G1; scripts/motion/reach_eval.py; 2 tests. Smoke OK (1.2 s/iteration at 4096 envs). Run reach-01 (one <= 2 h run, D-053).
 - 2026-10-11 - H3 reach-01 -> model_5900 (cap). Evaluation (dev seed 4200410; stage5b-h3-reach-01.json): paddle targets 61.0 %, root targets 2.3 %, falls 11.4 % per episode. **H3 missed.** The root reward exp(-(d/0.3)^2) gives no gradient from 1 m away, so the policy learned to stand and reach. Rule 8 follow-up 1, decided before launch: root-reward std 0.3 -> 1.0 m (Picklebot-Latent-Reach-WideRoot-G1), from model_5900; everything else unchanged. Evaluation uses the base task (same env and success tally).
+- 2026-10-11 - **User approval (D-054):** GVHMR code, venv, pytorch3d and checkpoints for the CalTennis video pilot (new step V1, a side task). The SMPL-X and SMPL body models await the user's registration.

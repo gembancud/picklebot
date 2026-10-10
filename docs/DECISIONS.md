@@ -1417,3 +1417,21 @@ Decision:
 Evidence: H2 runs and diagnostics (`stage5b-h2.md`). In LATENT the high level is trained to choose z within the prior's barrier and never samples the prior at random.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H2, H3, Open questions.
+
+### D-054 — CalTennis video pilot: GVHMR downloads approved
+
+- Date: 2026-10-11
+- Status: Accepted (user: "if you need my approval bro you got it. lets go!")
+- Amends: rule 10 approvals for Stage 5B (video pilot, `mjlab/results/stage5b-video-pilot-survey.md`)
+
+Decision: download and install, all into git-ignored locations:
+- the GVHMR code (github.com/zju3dv/GVHMR, non-commercial research licence);
+- its own Python venv (`~/envs/gvhmr`: torch 2.3 + cu121 and the GVHMR requirements; ultralytics is AGPL-3.0, used locally);
+- pytorch3d 0.7.6;
+- the GVHMR checkpoints (gvhmr, hmr2, vitpose-h, yolov8x; about 5.6 GB). The official Google Drive comes first; the Hugging Face mirror `camenduru/GVHMR` is the fallback if Drive refuses an unattended download.
+
+The SMPL-X v1.1 and SMPL v1.1.0 body models need the user's own registration (MPI non-commercial, single-user) and are supplied by the user.
+
+Pilot data: the CalTennis side views E_01 and W_01 of session 09_18_2025_16_15_court5 (CC BY-NC 4.0, already downloaded; players about 180-240 px tall, full body visible). The project is non-commercial (D-047). Video-derived motion and anything trained on it stay local.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B (new video-pilot step).
