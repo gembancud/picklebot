@@ -48,7 +48,9 @@ episodes += env.num_envs  # episodes still running at the end
 t = cmd.tally
 out = {"checkpoint": a.checkpoint, "seed": a.seed, "windows": t["windows"],
        "paddle_reached": t["paddle_reached"] / max(1, t["windows"]),
-       "root_reached": t["root_reached"] / max(1, t["windows"]), "episodes": episodes,
+       "root_reached": t["root_reached"] / max(1, t["windows"]),
+       "paddle_reached_25cm": t["paddle_reached_25"] / max(1, t["windows"]),
+       "root_reached_25cm": t["root_reached_25"] / max(1, t["windows"]), "episodes": episodes,
        "fall_rate": falls / max(1, episodes)}
 print(json.dumps(out, indent=1))
 if a.json:

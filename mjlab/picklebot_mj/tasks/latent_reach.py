@@ -33,6 +33,7 @@ from picklebot_mj.latent import GOAL_DIM, LatentController
 
 RIGHT_WRIST = ("right_wrist_roll_joint", "right_wrist_pitch_joint", "right_wrist_yaw_joint")
 REACH_TOL = 0.10
+REACH_TOL_WIDE = 0.25  # reported for information only (D-055)
 FALL_Z, FALL_TILT = 0.5, math.radians(60)
 
 
@@ -137,7 +138,8 @@ class ReachCommand(CommandTerm):
         self.min_paddle = torch.full((n,), 1e9, device=self.device)
         self.min_root = torch.full((n,), 1e9, device=self.device)
         self.started = torch.zeros(n, dtype=torch.bool, device=self.device)
-        self.tally = {"windows": 0, "paddle_reached": 0, "root_reached": 0}
+        self.tally = {"windows": 0, "paddle_reached": 0, "root_reached": 0, "paddle_reached_25": 0,
+                      "root_reached_25": 0}
         self.metrics["paddle_dist"] = torch.zeros(n, device=self.device)
         self.metrics["root_dist"] = torch.zeros(n, device=self.device)
 
@@ -174,6 +176,8 @@ class ReachCommand(CommandTerm):
             self.tally["windows"] += len(done)
             self.tally["paddle_reached"] += int((self.min_paddle[done] < REACH_TOL).sum())
             self.tally["root_reached"] += int((self.min_root[done] < REACH_TOL).sum())
+            self.tally["paddle_reached_25"] += int((self.min_paddle[done] < REACH_TOL_WIDE).sum())
+            self.tally["root_reached_25"] += int((self.min_root[done] < REACH_TOL_WIDE).sum())
         self.started[env_ids] = True
         d = self.robot.data
         n = len(env_ids)
@@ -209,6 +213,21 @@ def paddle_track(env, command_name="reach", std=0.15):
 def root_track(env, command_name="reach", std=0.3):
     _, dr = env.command_manager.get_term(command_name).distances()
     return torch.exp(-(dr / std) ** 2)
+
+
+def root_progress(env, command_name="reach", asset_name="robot", max_speed=1.0):
+    """Pelvis velocity toward the root target (m/s), clamped (H3 extension E1, D-055)."""
+    cmd = env.command_manager.get_term(command_name)
+    d = env.scene[asset_name].data
+    to = cmd.root_target - d.root_link_pos_w[:, :2]
+    dist = to.norm(dim=-1, keepdim=True).clamp(min=1e-3)
+    v = (d.root_link_lin_vel_w[:, :2] * (to / dist)).sum(-1)
+    return v.clamp(-max_speed, max_speed) * (dist.squeeze(-1) > 0.05)
+
+
+def latent_action_l2(env, action_name="latent", latent=32):
+    """L2 of the latent part of the high-level action (H3 extension E2, D-055)."""
+    return env.action_manager.get_term(action_name).raw_action[:, :latent].pow(2).sum(-1)
 
 
 def fell(env, asset_name="robot"):

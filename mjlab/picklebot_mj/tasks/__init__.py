@@ -432,3 +432,28 @@ def _latent_reach_wide_l1(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_REACH_WIDE_L1, env_cfg=_latent_reach_wide_l1(),
                     play_env_cfg=_latent_reach_wide_l1(True), rl_cfg=_latent_reach_rl_cfg())
+
+
+# Stage 5B H3 extension (D-055): E1 adds a root progress reward; E2 also penalises the latent action's L2 norm.
+from picklebot_mj.tasks.latent_reach import latent_action_l2, root_progress  # noqa: E402
+
+TASK_LATENT_REACH_E1 = "Picklebot-Latent-Reach-E1-G1"
+TASK_LATENT_REACH_E2 = "Picklebot-Latent-Reach-E2-G1"
+
+
+def _latent_reach_e1(play=False):
+    cfg = _latent_reach_wide_l1(play)
+    cfg.rewards["root_progress"] = RewardTermCfg(func=root_progress, weight=1.0)
+    return cfg
+
+
+def _latent_reach_e2(play=False):
+    cfg = _latent_reach_e1(play)
+    cfg.rewards["latent_l2"] = RewardTermCfg(func=latent_action_l2, weight=-0.01)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_REACH_E1, env_cfg=_latent_reach_e1(), play_env_cfg=_latent_reach_e1(True),
+                    rl_cfg=_latent_reach_rl_cfg())
+register_mjlab_task(task_id=TASK_LATENT_REACH_E2, env_cfg=_latent_reach_e2(), play_env_cfg=_latent_reach_e2(True),
+                    rl_cfg=_latent_reach_rl_cfg())
