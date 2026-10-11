@@ -13,6 +13,7 @@
 | reach-01 (5900) | λ 0.5, root reward σ 0.3 m | 61.0 % | 2.3 % | 11.4 % | root reward 0.08; stands and reaches |
 | reach-02 (11700) | root reward σ 1.0 m | 62.4 % | 3.2 % | 14.3 % | root reward 0.62 (moves part-way); action std 0.99 |
 | reach-03 (17500) | λ 0.5 → 1.0 | **73.2 %** | 8.5 % | **32.0 %** | paddle 1.60, root 0.70; action std 0.89 |
+| reach-04 (23200), E1 | + root progress reward (pelvis speed toward target, clamped ±1 m/s, w 1.0) | 77.0 % | 31.9 % | 27.7 % | 25 cm: paddle 78.3 %, root 51.5 %; training falls 0.3/12 episodes; action std 1.00 |
 
 ## Observations
 - **Paddle control improves with each change.** The latent can place the paddle.
