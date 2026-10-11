@@ -186,6 +186,9 @@ class BallPhysicsAction(ActionTerm):
         # Per-episode flags read by rewards/observations/terminations.
         b = lambda: torch.zeros(n, dtype=torch.bool, device=dev)
         self.hit_done, self.hit_now = b(), b()
+        # Ball state just after the first legal contact (court-local), read by return_shaping (H4, D-057).
+        self.hit_out_pos = torch.zeros(n, 3, device=dev)
+        self.hit_out_vel = torch.zeros(n, 3, device=dev)
         self.return_done, self.return_now = b(), b()
         self.lost_now = b()
         self.wrench = torch.zeros(n, 6, device=dev)
@@ -425,6 +428,8 @@ class BallPhysicsAction(ActionTerm):
             d["ball_out_speed"] += (self.ball.vel.norm(dim=-1) * f).sum()
             d["contact_height"] += (self.ball.pos[:, 2] * f).sum()
         self.hit_now |= first
+        self.hit_out_pos = torch.where(first.unsqueeze(-1), self.ball.pos, self.hit_out_pos)
+        self.hit_out_vel = torch.where(first.unsqueeze(-1), self.ball.vel, self.hit_out_vel)
         if getattr(self.cfg, "hit_hint", False):  # after the contact the spot input is the recovery spot again
             back = first & self.hit_hint_on
             self.recover_xy = torch.where(back.unsqueeze(-1), self.hit_rec_true, self.recover_xy)
@@ -594,6 +599,28 @@ def ball_spin(env) -> torch.Tensor:
 
 def paddle_contact(env) -> torch.Tensor:
     return _term(env).hit_now.float()
+
+
+RETURN_SPEED_REF = 6.0  # m/s toward the net that earns the full speed half of return_shaping
+GRAVITY = 9.81
+
+
+def return_quality(pos: torch.Tensor, vel: torch.Tensor) -> torch.Tensor:
+    """Score in [0, 1] of a ball just after contact (court-local; the robot is at x < 0, the net at x = 0):
+    half for its speed toward the net (up to RETURN_SPEED_REF), half if its drag-free ballistic path is still
+    above the net when it reaches x = 0. Dense guidance between 'touched the ball' and 'legal return'."""
+    vx = vel[:, 0]
+    speed = (vx / RETURN_SPEED_REF).clamp(0.0, 1.0)
+    t = (-pos[:, 0] / vx.clamp(min=1e-3)).clamp(max=10.0)
+    z_net = pos[:, 2] + vel[:, 2] * t - 0.5 * GRAVITY * t * t
+    clears = ((vx > 0.1) & (z_net - BALL_RADIUS > court.NET_CENTER_HEIGHT)).float()
+    return 0.5 * speed + 0.5 * clears
+
+
+def return_shaping(env) -> torch.Tensor:
+    """One-shot at the first legal contact: return_quality of the outgoing ball (read before legal_return)."""
+    t = _term(env)
+    return return_quality(t.hit_out_pos, t.hit_out_vel) * t.hit_now.float()
 
 
 def legal_return(env) -> torch.Tensor:

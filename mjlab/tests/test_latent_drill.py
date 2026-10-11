@@ -60,3 +60,28 @@ def test_zero_action_follows_the_prior_mean_and_stands():
         env.step(torch.zeros(32, 35, device="cuda"))
     assert (robot.data.body_link_pos_w[:, torso, 2] > 0.6).float().mean() > 0.9
     env.close()
+
+
+def test_return_quality_rewards_balls_sent_over_the_net():
+    from picklebot_mj.tasks.return_stand import return_quality
+
+    pos = torch.tensor([[-6.0, 0.0, 0.8]] * 4)
+    vel = torch.tensor([[8.0, 0.0, 4.0],    # fast, clears the net (1.04 m at x = 0)
+                        [8.0, 0.0, -3.0],   # fast, into the net
+                        [-2.0, 0.0, 3.0],   # away from the net
+                        [5.0, 0.0, 6.5]])   # slower, high: clears (1.54 m at x = 0)
+    q = return_quality(pos, vel)
+    assert q[0] == 1.0
+    assert q[1] == 0.5
+    assert q[2] == 0.0
+    assert torch.isclose(q[3], torch.tensor(0.5 * 5.0 / 6.0 + 0.5))
+
+
+@needs
+def test_shaped_task_reads_shaping_before_legal_return():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    cfg = load_env_cfg("Picklebot-Latent-Drill3-Shaped-G1")
+    keys = list(cfg.rewards)
+    assert keys[-1] == "legal_return" and "return_shaping" in keys

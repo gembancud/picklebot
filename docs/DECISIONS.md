@@ -1483,3 +1483,20 @@ Decision:
 5. **Still stop and ask** before sudo or system changes, Unity or the feat/hierarchical-control checkout, deletions, downloads, any run over 2 h, or using final seeds.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B (H3, H4, gate), Open questions.
+
+### D-057 — H4: no distillation from the flat student; return shaping instead
+
+- Date: 2026-10-12
+- Status: Accepted (loop, under the design latitude of D-056)
+- Amends: Stage 5B H4 (run 2)
+
+Context: h4-01 (fresh PPO over the latent, 1,300 iterations) reaches style 2.74 (target <= 3.86; S-D3-style-c 4.84), robot falls 0.5 % per episode and recovery 0.58 m. But it has 0 % legal returns: it touches 18 % of balls, with a mean paddle speed of 0.8 m/s at contact, and no ball crosses the net.
+
+Considered: distilling S-D3-style-c into the H4 policy through the frozen decoder (DAgger; `scripts/distill_h4.py`, tested). It was rejected on evidence:
+- **Smoke run** (60 iterations): the imitation error rose from 0.30 to about 2.0 and stayed there, while robot episodes ended more often.
+- **Expressiveness floor** (`scripts/latent_reach_floor.py`, `results/stage5b-h4-latent-floor.json`). Even fitted per state on the teacher's own states, the decoder reproduces the teacher's joint actions only by saturating 70 % of the latent commands at lambda 1 (overall MSE 0.185 against action variance 2.18; right-arm residual 0.37 against variance 1.19).
+- **Conclusion:** imitating the flat student pushes the executor to the edge of the human-motion space, toward the motion style we are replacing.
+
+Decision: H4 run 2 continues PPO from h4-01/model_1300 with **one added reward**: a one-shot `return_shaping` at the first legal contact. It pays half for the outgoing ball speed toward the net (capped at 6 m/s) and half if its drag-free ballistic path clears the net. Weight 2.0/step_dt, between paddle_contact (1.0) and legal_return (5.0). It is read before legal_return, which clears the step flags. Task `Picklebot-Latent-Drill3-Shaped-G1`.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.

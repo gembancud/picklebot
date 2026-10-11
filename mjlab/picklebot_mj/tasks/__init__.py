@@ -494,3 +494,25 @@ def _latent_drill3_rl_cfg():
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3, env_cfg=_latent_drill3(), play_env_cfg=_latent_drill3(True),
                     rl_cfg=_latent_drill3_rl_cfg())
+
+
+# H4 run 2 (D-057): the run-1 task plus a one-shot return-shaping reward at the first contact (outgoing speed toward
+# the net and a drag-free net-clearance check; picklebot_mj/tasks/return_stand.py return_quality). h4-01 touched 18 %
+# of balls at 0.8 m/s paddle speed and never crossed the net; contact and legal_return alone give no signal between.
+from picklebot_mj.tasks.return_stand import return_shaping  # noqa: E402
+
+TASK_LATENT_DRILL3_SHAPED = "Picklebot-Latent-Drill3-Shaped-G1"
+RETURN_SHAPING_WEIGHT = 2.0  # one-shot, like paddle_contact (1.0) and legal_return (5.0), divided by step_dt
+
+
+def _latent_drill3_shaped(play=False):
+    cfg = _latent_drill3(play)
+    step_dt = cfg.sim.mujoco.timestep * cfg.decimation
+    legal = cfg.rewards.pop("legal_return")  # legal_return clears the step flags, so it must stay last
+    cfg.rewards["return_shaping"] = RewardTermCfg(func=return_shaping, weight=RETURN_SHAPING_WEIGHT / step_dt)
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_SHAPED, env_cfg=_latent_drill3_shaped(),
+                    play_env_cfg=_latent_drill3_shaped(True), rl_cfg=_latent_drill3_rl_cfg())
