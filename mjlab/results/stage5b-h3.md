@@ -61,3 +61,21 @@ Corrected results: the same checkpoints and the same dev seeds (4200410–420041
 - latent-08: 95.9 % / 3.83.
 
 These are essentially unchanged, so the H2 conclusion stands. The tracking evaluations (H0/H1) already reset.
+
+## E3 (2026-10-11): more training, the last extension run
+reach-06-more is model_34700 (the cap), trained from reach-05/model_28900 with the same task (E2) and settings. It was evaluated with the corrected script on fresh dev seed 4200416 (`stage5b-h3-reach-06.json`):
+
+| Run | Paddle 10 cm | Root 10 cm | Paddle 25 cm | Root 25 cm | Falls |
+|---|---:|---:|---:|---:|---:|
+| reach-06 (E3) | 100.0 % | **59.4 %** | 100.0 % | 77.3 % | 0.1 % |
+
+**H3 is missed on root reach only.** Root reach across runs (corrected) was 10.6 → 45.5 (E1) → 54.7 (E2) → 59.4 % (E3). The gains are shrinking, about 5 points per 2 h run. At the end of training the mean root distance is about 16 cm.
+
+## Options for the user (after D-055)
+1. **Recommended: H3 is good enough; go to H4.**
+   - The executor can place the paddle 100 % of the time, it does not fall (0.1 %), and it moves its body to targets (77 % within 25 cm in 2 s).
+   - Body precision matters for H4 only insofar as it gets the paddle to the ball, and H4's own gate tests that: per-family legal returns within 5 points of S-D3-style-c, a style score ≤ 3.86, and videos.
+   - Start H4 from reach-06/model_34700's action space and controller.
+2. **Revise the root criterion** (for example 25 cm, or a 3 s window) and judge again. On its own this still misses at 25 cm (77.3 % vs 80 %), so it would need more training too.
+3. **More H3 training.** At about 5 points per 2 h run, 80 % at 10 cm would take roughly four or more further runs, if the trend holds.
+4. **Rethink the controller** (MaskedMimic-style), or **fall back** to the flat executor S-D3-style-c for Stage 6.
