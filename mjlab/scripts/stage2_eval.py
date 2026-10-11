@@ -121,6 +121,7 @@ def main():
     runner.load(args.checkpoint, load_cfg={"actor": True}, strict=True, map_location="cuda")
     policy = runner.get_inference_policy(device="cuda")
 
+    env.reset()  # apply the reset events before the first step (H4 latent action term; reach_eval.py, 2026-10-11)
     term = env.action_manager.get_term("ball")
     term.fault_counts.zero_()
     term.ep_family.zero_()

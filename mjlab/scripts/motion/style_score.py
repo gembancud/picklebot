@@ -85,6 +85,7 @@ def main():
     mean, std = ea[:, pose].mean(0), ea[:, pose].std(0).clamp(min=1e-3)
     g = torch.Generator(device="cuda").manual_seed(0)
     ref = ((ea[:, pose] - mean) / std)[torch.randperm(len(ea), generator=g, device="cuda")[:EXPERT_SAMPLE]]
+    env.reset()  # apply the reset events before the first step (see scripts/stage2_eval.py)
     obs = venv.get_observations()
     poses = []
     with torch.inference_mode():

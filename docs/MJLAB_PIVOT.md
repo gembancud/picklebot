@@ -243,7 +243,7 @@ Natural strokes and footwork from human motion data instead of reward shaping al
   - Retarget to the paddle G1 with GMR.
   - Report per clip: a footwork-coverage heuristic, foot skating, jitter, and how it compares with the mocap. Render clips for the user.
   - Decide whether to scale up.
-- [ ] **H4. Executor over the latent.** A fresh PPO executor in the H3 action space on the Drill 3 task, with the posture rewards (`pose`, `ready_stance`) and the style reward removed: style now comes from the decoder. Chained ≤ 2 h runs as the student fine-tunes were.
+- [ ] **H4. Executor over the latent.** *(D-056: up to 15 runs for H4 and the gate; runs, evaluation and results in `mjlab/results/stage5b-h4.md`.)* A fresh PPO executor in the H3 action space on the Drill 3 task, with the posture rewards (`pose`, `ready_stance`) and the style reward removed: style now comes from the decoder. Chained ≤ 2 h runs as the student fine-tunes were.
   - **Gate:**
     - no family's legal return falls more than 5 points below S-D3-style-c's (fixed-endpoint evaluation, `s5_gate_eval.sh`, every family reported, no averaging);
     - target hits and A/B gain with intervals reported;
@@ -723,3 +723,9 @@ Its measured capability envelope is published as a contract. It must hold across
   Re-evaluated reach-01 to reach-05 on their original dev seeds (v2 files). **Every run has paddle 99.8-100 % and falls 0.0-0.3 %. Root reach: 2.4 / 2.6 / 10.6 / 45.5 / 54.7 %** (25 cm: 9.9 / 11.3 / 34.3 / 69.9 / 74.7 %). The gate is missed only on root (54.7 % vs 80 %). prior_eval.py (H2) had the same missing reset; re-run, the H2 falls are unchanged (47.8 / 39.1 / 95.9 %), so D-053 stands. E3 next, decided before launch: more training (same task and settings) from reach-05/model_28900.
 - 2026-10-11 - H3 extension E3 (D-055) reach-06-more (more training, task E2) -> model_34700 (cap), from reach-05/model_28900. Evaluation (corrected script, dev seed 4200416; stage5b-h3-reach-06.json): paddle 100.0 %, root 59.4 %, falls 0.1 % (25 cm: root 77.3 %). **H3 missed on root reach after all three extension runs (10.6 -> 45.5 -> 54.7 -> 59.4 %); loop stopped for the user (Open questions; mjlab/results/stage5b-h3.md).**
 - 2026-10-12 - **User decision (D-056):** H3 accepted as sufficient (reach-06/model_34700). Budgeted push to the Stage 5B gate: up to 15 runs (<= 2 h each) for H4 and the gate, design changes within H4's scope allowed with decision entries, and a plateau stop after 3 runs improving < 1 point. Targets: the H4 gate, then the original Stage 5 thresholds with style <= 3.86. End with review videos and stage5b-gate.md. V1 and H5 skipped.
+- 2026-10-12 - H4 set up:
+  - **Task:** Picklebot-Latent-Drill3-G1, i.e. S-D3b's Drill 3 task in H3's latent action space (latent-07/10651, lambda 1.0, wrist residual), with pose and ready_stance removed, latent_l2 -0.01 and action_rate -0.01 (H3's value; the inherited -0.1 swamped the task terms in the smoke run). Student-size network, plain PPO.
+  - **Evaluation:** scripts/h4_eval.sh (Stage 5 gate protocol plus style score) and h4_summary.py (per family vs S-D3-style-c). Main metric for D-056's plateau rule: no-hint legal return pooled over 14 families.
+  - **Bug fix:** stage2_eval.py and style_score.py now reset before the first step. On S-D3-style-c the change is within noise (legal 78.5 -> 78.9 %, falls 4.3 -> 4.8 %), so the Stage 5 results stand.
+  - **Checks:** 2 tests (tests/test_latent_drill.py); smoke run OK (5.2 s/iteration).
+  - **Next:** run h4-01 (fresh PPO, <= 2 h).

@@ -457,3 +457,40 @@ register_mjlab_task(task_id=TASK_LATENT_REACH_E1, env_cfg=_latent_reach_e1(), pl
                     rl_cfg=_latent_reach_rl_cfg())
 register_mjlab_task(task_id=TASK_LATENT_REACH_E2, env_cfg=_latent_reach_e2(), play_env_cfg=_latent_reach_e2(True),
                     rl_cfg=_latent_reach_rl_cfg())
+
+
+# Stage 5B H4 (D-050, D-056): a fresh PPO executor on the Drill 3 task (S-D3b's gentle curriculum, the task of the
+# S-D3-style-c baseline without its style reward), acting through the frozen latent controller in H3's action space
+# (latent-07/latent_10651, lambda 1.0, wrist residual 0.3, latent L2 penalty 0.01 as in reach-06). The posture
+# rewards (pose, ready_stance) are removed: style comes from the decoder.
+from picklebot_mj.tasks.latent_reach import LatentJointPositionActionCfg  # noqa: E402
+
+TASK_LATENT_DRILL3 = "Picklebot-Latent-Drill3-G1"
+H4_LAMBDA = 1.0
+
+
+def _latent_drill3(play=False):
+    cfg = _drill3_gentle(play)
+    jp = cfg.actions["joint_pos"]
+    latent = LatentJointPositionActionCfg(entity_name=jp.entity_name, actuator_names=jp.actuator_names,
+                                          scale=jp.scale, use_default_offset=jp.use_default_offset,
+                                          checkpoint=LATENT_CONTROLLER, lam=H4_LAMBDA)
+    cfg.actions = {"latent": latent, "ball": cfg.actions["ball"]}  # the ball term stays after the joint term
+    cfg.rewards.pop("pose")
+    cfg.rewards.pop("ready_stance")
+    cfg.rewards["latent_l2"] = RewardTermCfg(func=latent_action_l2, weight=-0.01)
+    # The action is now the raw 35-d latent command, as in H3: use H3's action-rate weight (the inherited -0.1
+    # gave -5.5 per episode at the initial action std, swamping the task terms in the smoke run).
+    cfg.rewards["action_rate_l2"].weight = -0.01
+    return cfg
+
+
+def _latent_drill3_rl_cfg():
+    cfg = _rl_cfg()  # same experiment name as the students, so the gate scripts find the runs
+    cfg.actor.hidden_dims = STUDENT_HIDDEN
+    cfg.critic.hidden_dims = STUDENT_HIDDEN
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3, env_cfg=_latent_drill3(), play_env_cfg=_latent_drill3(True),
+                    rl_cfg=_latent_drill3_rl_cfg())
