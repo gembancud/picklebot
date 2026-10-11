@@ -1454,3 +1454,32 @@ Rules:
 - If none does, the loop stops for the user.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H3, Open questions.
+
+### D-056 — H3 accepted; budgeted push to the Stage 5B checkpoint
+
+- Date: 2026-10-12
+- Status: Accepted (user: the Stage 5B loop prompt of 2026-10-12)
+- Amends: D-053/D-055 (H3), rule 8 for H4 and the Stage 5B gate
+
+Decision:
+1. **H3 is accepted as sufficient** (option 1). Corrected evaluation of reach-06/model_34700: paddle 100 %, falls 0.1 %, root 59.4 % (10 cm). H4 uses the reach-06/model_34700 controller and action space: latent-07/latent_10651, lambda 1.0, wrist residual 0.3. V1 (the video pilot, which needs the user's SMPL files) and H5 are skipped.
+2. **Budget:** for H4 and the Stage 5B gate, up to **15 training runs in total** replace rule 8's two follow-ups. Each run:
+   - is at most 2 h;
+   - has a fixed endpoint;
+   - is evaluated on a fresh dev seed;
+   - changes one thing, written down before launch;
+   - warm-starts where sensible.
+
+   Design changes within H4's scope (rewards, curriculum, observations, network size, distilling from the flat student, using the wrist residual) are allowed, each recorded as a decision entry with its reason. Climbing stops early if 3 runs in a row improve the main metric by less than 1 point.
+3. **Targets, in order:**
+   - (a) the H4 gate as written: no family's legal return more than 5 points below S-D3-style-c's; target hits and A/B gain with intervals; style score <= 3.86; side-by-side videos;
+   - (b) then climb toward the original Stage 5 thresholds while holding style <= 3.86: every family including reach >= 75 % legal, A/B gain CI > 0, recovery <= 0.5 m, falls <= 1 %, retention.
+
+   Thresholds are never loosened.
+4. **End:** when the targets are met or the budget or plateau runs out, the loop:
+   - renders review videos of the best fixed endpoint: a continuous Drill 3 sequence across families (side and behind views), plus a side-by-side with S-D3-style-c;
+   - writes `mjlab/results/stage5b-gate.md` (pass or fail, every family);
+   - commits, pushes if the stage passed, and stops for the user.
+5. **Still stop and ask** before sudo or system changes, Unity or the feat/hierarchical-control checkout, deletions, downloads, any run over 2 h, or using final seeds.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B (H3, H4, gate), Open questions.
