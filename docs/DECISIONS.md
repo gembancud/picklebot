@@ -1435,3 +1435,22 @@ The SMPL-X v1.1 and SMPL v1.1.0 body models need the user's own registration (MP
 Pilot data: the CalTennis side views E_01 and W_01 of session 09_18_2025_16_15_court5 (CC BY-NC 4.0, already downloaded; players about 180-240 px tall, full body visible). The project is non-commercial (D-047). Video-derived motion and anything trained on it stay local.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B (new video-pilot step).
+
+### D-055 — Bounded H3 extension
+
+- Date: 2026-10-11
+- Status: Accepted (user: "go with option 1, do the H3 extension")
+- Amends: D-053 (H3), rule 8 for H3 only
+
+Decision: up to **3 more <= 2 h runs** for H3, one change each, each warm-started from the previous fixed endpoint, starting from reach-03-l1/model_17500 (lambda 1.0). Order fixed now:
+- **E1:** add a root *progress* reward: pelvis velocity toward the root target, clamped to [-1, 1] m/s, weight 1.0. The 1.0 m distance kernel is kept.
+- **E2:** add a latent action penalty, L2 on a_lat, weight 0.01, to keep z nearer the prior mean and reduce falls.
+- **E3:** more training of the E2 setup.
+
+Rules:
+- Each run is evaluated deterministically on a fresh dev seed.
+- **The gate is unchanged:** >= 80 % paddle and >= 80 % root targets within 10 cm, falls <= 5 %. Reach rates at 25 cm are also reported, for information only. The user did not change the tolerance.
+- The extension stops early if a run meets the gate.
+- If none does, the loop stops for the user.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H3, Open questions.
