@@ -36,6 +36,12 @@ runner = MjlabOnPolicyRunner(venv, asdict(agent), device="cuda")
 runner.load(a.checkpoint, load_cfg={"actor": True}, strict=True, map_location="cuda")
 policy = runner.get_inference_policy(device="cuda")
 cmd = env.command_manager.get_term("reach")
+# Without this reset the first episode starts without the reset events applied, and over
+# half fall in the first 3 s; found 2026-10-11 (artifacts/eval/reach-fall-diag.json).
+env.reset()
+# The reset also closes the construction-time command window (measured at the uninitialised spawn, always a miss):
+# start counting from here.
+cmd.tally = {k: 0 for k in cmd.tally}
 obs = venv.get_observations()
 episodes = falls = 0
 with torch.no_grad():

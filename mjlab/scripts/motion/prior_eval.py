@@ -69,6 +69,7 @@ def main():
     lat.load_state_dict(torch.load(args.checkpoint, map_location="cuda", weights_only=False)["model"])
     lat.eval()
 
+    env.reset()  # apply the reset events (reference-state start) before the first step; see reach_eval.py
     obs = venv.get_observations()
     cmd = env.command_manager.get_term("motion")
     cmd._update_command = lambda env_ids=None: None  # freeze the reference: no clip wraps or teleports
