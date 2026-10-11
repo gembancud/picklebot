@@ -30,7 +30,8 @@ So the earlier Stage 5 numbers stand. The final gate re-evaluates S-D3-style-c w
 | # | Run | Change (written before launch) | From | Endpoint | Main metric | Style |
 |---|---|---|---|---|---|---|
 | 1 | h4-01 | the plan as written: fresh PPO, settings above | scratch | model_1300 (cap) | **0.0 %** | **2.74** |
-| 2 | h4-02 | + one-shot return shaping at first contact (D-057), task `Picklebot-Latent-Drill3-Shaped-G1` | h4-01/model_1300 | | | |
+| 2 | h4-02 | + one-shot return shaping at first contact (D-057), task `Picklebot-Latent-Drill3-Shaped-G1` | h4-01/model_1300 | model_2700 (cap) | 0.0 % | 2.62 |
+| 3 | h4-03 | PPO entropy coefficient 0.01 -> 0.001 (`Picklebot-Latent-Drill3-Shaped-LowEnt-G1`) | h4-02/model_2700 | | | |
 
 ## Run 1: h4-01 (dev seeds 4200420-423; `stage5b-h4-h4-01-*.json`)
 - **Every family has 0 % legal returns.** Contact is 18 %, the paddle moves at 0.8 m/s at contact, contact height is 0.57 m, and no ball crosses the net. Rally endings: second bounce 7,610, out 2,961, wrong side 2,003.
@@ -50,3 +51,12 @@ So the earlier Stage 5 numbers stand. The final gate re-evaluates S-D3-style-c w
 | *teacher action variance* | 0.356 | 0.186 | 0.624 | 1.193 | 16.4 | 2.18 | |
 
 The decoder gets close only with most latent commands pinned at the barrier, i.e. at the edge of the human-motion space. The flat student's wrist variance (16) shows it slams the wrist between limits.
+
+## Run 2: h4-02 (dev seeds 4200425-428; `stage5b-h4-h4-02-*.json`)
+- **Legal returns still 0 %, no net crossings.** But the swing is forming:
+  - paddle speed at contact 0.8 -> 1.43 m/s;
+  - outgoing ball speed 2.6 -> 3.5 m/s;
+  - contact 17 %, height 0.59 m.
+- **Style 2.62, robot falls 0.34 %, recovery median 0.375 m** (the recovery threshold of <= 0.5 m is met).
+- **Training:** return shaping per episode rose from 0.003 to 0.040, fastest at the end. Contact stayed flat at about 0.17. Action std kept rising, 1.26 -> 1.30.
+- **Next change** (decided before launch): PPO entropy coefficient 0.01 -> 0.001. The latent passes through tanh, so extra noise costs almost nothing while the entropy bonus keeps paying for it (entropy loss about 58 over 35 dims). Training rollouts drown a coordinated swing in noise.

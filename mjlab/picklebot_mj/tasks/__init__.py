@@ -516,3 +516,19 @@ def _latent_drill3_shaped(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_SHAPED, env_cfg=_latent_drill3_shaped(),
                     play_env_cfg=_latent_drill3_shaped(True), rl_cfg=_latent_drill3_rl_cfg())
+
+
+# H4 run 3 (stage5b-h4.md): the run-2 task with the PPO entropy coefficient 0.01 -> 0.001. In h4-01/h4-02 the action
+# std rose from 1.0 to 1.30: the latent is squashed by tanh, so extra noise costs almost nothing while the entropy
+# bonus keeps paying for it, and training rollouts drown any coordinated swing in noise.
+TASK_LATENT_DRILL3_SHAPED_LOWENT = "Picklebot-Latent-Drill3-Shaped-LowEnt-G1"
+
+
+def _latent_drill3_lowent_rl_cfg():
+    cfg = _latent_drill3_rl_cfg()
+    cfg.algorithm.entropy_coef = 0.001
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_SHAPED_LOWENT, env_cfg=_latent_drill3_shaped(),
+                    play_env_cfg=_latent_drill3_shaped(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

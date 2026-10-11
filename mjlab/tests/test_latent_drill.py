@@ -85,3 +85,16 @@ def test_shaped_task_reads_shaping_before_legal_return():
     cfg = load_env_cfg("Picklebot-Latent-Drill3-Shaped-G1")
     keys = list(cfg.rewards)
     assert keys[-1] == "legal_return" and "return_shaping" in keys
+
+
+def test_low_entropy_variant_changes_only_the_entropy_coefficient():
+    import mjlab.tasks  # noqa: F401
+    from dataclasses import asdict
+
+    from mjlab.tasks.registry import load_rl_cfg
+
+    base = asdict(load_rl_cfg("Picklebot-Latent-Drill3-Shaped-G1"))
+    low = asdict(load_rl_cfg("Picklebot-Latent-Drill3-Shaped-LowEnt-G1"))
+    assert low["algorithm"]["entropy_coef"] == 0.001
+    low["algorithm"]["entropy_coef"] = base["algorithm"]["entropy_coef"]
+    assert low == base
