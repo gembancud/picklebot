@@ -185,7 +185,18 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 
 | # | Run | Change (written before launch) | From | Endpoint | Main metric | Style |
 |---|---|---|---|---|---|---|
-| 12 | h4-12 | learning-progress feed curriculum (D-066; `Picklebot-Latent-Drill3-LP-G1`); 12,288 envs (standing config) | h4-10/model_13800 | | | |
+| 12 | h4-12 | learning-progress feed curriculum (D-066; `Picklebot-Latent-Drill3-LP-G1`); 12,288 envs (standing config). *In effect uniform level sampling (attribution bug)* | h4-10/model_13800 | model_14900 (cap) | **63.8 %** | 2.96 |
 | 13 | h4-13 | the curriculum's attribution fix (in-flight feeds kept their unit; D-066 bug) | h4-12/model_14900 | | | |
 
 - **h4-12 caveat (found after the run):** `_refeed` computes a feed for every env and keeps it only where it fires. It restored family, target and the other per-feed fields for the other envs, but not the new curriculum unit. In-flight feeds' outcomes were therefore credited to random units: every unit's success average drifted to the overall rate (backhand's top level showed about 75 %), and level sampling was effectively uniform. So run 12 tested broad uniform level sampling, not the learning-progress curriculum. Fixed, with a regression test that fails on the old code; run 13 repeats the curriculum with correct attribution.
+
+## Run 12: h4-12 (dev seeds 4200495-498; `stage5b-h4-h4-12-*.json`)
+- **Main metric 63.8 %** (+5.2 over h4-10). **Backhand 27.6 %**, the first backhand returns of any H4 run.
+- **Five families now pass the H4 gate bar** (>= base - 5): easy forehand 95.7, wide forehand 94.7, deep 93.7, short 96.4, topspin 95.6 %. Reach short and reach deep also pass.
+- **Fail:**
+  - high 88.3, low 84.4, fast 81.1, backspin 70.3 % (low, fast and backspin regressed from run 10 by 1-18 points);
+  - reach forehand 66.4 %;
+  - reach backhand 0 %.
+- **A/B gain:** 0.12-0.55 (run 10: 0.05-0.28; base 0.48-0.90), CI above 0 on 12 families.
+- **Style 2.96, robot falls 1.7 %** (from 5.7 %), recovery 0.875 m.
+- **Reading:** even uniform sampling over difficulty levels (because of the attribution bug) gave backhand the easy, near-body variants it needed to get a first learning signal. The 3x larger batch (12,288 envs) is confounded with it.
