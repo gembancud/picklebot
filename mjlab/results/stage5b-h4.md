@@ -186,3 +186,6 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 | # | Run | Change (written before launch) | From | Endpoint | Main metric | Style |
 |---|---|---|---|---|---|---|
 | 12 | h4-12 | learning-progress feed curriculum (D-066; `Picklebot-Latent-Drill3-LP-G1`); 12,288 envs (standing config) | h4-10/model_13800 | | | |
+| 13 | h4-13 | the curriculum's attribution fix (in-flight feeds kept their unit; D-066 bug) | h4-12/model_14900 | | | |
+
+- **h4-12 caveat (found after the run):** `_refeed` computes a feed for every env and keeps it only where it fires. It restored family, target and the other per-feed fields for the other envs, but not the new curriculum unit. In-flight feeds' outcomes were therefore credited to random units: every unit's success average drifted to the overall rate (backhand's top level showed about 75 %), and level sampling was effectively uniform. So run 12 tested broad uniform level sampling, not the learning-progress curriculum. Fixed, with a regression test that fails on the old code; run 13 repeats the curriculum with correct attribution.

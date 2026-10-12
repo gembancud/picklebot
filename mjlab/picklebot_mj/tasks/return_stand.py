@@ -343,12 +343,13 @@ class BallPhysicsAction(ActionTerm):
         hint_old, true_old = self.hit_hint_on.clone(), self.hit_rec_true.clone()
         stance_old = self.stance_xy.clone()
         pos, vel, spin = self.ball.pos.clone(), self.ball.vel.clone(), self.ball.spin.clone()
-        fam_old, tgt_old = self.family.clone(), self.target.clone()
+        fam_old, tgt_old, unit_old = self.family.clone(), self.target.clone(), self.feed_unit.clone()
         self._feed(self.all_ids)
         m = fire.unsqueeze(-1)
         self.ball = BallState(torch.where(m, self.ball.pos, pos), torch.where(m, self.ball.vel, vel),
                               torch.where(m, self.ball.spin, spin))
         self.family = torch.where(fire, self.family, fam_old)
+        self.feed_unit = torch.where(fire, self.feed_unit, unit_old)  # D-066 fix: keep in-flight feeds' units
         self.target = torch.where(fire, self.target, tgt_old)
         self.recover_xy = torch.where(fire.unsqueeze(-1), self.recover_xy, rec_old)
         self.hit_hint_on = torch.where(fire, self.hit_hint_on, hint_old)

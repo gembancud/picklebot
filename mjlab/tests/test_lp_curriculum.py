@@ -60,3 +60,27 @@ def test_levels_interpolate_from_the_easy_end_and_evaluation_uses_full_families(
     lo, hi = t._range("lateral_y", fam)
     assert torch.allclose(lo, torch.full_like(lo, 0.30)) and torch.allclose(hi, torch.full_like(hi, 0.65))
     env.close()
+
+
+@needs
+def test_refeeds_keep_the_curriculum_unit_of_feeds_still_in_flight():
+    """Regression (h4-12): _refeed computes a feed for every env and keeps it only where `fire`; the unit of the
+    other envs' in-flight feeds must be kept too, or outcomes are credited to random units."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    cfg = load_env_cfg("Picklebot-Latent-Drill3-LP-G1")
+    cfg.actions["ball"].move_prob, cfg.actions["ball"].swing_prob = 0.0, 0.0
+    cfg.scene.num_envs = 128
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    t = env.action_manager.get_term("ball")
+    L = cfg.actions["ball"].lp_levels
+    before = t.feed_unit.clone()
+    fire = torch.zeros(128, dtype=torch.bool, device="cuda")
+    fire[:16] = True
+    t._refeed(fire)
+    assert torch.equal(t.feed_unit[16:], before[16:])
+    assert torch.equal(t.feed_unit // L, t.family)  # every env's unit matches its feed's family
+    env.close()
