@@ -1636,3 +1636,23 @@ Decision:
 - **For the user afterwards:** the agility test (train the H3 walker on 1-3 m targets in all directions) and the controller fixes in D-063 (mirrored or extra lateral/backward motion data, a wider latent barrier).
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4 and gate.
+
+### D-065 — Maximise H4: GPU throughput, an adaptive curriculum, then controller fixes if needed
+
+- Date: 2026-10-13
+- Status: Accepted (user: the H4 maximisation loop prompt of 2026-10-13, after reviewing the h4-10 videos: "not really mostly impressed yet")
+- Amends: D-064 (H4 continues), D-056 (budget)
+
+Decision:
+1. Finish D-064: `mjlab/results/stage5b-gate.md` from the paired gate evaluation of h4-10 and S-D3-style-c (fail, every family).
+2. **GPU first.** Training used the GPU poorly: 25-50 % utilisation, 2.7 of 12 GB, 55 of 200 W during evaluation. The drill task runs at about 19k steps/s against 91k for the reach task. Benchmark H4 training at 4096 / 8192 / 16384 envs (`scripts/bench_envs.sh`) plus safe speed-ups (no system change), then train with the fastest configuration that fits.
+3. **Adaptive training.** Replace the family-level feed mix with a learning-progress curriculum over continuous feed parameters (lateral offset, depth, speed, spin). Every family, backhand included, starts from easy variants that give a learning signal and widens with success. The existing family mix re-weights by failure, but backhand got 12 % of feeds and still 0 contacts, so sampling where it fails cannot help when failing gives no signal. If throughput allows, tune reward weights by population-based training instead of by hand.
+4. **Escalation** if backhand or left/back movement still does not learn:
+   - (a) test whether the H3 walker can put the paddle on the backhand side;
+   - (b) an agility H3 walker (1-3 m targets, all directions, less time, left and back balanced) as a footwork teacher;
+   - (c) retrain the motion controller (H0, then H1) with mirrored copies of the existing LAFAN1 locomotion clips (no downloads), then redo H3/H4.
+5. **Budget:** up to 25 training runs, each <= 2 h with a fixed endpoint, evaluated on a fresh dev seed, one change written before launch, warm starts where sensible. Design changes are allowed with decision entries. The plateau stop (3 runs in a row < 1 point on the no-hint pooled legal return) applies to H4 runs only.
+6. **Targets:** the H4 gate as written, then the original Stage 5 thresholds. Never loosened.
+7. **End:** review videos of the best fixed endpoint (closer side and behind views, side-by-side with S-D3-style-c, a backhand-only clip), stage5b-gate.md updated, commit, push if the stage passed, then stop for the user.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4 and gate.
