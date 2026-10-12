@@ -1618,3 +1618,21 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage
 2. **Run 11: add H3's fall penalty** (-50 on a terminating fall; `Picklebot-Latent-Drill3-FallPen-G1`), from h4-10/model_13800. The drill task ends an episode on a fall but never penalised it. h4-10 falls in 6.0 % of robot episodes (target <= 1 %; H3 with the penalty: 0.1 %).
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4, Open questions; `mjlab/results/stage5b-h4.md`.
+
+### D-064 — Stop H4 climbing after run 11; videos and gate report
+
+- Date: 2026-10-13
+- Status: Accepted (user: "go with option 1, let run 11 finish first")
+- Amends: D-056 (the 15-run budget ends at run 11)
+
+Context: H4 reaches human-like play on balls fed near the robot. With no hint, the nine forehand-side Stage 4 families return 79-90 % legally at style 2.90 (target <= 3.86; S-D3-style-c 4.84). Reach forehand is 64.5 %. The movement half of the target (backhand, the left/back reach families, recovery) is limited by the latent controller's directional bias and low speed (D-063). The 1.5 m direction test: covered within 2 s, about 1.1 m forward/right but only about 0.5 m left/back.
+
+Decision:
+- Run 11 (fall penalty) finishes and is evaluated as planned. Climbing then stops; runs 12-15 are not used.
+- The candidate is the better of the h4-10 and h4-11 fixed endpoints by the main metric on their dev evaluations.
+- **Final gate evaluation:** the candidate and S-D3-style-c on the same fresh dev seeds with the same script.
+- **Review videos:** a continuous Drill 3 sequence across families (side and behind views), and a side-by-side with S-D3-style-c.
+- **Report:** `mjlab/results/stage5b-gate.md`, pass or fail with every family reported. No push unless the stage passes.
+- **For the user afterwards:** the agility test (train the H3 walker on 1-3 m targets in all directions) and the controller fixes in D-063 (mirrored or extra lateral/backward motion data, a wider latent barrier).
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4 and gate.
