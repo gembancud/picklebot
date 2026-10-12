@@ -118,6 +118,8 @@ class BallPhysicsActionCfg(ActionTermCfg):
     hit_hint_prob: float = 1.0  # share of real-ball feeds that show it (H4 run 5); the rest must read the ball
     hint_forehand_only: bool = False  # stance hint puts every ball on the forehand side (run around; D-059)
     reach_curriculum: bool = False  # reach families start near (REACH_NEAR) and widen on success
+    lp_curriculum: bool = False  # learning-progress curriculum over (family x difficulty level) units (D-066)
+    lp_levels: int = 5
     reach_start: float = 0.0  # initial curriculum scale (0 = near version, 1 = full family)
     reach_near_set: str = "v1"  # "v1" (REACH_NEAR, S-D3) or "v2" (REACH_NEAR_V2, gentler, S-D3b)
     lost_back_margin: float = 0.5  # ball lost this far behind the baseline (Drill 3: room to play deep balls)
@@ -144,6 +146,7 @@ class BallPhysicsAction(ActionTerm):
         self._fault_eye = torch.eye(len(Fault), dtype=torch.long, device=dev)
         self.all_ids = torch.arange(n, device=dev)
         self._mix = torch.tensor(cfg.feed_mix.vector(), device=dev)
+        self._active_fams = [w > 0 for w in cfg.feed_mix.vector()]  # host-side copy: no syncs in logging loops
         self._ranges = {a: torch.tensor([getattr(FAMILIES[f], a) for f in FAMILY_NAMES], device=dev)
                         for a in ("start_x", "start_z", "bounce_x", "lateral_y", "flight_time", "spin_y")}
         self.family = torch.zeros(n, dtype=torch.long, device=dev)
@@ -169,6 +172,18 @@ class BallPhysicsAction(ActionTerm):
             for f in REACH_NEAR:
                 self.reach_scale[FAMILY_NAMES.index(f)] = cfg.reach_start
         self.hit_rec_true = torch.zeros(n, 2, device=dev)
+        # Learning-progress curriculum (D-066): unit = family * L + level; level s in [0, 1] interpolates every
+        # feed range from the family's easy end (feeds.LP_EASY) to the full family.
+        self.lp_sampler, self._lp_s = None, None
+        self.feed_unit = torch.zeros(n, dtype=torch.long, device=dev)
+        if getattr(cfg, "lp_curriculum", False):
+            from picklebot_mj.curriculum import LPSampler
+            from picklebot_mj.feeds import LP_EASY
+            L = int(cfg.lp_levels)
+            self._ranges_easy = {a: torch.tensor([getattr(LP_EASY.get(f, FAMILIES[f]), a) for f in FAMILY_NAMES],
+                                                 device=dev)
+                                 for a in ("start_x", "start_z", "bounce_x", "lateral_y", "flight_time", "spin_y")}
+            self.lp_sampler = LPSampler(self._mix.repeat_interleave(L), device=dev)
         # Ideal hitting stance for the current feed (privileged; stance_progress reward, H4 run 10, D-062).
         self.stance_xy = torch.zeros(n, 2, device=dev)
         self.hit_hint_on = torch.zeros(n, dtype=torch.bool, device=dev)
@@ -298,12 +313,24 @@ class BallPhysicsAction(ActionTerm):
             log = self._env.extras.setdefault("log", {})
             for f in REACH_NEAR:
                 log[f"Curriculum/scale_{f}"] = self.reach_scale[FAMILY_NAMES.index(f)]
+        if getattr(self, "lp_sampler", None) is not None:  # D-066: finished feeds update their (family, level) unit
+            self.lp_sampler.update(self.feed_unit, self.return_done & mask, mask)
+            L = int(self.cfg.lp_levels)
+            w = self.lp_sampler.weights().view(len(FAMILY_NAMES), L)
+            fast = self.lp_sampler.fast.view(len(FAMILY_NAMES), L)
+            lv = torch.arange(L, device=self.device, dtype=torch.float32)
+            log = self._env.extras.setdefault("log", {})
+            for i, name in enumerate(FAMILY_NAMES):
+                if (self._active_fams[i] if hasattr(self, "_active_fams") else bool(self._mix[i] > 0)):
+                    log[f"Curriculum/share_{name}"] = w[i].sum()
+                    log[f"Curriculum/level_{name}"] = (w[i] * lv).sum() / w[i].sum().clamp(min=1e-9)
+                    log[f"Curriculum/top_success_{name}"] = fast[i, -1]
         if self.fam_sampler is not None:  # finished feeds: success = legal return
             self.fam_sampler.update(self.family, self.return_done & mask, mask)
             self._mix = self.fam_sampler.weights()
             log = self._env.extras.setdefault("log", {})
             for i, name in enumerate(FAMILY_NAMES):
-                if self.fam_sampler.active[i]:
+                if (self._active_fams[i] if hasattr(self, "_active_fams") else bool(self._mix[i] > 0)):
                     log[f"Curriculum/{name}"] = self._mix[i]
 
     def _refeed(self, fire: torch.Tensor) -> None:
@@ -335,6 +362,10 @@ class BallPhysicsAction(ActionTerm):
     def _range(self, name, fam):
         """(lo, hi) per env for FeedCfg attribute `name`, gathered by family index."""
         t = self._ranges[name][fam]
+        lp_s = getattr(self, "_lp_s", None)
+        if lp_s is not None and lp_s.shape[0] == fam.shape[0]:  # D-066: easy -> full by level
+            easy = self._ranges_easy[name][fam]
+            return tuple((easy + lp_s.unsqueeze(-1) * (t - easy)).unbind(-1))
         if getattr(self.cfg, "reach_curriculum", False):  # interpolate near -> full by the family's scale
             near = self._ranges_near[name][fam]
             t = near + self.reach_scale[fam].unsqueeze(-1) * (t - near)
@@ -361,7 +392,15 @@ class BallPhysicsAction(ActionTerm):
 
     def _feed(self, env_ids):
         k = len(env_ids)
-        fam = torch.multinomial(self._mix, k, replacement=True, generator=self.gen)
+        if getattr(self, "lp_sampler", None) is not None:  # D-066: sample a (family, level) unit, then a level jittered within it
+            L = int(self.cfg.lp_levels)
+            unit = torch.multinomial(self.lp_sampler.weights(), k, replacement=True, generator=self.gen)
+            self.feed_unit[env_ids] = unit
+            fam = unit // L
+            jitter = torch.rand(k, generator=self.gen, device=self.device) - 0.5
+            self._lp_s = (((unit % L).float() + jitter) / max(1, L - 1)).clamp(0.0, 1.0)
+        else:
+            fam = torch.multinomial(self._mix, k, replacement=True, generator=self.gen)
         if self.shadow is not None:
             fam = self.shadow.family(env_ids, fam)
         self.family[env_ids] = fam
@@ -371,11 +410,13 @@ class BallPhysicsAction(ActionTerm):
             tgt = torch.full((k,), 0 if self.cfg.target_mode == "A" else 1, dtype=torch.long, device=self.device)
         self.target[env_ids] = tgt
         if self.cfg.recovery_mode == "fixed":
-            rec = torch.tensor(RECOVERY_FIXED, device=self.device).repeat(k, 1)
+            from picklebot_mj.tasks.shadow_swing import _const
+            rec = _const("rec_fixed", lambda: list(RECOVERY_FIXED), self.device).repeat(k, 1)
         else:
             u = torch.rand(k, 2, generator=self.gen_recover, device=self.device)
-            lo = torch.tensor([RECOVERY_BOX[0][0], RECOVERY_BOX[1][0]], device=self.device)
-            hi = torch.tensor([RECOVERY_BOX[0][1], RECOVERY_BOX[1][1]], device=self.device)
+            from picklebot_mj.tasks.shadow_swing import _const
+            lo = _const("rec_lo", lambda: [RECOVERY_BOX[0][0], RECOVERY_BOX[1][0]], self.device)
+            hi = _const("rec_hi", lambda: [RECOVERY_BOX[0][1], RECOVERY_BOX[1][1]], self.device)
             rec = lo + (hi - lo) * u
         self.recover_xy[env_ids] = rec
         x0, z0 = self._u("start_x", fam), self._u("start_z", fam)
@@ -563,17 +604,22 @@ def rally_flags(env) -> torch.Tensor:
     return torch.stack([t.rules.bounced.float(), t.hit_done.float()], -1)
 
 
+def _court_half(device) -> torch.Tensor:
+    from picklebot_mj.tasks.shadow_swing import _const
+    return _const("court_half", lambda: [court.HALF_LENGTH, court.HALF_WIDTH], device)
+
+
 def target_obs(env) -> torch.Tensor:
     """Requested landing target (court-local, scaled to the court half-size)."""
     t = _term(env)
     xy = t._target_xy[t.target]
-    return xy / torch.tensor([court.HALF_LENGTH, court.HALF_WIDTH], device=xy.device)
+    return xy / _court_half(xy.device)
 
 
 def court_pose_obs(env) -> torch.Tensor:
     """Own court position and heading (pelvis xy scaled to the court half-size, cos/sin yaw)."""
     t, robot = _term(env), env.scene["robot"]
-    xy = t.pelvis_xy() / torch.tensor([court.HALF_LENGTH, court.HALF_WIDTH], device=env.device)
+    xy = t.pelvis_xy() / _court_half(env.device)
     w, x, y, z = robot.data.root_link_pose_w[:, 3:7].unbind(-1)
     yaw = torch.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
     return torch.cat([xy, torch.stack([torch.cos(yaw), torch.sin(yaw)], -1)], -1)

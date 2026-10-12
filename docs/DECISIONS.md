@@ -1656,3 +1656,36 @@ Decision:
 7. **End:** review videos of the best fixed endpoint (closer side and behind views, side-by-side with S-D3-style-c, a backhand-only clip), stage5b-gate.md updated, commit, push if the stage passed, then stop for the user.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4 and gate.
+
+### D-066 — H4 training at 12,288 envs with fewer host syncs; learning-progress feed curriculum
+
+- Date: 2026-10-13
+- Status: Accepted (loop, under D-065)
+- Amends: D-065 steps 2-3; Stage 5B H4 (run 12)
+
+1. **Throughput** (`scripts/bench_envs.sh`, `scripts/profile_env_step.py`, `scripts/find_syncs.py`).
+   - **Diagnosis:** the drill step was bound by per-step overhead, not GPU compute. Iteration time was flat from 4,096 to 8,192 envs, at 30-50 % GPU utilisation and about 55 W. The profile showed 78 % of step time in the ball term and **175 CUDA syncs per step**: a per-family GPU-boolean check in the per-feed logging loop (56), Python-scalar index assignments (about 60) and small constant tensors rebuilt on every call (about 40).
+   - **Fixes, behaviour-preserving:**
+     - a host-side active-family list;
+     - `index_fill_` / `masked_fill_` instead of scalar index assignment (`rules._fill`);
+     - per-device cached constants (`shadow_swing._const`).
+
+     Result: 175 -> 15 syncs per step; the rest are inside mjlab.
+   - **Benchmark** (steps/s, clean GPU):
+
+     | Envs | Before | After the fixes | GPU memory |
+     |---:|---:|---:|---:|
+     | 4,096 | 19.3k | 23.3k | 3.9 GB |
+     | 12,288 | 48.1k | **55.3k** | 7.4 GB |
+     | 16,384 | 52.9k | 60.5k | 9.1 GB |
+
+     **Training now uses 12,288 envs** (`train_run.sh` reads PICKLEBOT_ENVS): about 2.9x the samples per 2 h run, leaving memory for an evaluation to overlap the next run. 16,384 is only 9 % faster.
+   - **Equivalence:** all tests pass. The single exception, test_style, passes alone but hits torch.compile's recompile limit when the whole suite runs in one process. The h4-10 no-hint evaluation on the same seed gives 58.42 % (old code), and 57.04 % / 58.37 % in two runs of the new code. GPU nondeterminism alone varies this metric by about +-1.4 points run to run, so borderline plateau decisions (around 1 point) get a repeat evaluation.
+2. **Learning-progress feed curriculum** (`curriculum.LPSampler`, `feeds.LP_EASY`, ball term `lp_curriculum`; task `Picklebot-Latent-Drill3-LP-G1`).
+   - **Units:** (family x 5 difficulty levels). A level s in [0, 1], jittered continuously within its bin, interpolates every feed range (lateral offset, depth, speed, height, spin) from an easy end to the full family.
+   - **Easy ends:** the easy-forehand feed for the Stage 4 families. A ball almost straight at the body (lateral -0.15..0.10 m) for backhand. The full backhand range for reach backhand. The wide forehand range for reach forehand. Nearer bounces for reach short and reach deep.
+   - **Priority:** learning progress plus intermediate success (10-90 %), with a floor of 0.2 of uniform. Units that never succeed no longer soak up feeds; the old (1 - success) term had given backhand 12 % of feeds at 0 contacts.
+   - **Replaces:** the family-level adaptive mix and the reach curriculum. Evaluations turn it off (full families).
+   - **Run 12:** h4-10's task (Footwork) with this curriculum, from h4-10/model_13800 (the best endpoint), at the new 12,288-env standing configuration. The env count is the D-065 standing throughput setting, not the run's experimental change, but it also triples the PPO batch. That confound is recorded with the result.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.

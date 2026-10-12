@@ -656,3 +656,21 @@ def _latent_drill3_fallpen(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_FALLPEN, env_cfg=_latent_drill3_fallpen(),
                     play_env_cfg=_latent_drill3_fallpen(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 12 (D-066): run 10's task (h4-10, the best endpoint) with the family-level adaptive mix and the reach
+# curriculum replaced by a learning-progress curriculum over (family x difficulty level) units: every family's feed
+# ranges are interpolated from an easy end (feeds.LP_EASY) to the full family, and units that are learnable now
+# (learning progress, intermediate success) are fed most. Evaluations always use the full families.
+TASK_LATENT_DRILL3_LP = "Picklebot-Latent-Drill3-LP-G1"
+
+
+def _latent_drill3_lp(play=False):
+    cfg = _latent_drill3_footwork(play)
+    b = cfg.actions["ball"]
+    b.adaptive_curriculum, b.reach_curriculum, b.lp_curriculum = False, False, True
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_LP, env_cfg=_latent_drill3_lp(), play_env_cfg=_latent_drill3_lp(True),
+                    rl_cfg=_latent_drill3_lowent_rl_cfg())

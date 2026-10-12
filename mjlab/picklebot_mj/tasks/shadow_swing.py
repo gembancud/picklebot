@@ -57,6 +57,17 @@ HINT_TABLE = {
 }
 
 
+_CONSTS: dict = {}
+
+
+def _const(key, values, device) -> torch.Tensor:
+    """A constant tensor built once per device (rebuilding it per call costs a synchronising host copy; D-065)."""
+    k = (key, str(device))
+    if k not in _CONSTS:
+        _CONSTS[k] = torch.tensor(values(), device=device)
+    return _CONSTS[k]
+
+
 def predict_intercept(p: torch.Tensor, v: torch.Tensor, fam: torch.Tensor, mode: str = "descend"):
     """Approximate (x, y) of the interception point of a just-launched feed.
 
@@ -65,7 +76,7 @@ def predict_intercept(p: torch.Tensor, v: torch.Tensor, fam: torch.Tensor, mode:
     """
     from picklebot_mj.ball import BALL_RADIUS
     g, r = 9.81, BALL_RADIUS
-    k = torch.tensor([HINT_TABLE[f] for f in FAMILY_NAMES], device=p.device)[fam]
+    k = _const("hint_table", lambda: [HINT_TABLE[f] for f in FAMILY_NAMES], p.device)[fam]
     tb = (v[:, 2] + torch.sqrt((v[:, 2] ** 2 + 2 * g * (p[:, 2] - r)).clamp(min=0))) / g
     dist = (v[:, 0] * tb).abs()
     xb = p[:, 0] + v[:, 0] * tb - torch.sign(v[:, 0]) * k[:, 0] * dist  # lands short of the drag-free aim
@@ -92,8 +103,8 @@ def stance_spot(term, v2: bool) -> torch.Tensor:
     sy = torch.where(forehand, yi + HINT_SIDE_FH, yi - HINT_SIDE_BH)
     sx = xi - HINT_BEHIND
     box = HINT_BOX_V2 if v2 else SPOT_BOX
-    lo = torch.tensor([box[0][0], box[1][0]], device=term.device)
-    hi = torch.tensor([box[0][1], box[1][1]], device=term.device)
+    lo = _const(("box_lo", v2), lambda: [box[0][0], box[1][0]], term.device)
+    hi = _const(("box_hi", v2), lambda: [box[0][1], box[1][1]], term.device)
     return torch.stack([sx, sy], -1).clamp(lo, hi)
 
 
@@ -131,14 +142,18 @@ class ShadowSwing:
         return torch.where(self.swing_ep[env_ids], alt, fam)
 
     def _clear(self, env_ids) -> None:
+        from picklebot_mj.rules import _fill
         for f in (self.bounced, self.open, self.closed):
-            f[env_ids] = False
-        self.elapsed[env_ids] = 0.0
-        self.dmin[env_ids] = FAR
+            _fill(f, env_ids, False)
+        _fill(self.elapsed, env_ids, 0.0)
+        _fill(self.dmin, env_ids, FAR)
 
     def after_refeed(self, fire: torch.Tensor) -> None:
-        idx = torch.nonzero(fire & self.swing_ep).squeeze(-1)
-        self._clear(idx)
+        m = fire & self.swing_ep  # mask form of _clear(nonzero(m)): no host sync
+        for f in (self.bounced, self.open, self.closed):
+            f.masked_fill_(m, False)
+        self.elapsed.masked_fill_(m, 0.0)
+        self.dmin.masked_fill_(m, FAR)
         self.t.tallied |= self.swing_ep  # swing feeds are never tallied as hitting outcomes
         self.after_feed(fire)
 
@@ -157,7 +172,7 @@ class ShadowSwing:
 
     def paddle_for_sim(self, paddle_pos: torch.Tensor) -> torch.Tensor:
         """Move the paddle out of the ball simulation for swing episodes (ghost ball)."""
-        far = torch.tensor([0.0, 0.0, FAR], device=self.dev)
+        far = _const("far", lambda: [0.0, 0.0, FAR], self.dev)
         return torch.where(self.swing_ep.unsqueeze(-1), paddle_pos + far, paddle_pos)
 
     # --- per physics step ---------------------------------------------------------------

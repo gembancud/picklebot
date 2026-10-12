@@ -28,6 +28,15 @@ from picklebot_mj import court
 HALF_WIDTH, HALF_LENGTH, KITCHEN = court.HALF_WIDTH, court.HALF_LENGTH, court.KITCHEN_DEPTH
 
 
+
+def _fill(t: torch.Tensor, env_ids, value) -> None:
+    """t[env_ids] = value without a host sync: index_fill_ takes the scalar directly, where an index assignment
+    first builds a CPU scalar tensor and copies it to the GPU synchronously (D-065 throughput work)."""
+    if isinstance(env_ids, torch.Tensor) and env_ids.dtype == torch.long:
+        t.index_fill_(0, env_ids, value)
+    else:
+        t[env_ids] = value
+
 class Phase(IntEnum):
     AWAIT_SERVE = 0
     SERVE_FLIGHT = 1
@@ -137,8 +146,8 @@ class RallyRules:
         self.serving_team[env_ids] = team_of(feeder)
         self.server[env_ids] = feeder
         self.expected_team[env_ids] = 1 - team_of(feeder)
-        self.hits[env_ids] = 1
-        self.designated_receiver[env_ids] = -1  # any player of the receiving team (drill)
+        _fill(self.hits, env_ids, 1)
+        _fill(self.designated_receiver, env_ids, -1)  # any player of the receiving team (drill)
 
     def begin_from_feed_masked(self, mask: torch.Tensor, feeder: int, must_bounce: bool = False):
         """begin_from_feed for the envs in `mask` only, with no host sync (all envs computed, then selected)."""
@@ -152,14 +161,14 @@ class RallyRules:
             setattr(self, k, torch.where(m, new, old[k]))
 
     def _reset_common(self, env_ids, phase):
-        self.phase[env_ids] = int(phase)
-        self.fault[env_ids] = int(Fault.NONE)
-        self.winner[env_ids] = -1
-        self.bounced[env_ids] = False
-        self.hits[env_ids] = 0
-        self.kitchen_occupied[env_ids] = False
-        self.volley_pending[env_ids] = False
-        self.established_outside[env_ids] = True
+        _fill(self.phase, env_ids, int(phase))
+        _fill(self.fault, env_ids, int(Fault.NONE))
+        _fill(self.winner, env_ids, -1)
+        _fill(self.bounced, env_ids, False)
+        _fill(self.hits, env_ids, 0)
+        _fill(self.kitchen_occupied, env_ids, False)
+        _fill(self.volley_pending, env_ids, False)
+        _fill(self.established_outside, env_ids, True)
 
     # Events --------------------------------------------------------------------------
     def fail(self, mask: torch.Tensor, losing_team: torch.Tensor, fault: Fault):

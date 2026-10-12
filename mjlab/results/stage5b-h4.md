@@ -177,3 +177,12 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
   - Reach forehand 65.5 %, **reach short 20.4 %**, reach deep 3.3 %. Backhand and reach backhand 0 %.
 - **Style 2.85, robot falls 5.4 %** (from 6.0 %; the penalty barely helps, since falls were already rare in stochastic training). Recovery 0.875 m.
 - **Climbing stops here (D-064).** Candidate by the main metric: **h4-10/model_13800** (58.6 %).
+
+## D-065/D-066: throughput and the learning-progress curriculum (2026-10-13)
+- **Throughput:** 175 -> 15 CUDA syncs per step (behaviour-preserving fixes); training at 12,288 envs, 55.3k steps/s against 19.3k at 4,096 before. Details and the equivalence check are in D-066.
+  - **Evaluation noise:** the same checkpoint, seed and code give 57.0-58.4 % pooled no-hint legal from GPU nondeterminism. Borderline plateau calls get a repeat evaluation.
+- **Learning-progress curriculum** over (family x 5 levels), from easy ends to full families (D-066).
+
+| # | Run | Change (written before launch) | From | Endpoint | Main metric | Style |
+|---|---|---|---|---|---|---|
+| 12 | h4-12 | learning-progress feed curriculum (D-066; `Picklebot-Latent-Drill3-LP-G1`); 12,288 envs (standing config) | h4-10/model_13800 | | | |

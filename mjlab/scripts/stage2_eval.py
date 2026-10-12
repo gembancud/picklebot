@@ -84,6 +84,7 @@ def main():
     cfg.actions["ball"].move_sector_weights = None  # evaluation samples spot directions uniformly
     cfg.actions["ball"].adaptive_curriculum = False  # and never adapts the feed or sector mix
     cfg.actions["ball"].reach_curriculum = False  # reach families are always evaluated at full range
+    cfg.actions["ball"].lp_curriculum = False  # and every family at its full range (D-066)
     if args.fixed_start:
         cfg.events["reset_base"].params["pose_range"] = {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "yaw": (-0.1, 0.1)}
         cfg.actions["ball"].feed_anchor = "start"

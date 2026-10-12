@@ -59,6 +59,7 @@ def main():
     ball = cfg.actions["ball"]
     ball.move_prob, ball.swing_prob, ball.hit_hint = 0.0, 0.0, False
     ball.move_sector_weights, ball.adaptive_curriculum, ball.reach_curriculum = None, False, False
+    ball.lp_curriculum = False
     if ball.recovery:
         ball.recovery_mode = "fixed"
     ball.feed_mix = FeedMix({f: 1.0 for f in FAMILY_NAMES})

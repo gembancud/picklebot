@@ -98,3 +98,16 @@ REACH_NEAR_V2: dict[str, FeedCfg] = {
                            flight_time=(0.95, 1.05)),
     "reach_deep": replace(REACH_FAMILIES_CFG["reach_deep"], bounce_x=(-5.4, -5.1)),
 }
+
+
+# Learning-progress curriculum (H4, D-066): the easy end of every family. A level s in [0, 1] interpolates every
+# range from this easy version to the full family. Stage 4 families start from the easy forehand feed. Backhand
+# starts from a ball almost straight at the body (a small shift or step takes it on the forehand side) and widens
+# to the full 0.30-0.65 m to the left. Reach families start from the nearest standing family on their side.
+LP_EASY: dict[str, FeedCfg] = {f: EASY_FOREHAND for f in STAGE4_FAMILIES}
+LP_EASY["backhand"] = replace(EASY_FOREHAND, lateral_y=(-0.15, 0.10))
+LP_EASY["reach_forehand"] = replace(REACH_FAMILIES_CFG["reach_forehand"], lateral_y=(-0.90, -0.65))
+LP_EASY["reach_backhand"] = replace(REACH_FAMILIES_CFG["reach_backhand"], lateral_y=(0.30, 0.65))
+LP_EASY["reach_short"] = replace(REACH_FAMILIES_CFG["reach_short"], bounce_x=(-4.1, -3.8), start_z=(1.6, 2.0),
+                                 flight_time=(0.95, 1.05))
+LP_EASY["reach_deep"] = replace(REACH_FAMILIES_CFG["reach_deep"], bounce_x=(-5.4, -5.0))

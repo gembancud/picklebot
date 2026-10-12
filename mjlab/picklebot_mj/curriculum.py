@@ -53,3 +53,43 @@ class AdaptiveSampler:
         p = score / score.sum()
         w = torch.where(self.active, self.floor / self.k + (1.0 - self.floor) * p, torch.zeros_like(p))
         return w / w.sum()
+
+
+class LPSampler:
+    """Learning-progress sampler over (family x difficulty level) units (H4, D-066).
+
+    Unlike AdaptiveSampler, whose (1 - success) term keeps feeding units that never succeed (backhand got 12 % of
+    feeds and 0 contacts), this prioritises units that are *learnable now*: absolute learning progress plus a
+    bonus for intermediate success (goals of intermediate difficulty, Florensa et al. 2018; ALP, Portelas et al.
+    2019), with a floor so every active unit, full-range levels included, keeps being rehearsed:
+
+        score_k  = LP_WEIGHT * |fast_k - slow_k| + (1 if BAND[0] < fast_k < BAND[1] else OUT_OF_BAND)
+        weight_k = floor / K + (1 - floor) * score_k / sum(score)
+    """
+
+    BAND = (0.1, 0.9)
+    OUT_OF_BAND = 0.2
+
+    def __init__(self, base_weights, floor: float = 0.2, fast: float = 0.05, slow: float = 0.01, device="cpu"):
+        self.inner = AdaptiveSampler(base_weights, floor=floor, fast=fast, slow=slow, device=device)
+
+    @property
+    def active(self):
+        return self.inner.active
+
+    @property
+    def fast(self):
+        return self.inner.fast
+
+    def update(self, unit, success, mask=None) -> None:
+        self.inner.update(unit, success, mask)
+
+    def weights(self) -> torch.Tensor:
+        s = self.inner
+        inside = (s.fast > self.BAND[0]) & (s.fast < self.BAND[1])
+        score = LP_WEIGHT * (s.fast - s.slow).abs() + torch.where(inside, torch.ones_like(s.fast),
+                                                                   torch.full_like(s.fast, self.OUT_OF_BAND))
+        score = torch.where(s.active, score, torch.zeros_like(score))
+        p = score / score.sum()
+        w = torch.where(s.active, s.floor / s.k + (1.0 - s.floor) * p, torch.zeros_like(p))
+        return w / w.sum()

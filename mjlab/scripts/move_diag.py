@@ -41,6 +41,7 @@ def main():
     cfg = load_env_cfg(a.task)
     b = cfg.actions["ball"]
     b.move_prob, b.swing_prob, b.move_sector_weights, b.adaptive_curriculum = 1.0, 0.0, None, False
+    b.lp_curriculum = False
     cfg.scene.num_envs, cfg.seed, b.seed = a.envs, a.seed, a.seed
     cfg.observations["actor"].enable_corruption = False
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda")
