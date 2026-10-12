@@ -116,6 +116,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     hint_v2: bool = False  # interception near the top of the bounce; stance spots may be behind the baseline
     hit_hint: bool = False  # real-ball episodes also show the stance hint until the first contact
     hit_hint_prob: float = 1.0  # share of real-ball feeds that show it (H4 run 5); the rest must read the ball
+    hint_forehand_only: bool = False  # stance hint puts every ball on the forehand side (run around; D-059)
     reach_curriculum: bool = False  # reach families start near (REACH_NEAR) and widen on success
     reach_start: float = 0.0  # initial curriculum scale (0 = near version, 1 = full family)
     reach_near_set: str = "v1"  # "v1" (REACH_NEAR, S-D3) or "v2" (REACH_NEAR_V2, gentler, S-D3b)

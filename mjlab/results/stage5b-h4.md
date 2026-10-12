@@ -34,7 +34,7 @@ So the earlier Stage 5 numbers stand. The final gate re-evaluates S-D3-style-c w
 | 3 | h4-03 | PPO entropy coefficient 0.01 -> 0.001 (`Picklebot-Latent-Drill3-Shaped-LowEnt-G1`) | h4-02/model_2700 | model_4100 (cap) | 0.2 % | 2.71 |
 | 4 | h4-04 | more training (same task and settings) | h4-03/model_4100 | model_5500 (cap) | **3.5 %** | 2.88 |
 | 5 | h4-05 | stance hint on half the real-ball feeds (D-058; `Picklebot-Latent-Drill3-HalfHint-G1`) | h4-04/model_5500 | model_6900 (cap) | **15.7 %** | 2.78 |
-| 6 | h4-06 | stance hint on 20 % of the real-ball feeds (`Picklebot-Latent-Drill3-FewHint-G1`) | h4-05/model_6900 | | | |
+| 6 | h4-06 | stance hint on 20 % of the real-ball feeds (`Picklebot-Latent-Drill3-FewHint-G1`) | h4-05/model_6900 | model_8300 (cap) | **46.2 %** | 2.81 |
 
 ## Run 1: h4-01 (dev seeds 4200420-423; `stage5b-h4-h4-01-*.json`)
 - **Every family has 0 % legal returns.** Contact is 18 %, the paddle moves at 0.8 m/s at contact, contact height is 0.57 m, and no ball crosses the net. Rally endings: second bounce 7,610, out 2,961, wrong side 2,003.
@@ -103,3 +103,24 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Training:** legal-return reward per episode dipped 0.45 -> 0.32 (half the feeds lost the hint) and stayed flat.
 - **Next** (decided before launch): stance hint on 20 % of real-ball feeds, from h4-05/model_6900.
 - **Still open:** backhand and the reach families are at about 0 %, and recovery regressed.
+
+## Run 6: h4-06 (dev seeds 4200445-448; `stage5b-h4-h4-06-*.json`)
+- **Main metric 46.2 %** (+30.5 points). No-hint contact 60 %. With the hint on every feed: 48.0 %, so the hint now barely matters.
+- **Per family, no hint:**
+
+  | Families | Legal returns |
+  |---|---|
+  | topspin, short, low | 81.0, 80.6, 79.3 % |
+  | backspin, deep, fast, easy forehand, wide forehand, high | 73.2, 73.1, 71.8, 69.4, 68.8, 65.9 % |
+  | reach forehand | 7.0 % |
+  | **backhand, reach backhand, reach short, reach deep** | **0 %** |
+
+  A/B gain CI is above 0 for short, low, topspin and backspin.
+- **Style 2.81, robot falls 0.2 %.** Recovery median 0.775 m (regressing: 0.375 -> 0.625 -> 0.775 m over runs 4-6).
+- **Backhand: contact 0 % even with the hint**, although it already gets the largest adaptive feed share (12.4 %). The executor does not get the paddle to balls on its left at all. This is a capability gap, not ball reading.
+- **Video check** (`artifacts/videos/h4/h4-05-backhand-behind.mp4`, 4 envs, backhand feeds, hint on): the robot stands in its ready pose, paddle on its right, while each ball passes on its left. No step and no swing.
+- **Next** (decided before launch, D-059): the stance hint puts every ball on the forehand side (run around the backhand), from h4-06/model_8300.
+
+| # | Run | Change (written before launch) | From | Endpoint | Main metric | Style |
+|---|---|---|---|---|---|---|
+| 7 | h4-07 | stance hint on the forehand side for every ball (D-059; `Picklebot-Latent-Drill3-FhHint-G1`) | h4-06/model_8300 | | | |

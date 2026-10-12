@@ -115,3 +115,31 @@ def test_half_hint_shows_the_hint_on_about_half_the_real_feeds():
     share = env.action_manager.get_term("ball").hit_hint_on.float().mean().item()
     assert 0.4 < share < 0.6
     env.close()
+
+
+@needs
+def test_forehand_only_hint_puts_backhand_balls_on_the_forehand_side():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.feeds import FeedMix
+    from picklebot_mj.tasks.shadow_swing import predict_intercept, stance_spot
+
+    spots = {}
+    for task in ("Picklebot-Latent-Drill3-FewHint-G1", "Picklebot-Latent-Drill3-FhHint-G1"):
+        cfg = load_env_cfg(task)
+        ball = cfg.actions["ball"]
+        ball.move_prob, ball.swing_prob, ball.hit_hint_prob = 0.0, 0.0, 1.0
+        ball.feed_mix, ball.adaptive_curriculum = FeedMix({"backhand": 1.0}), False
+        ball.feed_anchor = "start"
+        cfg.events["reset_base"].params["pose_range"] = {"x": (0.0, 0.0), "y": (0.0, 0.0), "yaw": (0.0, 0.0)}
+        cfg.scene.num_envs = 64
+        env = ManagerBasedRlEnv(cfg, device="cuda")
+        env.reset()
+        term = env.action_manager.get_term("ball")
+        _, yi = predict_intercept(term.ball.pos, term.ball.vel, term.family, "top")
+        spots[task] = (stance_spot(term, True)[:, 1] - yi).median().item()  # spot y minus ball y
+        env.close()
+    assert spots["Picklebot-Latent-Drill3-FewHint-G1"] < 0  # backhand: stand to the ball's right
+    assert spots["Picklebot-Latent-Drill3-FhHint-G1"] > 0  # forehand side: stand to the ball's left

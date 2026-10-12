@@ -87,6 +87,8 @@ def stance_spot(term, v2: bool) -> torch.Tensor:
     xi, yi = predict_intercept(term.ball.pos, term.ball.vel, term.family, "top" if v2 else "descend")
     pel = term.pelvis_xy()
     forehand = yi <= pel[:, 1]  # ball on the robot's right (-y) -> forehand
+    if getattr(term.cfg, "hint_forehand_only", False):  # H4 run 7 (D-059): every ball taken on the forehand side
+        forehand = torch.ones_like(forehand)
     sy = torch.where(forehand, yi + HINT_SIDE_FH, yi - HINT_SIDE_BH)
     sx = xi - HINT_BEHIND
     box = HINT_BOX_V2 if v2 else SPOT_BOX

@@ -1516,3 +1516,17 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage
    - The gate keeps its no-hint measure; the hint is a training aid only.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-059 — H4: stance hint on the forehand side ("run around the backhand")
+
+- Date: 2026-10-12
+- Status: Accepted (loop, under the design latitude of D-056)
+- Amends: Stage 5B H4 (run 7), D-058
+
+Context: h4-06 returns the nine forehand-side Stage 4 families at 66-81 % (no hint), but **backhand at 0 % with contact 0 %, even with the hint**. That is despite backhand already getting the largest adaptive feed share (12.4 %). A rendered sequence (`artifacts/videos/h4/h4-05-backhand-*`) shows the robot standing in its ready pose with the paddle on its right while the ball passes on its left. The stance hint (`stance_spot`) assumes a backhand stroke: it places the pelvis 0.4 m to the right of a ball on the left. The executor has not learned a backhand. With zero contacts the rewards give it nothing to learn from.
+
+Decision: run 7 places every hinted stance on the forehand side (pelvis 0.5 m to the left of the predicted contact, as for forehands). This teaches the human "run around the backhand" footwork with the stroke the executor already has. Implementation: `hint_forehand_only` in the ball term; task `Picklebot-Latent-Drill3-FhHint-G1`, otherwise as run 6 (hint on 20 % of real-ball feeds).
+
+Trade-off, left open: this does not teach a true backhand stroke. That matters most for reach_backhand (1-2.5 m to the left), where running around adds distance. If backhand stays at 0 %, a backhand-specific approach is a later decision.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.

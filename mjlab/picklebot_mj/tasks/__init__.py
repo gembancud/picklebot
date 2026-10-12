@@ -564,3 +564,19 @@ def _latent_drill3_fewhint(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_FEWHINT, env_cfg=_latent_drill3_fewhint(),
                     play_env_cfg=_latent_drill3_fewhint(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 7 (D-059): the run-6 task with the stance hint placing every ball on the forehand side ("run around the
+# backhand"). h4-06 returns the forehand-side families at 66-81 % but backhand at 0 % even with the hint: the hint
+# assumed a backhand stroke the executor has not learned, and it just stands while the ball passes on its left.
+TASK_LATENT_DRILL3_FHHINT = "Picklebot-Latent-Drill3-FhHint-G1"
+
+
+def _latent_drill3_fhhint(play=False):
+    cfg = _latent_drill3_fewhint(play)
+    cfg.actions["ball"].hint_forehand_only = True
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_FHHINT, env_cfg=_latent_drill3_fhhint(),
+                    play_env_cfg=_latent_drill3_fhhint(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
