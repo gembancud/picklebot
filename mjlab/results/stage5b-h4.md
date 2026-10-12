@@ -33,7 +33,8 @@ So the earlier Stage 5 numbers stand. The final gate re-evaluates S-D3-style-c w
 | 2 | h4-02 | + one-shot return shaping at first contact (D-057), task `Picklebot-Latent-Drill3-Shaped-G1` | h4-01/model_1300 | model_2700 (cap) | 0.0 % | 2.62 |
 | 3 | h4-03 | PPO entropy coefficient 0.01 -> 0.001 (`Picklebot-Latent-Drill3-Shaped-LowEnt-G1`) | h4-02/model_2700 | model_4100 (cap) | 0.2 % | 2.71 |
 | 4 | h4-04 | more training (same task and settings) | h4-03/model_4100 | model_5500 (cap) | **3.5 %** | 2.88 |
-| 5 | h4-05 | stance hint on half the real-ball feeds (D-058; `Picklebot-Latent-Drill3-HalfHint-G1`) | h4-04/model_5500 | | | |
+| 5 | h4-05 | stance hint on half the real-ball feeds (D-058; `Picklebot-Latent-Drill3-HalfHint-G1`) | h4-04/model_5500 | model_6900 (cap) | **15.7 %** | 2.78 |
+| 6 | h4-06 | stance hint on 20 % of the real-ball feeds (`Picklebot-Latent-Drill3-FewHint-G1`) | h4-05/model_6900 | | | |
 
 ## Run 1: h4-01 (dev seeds 4200420-423; `stage5b-h4-h4-01-*.json`)
 - **Every family has 0 % legal returns.** Contact is 18 %, the paddle moves at 0.8 m/s at contact, contact height is 0.57 m, and no ball crosses the net. Rally endings: second bounce 7,610, out 2,961, wrong side 2,003.
@@ -90,3 +91,15 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Training:** the legal-return reward rose 0.05 -> 0.45 per episode and levelled off over the last 500 iterations. Contact per episode drifted 0.20 -> 0.16.
 - **Reading:** the executor can return balls when told where to stand. It has not learned to find the interception point from the ball, because every real-ball training feed showed the hint.
 - **Next** (decided before launch, D-058): the stance hint on half the real-ball feeds, from h4-04/model_5500.
+
+## Run 5: h4-05 (dev seeds 4200440-443; `stage5b-h4-h4-05-*.json`)
+- **Main metric 15.7 %** (+12.2 points). No-hint contact 44 % (from 21 %).
+  - Per family, no hint: low 35.3, topspin 34.1, deep 31.5, fast 31.5, backspin 26.3, easy forehand 23.9, wide forehand 17.6, short 12.4, high 6.6 %.
+  - Backhand 0 %, reach forehand 1.0 %, the other reach families 0 %.
+- **With the hint on every feed: 43.0 %** (run 4: 40.9 %). Hiding half the hints in training did not cost hinted play.
+  - Evaluation fix: `stage2_eval.py` now sets `hit_hint_prob` = 1 for with-hint evaluations. The first with-hint pass of this run had used the task's 0.5 and was re-run (same seeds).
+- **Paddle speed** at contact 4.7 m/s; 2,482 net crossings.
+- **Style 2.78, robot falls 0.2 %.** Recovery median 0.625 m: worse than run 4 (0.375 m) and now outside <= 0.5 m.
+- **Training:** legal-return reward per episode dipped 0.45 -> 0.32 (half the feeds lost the hint) and stayed flat.
+- **Next** (decided before launch): stance hint on 20 % of real-ball feeds, from h4-05/model_6900.
+- **Still open:** backhand and the reach families are at about 0 %, and recovery regressed.

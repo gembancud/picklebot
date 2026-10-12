@@ -549,3 +549,18 @@ def _latent_drill3_halfhint(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_HALFHINT, env_cfg=_latent_drill3_halfhint(),
                     play_env_cfg=_latent_drill3_halfhint(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 6 (stage5b-h4.md): the stance hint on 20 % of the real-ball feeds (run 5: 50 %). Hiding half the hints
+# lifted the no-hint legal return 3.5 % -> 15.7 % without hurting hinted play (40.9 % -> 43.0 %).
+TASK_LATENT_DRILL3_FEWHINT = "Picklebot-Latent-Drill3-FewHint-G1"
+
+
+def _latent_drill3_fewhint(play=False):
+    cfg = _latent_drill3_shaped(play)
+    cfg.actions["ball"].hit_hint_prob = 0.2
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_FEWHINT, env_cfg=_latent_drill3_fewhint(),
+                    play_env_cfg=_latent_drill3_fewhint(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

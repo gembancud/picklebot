@@ -77,6 +77,8 @@ def main():
         cfg.actions["ball"].swing_prob = args.swing_prob
     if args.no_hint:
         cfg.actions["ball"].hit_hint = False
+    elif hasattr(cfg.actions["ball"], "hit_hint_prob"):
+        cfg.actions["ball"].hit_hint_prob = 1.0  # with-hint evaluations show it on every real-ball feed (D-058)
     if args.swing_families:
         cfg.actions["ball"].swing_mix = FeedMix({f: 1.0 for f in args.swing_families.split(",")})
     cfg.actions["ball"].move_sector_weights = None  # evaluation samples spot directions uniformly
