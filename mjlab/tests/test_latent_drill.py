@@ -222,3 +222,13 @@ def test_stance_progress_pulls_toward_the_forehand_side_stance_on_unhinted_feeds
     assert torch.allclose(r[free], torch.full_like(r[free], 0.5), atol=0.05)
     assert (r[hinted] == 0).all()
     env.close()
+
+
+def test_fall_penalty_variant_adds_only_the_fall_term():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    base = load_env_cfg("Picklebot-Latent-Drill3-Footwork-G1")
+    pen = load_env_cfg("Picklebot-Latent-Drill3-FallPen-G1")
+    assert set(pen.rewards) - set(base.rewards) == {"fall"} and pen.rewards["fall"].weight == -50.0
+    assert list(pen.rewards)[-1] == "legal_return"

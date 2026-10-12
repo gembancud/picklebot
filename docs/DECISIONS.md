@@ -1591,3 +1591,30 @@ Task `Picklebot-Latent-Drill3-Footwork-G1`, otherwise as run 9, from h4-09/model
 Considered and kept for later: pulling the executor toward the H3 reach-06 walker in move episodes (a teacher regulariser through RegPPO's hook). It is more plumbing, and the main metric needs direct progress under the plateau rule.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-063 — H4: the latent controller cannot step left or back; fall penalty for run 11
+
+- Date: 2026-10-13
+- Status: Accepted (loop, under the design latitude of D-056); finding 1 is reported to the user
+- Amends: Stage 5B H4 (run 11)
+
+1. **Finding (outside H4's scope):** the human-motion controller is directionally biased. `scripts/reach_direction_diag.py` on the H3 walker reach-06/model_34700, with the root target forced 0.8 m from the pelvis in the heading frame (dev seed 4200470, `results/stage5b-h4-reach-direction-diag.json`):
+
+   | Direction | Within 10 cm | Within 25 cm | Median closest approach |
+   |---|---:|---:|---:|
+   | Forward | 91.9 % | 99.3 % | 0.03 m |
+   | Right | 77.5 % | 95.7 % | 0.04 m |
+   | **Left** | **22.5 %** | **41.8 %** | 0.32 m |
+   | **Back** | **1.3 %** | **24.7 %** | 0.34 m |
+
+   The tracking data is right-handed tennis plus mostly forward LAFAN1 walking. Inside the latent barrier (lambda 1, about one prior std), leftward and backward steps are rare. This explains why H4 never moves left: backhand and reach backhand stay at 0 % contact, even with the forehand-side hint (D-059) and the stance shaping (D-062). Run 10's backhand video shows the robot planted while the ball passes on its left.
+
+   Fixing it needs a controller change outside H4's scope (D-056 fixed H4 to the reach-06 controller and action space):
+   - mirrored (left-handed) and more backward/lateral motion data in the H0/H1 training;
+   - a wider latent barrier;
+   - a root-velocity channel beside the latent.
+
+   This is left to the user and reported with the end-of-loop videos.
+2. **Run 11: add H3's fall penalty** (-50 on a terminating fall; `Picklebot-Latent-Drill3-FallPen-G1`), from h4-10/model_13800. The drill task ends an episode on a fall but never penalised it. h4-10 falls in 6.0 % of robot episodes (target <= 1 %; H3 with the penalty: 0.1 %).
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4, Open questions; `mjlab/results/stage5b-h4.md`.

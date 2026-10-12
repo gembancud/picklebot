@@ -637,3 +637,22 @@ def _latent_drill3_footwork(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_FOOTWORK, env_cfg=_latent_drill3_footwork(),
                     play_env_cfg=_latent_drill3_footwork(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 11 (D-063): the run-10 task plus H3's fall penalty (-50 on a terminating fall). The drill task ends an episode
+# on a fall but never penalised it; h4-10 falls in 6.0 % of robot episodes (H3, with the penalty: 0.1 %).
+from mjlab.envs import mdp as _mdp  # noqa: E402
+
+TASK_LATENT_DRILL3_FALLPEN = "Picklebot-Latent-Drill3-FallPen-G1"
+
+
+def _latent_drill3_fallpen(play=False):
+    cfg = _latent_drill3_footwork(play)
+    legal = cfg.rewards.pop("legal_return")  # keep legal_return last (it clears the step flags)
+    cfg.rewards["fall"] = RewardTermCfg(func=_mdp.is_terminated, weight=-50.0)
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_FALLPEN, env_cfg=_latent_drill3_fallpen(),
+                    play_env_cfg=_latent_drill3_fallpen(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
