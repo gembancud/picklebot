@@ -127,7 +127,7 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 | 8 | h4-08 | + spot-progress reward (D-060; `Picklebot-Latent-Drill3-Progress-G1`) | h4-07/model_9700 | model_11100 (cap) | 50.5 % | 2.85 |
 | 9 | h4-09 | episode mix: move 0.15 -> 0.35, ghost swing 0.25 -> 0.05 (D-061; `Picklebot-Latent-Drill3-MoveMix-G1`) | h4-08/model_11100 | model_12400 (cap) | **54.1 %** | 2.87 |
 | 10 | h4-10 | + stance_progress footwork shaping (D-062; `Picklebot-Latent-Drill3-Footwork-G1`) | h4-09/model_12400 | model_13800 (cap) | **58.6 %** | 2.90 |
-| 11 | h4-11 | + fall penalty -50 (D-063; `Picklebot-Latent-Drill3-FallPen-G1`) | h4-10/model_13800 | | | |
+| 11 | h4-11 | + fall penalty -50 (D-063; `Picklebot-Latent-Drill3-FallPen-G1`) | h4-10/model_13800 | model_14900 (cap; about 1,150 iterations, the GPU was shared with a video render) | 58.1 % | 2.85 |
 
 ## Run 7: h4-07 (dev seeds 4200450-453; `stage5b-h4-h4-07-*.json`)
 - **Main metric 50.4 %** (+4.2 points).
@@ -170,3 +170,10 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Video** (`artifacts/videos/h4/h4-10-backhand-*`): still planted while backhand balls pass on its left.
 - **Root cause (D-063):** the latent controller rarely steps left or back. The H3 walker reaches a target 0.8 m to its left within 25 cm only 41.8 % of the time (right 95.7 %, forward 99.3 %, back 24.7 %). Fixing this is outside H4's scope and goes to the user.
 - **Next** (decided before launch, D-063): + fall penalty -50 (the drill task had none), from h4-10/model_13800.
+
+## Run 11: h4-11 (dev seeds 4200485-488; `stage5b-h4-h4-11-*.json`)
+- **Main metric 58.1 %** (-0.5 vs run 10).
+  - Low 92.5 % (passes its gate bar), topspin 90.9, wide forehand 88.3, backspin 85.4, high 83.0, short 82.6, fast 81.5, deep 77.0, easy forehand 76.1 %.
+  - Reach forehand 65.5 %, **reach short 20.4 %**, reach deep 3.3 %. Backhand and reach backhand 0 %.
+- **Style 2.85, robot falls 5.4 %** (from 6.0 %; the penalty barely helps, since falls were already rare in stochastic training). Recovery 0.875 m.
+- **Climbing stops here (D-064).** Candidate by the main metric: **h4-10/model_13800** (58.6 %).
