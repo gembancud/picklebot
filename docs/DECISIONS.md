@@ -1530,3 +1530,28 @@ Decision: run 7 places every hinted stance on the forehand side (pelvis 0.5 m to
 Trade-off, left open: this does not teach a true backhand stroke. That matters most for reach_backhand (1-2.5 m to the left), where running around adds distance. If backhand stays at 0 %, a backhand-specific approach is a later decision.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-060 — H4: reward progress toward the spot the executor is shown
+
+- Date: 2026-10-12
+- Status: Accepted (loop, under the design latitude of D-056)
+- Amends: Stage 5B H4 (run 8), D-059
+
+Context: after run 7 the forehand-side families return 65-86 % (main metric 50.4 %), but three failures share one cause. **The executor has never learned to travel to a commanded spot:**
+- `move_arrival` is 0 in every H4 run (h4-01..07), and the move-tracking reward fell from 0.107 to 0.054 per episode.
+- Backhand stays at 0 % contact with the forehand-side hint: the hint asks for a 0.8-1.15 m sidestep that the robot never takes. Rendered: `artifacts/videos/h4/h4-07-backhand-*`.
+- The reach families are at 0-15 %, and recovery worsens every run (0.375 -> 0.625 -> 0.775 -> 0.825 m).
+
+For every forehand feed, the hinted spot is within about 0.2 m of where the robot already stands, so ignoring the spot input costs almost nothing there.
+
+In H3 the same gap (moving the pelvis to a target through the latent) was closed by a progress reward: root reach went 10.6 -> 45.5 % in one run (D-055 E1).
+
+Decision: run 8 adds `spot_progress`, weight 1.0: pelvis speed toward the spot input, clamped to +-1 m/s, zero within 0.1 m. It is active only when the spot is meant to be followed:
+- move-drill episodes;
+- ghost-swing episodes;
+- hinted real-ball feeds before the hit;
+- every real-ball feed after the hit (the recovery spot).
+
+Un-hinted approaches get no spot pull, so the ball must still be read. Task `Picklebot-Latent-Drill3-Progress-G1`, otherwise as run 7.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.

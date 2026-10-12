@@ -123,4 +123,15 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 
 | # | Run | Change (written before launch) | From | Endpoint | Main metric | Style |
 |---|---|---|---|---|---|---|
-| 7 | h4-07 | stance hint on the forehand side for every ball (D-059; `Picklebot-Latent-Drill3-FhHint-G1`) | h4-06/model_8300 | | | |
+| 7 | h4-07 | stance hint on the forehand side for every ball (D-059; `Picklebot-Latent-Drill3-FhHint-G1`) | h4-06/model_8300 | model_9700 (cap) | **50.4 %** | 2.81 |
+| 8 | h4-08 | + spot-progress reward (D-060; `Picklebot-Latent-Drill3-Progress-G1`) | h4-07/model_9700 | | | |
+
+## Run 7: h4-07 (dev seeds 4200450-453; `stage5b-h4-h4-07-*.json`)
+- **Main metric 50.4 %** (+4.2 points).
+  - Forehand-side families, no hint: deep 86.4, topspin 86.1, backspin 82.8, wide forehand 82.0, low 81.4, fast 79.2, easy forehand 73.5, high 70.4, short 64.8 %.
+  - A/B gain CI above 0 for wide forehand, deep, low, fast, topspin and backspin.
+- **Reach forehand 15.5 %.** Backhand, reach backhand, reach short and reach deep are 0 %, **backhand with 0 % contact even with the forehand-side hint**.
+- **Style 2.81, robot falls 0.3 %, recovery 0.825 m** (worse again).
+- **Video** (`artifacts/videos/h4/h4-07-backhand-*`): the robot still stands still while backhand balls pass. It does not take the hinted 0.8-1.15 m sidestep.
+- **Diagnosis:** `move_arrival` is 0 in every H4 run, so the executor never learned to travel to a commanded spot. For forehand feeds the hinted spot is within about 0.2 m of where it stands, so it can ignore the spot input.
+- **Next** (decided before launch, D-060): + spot-progress reward toward the spot input when it is meant to be followed, from h4-07/model_9700.

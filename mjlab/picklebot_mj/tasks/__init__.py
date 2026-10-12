@@ -580,3 +580,23 @@ def _latent_drill3_fhhint(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_FHHINT, env_cfg=_latent_drill3_fhhint(),
                     play_env_cfg=_latent_drill3_fhhint(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 8 (D-060): the run-7 task plus a spot-progress reward (pelvis speed toward the spot input whenever that spot
+# is meant to be followed). h4-01..07 never arrived at a single move-drill spot (move_arrival 0), ignore the
+# 0.8-1.15 m hinted sidestep on backhand feeds, and recover worse each run (0.375 -> 0.825 m).
+from picklebot_mj.tasks.return_stand import spot_progress  # noqa: E402
+
+TASK_LATENT_DRILL3_PROGRESS = "Picklebot-Latent-Drill3-Progress-G1"
+
+
+def _latent_drill3_progress(play=False):
+    cfg = _latent_drill3_fhhint(play)
+    legal = cfg.rewards.pop("legal_return")  # keep legal_return last (it clears the step flags)
+    cfg.rewards["spot_progress"] = RewardTermCfg(func=spot_progress, weight=1.0)
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_PROGRESS, env_cfg=_latent_drill3_progress(),
+                    play_env_cfg=_latent_drill3_progress(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

@@ -143,3 +143,33 @@ def test_forehand_only_hint_puts_backhand_balls_on_the_forehand_side():
         env.close()
     assert spots["Picklebot-Latent-Drill3-FewHint-G1"] < 0  # backhand: stand to the ball's right
     assert spots["Picklebot-Latent-Drill3-FhHint-G1"] > 0  # forehand side: stand to the ball's left
+
+
+@needs
+def test_spot_progress_rewards_moving_toward_the_spot_only_when_it_is_to_be_followed():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.tasks.return_stand import spot_progress
+
+    cfg = load_env_cfg("Picklebot-Latent-Drill3-Progress-G1")
+    assert list(cfg.rewards)[-1] == "legal_return" and cfg.rewards["spot_progress"].weight == 1.0
+    cfg.actions["ball"].move_prob, cfg.actions["ball"].swing_prob = 0.0, 0.0
+    cfg.actions["ball"].hit_hint_prob = 0.5
+    cfg.scene.num_envs = 64
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    term = env.action_manager.get_term("ball")
+    robot = env.scene["robot"]
+    term.recover_xy[:] = term.pelvis_xy() + torch.tensor([0.0, 1.0], device="cuda")  # spot 1 m to the left
+    v = torch.zeros(64, 6, device="cuda")
+    v[:, 1] = 0.6  # moving left, toward the spot
+    robot.write_root_link_velocity_to_sim(v)
+    env.sim.forward()
+    r = spot_progress(env)
+    hinted, free = term.hit_hint_on & ~term.hit_done, ~term.hit_hint_on & ~term.hit_done
+    assert hinted.any() and free.any()
+    assert torch.allclose(r[hinted], torch.full_like(r[hinted], 0.6), atol=0.05)
+    assert (r[free] == 0).all()  # un-hinted approach: the ball must be read, no spot pull
+    env.close()

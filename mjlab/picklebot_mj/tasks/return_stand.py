@@ -589,6 +589,24 @@ def recovery_reward(env, std: float = RECOVERY_STD) -> torch.Tensor:
     return torch.exp(-(d / std) ** 2) * t.hit_done.float()
 
 
+def spot_progress(env, max_speed: float = 1.0) -> torch.Tensor:
+    """Pelvis speed toward the spot input (m/s, clamped), whenever that spot is meant to be followed: move-drill and
+    ghost-swing episodes, hinted real-ball feeds before the hit, and every real-ball feed after the hit (the spot
+    is then the recovery spot). Un-hinted approaches stay free, so the ball must be read. H4 run 8 (D-060); the H3
+    root-progress reward (latent_reach.root_progress) moved root reach 10.6 -> 45.5 %."""
+    t = _term(env)
+    to = t.recover_xy - t.pelvis_xy()
+    dist = to.norm(dim=-1, keepdim=True).clamp(min=1e-3)
+    v = t._entity.data.root_link_lin_vel_w[:, :2]
+    prog = (v * (to / dist)).sum(-1).clamp(-max_speed, max_speed) * (dist.squeeze(-1) > 0.1).float()
+    active = t.hit_done | t.hit_hint_on
+    if t.drill is not None:
+        active = active | t.drill.move_ep
+    if t.shadow is not None:
+        active = active | t.shadow.swing_ep
+    return prog * active.float()
+
+
 def placement(env) -> torch.Tensor:
     """Placement bonus paid on legal landings (read before legal_return consumes the flags)."""
     return _term(env).placement_now
