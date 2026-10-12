@@ -31,7 +31,8 @@ So the earlier Stage 5 numbers stand. The final gate re-evaluates S-D3-style-c w
 |---|---|---|---|---|---|---|
 | 1 | h4-01 | the plan as written: fresh PPO, settings above | scratch | model_1300 (cap) | **0.0 %** | **2.74** |
 | 2 | h4-02 | + one-shot return shaping at first contact (D-057), task `Picklebot-Latent-Drill3-Shaped-G1` | h4-01/model_1300 | model_2700 (cap) | 0.0 % | 2.62 |
-| 3 | h4-03 | PPO entropy coefficient 0.01 -> 0.001 (`Picklebot-Latent-Drill3-Shaped-LowEnt-G1`) | h4-02/model_2700 | | | |
+| 3 | h4-03 | PPO entropy coefficient 0.01 -> 0.001 (`Picklebot-Latent-Drill3-Shaped-LowEnt-G1`) | h4-02/model_2700 | model_4100 (cap) | 0.2 % | 2.71 |
+| 4 | h4-04 | more training (same task and settings) | h4-03/model_4100 | | | |
 
 ## Run 1: h4-01 (dev seeds 4200420-423; `stage5b-h4-h4-01-*.json`)
 - **Every family has 0 % legal returns.** Contact is 18 %, the paddle moves at 0.8 m/s at contact, contact height is 0.57 m, and no ball crosses the net. Rally endings: second bounce 7,610, out 2,961, wrong side 2,003.
@@ -60,3 +61,16 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Style 2.62, robot falls 0.34 %, recovery median 0.375 m** (the recovery threshold of <= 0.5 m is met).
 - **Training:** return shaping per episode rose from 0.003 to 0.040, fastest at the end. Contact stayed flat at about 0.17. Action std kept rising, 1.26 -> 1.30.
 - **Next change** (decided before launch): PPO entropy coefficient 0.01 -> 0.001. The latent passes through tanh, so extra noise costs almost nothing while the entropy bonus keeps paying for it (entropy loss about 58 over 35 dims). Training rollouts drown a coordinated swing in noise.
+
+## Run 3: h4-03 (dev seeds 4200430-433; `stage5b-h4-h4-03-*.json`)
+- **Main metric 0.2 %** (no hint); 1.9 % with the stance hint (target A).
+  - Per family, no hint: wide forehand 1.5 %, topspin 0.6 %, deep 0.5 %, the rest 0-0.2 %.
+- **The swing now exists:**
+  - paddle speed at contact 2.93 m/s (from 1.43);
+  - outgoing ball 5.4 m/s (from 3.5);
+  - contact 22 %;
+  - 40 net crossings (from 0).
+- **Style 2.71, robot falls 0.8 %, recovery 0.425 m** (still within <= 1 % and <= 0.5 m).
+- **Training:** action std 1.29 -> 0.41. Return shaping per episode 0.04 -> 0.18. The legal-return reward first appeared at iteration 3,900 and was still rising at the cap (0 -> 0.026 -> 0.053 per episode over the last 300 iterations).
+- **Plateau count** (D-056): runs 2 and 3 both improved the main metric by < 1 point. Run 4 must reach >= 1.2 %, or climbing stops.
+- **Next** (decided before launch): more training, no change, from h4-03/model_4100. The curve was still accelerating at the cap.
