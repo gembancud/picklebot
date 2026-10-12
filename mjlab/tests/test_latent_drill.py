@@ -173,3 +173,19 @@ def test_spot_progress_rewards_moving_toward_the_spot_only_when_it_is_to_be_foll
     assert torch.allclose(r[hinted], torch.full_like(r[hinted], 0.6), atol=0.05)
     assert (r[free] == 0).all()  # un-hinted approach: the ball must be read, no spot pull
     env.close()
+
+
+@needs
+def test_move_mix_keeps_sixty_percent_real_balls():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    cfg = load_env_cfg("Picklebot-Latent-Drill3-MoveMix-G1")
+    cfg.scene.num_envs = 2048
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    t = env.action_manager.get_term("ball")
+    move, swing = t.drill.move_ep.float().mean().item(), t.shadow.swing_ep.float().mean().item()
+    assert abs(move - 0.35) < 0.04 and abs(swing - 0.05) < 0.02 and abs(1 - move - swing - 0.6) < 0.05
+    env.close()

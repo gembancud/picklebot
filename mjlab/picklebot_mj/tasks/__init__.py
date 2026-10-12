@@ -600,3 +600,19 @@ def _latent_drill3_progress(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_PROGRESS, env_cfg=_latent_drill3_progress(),
                     play_env_cfg=_latent_drill3_progress(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 9 (D-061): the run-8 task with the episode mix shifted from ghost-ball swings to move-to-spot drills
+# (move 0.15 -> 0.35, swing 0.25 -> 0.05; real balls stay at 60 %). No H4 run has ever arrived at a move spot;
+# the flat student learned to walk to spots in Drill 1 with 75 % move episodes.
+TASK_LATENT_DRILL3_MOVEMIX = "Picklebot-Latent-Drill3-MoveMix-G1"
+
+
+def _latent_drill3_movemix(play=False):
+    cfg = _latent_drill3_progress(play)
+    cfg.actions["ball"].move_prob, cfg.actions["ball"].swing_prob = 0.35, 0.05
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_MOVEMIX, env_cfg=_latent_drill3_movemix(),
+                    play_env_cfg=_latent_drill3_movemix(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

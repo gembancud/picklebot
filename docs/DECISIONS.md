@@ -1555,3 +1555,19 @@ Decision: run 8 adds `spot_progress`, weight 1.0: pelvis speed toward the spot i
 Un-hinted approaches get no spot pull, so the ball must still be read. Task `Picklebot-Latent-Drill3-Progress-G1`, otherwise as run 7.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-061 — H4: shift the episode mix from ghost swings to move-to-spot drills
+
+- Date: 2026-10-12
+- Status: Accepted (loop, under the design latitude of D-056)
+- Amends: Stage 5B H4 (run 9), D-060
+
+Context: run 8 added the spot-progress reward (D-060). The main metric held at 50.5 % (+0.1). Reach forehand rose 15.5 -> 25.1 %. But the executor still never arrives at a move-drill spot (`move_arrival` 0), the progress reward stays small (about 0.02 per episode), backhand stays at 0 % and recovery at 0.775 m. Only 15 % of episodes practise moving. The flat student learned to walk to spots in Drill 1 with 75 % move episodes.
+
+Decision: run 9 changes the episode mix, real balls held at 60 %:
+- move-to-spot 0.15 -> 0.35;
+- ghost-ball swings 0.25 -> 0.05. They taught the swing early; it now exists (contact speed 4-5 m/s, 64-86 % legal on forehand-side families).
+
+Task `Picklebot-Latent-Drill3-MoveMix-G1`, otherwise as run 8, from h4-08/model_11100.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.

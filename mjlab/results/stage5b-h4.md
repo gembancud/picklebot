@@ -124,7 +124,8 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 | # | Run | Change (written before launch) | From | Endpoint | Main metric | Style |
 |---|---|---|---|---|---|---|
 | 7 | h4-07 | stance hint on the forehand side for every ball (D-059; `Picklebot-Latent-Drill3-FhHint-G1`) | h4-06/model_8300 | model_9700 (cap) | **50.4 %** | 2.81 |
-| 8 | h4-08 | + spot-progress reward (D-060; `Picklebot-Latent-Drill3-Progress-G1`) | h4-07/model_9700 | | | |
+| 8 | h4-08 | + spot-progress reward (D-060; `Picklebot-Latent-Drill3-Progress-G1`) | h4-07/model_9700 | model_11100 (cap) | 50.5 % | 2.85 |
+| 9 | h4-09 | episode mix: move 0.15 -> 0.35, ghost swing 0.25 -> 0.05 (D-061; `Picklebot-Latent-Drill3-MoveMix-G1`) | h4-08/model_11100 | | | |
 
 ## Run 7: h4-07 (dev seeds 4200450-453; `stage5b-h4-h4-07-*.json`)
 - **Main metric 50.4 %** (+4.2 points).
@@ -135,3 +136,12 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Video** (`artifacts/videos/h4/h4-07-backhand-*`): the robot still stands still while backhand balls pass. It does not take the hinted 0.8-1.15 m sidestep.
 - **Diagnosis:** `move_arrival` is 0 in every H4 run, so the executor never learned to travel to a commanded spot. For forehand feeds the hinted spot is within about 0.2 m of where it stands, so it can ignore the spot input.
 - **Next** (decided before launch, D-060): + spot-progress reward toward the spot input when it is meant to be followed, from h4-07/model_9700.
+
+## Run 8: h4-08 (dev seeds 4200455-458; `stage5b-h4-h4-08-*.json`)
+- **Main metric 50.5 %** (+0.1; plateau count 1).
+  - Forehand-side families 71-85 %.
+  - Reach forehand 25.1 % (from 15.5 %).
+  - Backhand, reach backhand, reach short and reach deep 0-0.1 %.
+- **Style 2.85, robot falls 0.4 %, recovery 0.775 m.**
+- **Training:** spot progress per episode 0.0035 -> 0.02; `move_arrival` still 0.
+- **Next** (decided before launch, D-061): episode mix move 0.35 / ghost swing 0.05 / real 0.60, from h4-08/model_11100.
