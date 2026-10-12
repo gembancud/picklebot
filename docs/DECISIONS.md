@@ -1500,3 +1500,19 @@ Considered: distilling S-D3-style-c into the H4 policy through the frozen decode
 Decision: H4 run 2 continues PPO from h4-01/model_1300 with **one added reward**: a one-shot `return_shaping` at the first legal contact. It pays half for the outgoing ball speed toward the net (capped at 6 m/s) and half if its drag-free ballistic path clears the net. Weight 2.0/step_dt, between paddle_contact (1.0) and legal_return (5.0). It is read before legal_return, which clears the step flags. Task `Picklebot-Latent-Drill3-Shaped-G1`.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-058 — H4: lower PPO entropy, then show the stance hint on half the real-ball feeds
+
+- Date: 2026-10-12
+- Status: Accepted (loop, under the design latitude of D-056)
+- Amends: Stage 5B H4 (runs 3 and 5)
+
+1. **Run 3: entropy coefficient 0.01 -> 0.001** (`Picklebot-Latent-Drill3-Shaped-LowEnt-G1`, runs 3-4).
+   - The latent action passes through tanh, so extra noise costs the policy almost nothing while the entropy bonus keeps paying for it. Action std rose 1.0 -> 1.30 over runs 1-2.
+   - With the change, std fell to 0.41, and the first legal returns appeared (run 3: 0.2 %; run 4: 3.5 % no hint).
+2. **Run 5: the stance hint on half the real-ball feeds** (`hit_hint_prob` 0.5; `Picklebot-Latent-Drill3-HalfHint-G1`). h4-04 returns 40.9 % legally with the hint but 3.5 % without it (contact 59 % vs 21 %). Every real-ball training feed showed the hint, so the executor follows it and never learned to read the ball itself. The flat student learned that in Stage 4, before the hint existed.
+   - The hidden half must find the interception point from the ball observations.
+   - The hinted half keeps the movement teaching.
+   - The gate keeps its no-hint measure; the hint is a training aid only.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.

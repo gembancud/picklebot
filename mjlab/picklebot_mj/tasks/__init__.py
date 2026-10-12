@@ -532,3 +532,20 @@ def _latent_drill3_lowent_rl_cfg():
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_SHAPED_LOWENT, env_cfg=_latent_drill3_shaped(),
                     play_env_cfg=_latent_drill3_shaped(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 5 (stage5b-h4.md): the run-3/4 task with the stance hint shown on only half of the real-ball feeds.
+# h4-04 returns 40.9 % legally with the hint but 3.5 % without it (contact 59 % vs 21 %): it follows the hint and
+# never learned to read the ball, because every real-ball training feed showed the hint.
+TASK_LATENT_DRILL3_HALFHINT = "Picklebot-Latent-Drill3-HalfHint-G1"
+HIT_HINT_PROB = 0.5
+
+
+def _latent_drill3_halfhint(play=False):
+    cfg = _latent_drill3_shaped(play)
+    cfg.actions["ball"].hit_hint_prob = HIT_HINT_PROB
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_HALFHINT, env_cfg=_latent_drill3_halfhint(),
+                    play_env_cfg=_latent_drill3_halfhint(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

@@ -98,3 +98,20 @@ def test_low_entropy_variant_changes_only_the_entropy_coefficient():
     assert low["algorithm"]["entropy_coef"] == 0.001
     low["algorithm"]["entropy_coef"] = base["algorithm"]["entropy_coef"]
     assert low == base
+
+
+@needs
+def test_half_hint_shows_the_hint_on_about_half_the_real_feeds():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    cfg = load_env_cfg("Picklebot-Latent-Drill3-HalfHint-G1")
+    assert cfg.actions["ball"].hit_hint and cfg.actions["ball"].hit_hint_prob == 0.5
+    cfg.actions["ball"].move_prob, cfg.actions["ball"].swing_prob = 0.0, 0.0  # real-ball feeds only
+    cfg.scene.num_envs = 512
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    share = env.action_manager.get_term("ball").hit_hint_on.float().mean().item()
+    assert 0.4 < share < 0.6
+    env.close()

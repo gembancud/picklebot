@@ -32,7 +32,8 @@ So the earlier Stage 5 numbers stand. The final gate re-evaluates S-D3-style-c w
 | 1 | h4-01 | the plan as written: fresh PPO, settings above | scratch | model_1300 (cap) | **0.0 %** | **2.74** |
 | 2 | h4-02 | + one-shot return shaping at first contact (D-057), task `Picklebot-Latent-Drill3-Shaped-G1` | h4-01/model_1300 | model_2700 (cap) | 0.0 % | 2.62 |
 | 3 | h4-03 | PPO entropy coefficient 0.01 -> 0.001 (`Picklebot-Latent-Drill3-Shaped-LowEnt-G1`) | h4-02/model_2700 | model_4100 (cap) | 0.2 % | 2.71 |
-| 4 | h4-04 | more training (same task and settings) | h4-03/model_4100 | | | |
+| 4 | h4-04 | more training (same task and settings) | h4-03/model_4100 | model_5500 (cap) | **3.5 %** | 2.88 |
+| 5 | h4-05 | stance hint on half the real-ball feeds (D-058; `Picklebot-Latent-Drill3-HalfHint-G1`) | h4-04/model_5500 | | | |
 
 ## Run 1: h4-01 (dev seeds 4200420-423; `stage5b-h4-h4-01-*.json`)
 - **Every family has 0 % legal returns.** Contact is 18 %, the paddle moves at 0.8 m/s at contact, contact height is 0.57 m, and no ball crosses the net. Rally endings: second bounce 7,610, out 2,961, wrong side 2,003.
@@ -74,3 +75,18 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Training:** action std 1.29 -> 0.41. Return shaping per episode 0.04 -> 0.18. The legal-return reward first appeared at iteration 3,900 and was still rising at the cap (0 -> 0.026 -> 0.053 per episode over the last 300 iterations).
 - **Plateau count** (D-056): runs 2 and 3 both improved the main metric by < 1 point. Run 4 must reach >= 1.2 %, or climbing stops.
 - **Next** (decided before launch): more training, no change, from h4-03/model_4100. The curve was still accelerating at the cap.
+
+## Run 4: h4-04 (dev seeds 4200435-438; `stage5b-h4-h4-04-*.json`)
+- **Main metric 3.5 %** (+3.3 points; the plateau count resets).
+
+  | | Without the hint (gate) | With the hint (target A) |
+  |---|---:|---:|
+  | Contact | 21 % | 59 % |
+  | Legal returns | 3.5 % | **40.9 %** |
+
+  Per family, no hint: topspin 9.1 %, low 8.1 %, fast 7.4 %, deep 6.3 %, backspin 5.5 %, easy forehand 4.0 %, wide forehand 3.4 %, short 2.6 %, high 1.1 %. Backhand and every reach family are 0-0.2 %.
+- **The swing is real:** paddle speed at contact 4.4 m/s, ball out 7.2 m/s, 684 net crossings.
+- **Style 2.88, robot falls 0.8 %, recovery 0.375 m** (all within their targets).
+- **Training:** the legal-return reward rose 0.05 -> 0.45 per episode and levelled off over the last 500 iterations. Contact per episode drifted 0.20 -> 0.16.
+- **Reading:** the executor can return balls when told where to stand. It has not learned to find the interception point from the ball, because every real-ball training feed showed the hint.
+- **Next** (decided before launch, D-058): the stance hint on half the real-ball feeds, from h4-04/model_5500.

@@ -115,6 +115,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # Drill 3 (stage5-sd2c-videos.md):
     hint_v2: bool = False  # interception near the top of the bounce; stance spots may be behind the baseline
     hit_hint: bool = False  # real-ball episodes also show the stance hint until the first contact
+    hit_hint_prob: float = 1.0  # share of real-ball feeds that show it (H4 run 5); the rest must read the ball
     reach_curriculum: bool = False  # reach families start near (REACH_NEAR) and widen on success
     reach_start: float = 0.0  # initial curriculum scale (0 = near version, 1 = full family)
     reach_near_set: str = "v1"  # "v1" (REACH_NEAR, S-D3) or "v2" (REACH_NEAR_V2, gentler, S-D3b)
@@ -150,6 +151,7 @@ class BallPhysicsAction(ActionTerm):
         self._target_xy = torch.tensor(TARGET_CENTRES, device=dev)
         self.placement_now = torch.zeros(n, device=dev)
         self.gen_recover = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 130363)  # own stream
+        self.gen_hint = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 155921)  # own stream
         self.recover_xy = torch.tensor(RECOVERY_FIXED, device=dev).repeat(n, 1)
         # Recovery error at the next feed's launch, for feeds the robot hit: histogram (no host sync).
         self.recover_hist = torch.zeros(100, dtype=torch.long, device=dev)
@@ -387,6 +389,8 @@ class BallPhysicsAction(ActionTerm):
             hit_ep = torch.ones(k, dtype=torch.bool, device=self.device)
             if self.shadow is not None:
                 hit_ep &= ~self.shadow.swing_ep[env_ids]
+            if getattr(self.cfg, "hit_hint_prob", 1.0) < 1.0:
+                hit_ep &= torch.rand(k, generator=self.gen_hint, device=self.device) < self.cfg.hit_hint_prob
             spot = stance_spot(self, self.cfg.hint_v2)[env_ids]
             self.hit_rec_true[env_ids] = rec
             self.hit_hint_on[env_ids] = hit_ep
