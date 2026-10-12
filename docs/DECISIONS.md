@@ -1571,3 +1571,23 @@ Decision: run 9 changes the episode mix, real balls held at 60 %:
 Task `Picklebot-Latent-Drill3-MoveMix-G1`, otherwise as run 8, from h4-08/model_11100.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-062 — H4: privileged footwork shaping toward the hitting stance
+
+- Date: 2026-10-12
+- Status: Accepted (loop, under the design latitude of D-056)
+- Amends: Stage 5B H4 (run 10)
+
+Context: run 9 (move-heavy episode mix) lifted the main metric 50.5 -> 54.1 %, and reach forehand to 46 %. The executor now moves when the ball pulls it to the right. But it never moves left: backhand and reach backhand are 0 %, even with the forehand-side hint. It also ignores abstract spots. `scripts/move_diag.py` on h4-09 (`results/stage5b-h4-h4-09-move-diag.json`): 0 of 2,990 move-drill spots reached within 0.25 m, median closest approach 1.36 m.
+
+The spot input is already body-relative (`recovery_obs`), so perception is not the problem. The problem is exploration: at action std 0.38 the policy never finds the walking those rewards would pay for.
+
+Decision: run 10 adds `stance_progress`, weight 1.0: pelvis speed toward the feed's ideal hitting stance, clamped to +-1 m/s. The stance is the forehand-side stance spot computed from the predicted interception. It is active on **un-hinted** real-ball feeds before the hit; hinted feeds are already covered by spot_progress.
+- **Privileged reward only:** the observations are unchanged, so the executor must still read the ball. This is standard footwork shaping.
+- **Covers:** the backhand run-around and every reach family, in one term.
+
+Task `Picklebot-Latent-Drill3-Footwork-G1`, otherwise as run 9, from h4-09/model_12400.
+
+Considered and kept for later: pulling the executor toward the H3 reach-06 walker in move episodes (a teacher regulariser through RegPPO's hook). It is more plumbing, and the main metric needs direct progress under the plateau rule.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.

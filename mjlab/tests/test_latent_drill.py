@@ -189,3 +189,36 @@ def test_move_mix_keeps_sixty_percent_real_balls():
     move, swing = t.drill.move_ep.float().mean().item(), t.shadow.swing_ep.float().mean().item()
     assert abs(move - 0.35) < 0.04 and abs(swing - 0.05) < 0.02 and abs(1 - move - swing - 0.6) < 0.05
     env.close()
+
+
+@needs
+def test_stance_progress_pulls_toward_the_forehand_side_stance_on_unhinted_feeds():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.feeds import FeedMix
+    from picklebot_mj.tasks.return_stand import stance_progress
+
+    cfg = load_env_cfg("Picklebot-Latent-Drill3-Footwork-G1")
+    assert list(cfg.rewards)[-1] == "legal_return" and "stance_progress" in cfg.rewards
+    b = cfg.actions["ball"]
+    b.move_prob, b.swing_prob, b.hit_hint_prob, b.adaptive_curriculum = 0.0, 0.0, 0.5, False
+    b.feed_mix = FeedMix({"backhand": 1.0})
+    cfg.scene.num_envs = 64
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    t = env.action_manager.get_term("ball")
+    robot = env.scene["robot"]
+    to = t.stance_xy - t.pelvis_xy()
+    assert (to[:, 1] > 0.5).float().mean() > 0.9  # backhand ball, forehand-side stance: step left
+    v = torch.zeros(64, 6, device="cuda")
+    v[:, :2] = 0.5 * to / to.norm(dim=-1, keepdim=True)
+    robot.write_root_link_velocity_to_sim(v)
+    env.sim.forward()
+    r = stance_progress(env)
+    free, hinted = ~t.hit_hint_on, t.hit_hint_on
+    assert free.any() and hinted.any()
+    assert torch.allclose(r[free], torch.full_like(r[free], 0.5), atol=0.05)
+    assert (r[hinted] == 0).all()
+    env.close()

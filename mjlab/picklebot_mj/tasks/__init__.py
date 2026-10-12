@@ -616,3 +616,24 @@ def _latent_drill3_movemix(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_MOVEMIX, env_cfg=_latent_drill3_movemix(),
                     play_env_cfg=_latent_drill3_movemix(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 10 (D-062): the run-9 task plus stance_progress, a privileged footwork-shaping reward (pelvis speed toward
+# the feed's forehand-side hitting stance) on un-hinted real-ball feeds before the hit. h4-09 moves when the ball pulls
+# it to the right (reach forehand 46 %) but never to the left (backhand and reach backhand 0 %) and ignores abstract
+# spots (0 of 2,990 move-drill spots reached).
+from picklebot_mj.tasks.return_stand import stance_progress  # noqa: E402
+
+TASK_LATENT_DRILL3_FOOTWORK = "Picklebot-Latent-Drill3-Footwork-G1"
+
+
+def _latent_drill3_footwork(play=False):
+    cfg = _latent_drill3_movemix(play)
+    legal = cfg.rewards.pop("legal_return")  # keep legal_return last (it clears the step flags)
+    cfg.rewards["stance_progress"] = RewardTermCfg(func=stance_progress, weight=1.0)
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_FOOTWORK, env_cfg=_latent_drill3_footwork(),
+                    play_env_cfg=_latent_drill3_footwork(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

@@ -169,6 +169,8 @@ class BallPhysicsAction(ActionTerm):
             for f in REACH_NEAR:
                 self.reach_scale[FAMILY_NAMES.index(f)] = cfg.reach_start
         self.hit_rec_true = torch.zeros(n, 2, device=dev)
+        # Ideal hitting stance for the current feed (privileged; stance_progress reward, H4 run 10, D-062).
+        self.stance_xy = torch.zeros(n, 2, device=dev)
         self.hit_hint_on = torch.zeros(n, dtype=torch.bool, device=dev)
         if cfg.adaptive_curriculum:
             from picklebot_mj.curriculum import AdaptiveSampler
@@ -312,6 +314,7 @@ class BallPhysicsAction(ActionTerm):
             self.recover_hist.index_add_(0, idx, (fire & self.hit_done).long())
         rec_old = self.recover_xy.clone()
         hint_old, true_old = self.hit_hint_on.clone(), self.hit_rec_true.clone()
+        stance_old = self.stance_xy.clone()
         pos, vel, spin = self.ball.pos.clone(), self.ball.vel.clone(), self.ball.spin.clone()
         fam_old, tgt_old = self.family.clone(), self.target.clone()
         self._feed(self.all_ids)
@@ -323,6 +326,7 @@ class BallPhysicsAction(ActionTerm):
         self.recover_xy = torch.where(fire.unsqueeze(-1), self.recover_xy, rec_old)
         self.hit_hint_on = torch.where(fire, self.hit_hint_on, hint_old)
         self.hit_rec_true = torch.where(fire.unsqueeze(-1), self.hit_rec_true, true_old)
+        self.stance_xy = torch.where(fire.unsqueeze(-1), self.stance_xy, stance_old)
         self.rules.begin_from_feed_masked(fire, FEEDER_PLAYER, must_bounce=True)
         for name in ("hit_done", "return_done", "tallied", "_prev_dead"):
             setattr(self, name, getattr(self, name) & ~fire)
@@ -393,6 +397,7 @@ class BallPhysicsAction(ActionTerm):
             if getattr(self.cfg, "hit_hint_prob", 1.0) < 1.0:
                 hit_ep &= torch.rand(k, generator=self.gen_hint, device=self.device) < self.cfg.hit_hint_prob
             spot = stance_spot(self, self.cfg.hint_v2)[env_ids]
+            self.stance_xy[env_ids] = spot
             self.hit_rec_true[env_ids] = rec
             self.hit_hint_on[env_ids] = hit_ep
             self.recover_xy[env_ids] = torch.where(hit_ep.unsqueeze(-1), spot, rec)
@@ -604,6 +609,23 @@ def spot_progress(env, max_speed: float = 1.0) -> torch.Tensor:
         active = active | t.drill.move_ep
     if t.shadow is not None:
         active = active | t.shadow.swing_ep
+    return prog * active.float()
+
+
+def stance_progress(env, max_speed: float = 1.0) -> torch.Tensor:
+    """Footwork shaping (privileged target, unchanged observations): pelvis speed toward the feed's ideal hitting
+    stance (the stance-hint spot, on the forehand side when hint_forehand_only) on un-hinted real-ball feeds before
+    the hit. Hinted feeds are covered by spot_progress. H4 run 10 (D-062)."""
+    t = _term(env)
+    to = t.stance_xy - t.pelvis_xy()
+    dist = to.norm(dim=-1, keepdim=True).clamp(min=1e-3)
+    v = t._entity.data.root_link_lin_vel_w[:, :2]
+    prog = (v * (to / dist)).sum(-1).clamp(-max_speed, max_speed) * (dist.squeeze(-1) > 0.1).float()
+    active = ~t.hit_done & ~t.hit_hint_on & ~t.rules.dead
+    if t.drill is not None:
+        active = active & ~t.drill.move_ep
+    if t.shadow is not None:
+        active = active & ~t.shadow.swing_ep
     return prog * active.float()
 
 

@@ -125,7 +125,8 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 |---|---|---|---|---|---|---|
 | 7 | h4-07 | stance hint on the forehand side for every ball (D-059; `Picklebot-Latent-Drill3-FhHint-G1`) | h4-06/model_8300 | model_9700 (cap) | **50.4 %** | 2.81 |
 | 8 | h4-08 | + spot-progress reward (D-060; `Picklebot-Latent-Drill3-Progress-G1`) | h4-07/model_9700 | model_11100 (cap) | 50.5 % | 2.85 |
-| 9 | h4-09 | episode mix: move 0.15 -> 0.35, ghost swing 0.25 -> 0.05 (D-061; `Picklebot-Latent-Drill3-MoveMix-G1`) | h4-08/model_11100 | | | |
+| 9 | h4-09 | episode mix: move 0.15 -> 0.35, ghost swing 0.25 -> 0.05 (D-061; `Picklebot-Latent-Drill3-MoveMix-G1`) | h4-08/model_11100 | model_12400 (cap) | **54.1 %** | 2.87 |
+| 10 | h4-10 | + stance_progress footwork shaping (D-062; `Picklebot-Latent-Drill3-Footwork-G1`) | h4-09/model_12400 | | | |
 
 ## Run 7: h4-07 (dev seeds 4200450-453; `stage5b-h4-h4-07-*.json`)
 - **Main metric 50.4 %** (+4.2 points).
@@ -145,3 +146,14 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Style 2.85, robot falls 0.4 %, recovery 0.775 m.**
 - **Training:** spot progress per episode 0.0035 -> 0.02; `move_arrival` still 0.
 - **Next** (decided before launch, D-061): episode mix move 0.35 / ghost swing 0.05 / real 0.60, from h4-08/model_11100.
+
+## Run 9: h4-09 (dev seeds 4200460-463; `stage5b-h4-h4-09-*.json`)
+- **Main metric 54.1 %** (+3.6; plateau count reset).
+  - Stage 4 families, no hint: topspin 87.3, low 85.0, backspin 84.9, wide forehand 83.4, easy forehand 81.9, deep 80.7, short 79.6, fast 76.9, high 74.3 %.
+  - **Reach forehand 46.0 %** (from 25.1 %).
+  - Reach short 3.6 % and reach deep 1.8 % now pass their bar (base 6.0 / 1.4 %).
+  - **Backhand and reach backhand 0 %.**
+  - A/B gain CI above 0 on 11 families.
+- **Style 2.87. Robot falls 2.3 %** (up from 0.4 %; target <= 1 %). Recovery 0.825 m.
+- **Move diagnostic** (`scripts/move_diag.py`, `stage5b-h4-h4-09-move-diag.json`, move episodes only, dev seed 4200464): **0 of 2,990 spots reached within 0.25 m**; median closest approach 1.36 m; drill arrival 0 %. The executor moves when the ball pulls it to the right, but ignores abstract spots and never moves left. Its spot input is already body-relative, so this is exploration, not perception.
+- **Next** (decided before launch, D-062): + stance_progress, a privileged footwork-shaping reward toward the forehand-side hitting stance on un-hinted feeds before the hit, from h4-09/model_12400.
