@@ -704,3 +704,20 @@ def _latent_drill3_lp_top(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_LP_TOP, env_cfg=_latent_drill3_lp_top(),
                     play_env_cfg=_latent_drill3_lp_top(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 18 (D-070): the run-16/17 task with return shaping's net check requiring 0.3 m of predicted clearance.
+# h4-17 nets backspin (3,017 wrong-side endings vs 428 for h4-13; mean clearance 0.415 -> 0.19 m) by aiming flat at
+# the drag-free edge that the margin-free check rewarded.
+TASK_LATENT_DRILL3_MARGIN = "Picklebot-Latent-Drill3-Margin-G1"
+NET_MARGIN = 0.3
+
+
+def _latent_drill3_margin(play=False):
+    cfg = _latent_drill3_lp_top(play)
+    cfg.rewards["return_shaping"].params = {"margin": NET_MARGIN}
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_MARGIN, env_cfg=_latent_drill3_margin(),
+                    play_env_cfg=_latent_drill3_margin(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

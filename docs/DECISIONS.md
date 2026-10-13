@@ -1756,3 +1756,29 @@ Decision: after the D-065 loop ends, **Stage 5C — full-court coverage** teache
 5. **Budget:** up to 30 runs, each <= 2 h, with the D-065 discipline (fixed endpoints, fresh dev seeds, one change per run, decision entries for design changes, plateau stop on executor runs only).
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (new Stage 5C).
+
+### D-070 — H4 return shaping: require a net-clearance margin
+
+- Date: 2026-10-13
+- Status: Accepted (loop, under D-065)
+- Amends: D-057 (`return_shaping`)
+
+Context:
+- **Run 17:** 79.7 % pooled no-hint legal, the first H4 endpoint above S-D3-style-c (78.7 %).
+- **Backspin** has slid 93.2 % (run 13) -> 87.4 -> 77.8 -> 73.2 -> 72.2 %, with contact at 99.5 %, so it is return quality, not reach.
+- **Backspin-only evaluation** (dev seed 4200524, `artifacts/eval/backspin-h4-1{3,7}.json`):
+
+  | | h4-13 | h4-17 |
+  |---|---:|---:|
+  | wrong-side endings (ball back on its own side, i.e. into the net) | 428 | 3,017 |
+  | mean net clearance | 0.415 m | 0.19 m |
+  | legal | 96.4 % | 75.4 % |
+  | outgoing speed | 11.4 m/s | 11.8 m/s |
+
+  Same pace, lower path.
+
+`return_shaping`'s net check gave full credit to any outgoing ball whose drag-free path clears the tape at all. As aiming improved (A/B gain up on every family), the policy learned to hit flat at that edge. With real drag, and spin that the actor cannot observe, backspin returns then fall into the net.
+
+Decision: run 18 requires **0.3 m of predicted clearance** (the clearance h4-13 kept) for the net half of `return_shaping`. Task `Picklebot-Latent-Drill3-Margin-G1`, otherwise as run 17, from h4-17-more/model_19300.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.

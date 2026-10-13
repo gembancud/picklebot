@@ -702,7 +702,7 @@ RETURN_SPEED_REF = 6.0  # m/s toward the net that earns the full speed half of r
 GRAVITY = 9.81
 
 
-def return_quality(pos: torch.Tensor, vel: torch.Tensor) -> torch.Tensor:
+def return_quality(pos: torch.Tensor, vel: torch.Tensor, margin: float = 0.0) -> torch.Tensor:
     """Score in [0, 1] of a ball just after contact (court-local; the robot is at x < 0, the net at x = 0):
     half for its speed toward the net (up to RETURN_SPEED_REF), half if its drag-free ballistic path is still
     above the net when it reaches x = 0. Dense guidance between 'touched the ball' and 'legal return'."""
@@ -710,14 +710,16 @@ def return_quality(pos: torch.Tensor, vel: torch.Tensor) -> torch.Tensor:
     speed = (vx / RETURN_SPEED_REF).clamp(0.0, 1.0)
     t = (-pos[:, 0] / vx.clamp(min=1e-3)).clamp(max=10.0)
     z_net = pos[:, 2] + vel[:, 2] * t - 0.5 * GRAVITY * t * t
-    clears = ((vx > 0.1) & (z_net - BALL_RADIUS > court.NET_CENTER_HEIGHT)).float()
+    # margin: required clearance above the net tape (D-070: 0 let the policy aim at the very edge, and drag and
+    # spin then put backspin returns into the net).
+    clears = ((vx > 0.1) & (z_net - BALL_RADIUS > court.NET_CENTER_HEIGHT + margin)).float()
     return 0.5 * speed + 0.5 * clears
 
 
-def return_shaping(env) -> torch.Tensor:
+def return_shaping(env, margin: float = 0.0) -> torch.Tensor:
     """One-shot at the first legal contact: return_quality of the outgoing ball (read before legal_return)."""
     t = _term(env)
-    return return_quality(t.hit_out_pos, t.hit_out_vel) * t.hit_now.float()
+    return return_quality(t.hit_out_pos, t.hit_out_vel, margin) * t.hit_now.float()
 
 
 def legal_return(env) -> torch.Tensor:

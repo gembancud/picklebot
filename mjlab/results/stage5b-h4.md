@@ -234,7 +234,8 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Video** (`artifacts/videos/h4/h4-13-backhand-*`): backhands are now played with a left sidestep and a cross-body swing on the left.
 | - | h4-16-more | more training of run 15's configuration: **stopped at iteration 18,304** (about 100 iterations in) once run 15's evaluation refuted it; no endpoint, not counted | h4-15/model_18200 | - | - | - |
 | 16 | h4-16-top | rehearse mastered units only at the top level (D-068; `Picklebot-Latent-Drill3-LP-Top-G1`) | h4-14/model_17100 | model_18200 (cap) | **77.2 %** | 3.08 |
-| 17 | h4-17 | more training, same task | h4-16-top/model_18200 | | | |
+| 17 | h4-17 | more training, same task | h4-16-top/model_18200 | model_19300 (cap) | **79.7 %** | 3.19 |
+| 18 | h4-18 | return shaping needs 0.3 m net clearance (D-070; `Picklebot-Latent-Drill3-Margin-G1`) | h4-17/model_19300 | | | |
 
 ## Run 15: h4-15 (dev seeds 4200510-513; `stage5b-h4-h4-15-*.json`)
 - **Main metric 67.4 %** (-6.9). Every family is worse: easy forehand 70.2, backhand 76.0, backspin 77.8, reach forehand 74.7 %. Reach short 46.3 %.
@@ -248,3 +249,11 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Fail:** backhand 89.7 % (bar 91.8), fast 88.8 % (bar 92.6), reach forehand 87.0 % (bar 92.6), backspin 73.2 % (bar 91.4; regressed from 93.2 % in run 13), reach backhand 0 %.
 - **A/B gain:** 0.08-0.72, CI above 0 on 13 families.
 - **Robot falls 0.98 % per episode: meets the Stage 5 target (<= 1 %).** Style 3.08, recovery 0.625 m.
+
+## Run 17: h4-17 (dev seeds 4200520-523; `stage5b-h4-h4-17-*.json`)
+- **Main metric 79.7 %** (+2.5): **the first H4 endpoint above S-D3-style-c pooled (78.7 %).**
+- **Pass:** easy forehand 99.6, wide forehand 97.5, deep 99.2, short 98.9, low 96.6, fast 95.1, topspin 99.1 %, reach short 76.2 %, reach deep 16.9 %.
+- **Fail:** backhand 89.4 % (bar 91.8), high 89.7 % (bar 92.1), reach forehand 87.9 % (bar 92.6), backspin 72.2 % (bar 91.4), reach backhand 0.2 %.
+- **A/B gain:** 0.15-0.87, CI above 0 on 13 families.
+- **Style 3.19, robot falls 1.3 %, recovery 0.525 m** (target <= 0.5).
+- **Backspin diagnosis (D-070):** contact 99.5 %, but returns go into the net (net clearance 0.415 -> 0.19 m since h4-13).

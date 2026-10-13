@@ -232,3 +232,22 @@ def test_fall_penalty_variant_adds_only_the_fall_term():
     pen = load_env_cfg("Picklebot-Latent-Drill3-FallPen-G1")
     assert set(pen.rewards) - set(base.rewards) == {"fall"} and pen.rewards["fall"].weight == -50.0
     assert list(pen.rewards)[-1] == "legal_return"
+
+
+def test_net_margin_requires_clearance_above_the_tape():
+    from picklebot_mj.tasks.return_stand import return_quality
+
+    pos = torch.tensor([[-6.0, 0.0, 0.8]])
+    vel = torch.tensor([[8.0, 0.0, 4.0]])  # 1.04 m at x = 0: clears the 0.914 m tape by about 0.09 m
+    assert return_quality(pos, vel)[0] == 1.0
+    assert return_quality(pos, vel, margin=0.3)[0] == 0.5  # within the margin: speed half only
+
+
+def test_margin_task_changes_only_the_shaping_margin():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    base = load_env_cfg("Picklebot-Latent-Drill3-LP-Top-G1")
+    m = load_env_cfg("Picklebot-Latent-Drill3-Margin-G1")
+    assert m.rewards["return_shaping"].params == {"margin": 0.3}
+    assert set(m.rewards) == set(base.rewards)
