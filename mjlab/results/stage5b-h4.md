@@ -232,3 +232,4 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Style 3.01, robot falls 1.3 %, recovery 0.875 m.**
 - **Diagnosis (D-067):** the sampler starved mastered units of rehearsal, and they decayed.
 - **Video** (`artifacts/videos/h4/h4-13-backhand-*`): backhands are now played with a left sidestep and a cross-body swing on the left.
+| 16 | h4-16 | more training, same task (training legal reward still rising at h4-15's cap) | h4-15/model_18200 | | | |
