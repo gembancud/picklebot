@@ -200,3 +200,4 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **A/B gain:** 0.12-0.55 (run 10: 0.05-0.28; base 0.48-0.90), CI above 0 on 12 families.
 - **Style 2.96, robot falls 1.7 %** (from 5.7 %), recovery 0.875 m.
 - **Reading:** even uniform sampling over difficulty levels (because of the attribution bug) gave backhand the easy, near-body variants it needed to get a first learning signal. The 3x larger batch (12,288 envs) is confounded with it.
+| 14 | h4-14 | more training, same curriculum (backhand top-level success still rising 0.25 -> 0.61 at h4-13's cap) | h4-13/model_16000 | | | |
