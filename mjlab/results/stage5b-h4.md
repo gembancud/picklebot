@@ -236,7 +236,8 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 | 16 | h4-16-top | rehearse mastered units only at the top level (D-068; `Picklebot-Latent-Drill3-LP-Top-G1`) | h4-14/model_17100 | model_18200 (cap) | **77.2 %** | 3.08 |
 | 17 | h4-17 | more training, same task | h4-16-top/model_18200 | model_19300 (cap) | **79.7 %** | 3.19 |
 | 18 | h4-18 | return shaping needs 0.3 m net clearance (D-070; `Picklebot-Latent-Drill3-Margin-G1`) | h4-17/model_19300 | model_20000 (cap; about 730 iterations, throughput dips from other host load) | **81.9 %** | 3.31 |
-| 19 | h4-19 | more training, same task | h4-18/model_20000 | | | |
+| 19 | h4-19 | more training, same task | h4-18/model_20000 | model_21100 (cap) | **85.6 %** | 3.56 |
+| 20 | h4-20 | more training, same task | h4-19/model_21100 | | | |
 
 ## Run 15: h4-15 (dev seeds 4200510-513; `stage5b-h4-h4-15-*.json`)
 - **Main metric 67.4 %** (-6.9). Every family is worse: easy forehand 70.2, backhand 76.0, backspin 77.8, reach forehand 74.7 %. Reach short 46.3 %.
@@ -277,3 +278,15 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **A/B gain:** 0.21-0.73, CI above 0 on 13 families.
 - **Recovery 0.425 m (meets the Stage 5 <= 0.5 m).** Robot falls 3.4 % (up from 1.3 %). Style 3.31.
 - **Throughput:** training swung between 9k and 56k steps/s from other load on the host, so about 730 iterations in the cap.
+
+## Run 19: h4-19 (dev seeds 4200530-533; `stage5b-h4-h4-19-*.json`)
+- **Main metric 85.6 %** (+3.7; S-D3-style-c 78.7 %).
+- **12 of 14 families pass:**
+  - **reach backhand 32.5 %** (passes, above the base 27.5 %);
+  - reach deep 33.3 %, reach short 73.3 %;
+  - easy forehand 98.6, wide forehand 97.1, backhand 93.2, deep 99.5, short 99.6, high 96.8, low 97.1, fast 95.9, topspin 99.1 %.
+- **Fail:**
+  - backspin 88.8 % (bar 91.4; 92.5 % in run 18, about 2 points of per-family noise);
+  - reach forehand 88.1 % (bar 92.6; about 88 % for 4 runs, contact about 96 %, so mostly return quality on the move).
+- **Recovery 0.375 m, robot falls 3.2 %.**
+- **Style 3.56: rising each run** (3.08, 3.19, 3.31, 3.56) toward the 3.86 limit as the executor lunges for reach balls. Watch it; if it passes about 3.7, the next change protects style.
