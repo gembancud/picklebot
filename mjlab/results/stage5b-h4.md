@@ -186,7 +186,7 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 | # | Run | Change (written before launch) | From | Endpoint | Main metric | Style |
 |---|---|---|---|---|---|---|
 | 12 | h4-12 | learning-progress feed curriculum (D-066; `Picklebot-Latent-Drill3-LP-G1`); 12,288 envs (standing config). *In effect uniform level sampling (attribution bug)* | h4-10/model_13800 | model_14900 (cap) | **63.8 %** | 2.96 |
-| 13 | h4-13 | the curriculum's attribution fix (in-flight feeds kept their unit; D-066 bug) | h4-12/model_14900 | | | |
+| 13 | h4-13 | the curriculum's attribution fix (in-flight feeds kept their unit; D-066 bug) | h4-12/model_14900 | model_16000 (cap) | **74.4 %** | 2.96 |
 
 - **h4-12 caveat (found after the run):** `_refeed` computes a feed for every env and keeps it only where it fires. It restored family, target and the other per-feed fields for the other envs, but not the new curriculum unit. In-flight feeds' outcomes were therefore credited to random units: every unit's success average drifted to the overall rate (backhand's top level showed about 75 %), and level sampling was effectively uniform. So run 12 tested broad uniform level sampling, not the learning-progress curriculum. Fixed, with a regression test that fails on the old code; run 13 repeats the curriculum with correct attribution.
 
@@ -201,3 +201,24 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Style 2.96, robot falls 1.7 %** (from 5.7 %), recovery 0.875 m.
 - **Reading:** even uniform sampling over difficulty levels (because of the attribution bug) gave backhand the easy, near-body variants it needed to get a first learning signal. The 3x larger batch (12,288 envs) is confounded with it.
 | 14 | h4-14 | more training, same curriculum (backhand top-level success still rising 0.25 -> 0.61 at h4-13's cap) | h4-13/model_16000 | | | |
+
+## Run 13: h4-13, the working learning-progress curriculum (dev seeds 4200500-503; `stage5b-h4-h4-13-*.json`)
+- **Main metric 74.4 %** (+10.7; S-D3-style-c 78.7 %). **Backhand 74.5 %** (from 27.6 %). Reach forehand 84.0 %. **Reach short 36.8 %** (the flat student: 6.0 %).
+- **Eight families pass the H4 gate bar:**
+
+  | Family | H4 | S-D3-style-c |
+  |---|---:|---:|
+  | easy forehand | **97.9 %** | 96.0 % |
+  | wide forehand | 95.2 % | 97.5 % |
+  | deep | 93.9 % | 96.1 % |
+  | short | **98.4 %** | 97.9 % |
+  | topspin | **98.4 %** | 97.5 % |
+  | backspin | 93.2 % | 96.4 % |
+  | reach short | 36.8 % | 6.0 % |
+  | reach deep | 4.4 % | 1.4 % |
+
+- **Just missing** (inside the +-1.4-point evaluation noise): high 92.0 % (bar 92.1) and low 92.0 % (bar 92.4).
+- **Failing:** fast 85.3 % (-12.3), reach forehand 84.0 % (-12.9), backhand 74.5 % (-22.3), reach backhand 0 %.
+- **A/B gain:** 0.06-0.73, CI above 0 on 13 families. The executor now aims.
+- **Style 2.96, robot falls 1.3 %, recovery 0.925 m.**
+- **Training:** backhand's full-range success rose 0.25 -> 0.61 within the run. Reach backhand sits at the floor share (out of band). Curriculum logs: `Curriculum/*` in the run log.
