@@ -1723,3 +1723,36 @@ Decision: run 16 rehearses mastered units at full weight **only at the top, full
 Plateau count after run 15: 2 (runs 14 and 15 below best + 1 point). Run 16 must reach >= 75.4 % or H4 climbing stops (D-065).
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-069 — Next stage: full-court coverage (Stage 5C)
+
+- Date: 2026-10-13
+- Status: Accepted (user: "yes, queue the full-court coverage stage next")
+- Amends: roadmap order (new Stage 5C between Stage 5B and Stage 6)
+
+Context: the H4 executor plays a baseline game.
+- **Positions:** it starts and recovers within about 1.5 m of the baseline centre (about 8-10 % of its half court).
+- **Moves:** feeds ask for at most about 2.5 m of travel, it never reached a move-drill spot, and it never plays near the kitchen or volleys.
+- **Controller:** it covers about 1.1 m in 2 s forward or right, but only about 0.5 m left or back (D-063).
+
+Decision: after the D-065 loop ends, **Stage 5C — full-court coverage** teaches the executor to cover the whole half court:
+1. **Agile, all-direction footwork.**
+   - First an agility version of the H3 walker: 1-3 m targets in all directions with less time per target, left and back balanced, measured per direction (`scripts/reach_direction_diag.py`).
+   - If left and back stay slow, retrain the motion controller with mirrored copies of the existing LAFAN1 locomotion clips (H0 teacher, then H1 latent, chained; no downloads) and redo the walker.
+2. **A court-wide drill.**
+   - Start and recovery spots over the whole half court, including the kitchen line.
+   - Feeds that pull the robot to the net (short and drop balls), push it back (lobs) and cross the full width.
+   - Volley families (pre-bounce hits outside the kitchen; two-bounce and kitchen rules enforced).
+   - A working move-to-spot drill.
+3. **H4 trained on the court-wide drill** with the learning-progress curriculum over (family x level x court zone), warm-started from the best D-065 endpoint (on the new controller if step 1 retrains it).
+4. **Gate** (proposed; the user may revise before the stage starts):
+   - legal return >= 75 % for every family in every court zone;
+   - move-to-spot arrival >= 90 % in every direction (0.5-3 m);
+   - volleys >= 75 % legal;
+   - recovery <= 0.5 m;
+   - falls <= 1 %;
+   - style <= 3.86;
+   - review videos of full-court play.
+5. **Budget:** up to 30 runs, each <= 2 h, with the D-065 discipline (fixed endpoints, fresh dev seeds, one change per run, decision entries for design changes, plateau stop on executor runs only).
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (new Stage 5C).

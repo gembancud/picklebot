@@ -253,6 +253,28 @@ Natural strokes and footwork from human motion data instead of reward shaping al
 - [ ] **Learning primer for the user:** `docs/RL_PRIMER.md`. The concepts behind this project (scale, curricula, teacher-student, domain randomisation, motion priors, skill latents, multi-task, self-play, world models, evaluation discipline), each with a short summary, where it appears in Picklebot, and 1–2 key references.
 - [ ] **Stage 5B gate:** the student plays with human-like strokes and footwork at Stage 5 task performance. Report `mjlab/results/stage5b-gate.md`.
 
+## Stage 5C — full-court coverage (D-069; queued, starts after the D-065 H4 loop)
+The H4 executor plays a baseline game: it starts and recovers near the baseline centre, travels at most about 2.5 m, never reaches move-drill spots, and never plays at the net. This stage teaches it to cover its whole half court. Same discipline as D-065: up to 30 runs, each <= 2 h, fixed endpoints, fresh dev seeds, one change per run, decision entries for design changes, plateau stop on executor runs only.
+- [ ] **Agility walker:** the H3 reach task with 1-3 m targets in all directions, less time per target, left and back balanced. Report per-direction reach and speed (`scripts/reach_direction_diag.py`). Baseline (reach-06): about 1.1 m covered in 2 s forward/right, about 0.5 m left/back.
+- [ ] **Controller retrain (only if left/back stay slow):** mirrored copies of the existing LAFAN1 locomotion clips (no downloads) added to the H0 tracking teacher (chained), then H1 distillation, then the agility walker again.
+- [ ] **Court-wide drill task:**
+  - start and recovery spots over the whole half court, including the kitchen line;
+  - feed families that pull to the net (short, drop), push back (lobs) and cross the full width;
+  - volley families (pre-bounce hits outside the kitchen; two-bounce and kitchen rules);
+  - a working move-to-spot drill.
+
+  Tests for each.
+- [ ] **H4 court-wide training:** learning-progress curriculum over (family x level x court zone), warm-started from the best D-065 endpoint (on the new controller if it was retrained).
+- [ ] **Gate** (proposed; the user may revise before the stage starts):
+  - every family in every court zone >= 75 % legal;
+  - move-to-spot arrival >= 90 % in every direction (0.5-3 m);
+  - volleys >= 75 % legal;
+  - recovery <= 0.5 m;
+  - falls <= 1 %;
+  - style <= 3.86.
+
+  Report `mjlab/results/stage5c-gate.md` with full-court review videos.
+
 ## Stage 6 — System 1: the full executor command interface, robust and distilled
 System 1 is the fast executor that a later strategy layer (System 2, Stage 8) commands. By the end of this stage it must follow every command the strategy layer will use:
 - **where to land the ball** (any point in the far court, not just two regions);
@@ -751,3 +773,4 @@ Its measured capability envelope is published as a contract. It must hold across
 - 2026-10-13 - H4 run 15 h4-15-rehearse -> model_18200 (cap); training legal reward 0.83 -> 0.88-0.93, easy forehand back to 0.98, fast 0.95; evaluation (dev seeds 4200510-513) running. Run 16, decided before launch: more training (same task), from h4-15/model_18200.
 - 2026-10-13 - H4 run 15 evaluated (dev seeds 4200510-513): **67.4 %** (-6.9; every family worse) although training reward rose. Rehearsing every mastered unit diluted the full-range levels (D-068). The continuation h4-16-more was stopped at it. 18,304 (not counted). Run 16, decided before launch: rehearse mastered units only at the top level, from h4-14/model_17100. Plateau count 2: run 16 must reach >= 75.4 %.
 - 2026-10-13 - H4 run 16 h4-16-top evaluated (dev seeds 4200515-518): **main metric 77.2 %** (+2.8; plateau count reset); 9 families pass the H4 gate bar, backhand 89.7 % (bar 91.8), fast 88.8, reach forehand 87.0, backspin 73.2 (regressed), reach backhand 0 %; **falls 0.98 % (Stage 5 target met)**; style 3.08; recovery 0.625 m. Run 17, decided before launch: more training, from h4-16-top/model_18200.
+- 2026-10-13 - **User decision (D-069):** queue Stage 5C, full-court coverage (agility walker, then a mirrored-locomotion controller retrain if needed, a court-wide drill with volleys, H4 court-wide training), to start after the D-065 H4 loop.
