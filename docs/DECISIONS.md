@@ -1825,3 +1825,17 @@ h4-21's latents average sum (lam tanh a)^2 = 7.7 of 32 per step, with 3 % of dim
 Decision: run 22 adds `latent_prior_nll`, sum (lam * tanh(a_lat))^2, the latent's squared distance from the prior mean in prior-std units (-2 log p(z|s) up to a constant, as in PULSE/ASE). Weight -0.01, about 0.6 per episode at h4-21's spread (legal return is about 0.85 per episode). Task `Picklebot-Latent-Drill3-Prior-G1` (the run-21 task plus this term), from h4-21/model_23300.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-073 — H4: stronger prior-likelihood penalty (0.01 -> 0.05)
+
+- Date: 2026-10-14
+- Status: Accepted (loop, under D-065)
+- Amends: D-072
+
+Context: run 22 scored **91.0 %** (+2.4; plateau count reset). 13 of 14 families pass the H4 gate bar; only reach forehand misses (90.1 %, bar 92.6). Backspin is 97.1 %, reach backhand 78.3 %, recovery 0.275 m and robot falls 1.6 %.
+
+But **style is 3.82**, only 0.04 under the 3.86 limit. The prior-likelihood penalty at 0.01 averaged only -0.10 per episode in training, and style still rose (3.75 -> 3.82).
+
+Decision: run 23 raises the weight to -0.05, about -0.5 per episode, so style is held under the limit. The risk is losing some reach-forehand performance. Task `Picklebot-Latent-Drill3-Prior5-G1`, from h4-22/model_24400.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.

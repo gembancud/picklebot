@@ -764,3 +764,18 @@ def _latent_drill3_prior(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_PRIOR, env_cfg=_latent_drill3_prior(),
                     play_env_cfg=_latent_drill3_prior(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 23 (D-073): the run-22 task with the prior-likelihood penalty 0.01 -> 0.05. At 0.01 it averaged only -0.10
+# per episode and style still rose 3.75 -> 3.82 (limit 3.86).
+TASK_LATENT_DRILL3_PRIOR5 = "Picklebot-Latent-Drill3-Prior5-G1"
+
+
+def _latent_drill3_prior5(play=False):
+    cfg = _latent_drill3_prior(play)
+    cfg.rewards["latent_prior"].weight = -0.05
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_PRIOR5, env_cfg=_latent_drill3_prior5(),
+                    play_env_cfg=_latent_drill3_prior5(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
