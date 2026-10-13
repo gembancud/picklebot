@@ -238,7 +238,8 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 | 18 | h4-18 | return shaping needs 0.3 m net clearance (D-070; `Picklebot-Latent-Drill3-Margin-G1`) | h4-17/model_19300 | model_20000 (cap; about 730 iterations, throughput dips from other host load) | **81.9 %** | 3.31 |
 | 19 | h4-19 | more training, same task | h4-18/model_20000 | model_21100 (cap) | **85.6 %** | 3.56 |
 | 20 | h4-20 | more training, same task | h4-19/model_21100 | model_22200 (cap) | **88.6 %** | 3.69 |
-| 21 | h4-21 | + real net-clearance reward at the crossing (D-071; `Picklebot-Latent-Drill3-NetReal-G1`) | h4-20/model_22200 | | | |
+| 21 | h4-21 | + real net-clearance reward at the crossing (D-071; `Picklebot-Latent-Drill3-NetReal-G1`) | h4-20/model_22200 | model_23300 (cap) | 88.1 % | 3.75 |
+| 22 | h4-22 | + prior-likelihood latent penalty -0.01 (D-072; `Picklebot-Latent-Drill3-Prior-G1`) | h4-21/model_23300 | | | |
 
 ## Run 15: h4-15 (dev seeds 4200510-513; `stage5b-h4-h4-15-*.json`)
 - **Main metric 67.4 %** (-6.9). Every family is worse: easy forehand 70.2, backhand 76.0, backspin 77.8, reach forehand 74.7 %. Reach short 46.3 %.
@@ -302,3 +303,9 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Diagnostics (D-071):**
   - backspin clearance 0.315 -> 0.208 m against h4-18;
   - the style drift is whole-body (without the right wrist: 2.69 -> 3.23 from h4-13), not the wrist residual (0.24 rad in both).
+
+## Run 21: h4-21 (dev seeds 4200545-548; `stage5b-h4-h4-21-*.json`)
+- **Main metric 88.1 %** (-0.5; plateau count 1).
+- **Backspin 91.5 %** (passes; real clearance 0.77 m). **Reach backhand 67.5 %**, reach deep 51.1 %, reach short 82.4 %.
+- **Fail:** wide forehand 91.2 % (bar 92.5), fast 87.5 % (bar 92.6), reach forehand 82.0 % (bar 92.6). 11 of 14 pass.
+- **Style 3.75** (limit 3.86). Recovery 0.325 m, robot falls 2.5 %.

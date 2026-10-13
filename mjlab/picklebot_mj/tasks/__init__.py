@@ -744,3 +744,23 @@ def _latent_drill3_netreal(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_NETREAL, env_cfg=_latent_drill3_netreal(),
                     play_env_cfg=_latent_drill3_netreal(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 22 (D-072): the run-21 task plus a prior-likelihood penalty on the latent (style protection). Style drifted
+# 3.08 -> 3.69 over runs 16-20 (limit 3.86) through whole-body posture, not the wrist residual.
+from picklebot_mj.tasks.latent_reach import latent_prior_nll  # noqa: E402
+
+TASK_LATENT_DRILL3_PRIOR = "Picklebot-Latent-Drill3-Prior-G1"
+PRIOR_NLL_WEIGHT = 0.01  # h4-21 averages sum (lam tanh a)^2 = 7.7 of 32 per step: about 0.6 per episode (legal ~0.85)
+
+
+def _latent_drill3_prior(play=False):
+    cfg = _latent_drill3_netreal(play)
+    legal = cfg.rewards.pop("legal_return")  # keep legal_return last (it clears the step flags)
+    cfg.rewards["latent_prior"] = RewardTermCfg(func=latent_prior_nll, weight=-PRIOR_NLL_WEIGHT)
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_PRIOR, env_cfg=_latent_drill3_prior(),
+                    play_env_cfg=_latent_drill3_prior(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

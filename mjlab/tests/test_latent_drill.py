@@ -274,3 +274,25 @@ def test_net_clearance_rewards_the_real_crossing_once():
     t.consume_step_events()
     assert not t.cross_now.any()
     env.close()
+
+
+@needs
+def test_prior_nll_is_the_latent_distance_from_the_prior_mean():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.tasks.latent_reach import latent_prior_nll
+
+    cfg = load_env_cfg("Picklebot-Latent-Drill3-Prior-G1")
+    assert cfg.rewards["latent_prior"].weight == -0.01 and list(cfg.rewards)[-1] == "legal_return"
+    cfg.scene.num_envs = 4
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    a = torch.zeros(4, 35, device="cuda")
+    a[1, :32] = 100.0  # saturated: every latent dim at lam * 1 from the prior mean
+    a[2, 32:] = 5.0  # wrist residual only: no latent cost
+    env.step(a)
+    p = latent_prior_nll(env)
+    assert torch.allclose(p, torch.tensor([0.0, 32.0, 0.0, 0.0], device="cuda"), atol=1e-4)
+    env.close()

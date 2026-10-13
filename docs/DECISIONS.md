@@ -1807,3 +1807,21 @@ Decision:
 - **Run 22 (planned):** protect style with a prior-likelihood penalty on the latent, `(lam * tanh(a_lat))^2`, i.e. the latent's distance from the prior mean in prior-std units (as in PULSE/ASE). The current drift (+0.13 per run) should keep run 21 under 3.86.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-072 — H4: prior-likelihood latent penalty to stop the style drift
+
+- Date: 2026-10-14
+- Status: Accepted (loop, under D-065; planned in D-071)
+- Amends: Stage 5B H4 (run 22)
+
+Context: run 21 (real net-clearance reward, D-071) scored 88.1 % (-0.5 against run 20; plateau count 1).
+- **Fixed:** backspin 80.8 -> 91.5 % (passes; mean real clearance 0.77 m).
+- **New high:** reach backhand 67.5 %.
+- **Slipped:** wide forehand 91.2 % (bar 92.5), fast 87.5 % (bar 92.6), reach forehand 82.0 % (bar 92.6).
+- **Style 3.75**, against the 3.86 limit, after rising every run (3.08 -> 3.19 -> 3.31 -> 3.56 -> 3.69 -> 3.75). It is whole-body drift, not the wrist residual (D-071).
+
+h4-21's latents average sum (lam tanh a)^2 = 7.7 of 32 per step, with 3 % of dimensions saturated.
+
+Decision: run 22 adds `latent_prior_nll`, sum (lam * tanh(a_lat))^2, the latent's squared distance from the prior mean in prior-std units (-2 log p(z|s) up to a constant, as in PULSE/ASE). Weight -0.01, about 0.6 per episode at h4-21's spread (legal return is about 0.85 per episode). Task `Picklebot-Latent-Drill3-Prior-G1` (the run-21 task plus this term), from h4-21/model_23300.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.

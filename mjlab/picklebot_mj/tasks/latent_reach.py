@@ -230,6 +230,15 @@ def latent_action_l2(env, action_name="latent", latent=32):
     return env.action_manager.get_term(action_name).raw_action[:, :latent].pow(2).sum(-1)
 
 
+def latent_prior_nll(env, action_name="latent"):
+    """Prior-likelihood penalty (H4, D-072): sum over latent dims of (lam * tanh(a_lat))^2, i.e. the squared distance
+    of the chosen latent from the prior mean in prior-std units (-2 log p(z|s) up to a constant), as in PULSE/ASE.
+    Unlike latent_action_l2 on the raw action, it stays informative when tanh saturates."""
+    term = env.action_manager.get_term(action_name)
+    a = term.raw_action[:, :term.cfg.latent]
+    return (term.cfg.lam * torch.tanh(a)).pow(2).sum(-1)
+
+
 def fell(env, asset_name="robot"):
     d = env.scene[asset_name].data
     torso = list(env.scene[asset_name].body_names).index("torso_link")
