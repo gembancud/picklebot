@@ -214,6 +214,9 @@ class BallPhysicsAction(ActionTerm):
         # Ball state just after the first legal contact (court-local), read by return_shaping (H4, D-057).
         self.hit_out_pos = torch.zeros(n, 3, device=dev)
         self.hit_out_vel = torch.zeros(n, 3, device=dev)
+        # The returned ball's real clearance over the net tape when it crosses x = 0 (net_clearance, D-071).
+        self.cross_now = torch.zeros(n, dtype=torch.bool, device=dev)
+        self.cross_clear = torch.zeros(n, device=dev)
         self.return_done, self.return_now = b(), b()
         self.lost_now = b()
         self.wrench = torch.zeros(n, 6, device=dev)
@@ -498,6 +501,8 @@ class BallPhysicsAction(ActionTerm):
             clear = self.ball.pos[:, 2] - BALL_RADIUS - court.NET_CENTER_HEIGHT
             self.diag["net_clear"] += (clear * crossing.float()).sum()
             self.diag["n_cross"] += crossing.float().sum()
+            self.cross_now |= crossing
+            self.cross_clear = torch.where(crossing, clear, self.cross_clear)
         bounce = ev.court_contact & live & ~self.rules.dead
         self.rules.bounce(bounce, ev.court_point[..., :2].nan_to_num(0.0))
         ret = bounce & self.hit_done & ~self.rules.dead & self.rules.bounced & (self.rules.expected_team == 1)
@@ -577,6 +582,7 @@ class BallPhysicsAction(ActionTerm):
         self.return_now[:] = False
         self.lost_now[:] = False
         self.placement_now.zero_()
+        self.cross_now[:] = False
 
 
 def _term(env) -> BallPhysicsAction:
@@ -714,6 +720,14 @@ def return_quality(pos: torch.Tensor, vel: torch.Tensor, margin: float = 0.0) ->
     # spin then put backspin returns into the net).
     clears = ((vx > 0.1) & (z_net - BALL_RADIUS > court.NET_CENTER_HEIGHT + margin)).float()
     return 0.5 * speed + 0.5 * clears
+
+
+def net_clearance(env, margin: float = 0.3) -> torch.Tensor:
+    """One-shot when a returned ball really crosses the net: its simulated clearance over the tape (drag and spin
+    included), as a fraction of `margin`, capped at 1. D-071: the drag- and spin-free prediction in return_shaping
+    let backspin returns drift into the net. Read before legal_return, which clears the step flags."""
+    t = _term(env)
+    return (t.cross_clear / margin).clamp(0.0, 1.0) * t.cross_now.float()
 
 
 def return_shaping(env, margin: float = 0.0) -> torch.Tensor:

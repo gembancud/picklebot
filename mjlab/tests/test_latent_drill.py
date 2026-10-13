@@ -251,3 +251,26 @@ def test_margin_task_changes_only_the_shaping_margin():
     m = load_env_cfg("Picklebot-Latent-Drill3-Margin-G1")
     assert m.rewards["return_shaping"].params == {"margin": 0.3}
     assert set(m.rewards) == set(base.rewards)
+
+
+@needs
+def test_net_clearance_rewards_the_real_crossing_once():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    from picklebot_mj.tasks.return_stand import net_clearance
+
+    cfg = load_env_cfg("Picklebot-Latent-Drill3-NetReal-G1")
+    assert list(cfg.rewards)[-1] == "legal_return" and "net_clearance" in cfg.rewards
+    cfg.scene.num_envs = 8
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    t = env.action_manager.get_term("ball")
+    t.cross_now[:4] = True
+    t.cross_clear[:] = torch.tensor([0.6, 0.15, -0.05, 0.3, 0.6, 0.6, 0.6, 0.6], device="cuda")
+    r = net_clearance(env, margin=0.3)
+    assert torch.allclose(r, torch.tensor([1.0, 0.5, 0.0, 1.0, 0, 0, 0, 0], device="cuda"))
+    t.consume_step_events()
+    assert not t.cross_now.any()
+    env.close()

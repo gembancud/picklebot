@@ -721,3 +721,26 @@ def _latent_drill3_margin(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_MARGIN, env_cfg=_latent_drill3_margin(),
                     play_env_cfg=_latent_drill3_margin(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 21 (D-071): the run-18..20 task plus a one-shot reward for the returned ball's real net clearance when it
+# crosses (simulated, so drag and spin are included), graded up to 0.3 m. h4-20 nets backspin again (clearance
+# 0.315 -> 0.208 m; wrong side 673 -> 2,701) although return_shaping's drag- and spin-free prediction has a margin.
+from picklebot_mj.tasks.return_stand import net_clearance  # noqa: E402
+
+TASK_LATENT_DRILL3_NETREAL = "Picklebot-Latent-Drill3-NetReal-G1"
+NET_CLEARANCE_WEIGHT = 1.0  # one-shot, divided by step_dt
+
+
+def _latent_drill3_netreal(play=False):
+    cfg = _latent_drill3_margin(play)
+    step_dt = cfg.sim.mujoco.timestep * cfg.decimation
+    legal = cfg.rewards.pop("legal_return")  # legal_return clears the step flags, so it must stay last
+    cfg.rewards["net_clearance"] = RewardTermCfg(func=net_clearance, weight=NET_CLEARANCE_WEIGHT / step_dt,
+                                                 params={"margin": NET_MARGIN})
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_NETREAL, env_cfg=_latent_drill3_netreal(),
+                    play_env_cfg=_latent_drill3_netreal(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

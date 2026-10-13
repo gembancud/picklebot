@@ -237,7 +237,8 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 | 17 | h4-17 | more training, same task | h4-16-top/model_18200 | model_19300 (cap) | **79.7 %** | 3.19 |
 | 18 | h4-18 | return shaping needs 0.3 m net clearance (D-070; `Picklebot-Latent-Drill3-Margin-G1`) | h4-17/model_19300 | model_20000 (cap; about 730 iterations, throughput dips from other host load) | **81.9 %** | 3.31 |
 | 19 | h4-19 | more training, same task | h4-18/model_20000 | model_21100 (cap) | **85.6 %** | 3.56 |
-| 20 | h4-20 | more training, same task | h4-19/model_21100 | | | |
+| 20 | h4-20 | more training, same task | h4-19/model_21100 | model_22200 (cap) | **88.6 %** | 3.69 |
+| 21 | h4-21 | + real net-clearance reward at the crossing (D-071; `Picklebot-Latent-Drill3-NetReal-G1`) | h4-20/model_22200 | | | |
 
 ## Run 15: h4-15 (dev seeds 4200510-513; `stage5b-h4-h4-15-*.json`)
 - **Main metric 67.4 %** (-6.9). Every family is worse: easy forehand 70.2, backhand 76.0, backspin 77.8, reach forehand 74.7 %. Reach short 46.3 %.
@@ -290,3 +291,14 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
   - reach forehand 88.1 % (bar 92.6; about 88 % for 4 runs, contact about 96 %, so mostly return quality on the move).
 - **Recovery 0.375 m, robot falls 3.2 %.**
 - **Style 3.56: rising each run** (3.08, 3.19, 3.31, 3.56) toward the 3.86 limit as the executor lunges for reach balls. Watch it; if it passes about 3.7, the next change protects style.
+
+## Run 20: h4-20 (dev seeds 4200535-538; `stage5b-h4-h4-20-*.json`)
+- **Main metric 88.6 %** (+3.0).
+- **Pass:**
+  - easy forehand 99.3, wide forehand 99.5, backhand 94.9, deep 99.8, short 99.1, high 97.5, low 99.2, fast 96.3, topspin 99.3 %;
+  - **reach backhand 53.3 %**, reach short 79.2 %, **reach deep 46.8 %**.
+- **Fail:** backspin 80.8 % (bar 91.4; netting again, D-071), reach forehand 89.1 % (bar 92.6).
+- **Recovery 0.325 m, robot falls 2.7 %. Style 3.69** (limit 3.86; rising about 0.13 per run).
+- **Diagnostics (D-071):**
+  - backspin clearance 0.315 -> 0.208 m against h4-18;
+  - the style drift is whole-body (without the right wrist: 2.69 -> 3.23 from h4-13), not the wrist residual (0.24 rad in both).

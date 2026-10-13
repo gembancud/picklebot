@@ -1782,3 +1782,28 @@ Context:
 Decision: run 18 requires **0.3 m of predicted clearance** (the clearance h4-13 kept) for the net half of `return_shaping`. Task `Picklebot-Latent-Drill3-Margin-G1`, otherwise as run 17, from h4-17-more/model_19300.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-071 — H4: reward the real net clearance; style drift is whole-body (prior-likelihood penalty next)
+
+- Date: 2026-10-14
+- Status: Accepted (loop, under D-065)
+- Amends: D-070
+
+Context: run 20 scored **88.6 %** (+3.0). Reach backhand rose to 53.3 % and reach deep to 46.8 %; recovery is 0.325 m. Two problems remain:
+1. **Backspin slipped again** (92.5 -> 88.8 -> 80.8 %). Backspin-only evaluation, h4-18 -> h4-20 (dev seed 4200524):
+   - mean real net clearance 0.315 -> 0.208 m;
+   - wrong-side (netted) endings 673 -> 2,701;
+   - landing depth 3.25 -> 3.04 m, as aiming pulls returns flatter.
+
+   The 0.3 m margin of D-070 sits on a drag- and spin-free prediction. The actor cannot observe spin, and for backspin the real flight drops below that prediction.
+2. **Style is drifting toward the limit:** 3.31 -> 3.56 -> 3.69 (limit 3.86). `scripts/wrist_style_diag.py` (dev seed 4200540):
+   - the wrist residual is the same in h4-13 and h4-20 (0.24 rad mean);
+   - style without the right wrist still rises from 2.69 to 3.23.
+
+   So the drift is whole-body posture (lunging), not the wrist. The latent L2 on the raw action is flat across runs (-0.25 to -0.28 per episode) and says little once tanh saturates.
+
+Decision:
+- **Run 21:** add `net_clearance`, a one-shot reward when the returned ball really crosses the net (the simulated ball, so drag and spin are included). It is graded by its clearance over the tape up to 0.3 m, weight 1.0/step_dt. Task `Picklebot-Latent-Drill3-NetReal-G1`, from h4-20/model_22200.
+- **Run 22 (planned):** protect style with a prior-likelihood penalty on the latent, `(lam * tanh(a_lat))^2`, i.e. the latent's distance from the prior mean in prior-std units (as in PULSE/ASE). The current drift (+0.13 per run) should keep run 21 under 3.86.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
