@@ -120,6 +120,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     reach_curriculum: bool = False  # reach families start near (REACH_NEAR) and widen on success
     lp_curriculum: bool = False  # learning-progress curriculum over (family x difficulty level) units (D-066)
     lp_levels: int = 5
+    lp_mastered_weight: float | None = None  # None = as hopeless units (h4-12..14); 1.0 = rehearse fully (h4-15)
     reach_start: float = 0.0  # initial curriculum scale (0 = near version, 1 = full family)
     reach_near_set: str = "v1"  # "v1" (REACH_NEAR, S-D3) or "v2" (REACH_NEAR_V2, gentler, S-D3b)
     lost_back_margin: float = 0.5  # ball lost this far behind the baseline (Drill 3: room to play deep balls)
@@ -183,7 +184,8 @@ class BallPhysicsAction(ActionTerm):
             self._ranges_easy = {a: torch.tensor([getattr(LP_EASY.get(f, FAMILIES[f]), a) for f in FAMILY_NAMES],
                                                  device=dev)
                                  for a in ("start_x", "start_z", "bounce_x", "lateral_y", "flight_time", "spin_y")}
-            self.lp_sampler = LPSampler(self._mix.repeat_interleave(L), device=dev)
+            self.lp_sampler = LPSampler(self._mix.repeat_interleave(L), device=dev,
+                                        mastered_weight=getattr(cfg, "lp_mastered_weight", None))
         # Ideal hitting stance for the current feed (privileged; stance_progress reward, H4 run 10, D-062).
         self.stance_xy = torch.zeros(n, 2, device=dev)
         self.hit_hint_on = torch.zeros(n, dtype=torch.bool, device=dev)

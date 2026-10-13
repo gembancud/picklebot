@@ -200,7 +200,8 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **A/B gain:** 0.12-0.55 (run 10: 0.05-0.28; base 0.48-0.90), CI above 0 on 12 families.
 - **Style 2.96, robot falls 1.7 %** (from 5.7 %), recovery 0.875 m.
 - **Reading:** even uniform sampling over difficulty levels (because of the attribution bug) gave backhand the easy, near-body variants it needed to get a first learning signal. The 3x larger batch (12,288 envs) is confounded with it.
-| 14 | h4-14 | more training, same curriculum (backhand top-level success still rising 0.25 -> 0.61 at h4-13's cap) | h4-13/model_16000 | | | |
+| 14 | h4-14 | more training, same curriculum (backhand top-level success still rising 0.25 -> 0.61 at h4-13's cap) | h4-13/model_16000 | model_17100 (cap) | 74.3 % | 3.01 |
+| 15 | h4-15 | curriculum keeps rehearsing mastered units (D-067; `Picklebot-Latent-Drill3-LP-Rehearse-G1`) | h4-14/model_17100 | | | |
 
 ## Run 13: h4-13, the working learning-progress curriculum (dev seeds 4200500-503; `stage5b-h4-h4-13-*.json`)
 - **Main metric 74.4 %** (+10.7; S-D3-style-c 78.7 %). **Backhand 74.5 %** (from 27.6 %). Reach forehand 84.0 %. **Reach short 36.8 %** (the flat student: 6.0 %).
@@ -222,3 +223,12 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **A/B gain:** 0.06-0.73, CI above 0 on 13 families. The executor now aims.
 - **Style 2.96, robot falls 1.3 %, recovery 0.925 m.**
 - **Training:** backhand's full-range success rose 0.25 -> 0.61 within the run. Reach backhand sits at the floor share (out of band). Curriculum logs: `Curriculum/*` in the run log.
+
+## Run 14: h4-14 (dev seeds 4200505-508; `stage5b-h4-h4-14-*.json`)
+- **Main metric 74.3 %** (-0.2; plateau count 1).
+- **Gained:** backhand 83.6 % (from 74.5 %), reach short 57.4 % (from 36.8 %), reach deep 5.2 %.
+- **Lost:** easy forehand 87.3 % (from 97.9 %), backspin 87.4 % (from 93.2 %), high 89.3 % (from 92.0 %).
+- **Passing the gate bar:** wide forehand, deep, short, topspin, reach short and reach deep.
+- **Style 3.01, robot falls 1.3 %, recovery 0.875 m.**
+- **Diagnosis (D-067):** the sampler starved mastered units of rehearsal, and they decayed.
+- **Video** (`artifacts/videos/h4/h4-13-backhand-*`): backhands are now played with a left sidestep and a cross-body swing on the left.

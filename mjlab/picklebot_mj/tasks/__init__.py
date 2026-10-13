@@ -674,3 +674,18 @@ def _latent_drill3_lp(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_LP, env_cfg=_latent_drill3_lp(), play_env_cfg=_latent_drill3_lp(True),
                     rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 15 (D-067): the curriculum keeps rehearsing mastered units at full weight (h4-14 forgot easy forehand,
+# backspin and high while the sampler moved feeds to backhand and reach short).
+TASK_LATENT_DRILL3_LP_REHEARSE = "Picklebot-Latent-Drill3-LP-Rehearse-G1"
+
+
+def _latent_drill3_lp_rehearse(play=False):
+    cfg = _latent_drill3_lp(play)
+    cfg.actions["ball"].lp_mastered_weight = 1.0
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_LP_REHEARSE, env_cfg=_latent_drill3_lp_rehearse(),
+                    play_env_cfg=_latent_drill3_lp_rehearse(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

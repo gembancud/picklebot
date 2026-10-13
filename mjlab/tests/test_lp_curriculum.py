@@ -84,3 +84,17 @@ def test_refeeds_keep_the_curriculum_unit_of_feeds_still_in_flight():
     assert torch.equal(t.feed_unit[16:], before[16:])
     assert torch.equal(t.feed_unit // L, t.family)  # every env's unit matches its feed's family
     env.close()
+
+
+def test_mastered_units_keep_full_weight_when_asked():
+    unit = torch.tensor([0] * 300 + [1] * 300 + [2] * 300)
+    g = torch.Generator().manual_seed(1)
+    succ = torch.cat([torch.zeros(300, dtype=torch.bool), torch.rand(300, generator=g) < 0.5,
+                      torch.ones(300, dtype=torch.bool)])
+    old, new = LPSampler([1.0, 1.0, 1.0]), LPSampler([1.0, 1.0, 1.0], mastered_weight=1.0)
+    for _ in range(80):
+        old.update(unit, succ)
+        new.update(unit, succ)
+    wo, wn = old.weights(), new.weights()
+    assert wn[2] > 2 * wo[2]  # the mastered unit is rehearsed far more
+    assert wn[0] < wn[2]  # hopeless units stay low

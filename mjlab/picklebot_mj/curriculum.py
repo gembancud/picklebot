@@ -70,8 +70,12 @@ class LPSampler:
     BAND = (0.1, 0.9)
     OUT_OF_BAND = 0.2
 
-    def __init__(self, base_weights, floor: float = 0.2, fast: float = 0.05, slow: float = 0.01, device="cpu"):
+    def __init__(self, base_weights, floor: float = 0.2, fast: float = 0.05, slow: float = 0.01, device="cpu",
+                 mastered_weight: float | None = None):
         self.inner = AdaptiveSampler(base_weights, floor=floor, fast=fast, slow=slow, device=device)
+        # Score of units above the band (mastered). None = OUT_OF_BAND, as for hopeless units (h4-12..14); h4-14
+        # showed that this starves mastered families of rehearsal and they decay (easy forehand 97.9 -> 87.3 %).
+        self.mastered_weight = self.OUT_OF_BAND if mastered_weight is None else float(mastered_weight)
 
     @property
     def active(self):
@@ -87,8 +91,10 @@ class LPSampler:
     def weights(self) -> torch.Tensor:
         s = self.inner
         inside = (s.fast > self.BAND[0]) & (s.fast < self.BAND[1])
-        score = LP_WEIGHT * (s.fast - s.slow).abs() + torch.where(inside, torch.ones_like(s.fast),
-                                                                   torch.full_like(s.fast, self.OUT_OF_BAND))
+        mastered = s.fast >= self.BAND[1]
+        base = torch.where(inside, torch.ones_like(s.fast), torch.full_like(s.fast, self.OUT_OF_BAND))
+        base = torch.where(mastered, torch.full_like(s.fast, self.mastered_weight), base)
+        score = LP_WEIGHT * (s.fast - s.slow).abs() + base
         score = torch.where(s.active, score, torch.zeros_like(score))
         p = score / score.sum()
         w = torch.where(s.active, s.floor / s.k + (1.0 - s.floor) * p, torch.zeros_like(p))

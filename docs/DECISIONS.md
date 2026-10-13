@@ -1689,3 +1689,21 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4 and gate.
    - **Run 12:** h4-10's task (Footwork) with this curriculum, from h4-10/model_13800 (the best endpoint), at the new 12,288-env standing configuration. The env count is the D-065 standing throughput setting, not the run's experimental change, but it also triples the PPO batch. That confound is recorded with the result.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-067 — H4 curriculum: keep rehearsing mastered units
+
+- Date: 2026-10-13
+- Status: Accepted (loop, under D-065)
+- Amends: D-066 (LPSampler scoring)
+
+Context:
+- **Run 13** (working learning-progress curriculum): main metric 74.4 %, backhand 74.5 %, 8 families passing the H4 gate bar.
+- **Run 14** (more training): 74.3 %, flat. Underneath, backhand rose 74.5 -> 83.6 % and reach short 36.8 -> 57.4 %, while easy forehand fell 97.9 -> 87.3 %, backspin 93.2 -> 87.4 % and high 92.0 -> 89.3 %.
+
+The sampler scored mastered units (success >= 90 %) like hopeless ones (OUT_OF_BAND 0.2), so feeds moved away from them and they decayed: catastrophic forgetting. The gate needs every family, so mastered skills must stay in the mix.
+
+Video of h4-13 on backhand feeds (`artifacts/videos/h4/h4-13-backhand-*`): the robot now steps left and swings across its body to the left, with the paddle high on its left side. That is a real backhand-side stroke. Reach backhand (1-2.5 m left) stays at 0 % at every curriculum level (none above 10 % success), consistent with the controller's leftward-travel limit (D-063).
+
+Decision: run 15 sets `lp_mastered_weight` = 1.0, so mastered units score like in-band units; hopeless units stay at 0.2. Task `Picklebot-Latent-Drill3-LP-Rehearse-G1`, from h4-14/model_17100.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
