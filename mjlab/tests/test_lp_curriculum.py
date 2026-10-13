@@ -98,3 +98,13 @@ def test_mastered_units_keep_full_weight_when_asked():
     wo, wn = old.weights(), new.weights()
     assert wn[2] > 2 * wo[2]  # the mastered unit is rehearsed far more
     assert wn[0] < wn[2]  # hopeless units stay low
+
+
+def test_rehearse_mask_limits_full_weight_to_the_listed_units():
+    unit = torch.tensor([0] * 300 + [1] * 300)
+    succ = torch.ones(600, dtype=torch.bool)  # both units mastered
+    s = LPSampler([1.0, 1.0], mastered_weight=1.0, rehearse_mask=[False, True])
+    for _ in range(80):
+        s.update(unit, succ)
+    w = s.weights()
+    assert w[1] > 2 * w[0]  # only the listed (top-level) unit is rehearsed at full weight

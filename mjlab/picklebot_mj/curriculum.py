@@ -71,11 +71,16 @@ class LPSampler:
     OUT_OF_BAND = 0.2
 
     def __init__(self, base_weights, floor: float = 0.2, fast: float = 0.05, slow: float = 0.01, device="cpu",
-                 mastered_weight: float | None = None):
+                 mastered_weight: float | None = None, rehearse_mask=None):
         self.inner = AdaptiveSampler(base_weights, floor=floor, fast=fast, slow=slow, device=device)
         # Score of units above the band (mastered). None = OUT_OF_BAND, as for hopeless units (h4-12..14); h4-14
         # showed that this starves mastered families of rehearsal and they decay (easy forehand 97.9 -> 87.3 %).
         self.mastered_weight = self.OUT_OF_BAND if mastered_weight is None else float(mastered_weight)
+        # Units eligible for mastered_weight (None = all). h4-15 rehearsed every mastered unit, so practice spread
+        # over easy levels and the full-range ones the gate measures were diluted (74.3 -> 67.4 %). With a mask,
+        # only the listed units (the top, full-range level of each family) are rehearsed at full weight (D-068).
+        self.rehearse = None if rehearse_mask is None else torch.as_tensor(rehearse_mask, dtype=torch.bool,
+                                                                          device=self.inner.fast.device)
 
     @property
     def active(self):
@@ -92,6 +97,8 @@ class LPSampler:
         s = self.inner
         inside = (s.fast > self.BAND[0]) & (s.fast < self.BAND[1])
         mastered = s.fast >= self.BAND[1]
+        if self.rehearse is not None:
+            mastered = mastered & self.rehearse
         base = torch.where(inside, torch.ones_like(s.fast), torch.full_like(s.fast, self.OUT_OF_BAND))
         base = torch.where(mastered, torch.full_like(s.fast, self.mastered_weight), base)
         score = LP_WEIGHT * (s.fast - s.slow).abs() + base

@@ -201,7 +201,7 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Style 2.96, robot falls 1.7 %** (from 5.7 %), recovery 0.875 m.
 - **Reading:** even uniform sampling over difficulty levels (because of the attribution bug) gave backhand the easy, near-body variants it needed to get a first learning signal. The 3x larger batch (12,288 envs) is confounded with it.
 | 14 | h4-14 | more training, same curriculum (backhand top-level success still rising 0.25 -> 0.61 at h4-13's cap) | h4-13/model_16000 | model_17100 (cap) | 74.3 % | 3.01 |
-| 15 | h4-15 | curriculum keeps rehearsing mastered units (D-067; `Picklebot-Latent-Drill3-LP-Rehearse-G1`) | h4-14/model_17100 | | | |
+| 15 | h4-15 | curriculum keeps rehearsing mastered units (D-067; `Picklebot-Latent-Drill3-LP-Rehearse-G1`) | h4-14/model_17100 | model_18200 (cap) | 67.4 % | 3.12 |
 
 ## Run 13: h4-13, the working learning-progress curriculum (dev seeds 4200500-503; `stage5b-h4-h4-13-*.json`)
 - **Main metric 74.4 %** (+10.7; S-D3-style-c 78.7 %). **Backhand 74.5 %** (from 27.6 %). Reach forehand 84.0 %. **Reach short 36.8 %** (the flat student: 6.0 %).
@@ -232,4 +232,11 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Style 3.01, robot falls 1.3 %, recovery 0.875 m.**
 - **Diagnosis (D-067):** the sampler starved mastered units of rehearsal, and they decayed.
 - **Video** (`artifacts/videos/h4/h4-13-backhand-*`): backhands are now played with a left sidestep and a cross-body swing on the left.
-| 16 | h4-16 | more training, same task (training legal reward still rising at h4-15's cap) | h4-15/model_18200 | | | |
+| - | h4-16-more | more training of run 15's configuration: **stopped at iteration 18,304** (about 100 iterations in) once run 15's evaluation refuted it; no endpoint, not counted | h4-15/model_18200 | - | - | - |
+| 16 | h4-16-top | rehearse mastered units only at the top level (D-068; `Picklebot-Latent-Drill3-LP-Top-G1`) | h4-14/model_17100 | | | |
+
+## Run 15: h4-15 (dev seeds 4200510-513; `stage5b-h4-h4-15-*.json`)
+- **Main metric 67.4 %** (-6.9). Every family is worse: easy forehand 70.2, backhand 76.0, backspin 77.8, reach forehand 74.7 %. Reach short 46.3 %.
+- **Style 3.12, robot falls 1.5 %, recovery 0.625 m.**
+- **Diagnosis (D-068):** rehearsing every mastered unit spread practice over mastered easy levels and diluted the full-range ones. Training reward rose (0.88-0.93) because the balls were easier: a training-evaluation divergence.
+- **Plateau count: 2.** Run 16 must reach >= 75.4 %.

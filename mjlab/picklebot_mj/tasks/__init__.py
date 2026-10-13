@@ -689,3 +689,18 @@ def _latent_drill3_lp_rehearse(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_LP_REHEARSE, env_cfg=_latent_drill3_lp_rehearse(),
                     play_env_cfg=_latent_drill3_lp_rehearse(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# H4 run 16 (D-068): rehearse mastered units at full weight only at their top (full-range) level. h4-15 rehearsed
+# every mastered unit, so practice spread over mastered easy levels and the evaluated full-range play decayed.
+TASK_LATENT_DRILL3_LP_TOP = "Picklebot-Latent-Drill3-LP-Top-G1"
+
+
+def _latent_drill3_lp_top(play=False):
+    cfg = _latent_drill3_lp_rehearse(play)
+    cfg.actions["ball"].lp_rehearse_top_only = True
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_LP_TOP, env_cfg=_latent_drill3_lp_top(),
+                    play_env_cfg=_latent_drill3_lp_top(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

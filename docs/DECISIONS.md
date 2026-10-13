@@ -1707,3 +1707,19 @@ Video of h4-13 on backhand feeds (`artifacts/videos/h4/h4-13-backhand-*`): the r
 Decision: run 15 sets `lp_mastered_weight` = 1.0, so mastered units score like in-band units; hopeless units stay at 0.2. Task `Picklebot-Latent-Drill3-LP-Rehearse-G1`, from h4-14/model_17100.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-068 — H4 curriculum: rehearse mastered units only at the top level
+
+- Date: 2026-10-13
+- Status: Accepted (loop, under D-065)
+- Amends: D-067
+
+Context: run 15 (D-067, mastered units at full weight) scored **67.4 %**, down 6.9 points from run 14, with every family worse (easy forehand 70.2 %, backhand 76.0 %). Its training numbers looked better than ever: legal reward 0.88-0.93 per episode, easy forehand 0.98. With every mastered (family x level) unit at full weight, practice spread evenly over the many mastered *easy* levels, so the full-range levels the gate measures were diluted. The training reward rose because the balls were easier.
+
+The continuation run already launched (h4-16-more, same configuration) was stopped at iteration 18,304, about 100 iterations in, once run 15's evaluation refuted the configuration. It produced no endpoint and is not counted.
+
+Decision: run 16 rehearses mastered units at full weight **only at the top, full-range level** of each family. Mastered easy levels drop back to 0.2; in-band units keep 1.0 plus learning progress. Task `Picklebot-Latent-Drill3-LP-Top-G1`, from h4-14/model_17100 (the parent of run 15).
+
+Plateau count after run 15: 2 (runs 14 and 15 below best + 1 point). Run 16 must reach >= 75.4 % or H4 climbing stops (D-065).
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
