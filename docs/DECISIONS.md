@@ -1859,3 +1859,39 @@ Result (`mjlab/results/stage5b-gate.md`): paired final evaluation of `h4-25b-mor
 Decision: H4 and the Stage 5B gate are ticked, h4-25b/model_27700 is the Stage 5B executor, and the branch is pushed (the stage passed). Next is Stage 5C, full-court coverage (D-069).
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B, Stage 5C.
+
+### D-075 — Stage 5C, full-court coverage: plan and budget
+
+- Date: 2026-10-14
+- Status: Accepted (user: the Stage 5C loop prompt of 2026-10-14)
+- Amends: D-069 (Stage 5C)
+
+Decision:
+1. **Starting point:** the Stage 5B executor `h4-25b-more/model_27700`. Training at 12,288 envs (PICKLEBOT_ENVS) with the learning-progress curriculum.
+2. **Footwork first: an agility H3 walker.**
+   - **Task:** root targets 1-3 m away in all directions, uniform angle (left and back balanced), with less time per target than H3 (1 m in 2 s). Warm-started from reach-06/model_34700.
+   - **Measure** per direction with `scripts/reach_direction_diag.py` at 1.5 m and 2.5 m.
+   - **"Left/back stay slow" (fixed now):** within 25 cm at 1.5 m, left or back reaches less than 75 % of the mean of right and forward, after the walker's runs (up to 3).
+
+     If so, retrain the motion controller (H0 teacher, then H1 latent, chained) with mirrored copies of the existing LAFAN1 locomotion clips (no downloads), and redo the walker.
+3. **Court-wide drill:**
+   - start and recovery spots over the whole half court, including the kitchen line;
+   - feeds that pull to the net, push back and cross the full width;
+   - volley families (two-bounce and kitchen rules enforced);
+   - a working move-to-spot drill.
+
+   Tests for each. Then H4 is trained on it with the curriculum over family x level x court zone.
+4. **Budget:** up to 30 training runs. Each run is <= 2 h, has a fixed endpoint, is evaluated on a fresh dev seed (borderline evaluations repeated; noise about +-1.4 points), changes one thing written before launch, and warm-starts where sensible. Design changes get decision entries. The plateau stop applies to executor runs only.
+5. **Gate:**
+   - every family in every court zone >= 75 % legal;
+   - move-to-spot arrival >= 90 % in every direction (0.5-3 m);
+   - volleys >= 75 % legal;
+   - recovery <= 0.5 m;
+   - falls <= 1 %;
+   - style <= 3.86;
+   - no Stage 5B drill family more than 5 points below h4-25b.
+
+   Never loosened.
+6. **End:** paired final evaluation on fresh dev seeds and close-camera full-court videos (side, behind, kitchen play, a long sequence across the court). Then `mjlab/results/stage5c-gate.md`, commit, push if passed, and stop for the user.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C.
