@@ -241,7 +241,7 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 | 21 | h4-21 | + real net-clearance reward at the crossing (D-071; `Picklebot-Latent-Drill3-NetReal-G1`) | h4-20/model_22200 | model_23300 (cap) | 88.1 % | 3.75 |
 | 22 | h4-22 | + prior-likelihood latent penalty -0.01 (D-072; `Picklebot-Latent-Drill3-Prior-G1`) | h4-21/model_23300 | model_24400 (cap) | **91.0 %** | 3.82 |
 | 23 | h4-23 | prior-likelihood penalty 0.01 -> 0.05 (D-073; `Picklebot-Latent-Drill3-Prior5-G1`) | h4-22/model_24400 | model_25500 (cap) | **93.1 %** | **3.73** |
-| 24 | h4-24 | more training, same task | h4-23/model_25500 | | | |
+| 24 | h4-24 | more training, same task | h4-23/model_25500 | model_26600 (cap) | **93.3 %** | 3.74 |
 
 ## Run 15: h4-15 (dev seeds 4200510-513; `stage5b-h4-h4-15-*.json`)
 - **Main metric 67.4 %** (-6.9). Every family is worse: easy forehand 70.2, backhand 76.0, backspin 77.8, reach forehand 74.7 %. Reach short 46.3 %.
@@ -338,3 +338,9 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Fail:** backspin 91.0 % (bar 91.4; inside the per-family noise of about +-2), reach forehand 90.0 % (bar 92.6).
 - **A/B gain:** 0.08-0.90. **Recovery 0.325 m, robot falls 2.0 %.**
 | 25 | h4-25 | more training, same task (the last run of the D-065 budget) | h4-24/model_26600 | | | |
+
+## Run 24: h4-24 (dev seeds 4200560-563; `stage5b-h4-h4-24-*.json`)
+- **Main metric 93.3 %** (+0.15; plateau count 1).
+- **13 of 14 families pass:** backspin 92.4 % (back over its bar), backhand 97.4 %, high 93.0 %, **reach backhand 88.1 %**, reach short 85.4 %, **reach deep 69.3 %**, and the rest 95.5-99.3 %.
+- **Fail:** reach forehand 89.5 % (bar 92.6; 88-90 % for eight runs).
+- **Style 3.74, recovery 0.275 m, robot falls 1.9 %.**
