@@ -73,8 +73,16 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | # | Run | Change (written before launch) | From | Endpoint | Tennis / LAFAN1 / mirrored | Falls |
 |---|---|---|---|---|---|---|
 | 3 | s5c-03-h0mirror | ABORTED, not counted: launched alongside run 2, no learning iteration in 20 min (GPU contention); killed 17:38 | tracking-20-decay/model_60800 | - | - | - |
-| 3 | s5c-03b-h0mirror | H0 continued on tennis + LAFAN1 + mirrored LAFAN1 (0.5/0.25/0.25), fixed lr 1e-5 as in tracking-20-decay; run alone | tracking-20-decay/model_60800 | model_63300 (fixed at launch: last checkpoint before the 7000 s cap at ~2.6 s/iter) | | |
+| 3 | s5c-03b-h0mirror | H0 continued on tennis + LAFAN1 + mirrored LAFAN1 (0.5/0.25/0.25), fixed lr 1e-5 as in tracking-20-decay; run alone | tracking-20-decay/model_60800 | model_63300 (fixed at launch: last checkpoint before the 7000 s cap at ~2.6 s/iter) | 94.0 / 88.7 / **84.9** | 0.84 % |
+| 5 | s5c-05-h0mirror | continuation of run 3b (same data, lr, shares; seed 2): mirrored LAFAN1 is 1.3 points short | s5c-03b/model_63300 | model_65900 (fixed at launch) | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
 - **Run 3** was aborted and is not counted: started next to run 2, it printed no learning iteration in 20 minutes and cut run 2 to 1.7k steps/s. From now on, training runs go one at a time; the relaunch (s5c-03b) also restores tracking-20-decay's fixed learning rate of 1e-5, which the first launch had left out.
+- **Run 3b H0 evaluation** (model_63300, dev seed 4200640, `stage5c-h0-03b.json`):
+  - Tennis 94.0 % (H0 93.2 %). Per stroke against H0: forehand 96.0 (98.0), backhand 94.1 (90.7), forehand volley 96.9 (95.8), backhand volley 97.0 (95.0), smash 90.5 (89.5), serve 88.3 (89.0). Every stroke is within 3 points.
+  - LAFAN1 88.7 % (H0 89.2 %).
+  - **Mirrored LAFAN1 84.9 %, below the 86.2 % gate.** By clip type, against the originals: walk 93.0 (94.8), run 81.7 (84.3), sprint 78.7 (82.4), fight/sports 60.9 (76.2).
+  - Falls 0.84 %.
+  - **The H0 gate is not met yet**, so the run is chained (run 5).
+
