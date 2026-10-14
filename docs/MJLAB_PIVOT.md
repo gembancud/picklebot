@@ -243,7 +243,7 @@ Natural strokes and footwork from human motion data instead of reward shaping al
   - Retarget to the paddle G1 with GMR.
   - Report per clip: a footwork-coverage heuristic, foot skating, jitter, and how it compares with the mocap. Render clips for the user.
   - Decide whether to scale up.
-- [ ] **H4. Executor over the latent.** *(D-056: up to 15 runs for H4 and the gate; runs, evaluation and results in `mjlab/results/stage5b-h4.md`.)* A fresh PPO executor in the H3 action space on the Drill 3 task, with the posture rewards (`pose`, `ready_stance`) and the style reward removed: style now comes from the decoder. Chained ≤ 2 h runs as the student fine-tunes were.
+- [x] **H4. Executor over the latent.** **Met 2026-10-14 (D-074): h4-25b/model_27700.** *(D-056: up to 15 runs for H4 and the gate; runs, evaluation and results in `mjlab/results/stage5b-h4.md`.)* A fresh PPO executor in the H3 action space on the Drill 3 task, with the posture rewards (`pose`, `ready_stance`) and the style reward removed: style now comes from the decoder. Chained ≤ 2 h runs as the student fine-tunes were.
   - **Gate:**
     - no family's legal return falls more than 5 points below S-D3-style-c's (fixed-endpoint evaluation, `s5_gate_eval.sh`, every family reported, no averaging);
     - target hits and A/B gain with intervals reported;
@@ -251,7 +251,7 @@ Natural strokes and footwork from human motion data instead of reward shaping al
     - side-by-side videos with S-D3-style-c sent to the user.
 - [ ] **H5 (later, optional, needs its own decision).** A MaskedMimic-style sparse-goal prior (paddle pose at time t, root target), AdaPT-style tracker speed adaptation, or LATENT's wrist-free decoder variant.
 - [ ] **Learning primer for the user:** `docs/RL_PRIMER.md`. The concepts behind this project (scale, curricula, teacher-student, domain randomisation, motion priors, skill latents, multi-task, self-play, world models, evaluation discipline), each with a short summary, where it appears in Picklebot, and 1–2 key references.
-- [ ] **Stage 5B gate:** the student plays with human-like strokes and footwork at Stage 5 task performance. Report `mjlab/results/stage5b-gate.md`.
+- [x] **Stage 5B gate:** **Met 2026-10-14 (D-074; `mjlab/results/stage5b-gate.md`):** H4 h4-25b, pooled no-hint legal 93.9 % vs 78.3 % (S-D3-style-c), all 14 families within 5 points, style 3.81. the student plays with human-like strokes and footwork at Stage 5 task performance. Report `mjlab/results/stage5b-gate.md`.
 
 ## Stage 5C — full-court coverage (D-069; queued, starts after the D-065 H4 loop)
 The H4 executor plays a baseline game: it starts and recovers near the baseline centre, travels at most about 2.5 m, never reaches move-drill spots, and never plays at the net. This stage teaches it to cover its whole half court. Same discipline as D-065: up to 30 runs, each <= 2 h, fixed endpoints, fresh dev seeds, one change per run, decision entries for design changes, plateau stop on executor runs only.
@@ -785,3 +785,4 @@ Its measured capability envelope is published as a contract. It must hold across
 - 2026-10-14 - H4 run 24 evaluated (dev seeds 4200560-563): **main metric 93.3 %** (plateau count 1); **13 of 14 pass**; only reach forehand fails (89.5 vs 92.6; 88-90 % for eight runs); style 3.74, recovery 0.275 m, falls 1.9 %.
 - 2026-10-14 - H4 run 25 (h4-25-more) **invalid**: killed at iteration 26,966 (about 40 min in) when the WSL VM was shut down from the host at 09:50 (host up since 2026-10-02, no sleep; Hyper-V events show the VM torn down; cause outside the pipeline). Re-run as h4-25b, same configuration, from h4-24/model_26600.
 - 2026-10-14 - H4 run 25 h4-25b evaluated (dev seeds 4200565-568): **main metric 94.2 %; all 14 families pass the H4 gate bar** (reach forehand 96.1 %); A/B gain CI > 0 on all 14; style 3.80; recovery 0.275 m; falls 1.5 %. D-065 budget complete (25 runs). Candidate h4-25b/model_27700: paired final gate evaluation with S-D3-style-c (dev seeds 4200570-573) and review videos running.
+- 2026-10-14 - **Stage 5B gate MET (D-074).** Paired final evaluation (dev seeds 4200570-573) of h4-25b/model_27700 against S-D3-style-c: all 14 families within 5 points, pooled no-hint legal 93.9 % vs 78.3 %, style 3.81 (<= 3.86), A/B gain CI > 0 on all 14; recovery 0.275 m; falls 1.68 %; reach deep 73.3 %; retention from the old fixed start misses (fast -24). Review videos in mjlab/artifacts/videos/h4/gate2-*. Branch pushed. Next: Stage 5C full-court coverage (D-069).

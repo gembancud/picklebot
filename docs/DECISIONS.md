@@ -1839,3 +1839,23 @@ But **style is 3.82**, only 0.04 under the 3.86 limit. The prior-likelihood pena
 Decision: run 23 raises the weight to -0.05, about -0.5 per episode, so style is held under the limit. The risk is losing some reach-forehand performance. Task `Picklebot-Latent-Drill3-Prior5-G1`, from h4-22/model_24400.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B H4; `mjlab/results/stage5b-h4.md`.
+
+### D-074 — Stage 5B gate met (H4 executor h4-25b)
+
+- Date: 2026-10-14
+- Status: Accepted (loop end under D-065; the stage passes on D-056 target a)
+- Amends: Stage 5B (H4 and gate)
+
+Result (`mjlab/results/stage5b-gate.md`): paired final evaluation of `h4-25b-more/model_27700` against S-D3-style-c on fresh dev seeds 4200570-573.
+- **H4 gate met:**
+  - all 14 families within 5 points of S-D3-style-c or better;
+  - pooled no-hint legal 93.9 % vs 78.3 %;
+  - style 3.81 <= 3.86;
+  - A/B gain CI above 0 on all 14 families.
+- **Original Stage 5 thresholds (target b), partly met:**
+  - met: Stage 4 legal and contact, A/B gain, recovery 0.275 m, reach forehand/backhand/short >= 75 %;
+  - missed: reach deep 73.3 %, falls 1.68 %, retention from the old Stage 4 fixed start (fast -24, low -13, backhand -10). These carry into Stage 5C, which covers full-court footwork and start positions.
+
+Decision: H4 and the Stage 5B gate are ticked, h4-25b/model_27700 is the Stage 5B executor, and the branch is pushed (the stage passed). Next is Stage 5C, full-court coverage (D-069).
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5B, Stage 5C.
