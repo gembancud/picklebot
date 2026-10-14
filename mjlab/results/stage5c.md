@@ -44,3 +44,12 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | # | Run | Change (written before launch) | From | Endpoint | Main metric (court pooled) | Style |
 |---|---|---|---|---|---|---|
 | 2 | s5c-02-court | court-wide drill (D-076) with the zone-conditioned curriculum | h4-25b/model_27700 | | | |
+
+## Agility walker result: controller limit (D-077)
+- **s5c-01-agility -> model_37300** (dev seed 4200610). Within 25 cm at 1.5 m in 2 s: forward 32 %, right 27 %, **left 0.1 %, back 0 %**.
+  - Distance covered in 2 s: about 1.2 / 1.1 / 0.55 / 0.5 m.
+  - At 2.5 m: 0 % in every direction.
+  - The training curve was flat for the whole run.
+- **D-075 criterion met:** retrain the controller.
+- **Mirrored LAFAN1** (`scripts/motion/mirror_g1_csv.py`, `tests/test_mirror_g1.py`): 17 clips, 211,996 frames, `lafan-g1-mirror.npz`. Checked through forward kinematics: every left/right body pair mirrors the original within 1e-5 m (`artifacts/eval/check_mirror.py`).
+- **Motion set** `tennis-lafan3.npz`: 90 tennis + 17 LAFAN1 + 17 mirrored clips, 549,350 frames. Envs sampled 50.5 / 24.2 / 25.3 % by source (task `Picklebot-Tracking-TennisLafan3-Huge-G1`).

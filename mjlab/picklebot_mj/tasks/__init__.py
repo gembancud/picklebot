@@ -821,3 +821,22 @@ def _latent_court(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_COURT, env_cfg=_latent_court(), play_env_cfg=_latent_court(True),
                     rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# Stage 5C controller retrain (D-077): the H0 tracking teacher on tennis-v5 + LAFAN1 + left-right mirrored LAFAN1
+# (scripts/motion/mirror_g1_csv.py), sampled 0.5 / 0.25 / 0.25 by source, so locomotion keeps its share and gains
+# the leftward and backward stepping the original right-handed / forward-heavy data lacked (D-063, stage5c.md).
+TASK_TRACKING_TENNIS_LAFAN3_HUGE = "Picklebot-Tracking-TennisLafan3-Huge-G1"
+TENNIS_LAFAN3_MOTION = str(_MOTION_DIR / "tennis-lafan3.npz")
+TENNIS_LAFAN3_SHARES = (0.5, 0.25, 0.25)
+
+
+def _tracking_tennis_lafan3(play=False):
+    cfg = paddle_tracking_env_cfg(TENNIS_LAFAN3_MOTION, play=play)
+    cfg.commands["motion"].source_shares = TENNIS_LAFAN3_SHARES
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN3_HUGE, env_cfg=_tracking_tennis_lafan3(),
+                    play_env_cfg=_tracking_tennis_lafan3(True), rl_cfg=_tracking_huge_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)

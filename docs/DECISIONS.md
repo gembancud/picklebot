@@ -1918,3 +1918,31 @@ Decision, all opt-in by `court_wide` (earlier tasks unchanged): task `Picklebot-
 Tests: `tests/test_court_drill.py` (zone coverage and validity, volley rally phase, kitchen state from the feet, volley hint), plus the updated family-parametrised tests.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C.
+
+### D-077 — Stage 5C: retrain the motion controller with mirrored LAFAN1 locomotion
+
+- Date: 2026-10-14
+- Status: Accepted (loop; D-075 criterion met)
+- Amends: Stage 5C footwork step
+
+Context: run 1 (s5c-01-agility) trained the H3 walker on 1-3 m targets in every direction for a full 2 h run. The training curve stayed flat (root reward about 0.20, mean distance about 1.22 m throughout). Per direction at 1.5 m (`results/stage5c-agility-01-dir-*.json`, dev seed 4200610):
+
+| Direction | Within 25 cm | Distance covered in 2 s |
+|---|---:|---:|
+| Forward | 32 % | ~1.2 m |
+| Right | 27 % | ~1.1 m |
+| Left | 0.1 % | ~0.55 m |
+| Back | 0 % | ~0.5 m |
+
+At 2.5 m nothing reaches the target. These match the reach-06 baseline: harder training does not unlock leftward or backward travel. The D-075 criterion (left/back below 75 % of right/forward) is met by a wide margin. A flat run is decisive, so the two optional further walker runs are not used.
+
+Decision: retrain the motion controller.
+1. **Mirrored data:** left-right mirror the 17 LAFAN1 clips of the current set (walk, run, sprint, fight/sports; `scripts/motion/mirror_g1_csv.py`, tested). Root y and rotation are reflected; left and right joints swap, with roll and yaw negated. The result goes to `lafan-g1-mirror.npz`. No downloads.
+2. **Motion set:** merge tennis-v5 + LAFAN1 + mirrored LAFAN1 into `tennis-lafan3.npz`, sampled 0.5 / 0.25 / 0.25 by source (task `Picklebot-Tracking-TennisLafan3-Huge-G1`).
+3. **H0:** continue the H0 teacher (`tracking-20-decay/model_60800`) on it in chained <= 2 h runs, until the mirrored clips track like the originals and tennis stays within the H0 gate.
+4. **H1:** continue the latent distillation from latent-07 on the new teacher and data. Starting from latent-07 keeps the latent space close to the one H4 was trained on, so h4-25b can be warm-started on the new controller.
+5. **Agility walker:** redo it on the new controller, measured by the same per-direction criterion.
+
+Meanwhile the court-wide executor runs (on latent-07) continue on the parts that do not need faster footwork: volleys, kitchen play and zone play.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
