@@ -77,7 +77,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 5 | s5c-05-h0mirror | continuation of run 3b (same data, lr, shares; seed 2): mirrored LAFAN1 is 1.3 points short | s5c-03b/model_63300 | model_65900 (fixed at launch) | 93.1-93.5 / 89.6-89.9 / 85.7-86.2; serve 84.0-85.7 | 0.66-0.69 % |
 | 6 | s5c-06-h1mirror | **H1** latent distillation from run 3b's teacher on tennis-lafan3 (D-079); latent-07 settings | latent-07/latent_10651 | latent_12162 (cap) | 92.4 / 91.5; 87.9 / 87.8; **84.5 / 84.1** | 0.68-0.77 % |
 | 7 | s5c-07-agility-m | agility walker (run 1's task) on the run-6 controller; only the controller changes | s5c-01-agility/model_37300 | model_40100 | 1.5 m within 25 cm: fwd 51 %, right 9 %, **left 0.4 %, back 0 %** | |
-| 8 | s5c-08-agility-l3 | run 1's walker on latent-07 with the latent barrier lambda 1 -> 3 (D-080); nothing else | s5c-01-agility/model_37300 | last checkpoint before the cap | | |
+| 8 | s5c-08-agility-l3 | run 1's walker on latent-07 with the latent barrier lambda 1 -> 3 (D-080); nothing else | s5c-01-agility/model_37300 | model_40100 | 1.5 m within 25 cm: fwd 63 %, right 33 %, **left 0.4 %, back 0 %** | |
+| 9 | s5c-09-agility-l3-fresh | run 8 without the warm start (fresh policy): the lineage from reach-06 never stepped left/back | none | last checkpoint before the cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -107,4 +108,7 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - In every clip group, on both controllers, the encoder's latent lies a median of 2.1-2.9 prior standard deviations from the prior mean in its farthest dimension (90th percentile 3.2-4.9).
   - At lambda = 1, under 3 % of steps fit inside the walker's reach in any group. At lambda = 3, 63-83 % do (mirrored fight/sports 39 %).
   - The limit is the latent action barrier, not the training data. **D-080:** keep latent-07 and test the walker at lambda = 3 (run 8).
+- **Run 8** (dev seed 4200670): lambda 3 helped forward (63 % vs 32 %) and right (33 % vs 27 %). **Left (0.4 %) and back (0 %) are unchanged**, and at 2.5 m nothing is reached. The training curve was flat after recovering from the barrier change.
+- **Reference point:** the flat joint-space walking teacher (`Picklebot-Teacher-Move-G1`, model_15900; `stage5-teacher-move.md`) reaches 98.95-100 % of move-drill spots (0.5-3 m) in every sector. The body can do the footwork; the latent route cannot yet.
+- Run 9 asks whether the walker lineage is the obstacle: every walker so far descends from reach-06, which trained on targets within 1 m.
 
