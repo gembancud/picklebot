@@ -120,6 +120,10 @@ class BallPhysicsActionCfg(ActionTermCfg):
     reach_curriculum: bool = False  # reach families start near (REACH_NEAR) and widen on success
     lp_curriculum: bool = False  # learning-progress curriculum over (family x difficulty level) units (D-066)
     lp_levels: int = 5
+    # Stage 5C (D-076): court zones, zone-conditioned curriculum, volley feeds, kitchen rules from the feet,
+    # recovery spots over the whole half court.
+    court_wide: bool = False
+    recovery_box: tuple = ((-6.2, -5.0), (-1.5, 1.5))
     lp_mastered_weight: float | None = None  # None = as hopeless units (h4-12..14); 1.0 = rehearse fully (h4-15)
     lp_rehearse_top_only: bool = False  # mastered_weight applies to the top (full-range) level only (D-068)
     reach_start: float = 0.0  # initial curriculum scale (0 = near version, 1 = full family)
@@ -178,6 +182,17 @@ class BallPhysicsAction(ActionTerm):
         # feed range from the family's easy end (feeds.LP_EASY) to the full family.
         self.lp_sampler, self._lp_s = None, None
         self.feed_unit = torch.zeros(n, dtype=torch.long, device=dev)
+        self.zone = torch.zeros(n, dtype=torch.long, device=dev)  # court zone at feed time (D-076)
+        from picklebot_mj.feeds import COURT_ZONES, COURT_ZONE_FAMILIES, VOLLEY_FAMILIES, ZONE_X_EDGES
+        self._zone_edges = torch.tensor(ZONE_X_EDGES, device=dev)
+        self._is_volley = torch.tensor([f in VOLLEY_FAMILIES for f in FAMILY_NAMES], device=dev)
+        self._zone_valid = torch.tensor([[z in COURT_ZONE_FAMILIES[f] for f in FAMILY_NAMES] for z in COURT_ZONES],
+                                        device=dev)  # [zone, family]
+        self.ep_zone_family = torch.zeros(len(COURT_ZONES), len(FAMILY_NAMES), 4, dtype=torch.long, device=dev)
+        self.lp_zone_samplers = None
+        if getattr(cfg, "court_wide", False):
+            self._foot_ids = [int(i) for i in self._entity.find_bodies(("left_ankle_roll_link",
+                                                                       "right_ankle_roll_link"))[0]]
         if getattr(cfg, "lp_curriculum", False):
             from picklebot_mj.curriculum import LPSampler
             from picklebot_mj.feeds import LP_EASY
@@ -189,6 +204,12 @@ class BallPhysicsAction(ActionTerm):
             self.lp_sampler = LPSampler(self._mix.repeat_interleave(L), device=dev,
                                         mastered_weight=getattr(cfg, "lp_mastered_weight", None),
                                         rehearse_mask=top if getattr(cfg, "lp_rehearse_top_only", False) else None)
+            if getattr(cfg, "court_wide", False):  # one sampler per zone, over the families valid there (D-076)
+                self.lp_zone_samplers = [
+                    LPSampler((self._mix * self._zone_valid[z].float()).repeat_interleave(L), device=dev,
+                              mastered_weight=getattr(cfg, "lp_mastered_weight", None),
+                              rehearse_mask=top if getattr(cfg, "lp_rehearse_top_only", False) else None)
+                    for z in range(self._zone_valid.shape[0])]
         # Ideal hitting stance for the current feed (privileged; stance_progress reward, H4 run 10, D-062).
         self.stance_xy = torch.zeros(n, 2, device=dev)
         self.hit_hint_on = torch.zeros(n, dtype=torch.bool, device=dev)
@@ -275,6 +296,10 @@ class BallPhysicsAction(ActionTerm):
             self.shadow.assign(env_ids, self.cfg.move_prob)
         self._feed(env_ids)
         self.rules.begin_from_feed(env_ids, torch.full_like(env_ids, FEEDER_PLAYER), must_bounce=True)
+        if getattr(self.cfg, "court_wide", False):  # volley feeds: rally phase, may be taken before the bounce
+            m = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+            m[env_ids] = True
+            self.rules.begin_from_feed_masked(m & self._is_volley[self.family], FEEDER_PLAYER, must_bounce=False)
         for f in (self.hit_done, self.hit_now, self.return_done, self.return_now, self.lost_now, self._prev_dead,
                   self.tallied):
             f[env_ids] = False
@@ -305,6 +330,11 @@ class BallPhysicsAction(ActionTerm):
         self.ep["legal_return"] += outcome[:, 2].sum()
         self.ep["fall"] += outcome[:, 3].sum()
         self.ep_family.index_add_(0, self.family, outcome)
+        if getattr(self.cfg, "court_wide", False):
+            self.ep_zone_family.view(-1, 4).index_add_(0, self.zone * len(FAMILY_NAMES) + self.family, outcome)
+            if getattr(self, "lp_zone_samplers", None) is not None:
+                for z, zs in enumerate(self.lp_zone_samplers):
+                    zs.update(self.feed_unit, self.return_done & mask, mask & (self.zone == z))
         if getattr(self.cfg, "reach_curriculum", False):  # widen a reach family once it is mastered at its scale
             m = mask.float()
             n_f = torch.zeros_like(self.reach_ema).index_add_(0, self.family, m)
@@ -352,18 +382,25 @@ class BallPhysicsAction(ActionTerm):
         stance_old = self.stance_xy.clone()
         pos, vel, spin = self.ball.pos.clone(), self.ball.vel.clone(), self.ball.spin.clone()
         fam_old, tgt_old, unit_old = self.family.clone(), self.target.clone(), self.feed_unit.clone()
+        zone_old = self.zone.clone()
         self._feed(self.all_ids)
         m = fire.unsqueeze(-1)
         self.ball = BallState(torch.where(m, self.ball.pos, pos), torch.where(m, self.ball.vel, vel),
                               torch.where(m, self.ball.spin, spin))
         self.family = torch.where(fire, self.family, fam_old)
         self.feed_unit = torch.where(fire, self.feed_unit, unit_old)  # D-066 fix: keep in-flight feeds' units
+        self.zone = torch.where(fire, self.zone, zone_old)
         self.target = torch.where(fire, self.target, tgt_old)
         self.recover_xy = torch.where(fire.unsqueeze(-1), self.recover_xy, rec_old)
         self.hit_hint_on = torch.where(fire, self.hit_hint_on, hint_old)
         self.hit_rec_true = torch.where(fire.unsqueeze(-1), self.hit_rec_true, true_old)
         self.stance_xy = torch.where(fire.unsqueeze(-1), self.stance_xy, stance_old)
-        self.rules.begin_from_feed_masked(fire, FEEDER_PLAYER, must_bounce=True)
+        if getattr(self.cfg, "court_wide", False):
+            volley = self._is_volley[self.family]
+            self.rules.begin_from_feed_masked(fire & ~volley, FEEDER_PLAYER, must_bounce=True)
+            self.rules.begin_from_feed_masked(fire & volley, FEEDER_PLAYER, must_bounce=False)
+        else:
+            self.rules.begin_from_feed_masked(fire, FEEDER_PLAYER, must_bounce=True)
         for name in ("hit_done", "return_done", "tallied", "_prev_dead"):
             setattr(self, name, getattr(self, name) & ~fire)
         self.refeed_timer = torch.where(fire, torch.full_like(self.refeed_timer, -1.0), self.refeed_timer)
@@ -401,13 +438,27 @@ class BallPhysicsAction(ActionTerm):
 
     def _feed(self, env_ids):
         k = len(env_ids)
-        if getattr(self, "lp_sampler", None) is not None:  # D-066: sample a (family, level) unit, then a level jittered within it
+        if getattr(self.cfg, "court_wide", False):  # court zone from the pelvis x at feed time (D-076)
+            self.zone[env_ids] = torch.bucketize(self._anchor(env_ids)[0].contiguous(), self._zone_edges, right=True)
+        if getattr(self, "lp_zone_samplers", None) is not None:  # zone-conditioned learning-progress units
+            L = int(self.cfg.lp_levels)
+            W = torch.stack([zs.weights() for zs in self.lp_zone_samplers])  # [zone, unit]
+            unit = torch.multinomial(W[self.zone[env_ids]], 1, replacement=True, generator=self.gen).squeeze(-1)
+            self.feed_unit[env_ids] = unit
+            fam = unit // L
+            jitter = torch.rand(k, generator=self.gen, device=self.device) - 0.5
+            self._lp_s = (((unit % L).float() + jitter) / max(1, L - 1)).clamp(0.0, 1.0)
+        elif getattr(self, "lp_sampler", None) is not None:  # D-066: sample a (family, level) unit, then a level jittered within it
             L = int(self.cfg.lp_levels)
             unit = torch.multinomial(self.lp_sampler.weights(), k, replacement=True, generator=self.gen)
             self.feed_unit[env_ids] = unit
             fam = unit // L
             jitter = torch.rand(k, generator=self.gen, device=self.device) - 0.5
             self._lp_s = (((unit % L).float() + jitter) / max(1, L - 1)).clamp(0.0, 1.0)
+        elif getattr(self.cfg, "court_wide", False):  # only families valid in each env's zone (D-076)
+            W = self._mix * self._zone_valid[self.zone[env_ids]].float()  # [k, family]
+            W = torch.where(W.sum(-1, keepdim=True) > 0, W, self._mix.expand_as(W))  # no valid family: plain mix
+            fam = torch.multinomial(W, 1, replacement=True, generator=self.gen).squeeze(-1)
         else:
             fam = torch.multinomial(self._mix, k, replacement=True, generator=self.gen)
         if self.shadow is not None:
@@ -424,8 +475,9 @@ class BallPhysicsAction(ActionTerm):
         else:
             u = torch.rand(k, 2, generator=self.gen_recover, device=self.device)
             from picklebot_mj.tasks.shadow_swing import _const
-            lo = _const("rec_lo", lambda: [RECOVERY_BOX[0][0], RECOVERY_BOX[1][0]], self.device)
-            hi = _const("rec_hi", lambda: [RECOVERY_BOX[0][1], RECOVERY_BOX[1][1]], self.device)
+            box = getattr(self.cfg, "recovery_box", RECOVERY_BOX)
+            lo = _const(("rec_lo", box), lambda: [box[0][0], box[1][0]], self.device)
+            hi = _const(("rec_hi", box), lambda: [box[0][1], box[1][1]], self.device)
             rec = lo + (hi - lo) * u
         self.recover_xy[env_ids] = rec
         x0, z0 = self._u("start_x", fam), self._u("start_z", fam)
@@ -465,6 +517,14 @@ class BallPhysicsAction(ActionTerm):
             sim_paddle = PaddleState(self.shadow.paddle_for_sim(paddle.pos), paddle.rot, paddle.lin_vel,
                                      paddle.ang_vel)
         live = ~self.rules.dead
+        if getattr(self.cfg, "court_wide", False):  # kitchen state from the feet (D-076)
+            feet = data.body_link_pos_w[:, self._foot_ids] - origins.unsqueeze(1)
+            in_k = feet[..., 0] >= -court.KITCHEN_DEPTH  # robot side x < 0; the kitchen line counts as kitchen
+            down = feet[..., 2] < 0.12
+            touches = (in_k & down).any(-1)
+            outside = (~in_k).all(-1)
+            self.rules.feet(live, torch.full_like(self.all_ids, ROBOT_PLAYER), touches, outside,
+                            torch.ones_like(live))
         before = self.ball
         self.ball, ev = self.sim.step(self.ball, dt, self.cfg.ball_substeps, sim_paddle, adaptive=False)
         # Freeze balls of finished rallies (they are reset with the episode).
@@ -748,7 +808,10 @@ def approach_ball(env, std: float = 0.25) -> torch.Tensor:
     t, robot = _term(env), env.scene["robot"]
     paddle = robot.data.body_link_pose_w[:, t.paddle_id, :3] - env.scene.env_origins
     d = (t.ball.pos - paddle).norm(dim=-1)
-    active = t.rules.bounced & ~t.hit_done & ~t.rules.dead
+    bounced = t.rules.bounced
+    if getattr(t.cfg, "court_wide", False):  # volley feeds are taken before their bounce (D-076)
+        bounced = bounced | t._is_volley[t.family]
+    active = bounced & ~t.hit_done & ~t.rules.dead
     return torch.exp(-(d / std) ** 2) * active.float()
 
 

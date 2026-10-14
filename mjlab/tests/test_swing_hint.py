@@ -7,7 +7,7 @@ import pytest
 import torch
 
 from picklebot_mj.ball_sim import BallSim
-from picklebot_mj.feeds import FAMILY_NAMES, only
+from picklebot_mj.feeds import VOLLEY_FAMILIES, FAMILY_NAMES, only
 from picklebot_mj.tasks.shadow_swing import HINT_Z, predict_intercept
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -35,7 +35,7 @@ def _actual(t, n):
     return torch.where(torch.isnan(hit[:, :1]), apex[:, :2], hit)
 
 
-@pytest.mark.parametrize("name", FAMILY_NAMES)
+@pytest.mark.parametrize("name", [f for f in FAMILY_NAMES if f not in VOLLEY_FAMILIES])  # volleys: pre-bounce
 def test_hint_close_to_simulated_interception(name):
     n = 256
     t = _FakeTerm(only(name), n, seed=11)  # a different seed than the calibration

@@ -111,3 +111,46 @@ LP_EASY["reach_backhand"] = replace(REACH_FAMILIES_CFG["reach_backhand"], latera
 LP_EASY["reach_short"] = replace(REACH_FAMILIES_CFG["reach_short"], bounce_x=(-4.1, -3.8), start_z=(1.6, 2.0),
                                  flight_time=(0.95, 1.05))
 LP_EASY["reach_deep"] = replace(REACH_FAMILIES_CFG["reach_deep"], bounce_x=(-5.4, -5.0))
+
+
+# Stage 5C court-wide families (D-076). Feed ranges are relative to the robot's pelvis as for the reach families
+# (feed anchor "pelvis"), so each family keeps its meaning wherever the robot stands; COURT_ZONE_FAMILIES lists the
+# court zones each one is fed in (a drop from the front zone would land beyond the net, a lob from the back zone
+# beyond the baseline). Volley families are aimed to bounce behind the robot, so they must be taken before the bounce.
+COURT_FAMILIES_CFG: dict[str, FeedCfg] = {
+    # Soft short ball, bouncing 2.0-3.5 m in front of the robot: pulls it toward the net.
+    "drop": replace(EASY_FOREHAND, bounce_x=(-3.6, -2.1), start_z=(1.0, 1.3), flight_time=(1.0, 1.2),
+                    lateral_y=(-0.6, 0.2), spin_y=(-30.0, 0.0)),
+    # High lob landing 2.0-3.5 m behind the robot: pushes it back.
+    "lob": replace(EASY_FOREHAND, bounce_x=(-9.1, -7.6), start_z=(2.5, 3.0), flight_time=(1.4, 1.6),
+                   lateral_y=(-0.6, 0.2), spin_y=(0.0, 30.0)),
+    # Across the court: 2.5-4.0 m to either side (clamped inside the sidelines).
+    "cross_forehand": replace(EASY_FOREHAND, lateral_y=(-4.0, -2.5), start_z=(1.9, 2.3), flight_time=(1.25, 1.4)),
+    "cross_backhand": replace(EASY_FOREHAND, lateral_y=(2.5, 4.0), start_z=(1.9, 2.3), flight_time=(1.25, 1.4)),
+    # Volleys: aimed to bounce 1.0-1.6 m behind the robot, so they pass it about knee-to-chest high before bouncing.
+    "volley_forehand": replace(EASY_FOREHAND, bounce_x=(-7.2, -6.6), start_z=(1.3, 1.6), flight_time=(0.8, 0.95),
+                               lateral_y=(-0.65, -0.30)),
+    "volley_backhand": replace(EASY_FOREHAND, bounce_x=(-7.2, -6.6), start_z=(1.3, 1.6), flight_time=(0.8, 0.95),
+                               lateral_y=(0.30, 0.65)),
+}
+FAMILIES.update(COURT_FAMILIES_CFG)
+COURT_FAMILIES: tuple[str, ...] = tuple(COURT_FAMILIES_CFG)
+VOLLEY_FAMILIES: tuple[str, ...] = ("volley_forehand", "volley_backhand")
+FAMILY_NAMES = tuple(FAMILIES)
+LP_EASY.update({
+    "drop": replace(COURT_FAMILIES_CFG["drop"], bounce_x=(-4.4, -3.9)),  # just past the "short" family
+    "lob": replace(COURT_FAMILIES_CFG["lob"], bounce_x=(-6.2, -5.8)),  # about 0.5 m behind
+    "cross_forehand": replace(COURT_FAMILIES_CFG["cross_forehand"], lateral_y=(-2.5, -1.8)),
+    "cross_backhand": replace(COURT_FAMILIES_CFG["cross_backhand"], lateral_y=(1.8, 2.5)),
+    "volley_forehand": replace(COURT_FAMILIES_CFG["volley_forehand"], start_z=(1.5, 1.7), flight_time=(0.95, 1.05)),
+    "volley_backhand": replace(COURT_FAMILIES_CFG["volley_backhand"], start_z=(1.5, 1.7), flight_time=(0.95, 1.05)),
+})
+
+# Court zones by the robot's pelvis x at feed time (court-local; baseline x = -6.71, kitchen line x = -2.13).
+COURT_ZONES: tuple[str, ...] = ("back", "mid", "front")
+ZONE_X_EDGES = (-5.0, -3.4)  # back: x < -5.0, mid: -5.0 <= x < -3.4, front: x >= -3.4
+_ALL_ZONES = set(COURT_ZONES)
+COURT_ZONE_FAMILIES: dict[str, set[str]] = {f: set(_ALL_ZONES) for f in FAMILY_NAMES}
+COURT_ZONE_FAMILIES.update({"drop": {"back", "mid"}, "lob": {"mid", "front"}, "reach_short": {"back", "mid"},  # measured: tune_court_feeds.py
+                            
+                            "volley_forehand": {"mid", "front"}, "volley_backhand": {"mid", "front"}})

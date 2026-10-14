@@ -794,3 +794,30 @@ def _latent_reach_agility(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_REACH_AGILITY, env_cfg=_latent_reach_agility(),
                     play_env_cfg=_latent_reach_agility(True), rl_cfg=_latent_reach_rl_cfg())
+
+
+# Stage 5C court-wide drill (D-076): h4-25b's task (Picklebot-Latent-Drill3-Prior5-G1) over the whole half court.
+# Start and recovery spots anywhere from the baseline to the kitchen line, the six court families (drop, lob, cross,
+# volleys) added to the feed mix, a learning-progress curriculum per court zone (back / mid / front), volley feeds in
+# rally phase, and kitchen rules from the robot's feet.
+from picklebot_mj.feeds import COURT_FAMILIES  # noqa: E402
+from picklebot_mj.tasks.return_stand import ROBOT_START  # noqa: E402
+
+TASK_LATENT_COURT = "Picklebot-Latent-Court-G1"
+COURT_START_X, COURT_START_Y = (-6.4, -2.4), (-2.6, 2.6)  # court-local pelvis start box
+COURT_RECOVERY_BOX = ((-6.2, -2.4), (-2.5, 2.5))
+COURT_MIX = FeedMix({name: 1.0 for name in STAGE4_FAMILIES + REACH_FAMILIES + COURT_FAMILIES})
+
+
+def _latent_court(play=False):
+    cfg = _latent_drill3_prior5(play)
+    b = cfg.actions["ball"]
+    b.court_wide, b.recovery_box, b.feed_mix = True, COURT_RECOVERY_BOX, COURT_MIX
+    cfg.events["reset_base"].params["pose_range"] = {
+        "x": (COURT_START_X[0] - ROBOT_START[0], COURT_START_X[1] - ROBOT_START[0]),
+        "y": (COURT_START_Y[0] - ROBOT_START[1], COURT_START_Y[1] - ROBOT_START[1]), "yaw": (-0.3, 0.3)}
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT, env_cfg=_latent_court(), play_env_cfg=_latent_court(True),
+                    rl_cfg=_latent_drill3_lowent_rl_cfg())

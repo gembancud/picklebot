@@ -42,6 +42,8 @@ D_BIN, D_BINS = 0.025, 80
 # v2 hint (Drill 3, stage5-sd2c-videos.md): take the ball near the top of its bounce, at most HINT_TOP_Z high (on the
 # rise for high bounces), and allow stance spots behind the baseline, where players stand for deep balls.
 HINT_TOP_Z = 1.1
+VOLLEY_Z = 1.0  # volley interception height (D-076)
+VOLLEY_SHORTFALL = 0.095  # drag: the ball reaches VOLLEY_Z about 9.5 % of its drag-free distance short
 HINT_BOX_V2 = ((-8.5, -2.4), (-3.5, 3.5))
 
 
@@ -89,7 +91,13 @@ def predict_intercept(p: torch.Tensor, v: torch.Tensor, fam: torch.Tensor, mode:
     else:
         ti = torch.where(apex >= HINT_Z, (vz1 + torch.sqrt((vz1 ** 2 - 2 * g * (HINT_Z - r)).clamp(min=0))) / g,
                          vz1 / g)
-    return xb + vx1 * ti, p[:, 1]
+    x = xb + vx1 * ti
+    from picklebot_mj.feeds import VOLLEY_FAMILIES
+    vol = _const("volley_mask", lambda: [f in VOLLEY_FAMILIES for f in FAMILY_NAMES], p.device)[fam]
+    # Volleys (D-076): where the ball descends through VOLLEY_Z before its bounce (drag-free).
+    tv = (v[:, 2] + torch.sqrt((v[:, 2] ** 2 + 2 * g * (p[:, 2] - VOLLEY_Z)).clamp(min=0))) / g
+    x = torch.where(vol, p[:, 0] + v[:, 0] * tv * (1.0 - VOLLEY_SHORTFALL), x)  # drag shortens the flight
+    return x, p[:, 1]
 
 
 def stance_spot(term, v2: bool) -> torch.Tensor:
@@ -237,3 +245,9 @@ def shadow_swing_reward(env) -> torch.Tensor:
     if t.shadow is None:
         return torch.zeros(env.num_envs, device=env.device)
     return t.shadow.consume()
+
+# Stage 5C families (D-076): calibrated with artifacts/eval/hint_calib2.py. Volleys are intercepted before their
+# bounce (predict_intercept, VOLLEY_Z).
+HINT_TABLE.update({"drop": (0.0761, 0.4537, 0.6028), "lob": (0.144, 0.471, 0.5791),  # hint_calib2.py, 2026-10-14
+                   "cross_forehand": (0.1027, 0.526, 0.5922), "cross_backhand": (0.1027, 0.526, 0.5922),
+                   "volley_forehand": HINT_TABLE["easy_forehand"], "volley_backhand": HINT_TABLE["easy_forehand"]})

@@ -7,7 +7,7 @@ import pytest
 import torch
 
 from picklebot_mj.ball_sim import BallSim
-from picklebot_mj.feeds import FAMILY_NAMES, REACH_FAMILIES, REACH_NEAR, only
+from picklebot_mj.feeds import VOLLEY_FAMILIES, FAMILY_NAMES, REACH_FAMILIES, REACH_NEAR, only
 from picklebot_mj.tasks.shadow_swing import HINT_TOP_Z, predict_intercept
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
@@ -33,7 +33,7 @@ def _top_point(t, n):
     return out
 
 
-@pytest.mark.parametrize("name", FAMILY_NAMES)
+@pytest.mark.parametrize("name", [f for f in FAMILY_NAMES if f not in VOLLEY_FAMILIES])  # volleys: pre-bounce
 def test_v2_hint_close_to_simulated_top_of_bounce(name):
     n = 256
     t = _FakeTerm(only(name), n, seed=13)

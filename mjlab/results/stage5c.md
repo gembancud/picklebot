@@ -14,3 +14,15 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | # | Run | Change (written before launch) | From | Endpoint | Left / right / forward / back within 25 cm at 1.5 m |
 |---|---|---|---|---|---|
 | 1 | s5c-01-agility | agility walker task (1-3 m targets) | reach-06/model_34700 | | |
+
+## Court-wide drill (D-076; `Picklebot-Latent-Court-G1`)
+- **Zones:** back / mid / front by the pelvis x at feed time. Court-wide start and recovery spots.
+- **Six new families:** drop, lob, cross forehand and backhand, volley forehand and backhand. Each is fed only where valid.
+- **Offline feed check** (`scripts/tune_court_feeds.py`, `artifacts/eval/court-feeds-v1.json`, 512 feeds per cell):
+  - every Stage 4 family is valid from every zone (travel <= 0.5 m);
+  - drop asks for 1.3-2.4 m forward (back/mid); lob for 1.1-2.0 m back (mid/front);
+  - cross asks for 2.2-3.2 m sideways at up to 1.5 m/s;
+  - volleys are 100 % hittable before the bounce;
+  - drop and reach short from the front land beyond the net (excluded).
+- **Kitchen rules from the feet;** volleys in rally phase; pre-bounce volley hints.
+- **Zone-conditioned learning-progress curriculum.**

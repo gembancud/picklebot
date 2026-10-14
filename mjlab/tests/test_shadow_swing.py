@@ -14,7 +14,9 @@ def test_student_swing_task_config():
     c, f2 = load_env_cfg(TASK_STUDENT_SWING), load_env_cfg(TASK_FOOTWORK_WIDE)
     b = c.actions["ball"]
     assert b.move_prob == 0.25 and b.swing_prob == 0.5
-    assert all(w > 0 for w in b.swing_mix.vector()) and len(b.swing_mix.vector()) == len(FAMILY_NAMES)
+    from picklebot_mj.feeds import REACH_FAMILIES, STAGE4_FAMILIES
+    w = dict(zip(FAMILY_NAMES, b.swing_mix.vector()))  # Stage 5 families; the Stage 5C court families are not used
+    assert all(w[f] > 0 for f in STAGE4_FAMILIES + REACH_FAMILIES) and len(w) == len(FAMILY_NAMES)
     assert "shadow_swing" in c.rewards and "move_arrival" in c.rewards
     for g in ("actor", "critic"):  # the student's inputs are unchanged
         assert list(c.observations[g].terms) == list(f2.observations[g].terms)

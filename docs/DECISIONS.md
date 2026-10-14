@@ -1895,3 +1895,26 @@ Decision:
 6. **End:** paired final evaluation on fresh dev seeds and close-camera full-court videos (side, behind, kitchen play, a long sequence across the court). Then `mjlab/results/stage5c-gate.md`, commit, push if passed, and stop for the user.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C.
+
+### D-076 — Stage 5C court-wide drill design
+
+- Date: 2026-10-14
+- Status: Accepted (loop, under D-075)
+- Amends: Stage 5C (drill task)
+
+Decision, all opt-in by `court_wide` (earlier tasks unchanged): task `Picklebot-Latent-Court-G1`, built on h4-25b's task.
+1. **Court zones** by the robot's pelvis x at feed time: back (x < -5.0), mid (-5.0..-3.4), front (>= -3.4, up to the kitchen line -2.13). Outcomes are tallied per zone x family (`ep_zone_family`).
+2. **Start and recovery spots** anywhere from the baseline to the kitchen line (start x -6.4..-2.4, y +-2.6; recovery x -6.2..-2.4, y +-2.5).
+3. **Six court families** (`feeds.COURT_FAMILIES`), relative to the pelvis:
+   - drop: bounces 2-3.5 m in front;
+   - lob: lands 2-3.5 m behind;
+   - cross forehand and cross backhand: 2.5-4 m sideways;
+   - volley forehand and volley backhand: aimed to bounce behind the robot, taken before the bounce.
+
+   Each is fed only in the zones where `scripts/tune_court_feeds.py` measured it valid. Drop and reach short are back/mid (from the front they land beyond the net 64 % and 99 % of the time); lob and volleys are mid/front; everything else is valid everywhere (`artifacts/eval/court-feeds-v1.json`). Hint drag factors are calibrated with `artifacts/eval/hint_calib2.py`.
+4. **Volleys:** fed in rally phase, so they may be taken before the bounce. The kitchen rules are now enforced from the robot's ankle positions every physics step (`rules.feet`): a volley with a foot in the kitchen, or unestablished outside it, is a kitchen fault. Approach shaping and the stance hint use the pre-bounce interception point for volleys (descending through 1.0 m, with a 9.5 % drag shortfall).
+5. **Curriculum:** one learning-progress sampler per court zone, over the families valid there (family x 5 levels). Without the curriculum (evaluation), families are drawn only from those valid in each env's zone.
+
+Tests: `tests/test_court_drill.py` (zone coverage and validity, volley rally phase, kitchen state from the feet, volley hint), plus the updated family-parametrised tests.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C.
