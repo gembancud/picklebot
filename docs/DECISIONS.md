@@ -1964,3 +1964,38 @@ Decision: re-aim both volley families. The aim moves to 2.6-3.0 m behind the rob
 Run 2's volley results were measured on the old definitions and are reported as such. The next executor run (run 4) changes only this: it warm-starts from run 2's endpoint.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/picklebot_mj/feeds.py`; `mjlab/results/stage5c.md`.
+
+### D-079 — Stage 5C: stop the H0 chain at run 3b and distil H1 from it
+
+- Date: 2026-10-14
+- Status: Accepted (loop)
+- Amends: D-077 step 3
+
+Context: the D-077 H0 gate asked for mirrored LAFAN1 >= 86.2 % (H0's LAFAN1 minus 3 points). Each checkpoint was scored on two dev seeds (`mjlab/results/stage5c-h0-*.json`):
+
+| Checkpoint | Tennis | LAFAN1 | Mirrored LAFAN1 | Serve | Smash |
+|---|---:|---:|---:|---:|---:|
+| H0 (tracking-20-decay/60800), before any mirrored data (seed 4200642) | 93.9 | 90.1 | **83.4** | 89.7 | 90.8 |
+| Run 3b (s5c-03b/63300) | 94.0 / 94.1 | 88.7 / 88.7 | 84.9 / 84.8 | 88.3 / 89.3 | 90.5 / 89.5 |
+| Run 5 (s5c-05/65900) | 93.1 / 93.5 | 89.6 / 89.9 | 85.7 / 86.2 | 84.0 / 85.7 | 87.8 / 87.4 |
+
+Three findings:
+1. **H0 already tracked the mirrored clips at 83.4 % before training on them.** The H3 walker's missing left/back footwork is therefore not mainly a teacher problem. It comes from what the H1 latent space was distilled on: tennis plus right-handed, forward-heavy LAFAN1.
+2. **Run 3b's mirrored locomotion is close to the originals.** Walk 92.7 / 93.0 against 94.6 / 94.8; run 81.4 / 81.7 against 86.7 / 84.3; sprint 78.3 / 78.7 against 80.7 / 82.4. Most of the remaining gap is the mirrored fight/sports clips (63-66 % against 75 %).
+3. **Run 5 bought about 1 point of mirrored tracking at the cost of serve (-4.5) and smash (-2.5 points).** Its serve is more than 3 points below H0 on both seeds.
+
+Decision:
+- **H0 chain stopped at run 3b.** Its mirrored LAFAN1 score is 1.3 points short of the 86.2 % H0 target; this is recorded as *not met*, not reinterpreted.
+- **H1 is distilled from run 3b's teacher** (s5c-03b/model_63300). Run 3b keeps every tennis stroke within 3 points of H0, and its locomotion clips, original and mirrored, track within about 3-5 points of each other.
+- **What decides D-077 is the agility walker on the new controller**: left/back reach against right/forward, measured as in run 1. That test is unchanged.
+
+H1 run (run 6), changing only the data and teacher from latent-07:
+- teacher s5c-03b/model_63300, task `Picklebot-Tracking-TennisLafan3-Huge-G1`;
+- init latent-07/latent_10651; latent-07's settings otherwise (KL 1e-4, prior imitation 0.5, smoothness 0.005, DAgger with student rollouts);
+- fixed endpoint: the checkpoint written at the 6,900 s cap.
+
+H1 check, fixed before launch, by `tracking_eval.py --latent --per-stroke` on two fresh dev seeds:
+- tennis and LAFAN1 within 3 points of latent-07 (93.2 / 88.8 %);
+- mirrored LAFAN1 within 3 points of the new LAFAN1 score.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.

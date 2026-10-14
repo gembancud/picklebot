@@ -74,7 +74,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 |---|---|---|---|---|---|---|
 | 3 | s5c-03-h0mirror | ABORTED, not counted: launched alongside run 2, no learning iteration in 20 min (GPU contention); killed 17:38 | tracking-20-decay/model_60800 | - | - | - |
 | 3 | s5c-03b-h0mirror | H0 continued on tennis + LAFAN1 + mirrored LAFAN1 (0.5/0.25/0.25), fixed lr 1e-5 as in tracking-20-decay; run alone | tracking-20-decay/model_60800 | model_63300 (fixed at launch: last checkpoint before the 7000 s cap at ~2.6 s/iter) | 94.0 / 88.7 / **84.9** | 0.84 % |
-| 5 | s5c-05-h0mirror | continuation of run 3b (same data, lr, shares; seed 2): mirrored LAFAN1 is 1.3 points short | s5c-03b/model_63300 | model_65900 (fixed at launch) | | |
+| 5 | s5c-05-h0mirror | continuation of run 3b (same data, lr, shares; seed 2): mirrored LAFAN1 is 1.3 points short | s5c-03b/model_63300 | model_65900 (fixed at launch) | 93.1-93.5 / 89.6-89.9 / 85.7-86.2; serve 84.0-85.7 | 0.66-0.69 % |
+| 6 | s5c-06-h1mirror | **H1** latent distillation from run 3b's teacher on tennis-lafan3 (D-079); latent-07 settings | latent-07/latent_10651 | checkpoint at the 6,900 s cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -85,4 +86,7 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - **Mirrored LAFAN1 84.9 %, below the 86.2 % gate.** By clip type, against the originals: walk 93.0 (94.8), run 81.7 (84.3), sprint 78.7 (82.4), fight/sports 60.9 (76.2).
   - Falls 0.84 %.
   - **The H0 gate is not met yet**, so the run is chained (run 5).
+- **H0 evaluation on a second seed** (4200642; `stage5c-h0-05b.json`, `-03b-b.json`, `-h0base.json`). Mirrored LAFAN1: original H0 83.4 %, run 3b 84.8 %, run 5 86.2 %.
+  - Run 5's serve (84.0 / 85.7 %) is more than 3 points below H0's (89.7 %), and its smash fell to 87.4-87.8 %.
+- **D-079:** the H0 chain stops at run 3b, with the mirrored target recorded as not met (84.9 / 84.8 % against 86.2 %). H1 is distilled from run 3b's teacher. Whether the controller gains left/back footwork is decided by the agility walker, measured as in run 1.
 
