@@ -337,7 +337,8 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
   - **reach backhand 85.9 %**, reach short 84.1 %, **reach deep 62.5 %**.
 - **Fail:** backspin 91.0 % (bar 91.4; inside the per-family noise of about +-2), reach forehand 90.0 % (bar 92.6).
 - **A/B gain:** 0.08-0.90. **Recovery 0.325 m, robot falls 2.0 %.**
-| 25 | h4-25 | more training, same task (the last run of the D-065 budget) | h4-24/model_26600 | | | |
+| - | h4-25-more | more training, same task: **invalid**, killed at iteration 26,966 (about 40 min) when the WSL VM was shut down from the host at 09:50 (the host itself did not sleep or reboot); no fixed endpoint, not counted | h4-24/model_26600 | - | - | - |
+| 25 | h4-25b | more training, same task (re-run of the killed h4-25; the last run of the D-065 budget) | h4-24/model_26600 | | | |
 
 ## Run 24: h4-24 (dev seeds 4200560-563; `stage5b-h4-h4-24-*.json`)
 - **Main metric 93.3 %** (+0.15; plateau count 1).

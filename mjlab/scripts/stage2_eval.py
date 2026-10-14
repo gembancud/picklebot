@@ -54,7 +54,7 @@ def main():
                     help="aiming tasks: force the landing target (paired A/B evaluation)")
     ap.add_argument("--grip", choices=["default", "v1"], default="default",
                     help="v1 = Stage 2 robot (inline grip, square face) for old checkpoints")
-    ap.add_argument("--view", choices=["side", "behind"], default="side")
+    ap.add_argument("--view", choices=["side", "behind", "side_close", "behind_close"], default="side")
     ap.add_argument("--slowmo", type=float, default=1.0, help="playback slow-down factor for the video")
     ap.add_argument("--fixed-start", action="store_true",
                     help="footwork tasks: start at ROBOT_START (Stage 4 pose box) with fixed-anchor feeds (retention)")
@@ -106,6 +106,10 @@ def main():
         # Side-on view from the robot's right, wide enough to follow the ball over the net.
         if args.view == "side":
             cfg.viewer.distance, cfg.viewer.elevation, cfg.viewer.azimuth = 6.5, -8.0, 270.0
+        elif args.view == "side_close":  # review videos (D-065): the body fills the frame
+            cfg.viewer.distance, cfg.viewer.elevation, cfg.viewer.azimuth = 3.2, -6.0, 270.0
+        elif args.view == "behind_close":
+            cfg.viewer.distance, cfg.viewer.elevation, cfg.viewer.azimuth = 3.0, -12.0, 0.0
         else:  # behind the robot, looking down the court toward the net
             cfg.viewer.distance, cfg.viewer.elevation, cfg.viewer.azimuth = 4.5, -14.0, 0.0
         cfg.viewer.geom_group = (1, 1, 1, 1, 0, 0)  # group 3 = court markings
