@@ -179,8 +179,9 @@ def main():
     by_stroke = defaultdict(list)
     for p in per_clip:
         tag = p["clip"].split("_", 1)[1]
-        if tag.startswith("subject"):  # LAFAN1 clip: walk1_subject1 -> lafan_walk
-            by_stroke["lafan_" + p["clip"].split("_")[0].rstrip("0123456789")].append(p)
+        if tag.startswith("subject"):  # LAFAN1 clip: walk1_subject1 -> lafan_walk; mirrored (D-077) -> lafanmirror_walk
+            pre = "lafanmirror_" if p["clip"].endswith("_mirror") else "lafan_"
+            by_stroke[pre + p["clip"].split("_")[0].rstrip("0123456789")].append(p)
             continue
         stroke = next(s for k, s in (("Servicio", "serve"), ("Remate", "smash"), ("VDerecha", "forehand_volley"),
                                      ("VReves", "backhand_volley"), ("Derecha", "forehand"), ("Reves", "backhand"))
@@ -189,6 +190,11 @@ def main():
     summary["by_stroke"] = {s: {"units": len(g), "success": float(np.mean([p["success"] for p in g])),
                                 "fall": float(np.mean([p["fall"] for p in g])),
                                 "mpkpe": float(np.mean([p["mpkpe"] for p in g]))} for s, g in by_stroke.items()}
+    pooled = defaultdict(list)  # success pooled by source: tennis strokes, LAFAN1, mirrored LAFAN1
+    for k, g in by_stroke.items():
+        src = "lafan_mirror" if k.startswith("lafanmirror_") else "lafan" if k.startswith("lafan_") else "tennis"
+        pooled[src].extend(p["success"] for p in g)
+    summary["by_source"] = {k: float(np.mean(v)) for k, v in pooled.items()}
     print(json.dumps({k: v for k, v in summary.items()}, indent=1))
     if args.json:
         json.dump({**summary, "per_clip": per_clip}, open(args.json, "w"), indent=1)

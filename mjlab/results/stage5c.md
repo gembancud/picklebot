@@ -53,3 +53,10 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 - **D-075 criterion met:** retrain the controller.
 - **Mirrored LAFAN1** (`scripts/motion/mirror_g1_csv.py`, `tests/test_mirror_g1.py`): 17 clips, 211,996 frames, `lafan-g1-mirror.npz`. Checked through forward kinematics: every left/right body pair mirrors the original within 1e-5 m (`artifacts/eval/check_mirror.py`).
 - **Motion set** `tennis-lafan3.npz`: 90 tennis + 17 LAFAN1 + 17 mirrored clips, 549,350 frames. Envs sampled 50.5 / 24.2 / 25.3 % by source (task `Picklebot-Tracking-TennisLafan3-Huge-G1`).
+
+## Controller retrain (D-077)
+**H0 gate**, fixed now: per-stroke tennis within 3 points of H0 (H0: 93.2 %, every stroke type >= 89 %), LAFAN1 within 3 points of H0 (89.2 %), **mirrored LAFAN1 >= 86.2 %** (H0's LAFAN1 minus 3), falls <= 1 %. Scored with `scripts/motion/tracking_eval.py --per-stroke`, which now reports `by_source` and separate `lafanmirror_*` groups.
+
+| # | Run | Change (written before launch) | From | Endpoint | Tennis / LAFAN1 / mirrored | Falls |
+|---|---|---|---|---|---|---|
+| 3 | s5c-03-h0mirror | H0 continued on tennis + LAFAN1 + mirrored LAFAN1 (0.5/0.25/0.25) | tracking-20-decay/model_60800 | | | |
