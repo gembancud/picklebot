@@ -84,3 +84,28 @@ def test_extension_rewards_are_finite_and_progress_has_the_right_sign():
     far = to.norm(dim=-1) > 0.05
     assert (root_progress(env)[far] > 0.3).all()
     env.close()
+
+
+@needs
+def test_agility_root_targets_are_1_to_3_m_away_in_every_direction():
+    import math
+
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    cfg = load_env_cfg("Picklebot-Latent-Reach-Agility-G1")
+    cfg.scene.num_envs = 1024
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    cmd = env.command_manager.get_term("reach")
+    env.step(torch.zeros(1024, 35, device="cuda"))  # robot state now reflects the reset placement
+    cmd._resample_command(torch.arange(1024, device="cuda"))
+    rel = cmd.root_target - env.scene["robot"].data.root_link_pos_w[:, :2]
+    d = rel.norm(dim=-1)
+    assert (d >= 0.99).all() and (d <= 3.01).all()
+    ang = torch.atan2(rel[:, 1], rel[:, 0])
+    quad = ((ang + math.pi) / (math.pi / 2)).long().clamp(0, 3)
+    share = torch.bincount(quad, minlength=4).float() / 1024
+    assert (share > 0.18).all()  # all four quadrants (left, right, forward, back) are covered evenly
+    env.close()

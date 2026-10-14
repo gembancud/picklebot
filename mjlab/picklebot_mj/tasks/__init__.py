@@ -779,3 +779,18 @@ def _latent_drill3_prior5(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_PRIOR5, env_cfg=_latent_drill3_prior5(),
                     play_env_cfg=_latent_drill3_prior5(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# Stage 5C agility walker (D-075): the H3 E2 reach task with root targets 1-3 m away in every direction (uniform
+# angle and distance), still one target per 2 s (H3: within 1 m), so the walker must move up to 1.5 m/s.
+TASK_LATENT_REACH_AGILITY = "Picklebot-Latent-Reach-Agility-G1"
+
+
+def _latent_reach_agility(play=False):
+    cfg = _latent_reach_e2(play)
+    cfg.commands["reach"].root_min, cfg.commands["reach"].root_radius = 1.0, 3.0
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_REACH_AGILITY, env_cfg=_latent_reach_agility(),
+                    play_env_cfg=_latent_reach_agility(True), rl_cfg=_latent_reach_rl_cfg())

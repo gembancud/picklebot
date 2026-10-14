@@ -117,6 +117,7 @@ class ReachCommandCfg(CommandTermCfg):
     shoulder_body: str = "right_shoulder_pitch_link"
     reach: tuple[float, float] = (0.3, 0.7)
     root_radius: float = 1.0
+    root_min: float = 0.0  # > 0: root targets uniform in distance over [root_min, root_radius] (agility, D-075)
     resampling_time_range: tuple[float, float] = (2.0, 2.0)
     debug_vis: bool = False
 
@@ -183,7 +184,10 @@ class ReachCommand(CommandTerm):
         n = len(env_ids)
         c, s = _yaw_frame(d.root_link_quat_w[env_ids])
         # Root target: uniform in a disc of radius root_radius around the current pelvis position.
-        r = self.cfg.root_radius * torch.rand(n, device=self.device).sqrt()
+        if self.cfg.root_min > 0.0:  # annulus, uniform in distance: far targets are as common as near ones
+            r = self.cfg.root_min + (self.cfg.root_radius - self.cfg.root_min) * torch.rand(n, device=self.device)
+        else:
+            r = self.cfg.root_radius * torch.rand(n, device=self.device).sqrt()
         a = 2 * math.pi * torch.rand(n, device=self.device)
         self.root_target[env_ids] = d.root_link_pos_w[env_ids, :2] + torch.stack([r * a.cos(), r * a.sin()], -1)
         # Paddle target: from the right shoulder, a direction in the forward/right/up hemisphere (heading frame:
