@@ -39,3 +39,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - Drop 11-32 %, cross 14-40 %, lob 0 %, volleys 0-0.7 %, reach deep 0-45 %.
 - **Move-to-spot arrival 0 % in every direction. Recovery 1.53 m. Falls 10.3 %. Style 3.88.**
 - **Stage 5B regression check** (h4-25b against itself): within -2.6..+1.0 points, so the check is sound.
+
+## Court-wide executor runs (`Picklebot-Latent-Court-G1`)
+| # | Run | Change (written before launch) | From | Endpoint | Main metric (court pooled) | Style |
+|---|---|---|---|---|---|---|
+| 2 | s5c-02-court | court-wide drill (D-076) with the zone-conditioned curriculum | h4-25b/model_27700 | | | |
