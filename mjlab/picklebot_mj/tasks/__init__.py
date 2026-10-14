@@ -796,6 +796,23 @@ register_mjlab_task(task_id=TASK_LATENT_REACH_AGILITY, env_cfg=_latent_reach_agi
                     play_env_cfg=_latent_reach_agility(True), rl_cfg=_latent_reach_rl_cfg())
 
 
+# Stage 5C run 7 (D-079): the agility walker on the H1 controller distilled with mirrored LAFAN1 (s5c-06-h1mirror,
+# latent_12162, from latent-07). Only the controller changes.
+LATENT_CONTROLLER_M = str(Path(__file__).resolve().parents[2] / "artifacts" / "train" / "latent" / "s5c-06-h1mirror"
+                          / "latent_12162.pt")
+TASK_LATENT_REACH_AGILITY_M = "Picklebot-Latent-Reach-Agility-M-G1"
+
+
+def _latent_reach_agility_m(play=False):
+    cfg = _latent_reach_agility(play)
+    cfg.actions["latent"].checkpoint = LATENT_CONTROLLER_M
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_REACH_AGILITY_M, env_cfg=_latent_reach_agility_m(),
+                    play_env_cfg=_latent_reach_agility_m(True), rl_cfg=_latent_reach_rl_cfg())
+
+
 # Stage 5C court-wide drill (D-076): h4-25b's task (Picklebot-Latent-Drill3-Prior5-G1) over the whole half court.
 # Start and recovery spots anywhere from the baseline to the kitchen line, the six court families (drop, lob, cross,
 # volleys) added to the feed mix, a learning-progress curriculum per court zone (back / mid / front), volley feeds in

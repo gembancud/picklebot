@@ -34,6 +34,7 @@ DIRS = {"left": (0.0, 1.0), "right": (0.0, -1.0), "forward": (1.0, 0.0), "back":
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--checkpoint", default=CK)
+    ap.add_argument("--task", default=TASK, help="reach task (its latent controller is the one measured)")
     ap.add_argument("--dist", type=float, default=0.8)
     ap.add_argument("--envs", type=int, default=512)
     ap.add_argument("--seconds", type=float, default=10.0)
@@ -43,11 +44,11 @@ def main():
     assert a.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
     out = {"checkpoint": a.checkpoint, "dist_m": a.dist, "seed": a.seed}
     for name, (fx, fy) in DIRS.items():
-        cfg = load_env_cfg(TASK)
+        cfg = load_env_cfg(a.task)
         cfg.scene.num_envs, cfg.seed = a.envs, a.seed
         env = ManagerBasedRlEnv(cfg=cfg, device="cuda")
-        venv = RslRlVecEnvWrapper(env, clip_actions=load_rl_cfg(TASK).clip_actions)
-        runner = MjlabOnPolicyRunner(venv, copy.deepcopy(asdict(load_rl_cfg(TASK))), device="cuda")
+        venv = RslRlVecEnvWrapper(env, clip_actions=load_rl_cfg(a.task).clip_actions)
+        runner = MjlabOnPolicyRunner(venv, copy.deepcopy(asdict(load_rl_cfg(a.task))), device="cuda")
         runner.load(a.checkpoint, load_cfg={"actor": True}, strict=True, map_location="cuda")
         policy = runner.get_inference_policy(device="cuda")
         cmd = env.command_manager.get_term("reach")
