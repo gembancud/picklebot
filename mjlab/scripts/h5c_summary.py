@@ -1,0 +1,56 @@
+"""Stage 5C gate summary for an h5c_eval.sh run (D-075).
+
+Gate:
+- every family in every court zone where it is fed >= 75 % legal (volleys included);
+- move-to-spot arrival >= 90 % in every direction;
+- recovery median <= 0.5 m (court-wide random spots);
+- falls <= 1 % per robot episode;
+- style <= 3.86;
+- no Stage 5B drill family more than 5 points below h4-25b (its paired final evaluation, stage5b-h4-gate2-cand).
+
+Main metric (plateau rule): the court drill's pooled no-hint legal rate.
+Usage: python scripts/h5c_summary.py TAG [--json OUT]
+"""
+import argparse
+import json
+
+ap = argparse.ArgumentParser()
+ap.add_argument("tag")
+ap.add_argument("--json", default=None)
+a = ap.parse_args()
+R = f"results/stage5c-{a.tag}"
+court, move = json.load(open(f"{R}-court.json")), json.load(open(f"{R}-move.json"))
+d5b, base5b = json.load(open(f"{R}-drill5b.json")), json.load(open("results/stage5b-h4-gate2-cand-nohint-A.json"))
+style = json.load(open(f"{R}-style.json"))["nearest_clip_distance_median"]
+checks = {}
+cells = court.get("per_zone_family", {})
+low = {k: v["legal_return"] for k, v in cells.items() if v["episodes"] >= 30 and v["legal_return"] < 0.75}
+checks["court cells >= 75 %"] = (not low, f"{len(cells) - len(low)}/{len(cells)} cells pass" + (f"; fail: {low}" if low else ""))
+SECTOR_NAMES = ("fwd", "fwd-left", "left", "back-left", "back", "back-right", "right", "fwd-right")  # 0 = toward the net, ccw
+sectors = move.get("move_drill", {}).get("sectors", [])
+arr = {SECTOR_NAMES[v["sector"]]: v.get("arrival_rate") for v in sectors}
+bad = {k: r for k, r in arr.items() if r is None or r < 0.9}
+checks["move arrival >= 90 % per direction"] = (not bad and bool(arr), f"{arr}")
+rec = court.get("recovery", {}).get("error_median_m")
+checks["recovery <= 0.5 m"] = (rec is not None and rec <= 0.5, f"{rec}")
+falls = court["robot_fall_rate_per_episode"]
+checks["falls <= 1 %"] = (falls <= 0.01, f"{falls}")
+checks["style <= 3.86"] = (style <= 3.86, f"{style:.3f}")
+reg = {f: round(d5b["per_family"][f]["legal_return"] - base5b["per_family"][f]["legal_return"], 3)
+       for f in base5b["per_family"] if f in d5b["per_family"]}
+worse = {f: x for f, x in reg.items() if x < -0.05}
+checks["5B families within 5 points of h4-25b"] = (not worse, f"diffs {reg}")
+main = court["legal_return_rate"]
+print(f"{a.tag}: main metric (court drill, pooled no-hint legal) {main:.4f}; falls {falls}; recovery {rec}; style {style:.3f}")
+for k, (ok, why) in checks.items():
+    print(f"  [{'pass' if ok else 'FAIL'}] {k}: {why}")
+zones = {}
+for k, v in cells.items():
+    f, z = k.split("@")
+    zones.setdefault(f, {})[z] = round(v["legal_return"], 3)
+print("  per family x zone (legal):")
+for f, zz in zones.items():
+    print(f"    {f:16s} " + "  ".join(f"{z}:{zz.get(z, '-')}" for z in ("back", "mid", "front")))
+if a.json:
+    json.dump({"main": main, "checks": {k: [ok, why] for k, (ok, why) in checks.items()}, "zones": zones},
+              open(a.json, "w"), indent=1)

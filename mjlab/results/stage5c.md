@@ -26,3 +26,16 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - drop and reach short from the front land beyond the net (excluded).
 - **Kitchen rules from the feet;** volleys in rally phase; pre-bounce volley hints.
 - **Zone-conditioned learning-progress curriculum.**
+
+## Evaluation (`scripts/h5c_eval.sh`, `scripts/h5c_summary.py`)
+1. **Court drill:** every family, court-wide starts, random court-wide recovery spots, no hint, 2048 envs x 24 s. Gives per (zone x family) legal, recovery and falls. The pooled legal rate is the **main metric**.
+2. **Move-to-spot drill:** arrival per direction (8 sectors).
+3. **Regression on the Stage 5B drill**, with exactly its 14 families (`--families drill5b`; "every" now also contains the court families). Compared with h4-25b's paired final evaluation.
+4. **Style score.**
+
+## Baseline: h4-25b on the court drill (dev seeds 4200600-603; `stage5c-baseline-h4-25b-*.json`)
+- **Main metric 52.0 %.** 15 of 55 (zone x family) cells reach 75 %.
+  - Stage 4 families: 73-85 % from the back and mid zones, 44-70 % from the front.
+  - Drop 11-32 %, cross 14-40 %, lob 0 %, volleys 0-0.7 %, reach deep 0-45 %.
+- **Move-to-spot arrival 0 % in every direction. Recovery 1.53 m. Falls 10.3 %. Style 3.88.**
+- **Stage 5B regression check** (h4-25b against itself): within -2.6..+1.0 points, so the check is sound.

@@ -6,7 +6,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 RUN=$1; CK=$2; TAG=$3; S=$4; T=${5:-Picklebot-Latent-Drill3-G1}; R=results/stage5b-h4-$TAG; P=~/envs/picklebot-mj/bin/python
-A="--task $T --envs 2048 --seconds 16 --move-prob 0.0 --swing-prob 0.0 --families every"
+A="--task $T --envs 2048 --seconds 16 --move-prob 0.0 --swing-prob 0.0 --families drill5b"  # the 14 Stage 5B families (court families came later)
 for tg in A B; do
   bash scripts/stage2_eval.sh $RUN $CK $A --seed $S --target $tg --json $R-$tg.json > /dev/null 2>&1
   bash scripts/stage2_eval.sh $RUN $CK $A --seed $((S+1)) --target $tg --no-hint --json $R-nohint-$tg.json > /dev/null 2>&1

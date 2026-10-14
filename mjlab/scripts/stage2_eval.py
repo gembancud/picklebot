@@ -63,6 +63,8 @@ def main():
     ap.add_argument("--swing-prob", type=float, default=None, help="drill tasks: fraction of shadow-swing episodes")
     ap.add_argument("--swing-families", default=None, help="comma-separated families for shadow-swing (ghost) feeds")
     ap.add_argument("--no-hint", action="store_true", help="real-ball episodes without the stance hint (spot input = recovery)")
+    ap.add_argument("--recovery", choices=["fixed", "random"], default="fixed",
+                    help="recovery spot in evaluation: baseline centre (Stage 5) or random over the task's recovery box (5C)")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
@@ -89,12 +91,13 @@ def main():
         cfg.events["reset_base"].params["pose_range"] = {"x": (-0.05, 0.05), "y": (-0.05, 0.05), "yaw": (-0.1, 0.1)}
         cfg.actions["ball"].feed_anchor = "start"
     if cfg.actions["ball"].recovery:
-        cfg.actions["ball"].recovery_mode = "fixed"  # evaluate recovery to the baseline centre
+        cfg.actions["ball"].recovery_mode = args.recovery  # baseline centre (default) or court-wide random (5C)
     cfg.scene.num_envs = args.envs
     cfg.seed = args.seed
     cfg.actions["ball"].seed = args.seed
     cfg.observations["actor"].enable_corruption = False
-    groups = {"all": list(STAGE4_FAMILIES), "reach": list(REACH_FAMILIES), "every": list(FAMILY_NAMES)}
+    groups = {"all": list(STAGE4_FAMILIES), "reach": list(REACH_FAMILIES), "every": list(FAMILY_NAMES),
+              "drill5b": list(STAGE4_FAMILIES) + list(REACH_FAMILIES)}  # the Stage 5B drill (14 families)
     fams = groups.get(args.families) or args.families.split(",")
     cfg.actions["ball"].feed_mix = FeedMix({f: 1.0 for f in fams})
     if args.grip == "v1":
@@ -132,6 +135,8 @@ def main():
     term = env.action_manager.get_term("ball")
     term.fault_counts.zero_()
     term.ep_family.zero_()
+    if hasattr(term, "ep_zone_family"):
+        term.ep_zone_family.zero_()
     term.land_family.zero_()
     term.recover_hist.zero_()
     for v in term.ep.values():
@@ -170,6 +175,17 @@ def main():
             la, lb, lt = (int(v) for v in term.land_family[i].tolist())
             table[name].update({"landings_in_A": la, "landings_in_B": lb, "target_hits": lt})
     out["per_family"] = table
+    if getattr(term.cfg, "court_wide", False):  # Stage 5C: outcomes per court zone and family (D-076)
+        from picklebot_mj.feeds import COURT_ZONES
+        zt = {}
+        for zi, zname in enumerate(COURT_ZONES):
+            for i, name in enumerate(FAMILY_NAMES):
+                n_ep, c, r, f = (int(v) for v in term.ep_zone_family[zi, i].tolist())
+                if n_ep:
+                    zt[f"{name}@{zname}"] = {"episodes": n_ep, "contact": round(c / n_ep, 4),
+                                             "legal_return": round(r / n_ep, 4), "legal_return_ci95": wilson(r, n_ep),
+                                             "fall": round(f / n_ep, 4)}
+        out["per_zone_family"] = zt
     d = {k: float(v) for k, v in term.diag.items()}
     nc, nl = max(d["n_contact"], 1.0), max(d["n_land"], 1.0)
     out["contact_diagnostics"] = {
