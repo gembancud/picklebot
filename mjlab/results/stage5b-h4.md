@@ -338,10 +338,19 @@ The decoder gets close only with most latent commands pinned at the barrier, i.e
 - **Fail:** backspin 91.0 % (bar 91.4; inside the per-family noise of about +-2), reach forehand 90.0 % (bar 92.6).
 - **A/B gain:** 0.08-0.90. **Recovery 0.325 m, robot falls 2.0 %.**
 | - | h4-25-more | more training, same task: **invalid**, killed at iteration 26,966 (about 40 min) when the WSL VM was shut down from the host at 09:50 (the host itself did not sleep or reboot); no fixed endpoint, not counted | h4-24/model_26600 | - | - | - |
-| 25 | h4-25b | more training, same task (re-run of the killed h4-25; the last run of the D-065 budget) | h4-24/model_26600 | | | |
+| 25 | h4-25b | more training, same task (re-run of the killed h4-25; the last run of the D-065 budget) | h4-24/model_26600 | model_27700 (cap) | **94.2 %** | 3.80 |
 
 ## Run 24: h4-24 (dev seeds 4200560-563; `stage5b-h4-h4-24-*.json`)
 - **Main metric 93.3 %** (+0.15; plateau count 1).
 - **13 of 14 families pass:** backspin 92.4 % (back over its bar), backhand 97.4 %, high 93.0 %, **reach backhand 88.1 %**, reach short 85.4 %, **reach deep 69.3 %**, and the rest 95.5-99.3 %.
 - **Fail:** reach forehand 89.5 % (bar 92.6; 88-90 % for eight runs).
 - **Style 3.74, recovery 0.275 m, robot falls 1.9 %.**
+
+## Run 25: h4-25b (dev seeds 4200565-568; `stage5b-h4-h4-25-*.json`)
+- **Main metric 94.2 %** (+0.9). **All 14 families pass the H4 gate bar:**
+  - **reach forehand 96.1 %** (bar 92.6), backspin 97.8 %;
+  - reach backhand 86.8 %, reach short 84.1 %, reach deep 74.6 %;
+  - the rest 95.8-98.2 %.
+- **A/B gain** CI above 0 on all 14 families (0.13-0.74).
+- **Style 3.80** (limit 3.86). **Recovery 0.275 m, robot falls 1.5 %.**
+- **Candidate for the final gate** (best main metric among the evaluated fixed endpoints; D-065). Paired final evaluation with S-D3-style-c on fresh dev seeds 4200570-573: `stage5b-h4-gate2-*.json`.
