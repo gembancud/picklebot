@@ -1946,3 +1946,21 @@ Decision: retrain the motion controller.
 Meanwhile the court-wide executor runs (on latent-07) continue on the parts that do not need faster footwork: volleys, kitchen play and zone play.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
+
+### D-078 — Stage 5C: re-aim the volley feeds to waist-to-chest height
+
+- Date: 2026-10-14
+- Status: Accepted (loop)
+- Amends: D-076 (volley families)
+
+Context: run 2 (s5c-02-court, model_28400; `mjlab/results/stage5c-s5c-02-*.json`, dev seeds 4200620-623) raised the court-wide main metric from 52.0 % to 71.3 %, but both volley families scored 0 % legal in every zone. Contact was 6 % (forehand) and 0.1 % (backhand); the few contacts came after the bounce, 0.38 m high on average. The learning-progress sampler kept every volley unit at its floor weight (top-level success 0.000 for the whole run). An offline check of the D-076 feeds (`mjlab/artifacts/eval/volley_geom.py`) shows why: aimed 1.0-1.6 m behind the robot, they pass the pelvis knee-high and dipping (median 0.44-0.58 m in the mid zone). That is a hard low dig, not the waist-to-chest volley a beginner drill starts with, and well below the paddle's ready height (0.9-1.2 m).
+
+Decision: re-aim both volley families. The aim moves to 2.6-3.0 m behind the robot, still clamped inside the baseline by `BOUNCE_AIM_MIN`, with a flatter, faster arc: start height 0.95-1.25 m, flight time 0.70-0.85 s. They now pass the pelvis at 0.7-1.2 m (mid zone 0.79-1.01, front zone 0.89-1.23, 5th-95th percentile) and 7-10.5 m/s.
+- The learning-progress easy end is the same flat ball with narrower ranges, about 0.75-1.2 m.
+- Lateral offsets, spin and the court zones (mid, front) are unchanged.
+- The offline feed check still gives 100 % landing in and 100 % in the volley window in every zone.
+- The volley stance-hint test still passes.
+
+Run 2's volley results were measured on the old definitions and are reported as such. The next executor run (run 4) changes only this: it warm-starts from run 2's endpoint.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/picklebot_mj/feeds.py`; `mjlab/results/stage5c.md`.

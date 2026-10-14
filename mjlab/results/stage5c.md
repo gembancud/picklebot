@@ -43,7 +43,20 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 ## Court-wide executor runs (`Picklebot-Latent-Court-G1`)
 | # | Run | Change (written before launch) | From | Endpoint | Main metric (court pooled) | Style |
 |---|---|---|---|---|---|---|
-| 2 | s5c-02-court | court-wide drill (D-076) with the zone-conditioned curriculum | h4-25b/model_27700 | | | |
+| 2 | s5c-02-court | court-wide drill (D-076) with the zone-conditioned curriculum | h4-25b/model_27700 | model_28400 (see note) | **71.3 %** (52.0 baseline); 37/55 cells | 3.817 |
+| 4 | s5c-04-volley | volley feeds re-aimed to waist-to-chest height (D-078); nothing else | s5c-02/model_28400 | last checkpoint before the cap | | |
+
+### Run 2 evaluation (s5c-02/model_28400, dev seeds 4200620-623; `stage5c-s5c-02-*.json`)
+- **Main metric 71.3 %** (h4-25b 52.0 %). 37 of 55 cells reach 75 %.
+  - Stage 4 and reach_forehand/backhand families: 84-99 % in every zone.
+  - Below 75 %: cross_backhand 40-47 %, cross_forehand 61-66 %, drop 44-61 %, reach_deep 57 % (back) / 9 % (mid) / 1 % (front), reach_short 65 % (mid), lob 2-4 %, volleys 0 %.
+- **Move-to-spot arrival about 0 % in every direction.** Recovery 1.58 m. Falls 4.2 %. **Style 3.817.**
+- **Stage 5B regression:** within 5 points except topspin -7.2, wide_forehand -6.4 and reach_deep -23.9.
+- **Volley diagnosis** (`volley_diag.sh`, seed 4200630, with hint):
+  - Contact: 16 % forehand, 1 % backhand. Legal: 0.6 %.
+  - The robot lets the ball pass and swings after the bounce (mean contact height 0.38 m).
+  - The D-076 volley feeds pass the pelvis knee-high (0.44-0.58 m in the mid zone): see D-078.
+- **What the walker caps:** lobs and reach_deep from the mid/front zones (balls going behind the robot), move-to-spot arrival and recovery all need the backward and leftward footwork the controller lacks (D-077).
 
 ## Agility walker result: controller limit (D-077)
 - **s5c-01-agility -> model_37300** (dev seed 4200610). Within 25 cm at 1.5 m in 2 s: forward 32 %, right 27 %, **left 0.1 %, back 0 %**.
@@ -59,4 +72,9 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 
 | # | Run | Change (written before launch) | From | Endpoint | Tennis / LAFAN1 / mirrored | Falls |
 |---|---|---|---|---|---|---|
-| 3 | s5c-03-h0mirror | H0 continued on tennis + LAFAN1 + mirrored LAFAN1 (0.5/0.25/0.25) | tracking-20-decay/model_60800 | | | |
+| 3 | s5c-03-h0mirror | ABORTED, not counted: launched alongside run 2, no learning iteration in 20 min (GPU contention); killed 17:38 | tracking-20-decay/model_60800 | - | - | - |
+| 3 | s5c-03b-h0mirror | H0 continued on tennis + LAFAN1 + mirrored LAFAN1 (0.5/0.25/0.25), fixed lr 1e-5 as in tracking-20-decay; run alone | tracking-20-decay/model_60800 | model_63300 (fixed at launch: last checkpoint before the 7000 s cap at ~2.6 s/iter) | | |
+
+### Run notes
+- **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
+- **Run 3** was aborted and is not counted: started next to run 2, it printed no learning iteration in 20 minutes and cut run 2 to 1.7k steps/s. From now on, training runs go one at a time; the relaunch (s5c-03b) also restores tracking-20-decay's fixed learning rate of 1e-5, which the first launch had left out.

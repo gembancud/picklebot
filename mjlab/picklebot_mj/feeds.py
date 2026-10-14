@@ -127,10 +127,12 @@ COURT_FAMILIES_CFG: dict[str, FeedCfg] = {
     # Across the court: 2.5-4.0 m to either side (clamped inside the sidelines).
     "cross_forehand": replace(EASY_FOREHAND, lateral_y=(-4.0, -2.5), start_z=(1.9, 2.3), flight_time=(1.25, 1.4)),
     "cross_backhand": replace(EASY_FOREHAND, lateral_y=(2.5, 4.0), start_z=(1.9, 2.3), flight_time=(1.25, 1.4)),
-    # Volleys: aimed to bounce 1.0-1.6 m behind the robot, so they pass it about knee-to-chest high before bouncing.
-    "volley_forehand": replace(EASY_FOREHAND, bounce_x=(-7.2, -6.6), start_z=(1.3, 1.6), flight_time=(0.8, 0.95),
+    # Volleys (D-078): flat feeds aimed 2.6-3.0 m behind the robot (clamped inside the baseline), so they pass the
+    # pelvis about 0.7-1.2 m high, waist to chest, at 7-10.5 m/s depending on the zone. (D-076's aim, 1.0-1.6 m
+    # behind, passed the robot knee-high and dipping: 0.44-0.58 m median in the mid zone.)
+    "volley_forehand": replace(EASY_FOREHAND, bounce_x=(-8.6, -8.2), start_z=(0.95, 1.25), flight_time=(0.70, 0.85),
                                lateral_y=(-0.65, -0.30)),
-    "volley_backhand": replace(EASY_FOREHAND, bounce_x=(-7.2, -6.6), start_z=(1.3, 1.6), flight_time=(0.8, 0.95),
+    "volley_backhand": replace(EASY_FOREHAND, bounce_x=(-8.6, -8.2), start_z=(0.95, 1.25), flight_time=(0.70, 0.85),
                                lateral_y=(0.30, 0.65)),
 }
 FAMILIES.update(COURT_FAMILIES_CFG)
@@ -142,8 +144,11 @@ LP_EASY.update({
     "lob": replace(COURT_FAMILIES_CFG["lob"], bounce_x=(-6.2, -5.8)),  # about 0.5 m behind
     "cross_forehand": replace(COURT_FAMILIES_CFG["cross_forehand"], lateral_y=(-2.5, -1.8)),
     "cross_backhand": replace(COURT_FAMILIES_CFG["cross_backhand"], lateral_y=(1.8, 2.5)),
-    "volley_forehand": replace(COURT_FAMILIES_CFG["volley_forehand"], start_z=(1.5, 1.7), flight_time=(0.95, 1.05)),
-    "volley_backhand": replace(COURT_FAMILIES_CFG["volley_backhand"], start_z=(1.5, 1.7), flight_time=(0.95, 1.05)),
+    # narrower: about 0.75-1.2 m at the pelvis, the spread mostly from the court zone (D-078)
+    "volley_forehand": replace(COURT_FAMILIES_CFG["volley_forehand"], start_z=(1.05, 1.15), flight_time=(0.78, 0.82),
+                               bounce_x=(-8.5, -8.3)),
+    "volley_backhand": replace(COURT_FAMILIES_CFG["volley_backhand"], start_z=(1.05, 1.15), flight_time=(0.78, 0.82),
+                               bounce_x=(-8.5, -8.3)),
 })
 
 # Court zones by the robot's pelvis x at feed time (court-local; baseline x = -6.71, kitchen line x = -2.13).
