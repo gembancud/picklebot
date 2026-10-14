@@ -78,7 +78,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 6 | s5c-06-h1mirror | **H1** latent distillation from run 3b's teacher on tennis-lafan3 (D-079); latent-07 settings | latent-07/latent_10651 | latent_12162 (cap) | 92.4 / 91.5; 87.9 / 87.8; **84.5 / 84.1** | 0.68-0.77 % |
 | 7 | s5c-07-agility-m | agility walker (run 1's task) on the run-6 controller; only the controller changes | s5c-01-agility/model_37300 | model_40100 | 1.5 m within 25 cm: fwd 51 %, right 9 %, **left 0.4 %, back 0 %** | |
 | 8 | s5c-08-agility-l3 | run 1's walker on latent-07 with the latent barrier lambda 1 -> 3 (D-080); nothing else | s5c-01-agility/model_37300 | model_40100 | 1.5 m within 25 cm: fwd 63 %, right 33 %, **left 0.4 %, back 0 %** | |
-| 9 | s5c-09-agility-l3-fresh | run 8 without the warm start (fresh policy): the lineage from reach-06 never stepped left/back | none | last checkpoint before the cap | | |
+| 9 | s5c-09-agility-l3-fresh | run 8 without the warm start (fresh policy): the lineage from reach-06 never stepped left/back | none | model_2800 | 1.5 m within 25 cm: fwd 63 %, right 26 %, **left 0.2 %, back 0 %** | |
+| 10 | s5c-10-h1footwork | **H1** on tennis-lafan4: + the walking teacher's footwork clips (D-081); teacher run 3b | latent-07/latent_10651 | checkpoint at the 6,900 s cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -111,4 +112,9 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 - **Run 8** (dev seed 4200670): lambda 3 helped forward (63 % vs 32 %) and right (33 % vs 27 %). **Left (0.4 %) and back (0 %) are unchanged**, and at 2.5 m nothing is reached. The training curve was flat after recovering from the barrier change.
 - **Reference point:** the flat joint-space walking teacher (`Picklebot-Teacher-Move-G1`, model_15900; `stage5-teacher-move.md`) reaches 98.95-100 % of move-drill spots (0.5-3 m) in every sector. The body can do the footwork; the latent route cannot yet.
 - Run 9 asks whether the walker lineage is the obstacle: every walker so far descends from reach-06, which trained on targets within 1 m.
+- **Run 9** (dev seed 4200680): trained from scratch, the walker settles in the same pattern, so the starting checkpoint was not the obstacle.
+- **D-081: footwork data.** 128 x 30 s of the walking teacher's move-to-spot episodes recorded as motion clips (`scripts/motion/record_policy_clips.py`, training seed 11; `footwork-teacher.npz`, 191,872 frames).
+  - Moving frames by direction: forward 37k, left 38k, right 36k, back 27k. LAFAN1 is 69 % forward.
+  - Run 3b's H0 tracks every footwork window at 100 % (seed 4200690, `stage5c-h0-03b-lafan4.json`), so no H0 run is needed.
+  - Motion set `tennis-lafan4.npz` (252 clips, 741,222 frames) is sampled 0.5 / 0.15 / 0.1 / 0.25 (tennis / LAFAN1 / mirrored / footwork).
 

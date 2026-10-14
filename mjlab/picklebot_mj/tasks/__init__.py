@@ -872,3 +872,23 @@ def _tracking_tennis_lafan3(play=False):
 register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN3_HUGE, env_cfg=_tracking_tennis_lafan3(),
                     play_env_cfg=_tracking_tennis_lafan3(True), rl_cfg=_tracking_huge_rl_cfg(),
                     runner_cls=MotionTrackingOnPolicyRunner)
+
+
+# Stage 5C (D-081): the H0 teacher's motion set gains the walking teacher's own footwork (Picklebot-Teacher-Move-G1,
+# model_15900, recorded by scripts/motion/record_policy_clips.py: 128 x 30 s of move-to-spot episodes in uniform
+# directions, about equal forward / left / right / back stepping). Sources: tennis-v5, LAFAN1, mirrored LAFAN1,
+# footwork, sampled 0.5 / 0.15 / 0.1 / 0.25.
+TASK_TRACKING_TENNIS_LAFAN4_HUGE = "Picklebot-Tracking-TennisLafan4-Huge-G1"
+TENNIS_LAFAN4_MOTION = str(_MOTION_DIR / "tennis-lafan4.npz")
+TENNIS_LAFAN4_SHARES = (0.5, 0.15, 0.1, 0.25)
+
+
+def _tracking_tennis_lafan4(play=False):
+    cfg = paddle_tracking_env_cfg(TENNIS_LAFAN4_MOTION, play=play)
+    cfg.commands["motion"].source_shares = TENNIS_LAFAN4_SHARES
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN4_HUGE, env_cfg=_tracking_tennis_lafan4(),
+                    play_env_cfg=_tracking_tennis_lafan4(True), rl_cfg=_tracking_huge_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)

@@ -2027,3 +2027,35 @@ Decision:
 - **If left/back become reachable,** the executor moves to a wider barrier in its own run, watching style (<= 3.86) and falls. Its prior penalty (`latent_prior_nll`, (lam * tanh a)^2) grows with lam^2, and that interaction is part of that run's write-up.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
+
+### D-081 — Stage 5C: teach the latent controller the walking teacher's footwork
+
+- Date: 2026-10-15
+- Status: Accepted (loop)
+- Amends: D-077, D-079, D-080 (footwork path)
+
+Context: four walker runs measured within 25 cm of a 1.5 m target (dev seeds 4200610-680; `mjlab/results/stage5c-agility-0*-dir-*.json`):
+
+| Run | Controller | lam | Start | Fwd | Right | Left | Back |
+|---|---|---|---|---:|---:|---:|---:|
+| 1 | latent-07 | 1 | warm (reach-06) | 32 % | 27 % | 0.1 % | 0 % |
+| 7 | mirrored-data controller (s5c-06) | 1 | warm (run 1) | 51 % | 9 % | 0.4 % | 0 % |
+| 8 | latent-07 | 3 | warm (run 1) | 63 % | 33 % | 0.4 % | 0 % |
+| 9 | latent-07 | 3 | fresh | 63 % | 26 % | 0.2 % | 0 % |
+
+None of them steps left or back. The flat walking teacher (`Picklebot-Teacher-Move-G1`/model_15900) reaches 99-100 % of move-drill spots in every direction, so the body can. The motion data the latent space is built from shows the gap. Counting frames moving faster than 0.3 m/s, by direction in the heading frame:
+- **LAFAN1** is 69 % forward and about 10 % each left, right and back. Mirroring it keeps that mix.
+- **The tennis clips** favour the forehand side.
+
+The prior (the walker's and executor's action centre) is conditioned on state. From a ready stance, it has almost never seen a left shuffle or a backpedal.
+
+Decision:
+1. **Footwork data from the walking teacher** (`mjlab/scripts/motion/record_policy_clips.py`, training seed 11). 128 move-to-spot episodes of 30 s each, no falls, recorded as G1 motion CSVs and converted with `csv_to_npz_local.py` (`footwork-teacher.npz`: 128 clips, 191,872 frames). Moving frames: forward 37k, left 38k, right 36k, back 27k; median speed 0.72 m/s.
+2. **Motion set** `tennis-lafan4.npz`: tennis-v5 + LAFAN1 + mirrored LAFAN1 + footwork, sampled 0.5 / 0.15 / 0.1 / 0.25 (task `Picklebot-Tracking-TennisLafan4-Huge-G1`).
+3. **No H0 run is needed.** Run 3b's teacher (s5c-03b/model_63300) already tracks every footwork window at 100 % (dev seed 4200690, `mjlab/results/stage5c-h0-03b-lafan4.json`), and the clips are its own robot's motion.
+4. **H1 (run 10)** is distilled from latent-07/latent_10651 with run 3b's teacher on tennis-lafan4, latent-07's settings otherwise (as run 6, D-079). Fixed endpoint: the checkpoint at the 6,900 s cap.
+   - Check, fixed now (two fresh dev seeds, encoder path, `tracking_eval.py --latent --per-stroke`): tennis and LAFAN1 within 3 points of latent-07 (93.4 / 89.0 % on seed 4200651), footwork >= 95 %.
+   - Serve and smash are reported separately, since run 6 lost about 10 points of serve.
+5. **Walker (run 11)** on the run-10 controller at lam = 3, measured per direction as before. The style of the footwork, and so of anything built on it, is judged by the style score in later executor runs (gate <= 3.86).
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
