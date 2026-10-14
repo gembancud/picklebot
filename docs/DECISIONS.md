@@ -1999,3 +1999,31 @@ H1 check, fixed before launch, by `tracking_eval.py --latent --per-stroke` on tw
 - mirrored LAFAN1 within 3 points of the new LAFAN1 score.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
+
+### D-080 — Stage 5C: the latent action barrier, not the motion data, limits footwork; walker at lambda = 3
+
+- Date: 2026-10-15
+- Status: Accepted (loop)
+- Amends: D-077, D-079 (footwork path)
+
+Context:
+- **Run 7** (s5c-07-agility-m, the agility walker on the mirrored-data controller s5c-06/latent_12162; dev seed 4200660; `mjlab/results/stage5c-agility-07-dir-*.json`). Within 25 cm at 1.5 m, against run 1 on latent-07: forward 51 % (32 %), right 9 % (27 %), left 0.4 % (0.1 %), back 0 % (0 %). At 2.5 m nothing is reached. **Left and back did not improve.**
+- **Latent barrier check** (`mjlab/scripts/motion/latent_barrier_check.py`, dev seed 4200661; `mjlab/results/stage5c-barrier-l07.json`, `-l06m.json`). The walker and the executor act through z = mu_p + lam * sigma_p * tanh(a) with lam = 1, so every latent dimension stays within one prior standard deviation of the prior mean. While the controller tracks its own training clips through the encoder, the largest per-dimension distance |mu_q - mu_p| / sigma_p has a median of 2.1-2.9 (90th percentile 3.2-4.9) in every clip group, on both controllers.
+- **Coverage by lam** (share of steps whose latent lies inside the barrier, latent-07):
+
+  | Clip group | lam = 1 | lam = 2 | lam = 3 |
+  |---|---:|---:|---:|
+  | Tennis strokes | 0-1 % | 24-32 % | 63-73 % |
+  | LAFAN1 walk / run / sprint | 0.3-2.6 % | 39-45 % | 82-83 % |
+  | Mirrored LAFAN1 walk / run / sprint | 0-0.4 % | 22-24 % | 66-70 % |
+
+  This is what a 32-dimensional Gaussian predicts: the chance that all 32 dimensions lie within 1 sigma is 0.68^32 ≈ 5e-6; within 2 sigma, 0.23; within 3 sigma, 0.92.
+
+**Conclusion.** At lam = 1 the walker can only nudge the prior's default continuation of the current motion. It cannot select a sidestep or a backpedal even though the decoder reproduces both (mirrored walk tracked at 92-93 % through the encoder, even by latent-07). The mirrored-data retrain (D-077) left the barrier unchanged, which is why runs 6-7 did not help. The H3 history fits: lam 0.5 -> 1.0 raised root-target reach from 3.2 % to 8.5 % and paddle reach from 62 % to 73 % (reach-02 -> reach-03, `stage5b-h3.md`).
+
+Decision:
+- **Keep latent-07** as the controller. The mirrored-data controller (s5c-06) cost about 10 points of serve and did not unlock footwork. Its artifacts and reports stay as they are.
+- **Run 8:** the agility walker of run 1 on latent-07 with **lam = 3.0**, the only change (task `Picklebot-Latent-Reach-Agility-L3-G1`). It warm-starts from run 1's endpoint, has a fixed endpoint at the last checkpoint before the cap, and is measured per direction as in run 1.
+- **If left/back become reachable,** the executor moves to a wider barrier in its own run, watching style (<= 3.86) and falls. Its prior penalty (`latent_prior_nll`, (lam * tanh a)^2) grows with lam^2, and that interaction is part of that run's write-up.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.

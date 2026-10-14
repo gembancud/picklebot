@@ -76,7 +76,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 3 | s5c-03b-h0mirror | H0 continued on tennis + LAFAN1 + mirrored LAFAN1 (0.5/0.25/0.25), fixed lr 1e-5 as in tracking-20-decay; run alone | tracking-20-decay/model_60800 | model_63300 (fixed at launch: last checkpoint before the 7000 s cap at ~2.6 s/iter) | 94.0 / 88.7 / **84.9** | 0.84 % |
 | 5 | s5c-05-h0mirror | continuation of run 3b (same data, lr, shares; seed 2): mirrored LAFAN1 is 1.3 points short | s5c-03b/model_63300 | model_65900 (fixed at launch) | 93.1-93.5 / 89.6-89.9 / 85.7-86.2; serve 84.0-85.7 | 0.66-0.69 % |
 | 6 | s5c-06-h1mirror | **H1** latent distillation from run 3b's teacher on tennis-lafan3 (D-079); latent-07 settings | latent-07/latent_10651 | latent_12162 (cap) | 92.4 / 91.5; 87.9 / 87.8; **84.5 / 84.1** | 0.68-0.77 % |
-| 7 | s5c-07-agility-m | agility walker (run 1's task) on the run-6 controller; only the controller changes | s5c-01-agility/model_37300 | last checkpoint before the cap | | |
+| 7 | s5c-07-agility-m | agility walker (run 1's task) on the run-6 controller; only the controller changes | s5c-01-agility/model_37300 | model_40100 | 1.5 m within 25 cm: fwd 51 %, right 9 %, **left 0.4 %, back 0 %** | |
+| 8 | s5c-08-agility-l3 | run 1's walker on latent-07 with the latent barrier lambda 1 -> 3 (D-080); nothing else | s5c-01-agility/model_37300 | last checkpoint before the cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -101,4 +102,9 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - Per stroke, serve fell to 81.3 / 82.0 % (latent-07 92.3 %) and smash to 84.2 / 82.0 % (89.5 %). Volleys and backhand improved.
   - Even latent-07 tracks mirrored walk (92.1 %) and run (81.2 %) through its encoder about as well as the originals. The encoder path does not test what the walker uses, though: the walker acts through the *prior* (z = mu_p + sigma_p tanh(a)), which never saw leftward or backward stepping states.
   - **The H1 check is not fully met.** As D-079 fixed, the agility walker decides (run 7).
+- **Run 7** (dev seed 4200660): left and back did not improve on the mirrored-data controller (run 1: left 0.1 %, back 0 %). The training curve recovered from the controller swap and then stayed flat (root reward about 0.19, as in run 1).
+- **Latent barrier check** (`scripts/motion/latent_barrier_check.py`, dev seed 4200661; `stage5c-barrier-*.json`).
+  - In every clip group, on both controllers, the encoder's latent lies a median of 2.1-2.9 prior standard deviations from the prior mean in its farthest dimension (90th percentile 3.2-4.9).
+  - At lambda = 1, under 3 % of steps fit inside the walker's reach in any group. At lambda = 3, 63-83 % do (mirrored fight/sports 39 %).
+  - The limit is the latent action barrier, not the training data. **D-080:** keep latent-07 and test the walker at lambda = 3 (run 8).
 

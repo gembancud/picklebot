@@ -813,6 +813,21 @@ register_mjlab_task(task_id=TASK_LATENT_REACH_AGILITY_M, env_cfg=_latent_reach_a
                     play_env_cfg=_latent_reach_agility_m(True), rl_cfg=_latent_reach_rl_cfg())
 
 
+# Stage 5C run 8 (D-080): run 1's agility walker (latent-07) with the latent barrier widened, lambda 1 -> 3. At lambda 1
+# no tracked clip's latent fits inside the barrier (32 dims, each within one prior std); at 3, 63-83 % of steps do.
+TASK_LATENT_REACH_AGILITY_L3 = "Picklebot-Latent-Reach-Agility-L3-G1"
+
+
+def _latent_reach_agility_l3(play=False):
+    cfg = _latent_reach_agility(play)
+    cfg.actions["latent"].lam = 3.0
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_REACH_AGILITY_L3, env_cfg=_latent_reach_agility_l3(),
+                    play_env_cfg=_latent_reach_agility_l3(True), rl_cfg=_latent_reach_rl_cfg())
+
+
 # Stage 5C court-wide drill (D-076): h4-25b's task (Picklebot-Latent-Drill3-Prior5-G1) over the whole half court.
 # Start and recovery spots anywhere from the baseline to the kitchen line, the six court families (drop, lob, cross,
 # volleys) added to the feed mix, a learning-progress curriculum per court zone (back / mid / front), volley feeds in
