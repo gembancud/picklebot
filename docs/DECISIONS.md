@@ -2145,3 +2145,47 @@ Decision (run 16, `mjlab/scripts/kickstart_h4.py --recover`):
 - **Smoke run:** about a third of all steps are recovery phase.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
+
+### D-086 — Stage 5C: reviewed plan for the remaining runs (user-approved)
+
+- Date: 2026-10-16
+- Status: Accepted (user, after a five-reviewer consensus round)
+- Amends: D-075 loop practice (evaluation rules, order of work)
+
+Context: five read-only reviewers looked at runs 1-18: RL methods, motion priors, pickleball drill design, experiment design, and infrastructure. In a second round they voted on a merged plan, and the user approved it ("go with the agreed plan"). The user made no decision on the plateau-rule rewording or on Windows/WSL sleep settings, so the plateau rule stays as in D-075 and no system settings are changed.
+
+Findings on record (all verified):
+1. **Walker runs 1, 7, 8, 9 and 11 were confounded.** The reach task's paddle target is world-fixed at the starting shoulder for each 2 s window, weighted 2.0 against root 1.0 + progress 1.0, so travel was penalised. They show nothing about the controller's footwork.
+2. **Run 4 was planned and never run.** The re-aimed volley feeds (D-078) entered training from run 12 without a run of their own. Counted runs: 17 used, 13 left.
+3. **Runs that changed more than one thing:** run 6 (teacher and data), run 12 (lambda, method, teacher, episode mix, beta phase), run 15 (loss, teacher and start), run 18 (teacher and start).
+4. **Recovery shows the same median, 1.675 m, in runs 14, 15 and 17.** As scored (a random spot up to about 6 m away, judged at the next feed about 1.5-2 s later, with pelvis-anchored feeds), it does not tell policies apart.
+5. **Move-to-spot falls were not in the gate:** runs 14 and 17 fall in every move episode.
+6. **Cells with fewer than 30 episodes counted as passing** in `h5c_summary.py`, and `h5c_eval.sh` hid failed jobs.
+7. **Kickstart losses plateau after 6-30 min.** With `--beta-frac 0` the first iteration still mixes in the hitting teacher, and every family teacher was mapped with one global lam-self.
+
+Plan:
+- **0. No-run fixes:**
+  - Evaluate run 18 against every gate item before building on it.
+  - Falls in the gate = the worse of the court and move-to-spot drills.
+  - Cells under 30 episodes count as unresolved, never passing.
+  - Evaluation jobs must exit 0 and write a fresh JSON.
+  - Run directories are matched exactly.
+  - The final evaluation pools 4+ seeds per cell, declared here.
+  - A main-metric change under 2 points is re-evaluated on a second seed before it counts for the plateau rule.
+  - Recovery gets a stand-still baseline (the gap at contact).
+  - The split-step and kitchen-line-zone metrics are reported, not gated.
+  - Kickstart: beta fix, per-teacher lam, early stop.
+  - TF32 on; PPO iteration limit sized to the 2 h cap.
+- **1. Run 19: residual executor around a frozen run 18** (or run 15 if run 18 lacks both skills). z = z_ref(s) + lam_r sigma_p tanh(a).
+  - Start: the residual output starts at zero and its std at about 0.1; it also acts on the wrist.
+  - The frozen executor sees its own last action. Before launch, check that zero residual reproduces run 18.
+  - Penalty (lam_r tanh a)^2, heavier in move episodes.
+  - Kill rules fixed at launch: style above 3.86, arrival down more than 15 points in any direction, or more move-drill falls.
+- **2. Volley specialist (2 runs).** Train unanchored at lam 3 with an easy on-ramp as curriculum level 0 (soft 4-6 m/s ball, ramping to the gate's 7-10 m/s feeds; training only), then merge with per-teacher lam. Kill rule: volley contact < 5 % at a fixed checkpoint on unchanged evaluation feeds.
+- **3. Recovery.** Court-aimed feeds for training and the rally evaluation only; the 55-cell gate drill keeps D-076's pelvis-anchored feeds.
+  - Recovery is also scored with the move drill's time model (1.5 s + 1.25 s/m), threshold 0.5 m unchanged, next to the original measure.
+  - Runs 15, 17 and 18 are re-scored on it.
+- **4. Rally evaluation** (evaluation only): consecutive feeds from a scripted far-court opponent; P(rally >= 10) with a CI, reported next to the gate.
+- **5. Reserve and report.** Two runs are kept in reserve. The final candidate is named before the paired final evaluation, and the report states the gate result with the distance and CI on each criterion and lists every rule deviation.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`; `mjlab/scripts/h5c_summary.py`, `h5c_eval.sh`, `stage2_eval.sh`.

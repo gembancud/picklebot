@@ -87,6 +87,8 @@ def main():
     ap.add_argument("--hit-teacher", default=None, help="hitting teacher checkpoint (default: --init)")
     ap.add_argument("--hit-loss", choices=["joint", "latent"], default="joint")
     ap.add_argument("--hit-weight", type=float, default=1.0)
+    ap.add_argument("--family-teacher", action="append", default=[],
+                    help="FAMILIES=CK: ball episodes of these comma-separated families copy CK's latent instead (D-086)")
     ap.add_argument("--recover", action="store_true", help="walking teacher after the hit in ball episodes (D-085)")
     ap.add_argument("--recover-delay", type=float, default=0.2, help="seconds after first contact")
     ap.add_argument("--teacher", default=TEACHER, help="walking teacher (move-to-spot episodes)")
@@ -132,6 +134,14 @@ def main():
     obs_dim = venv.get_observations()["actor"].shape[1]
     t_obs_dim = obs_dim - (sl.stop - sl.start) + term.n_joint
     walker = build_teacher(args.teacher, t_obs_dim, term.n_joint, rl["actor"], "cuda")
+    from picklebot_mj.feeds import FAMILY_NAMES
+    fam_teachers = []  # (family mask over FAMILY_NAMES, actor) for --family-teacher
+    for spec in args.family_teacher:
+        fams, ck = spec.split("=", 1)
+        r3 = MjlabOnPolicyRunner(venv, copy.deepcopy(rl), device="cuda")
+        r3.load(ck, load_cfg={"actor": True}, strict=True, map_location="cuda")
+        mask = torch.tensor([f in fams.split(",") for f in FAMILY_NAMES], device="cuda")
+        fam_teachers.append((mask, r3.alg.actor.eval()))
     # Teacher-layout column ranges of the ball terms (the student's 35-d last action becomes 29-d).
     cols, start = {}, 0
     for nm, dm in zip(env.observation_manager.active_terms["actor"], env.observation_manager.group_obs_term_dim["actor"]):
@@ -188,6 +198,9 @@ def main():
                     move = move | rec  # imitate the walking teacher here too
                 y_walk = walker(TensorDict({"actor": tx}, batch_size=[args.envs]))
                 a_self = self_teacher(obs)
+                for fmask, fteach in fam_teachers:  # family specialists override the hitting teacher
+                    use_f = fmask[ball.family] & ~ball.drill.move_ep
+                    a_self = torch.where(use_f.unsqueeze(-1), fteach(obs), a_self)
                 y_self = joint_target(term, a_self, ctrl, args.lam_self)
                 O.append(x.clone())
                 C.append(ctrl.clone())

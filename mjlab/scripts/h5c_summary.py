@@ -4,7 +4,7 @@ Gate:
 - every family in every court zone where it is fed >= 75 % legal (volleys included);
 - move-to-spot arrival >= 90 % in every direction;
 - recovery median <= 0.5 m (court-wide random spots);
-- falls <= 1 % per robot episode;
+- falls <= 1 % per robot episode, taken as the worse of the court drill and the move-to-spot drill (D-086);
 - style <= 3.86;
 - no Stage 5B drill family more than 5 points below h4-25b (its paired final evaluation, stage5b-h4-gate2-cand).
 
@@ -25,7 +25,10 @@ style = json.load(open(f"{R}-style.json"))["nearest_clip_distance_median"]
 checks = {}
 cells = court.get("per_zone_family", {})
 low = {k: v["legal_return"] for k, v in cells.items() if v["episodes"] >= 30 and v["legal_return"] < 0.75}
-checks["court cells >= 75 %"] = (not low, f"{len(cells) - len(low)}/{len(cells)} cells pass" + (f"; fail: {low}" if low else ""))
+thin = {k: v["episodes"] for k, v in cells.items() if v["episodes"] < 30}  # unresolved: never counted as passing (D-086)
+n_pass = len(cells) - len(low) - len(thin)
+checks["court cells >= 75 %"] = (not low and not thin, f"{n_pass}/{len(cells)} cells pass" + (f"; fail: {low}" if low else "")
+                                 + (f"; under 30 episodes: {thin}" if thin else ""))
 SECTOR_NAMES = ("fwd", "fwd-left", "left", "back-left", "back", "back-right", "right", "fwd-right")  # 0 = toward the net, ccw
 sectors = move.get("move_drill", {}).get("sectors", [])
 arr = {SECTOR_NAMES[v["sector"]]: v.get("arrival_rate") for v in sectors}
@@ -33,8 +36,9 @@ bad = {k: r for k, r in arr.items() if r is None or r < 0.9}
 checks["move arrival >= 90 % per direction"] = (not bad and bool(arr), f"{arr}")
 rec = court.get("recovery", {}).get("error_median_m")
 checks["recovery <= 0.5 m"] = (rec is not None and rec <= 0.5, f"{rec}")
-falls = court["robot_fall_rate_per_episode"]
-checks["falls <= 1 %"] = (falls <= 0.01, f"{falls}")
+falls_court, falls_move = court["robot_fall_rate_per_episode"], move.get("robot_fall_rate_per_episode", 0.0)
+falls = max(falls_court, falls_move)
+checks["falls <= 1 %"] = (falls <= 0.01, f"court {falls_court}, move drill {falls_move}")
 checks["style <= 3.86"] = (style <= 3.86, f"{style:.3f}")
 reg = {f: round(d5b["per_family"][f]["legal_return"] - base5b["per_family"][f]["legal_return"], 3)
        for f in base5b["per_family"] if f in d5b["per_family"]}

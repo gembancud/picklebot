@@ -941,3 +941,26 @@ def _latent_drill3_prior5_l3(play=False):
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_PRIOR5_L3, env_cfg=_latent_drill3_prior5_l3(),
                     play_env_cfg=_latent_drill3_prior5_l3(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
 
+
+# Stage 5C (D-086): a volley specialist teacher. The lambda-3 court task with volley feeds only, from start and recovery
+# spots in the zones where volleys are fed (mid and front, x >= -5.0), no move or ghost-swing episodes. With volleys a
+# few per cent of the full mix and their units at the curriculum floor, no executor has touched a volley (contact <= 0.4 %).
+from picklebot_mj.feeds import VOLLEY_FAMILIES, ZONE_X_EDGES  # noqa: E402
+
+TASK_LATENT_COURT_VOLLEY_L3 = "Picklebot-Latent-Court-Volley-L3-G1"
+
+
+def _latent_court_volley_l3(play=False):
+    cfg = _latent_court_l3(play)
+    b = cfg.actions["ball"]
+    b.feed_mix = FeedMix({f: 1.0 for f in VOLLEY_FAMILIES})
+    b.move_prob, b.swing_prob = 0.0, 0.0
+    x0 = ZONE_X_EDGES[0]
+    b.recovery_box = ((x0, COURT_RECOVERY_BOX[0][1]), COURT_RECOVERY_BOX[1])
+    cfg.events["reset_base"].params["pose_range"]["x"] = (x0 + 0.1 - ROBOT_START[0], COURT_START_X[1] - ROBOT_START[0])
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_VOLLEY_L3, env_cfg=_latent_court_volley_l3(),
+                    play_env_cfg=_latent_court_volley_l3(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+

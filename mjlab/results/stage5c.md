@@ -44,7 +44,7 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | # | Run | Change (written before launch) | From | Endpoint | Main metric (court pooled) | Style |
 |---|---|---|---|---|---|---|
 | 2 | s5c-02-court | court-wide drill (D-076) with the zone-conditioned curriculum | h4-25b/model_27700 | model_28400 (see note) | **71.3 %** (52.0 baseline); 37/55 cells | 3.817 |
-| 4 | s5c-04-volley | volley feeds re-aimed to waist-to-chest height (D-078); nothing else | s5c-02/model_28400 | last checkpoint before the cap | | |
+| 4 | s5c-04-volley | **never run** (planned; D-078's re-aimed volley feeds entered training from run 12 without a run of their own) | - | - | - | - |
 
 ### Run 2 evaluation (s5c-02/model_28400, dev seeds 4200620-623; `stage5c-s5c-02-*.json`)
 - **Main metric 71.3 %** (h4-25b 52.0 %). 37 of 55 cells reach 75 %.
@@ -165,4 +165,11 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - Volleys still 0 % (contact 0 / 0.4 %). Style 4.016, falls 3.6 %.
   - Stage 5B families within 5 points of h4-25b except backspin (-15) and reach_deep (-19.5).
   - In move-only episodes it falls every time (robot fall rate 1.0 per episode), so PPO keeps no footwork. It serves as the hitting teacher for run 18.
+- **Review round and D-086 (user-approved plan).** Five reviewers checked runs 1-18. Corrections to this log:
+  - Run 4 was never run, so 17 runs are used and 13 remain.
+  - Walker runs 1, 7, 8, 9 and 11 were confounded by a world-fixed paddle target (weight 2.0).
+  - Runs 6, 12, 15 and 18 each changed more than one thing.
+  - Recovery as scored gives 1.675 m whatever the policy.
+  - From now on: falls = the worse of the court and move-to-spot drills, cells under 30 episodes are unresolved, evaluation failures stop the summary, and the final evaluation pools 4+ seeds per cell.
+  - Re-scored with the new fall rule: run 15 falls 4.0 % (court) / 1.4 % (move); run 17 falls 3.6 % / **100 %** (move).
 
