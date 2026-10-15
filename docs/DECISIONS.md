@@ -2098,3 +2098,28 @@ Runs:
 - The style gate (<= 3.86) applies as before. The leg motion now comes from the walking teacher through the human-motion decoder, and the style score will show what that costs.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
+
+### D-084 — Stage 5C: two-teacher kickstart with exact latent copying of the hitting teacher
+
+- Date: 2026-10-15
+- Status: Accepted (loop)
+- Amends: D-082 (runs after the first kickstart)
+
+Context:
+- **Run 12** (kickstart, joint-space losses; `stage5c-s5c-12-*.json`): move-to-spot arrival 76-99 % in every direction and style 3.585, but court legal returns 22 %.
+  - On evaluation states the kickstarted executor stays close to its starting executor's joint targets (MSE 0.004, right wrist 0.031; `mjlab/artifacts/eval/ks_diag.py`). Its latent still differs by 0.14 prior sigmas per dimension (median).
+  - A return depends on paddle timing around contact, which that loss does not pin down.
+- **Run 13** (PPO from run 12): stopped after about 200 of an expected 1,000 iterations, counted. Falls rose to 158-315 per logging interval. Cause: the action-noise std inherited from lam = 1 (about 0.38) moves the latent 3x further at lam = 3.
+- **Run 14** (PPO from run 12, latent std x 1/3, `scripts/rescale_action_std.py`; dev seeds 4200750-753; `stage5c-s5c-14-*.json`):
+  - Court main metric **74.9 %** (best so far; 42/55 cells). Stage 5B families within 5 points of h4-25b except backspin (-9.8) and reach_deep (-58).
+  - **Move-to-spot arrival 0 %, the footwork is gone.** Style 3.868 (limit 3.86), recovery 1.68 m, falls 4.2 %.
+  - Under PPO's action noise the robot never holds still long enough to "arrive", so the arrival reward never fires. Meanwhile the latent prior penalty pulls the latent back toward the prior mean.
+
+Decision (run 15): kickstart again (`mjlab/scripts/kickstart_h4.py`, extended):
+- **Hitting:** matched exactly in the latent. From run 14's endpoint, ball episodes match run 14's own latent and wrist command (`--hit-loss latent`, lam_self = 3). Both share the barrier, so the copy is exactly representable.
+- **Footwork:** move-to-spot episodes match the walking teacher in joint space, as in run 12.
+- No PPO, no noise, no penalties. Fixed endpoint: the checkpoint at the 6,900 s cap.
+- **The question:** can one network hold run 14's hitting and run 12's footwork when both are copied rather than rewarded?
+- **Still open after that:** recovery after the hit (the walking teacher's skill, needed in ball episodes), volleys, lobs and reach_deep, falls, and style.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.

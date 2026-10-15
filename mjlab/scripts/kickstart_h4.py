@@ -9,6 +9,10 @@ Two-teacher policy distillation through the frozen latent controller (as distill
 
 Both targets are in joint space: q = D(s, mu_p + lam sigma_p tanh(a_lat)) (+ wrist residual), loss
     mean over states of |q_student - q_target|^2 + w_lat * mean((lam * tanh(a_lat))^2).
+With --hit-loss latent (D-084), ball episodes instead match the hitting teacher's latent and wrist command exactly:
+    |lam tanh(a_lat) - lam_self tanh(a_self_lat)|^2 (prior sigmas, mean over dims) + |tanh(a_w) - tanh(a_self_w)|^2,
+which the wider barrier can represent exactly, so the hitting motion is copied rather than approximated through the
+decoder's joint outputs. --hit-teacher sets the hitting teacher separately from --init (default: --init).
 Rollouts are DAgger-style on the student's own states. During the first --beta-frac of the wall-clock budget, a
 share beta (1 -> 0) of envs instead executes the starting executor's action converted to the student's barrier
 (a = atanh(tanh(a_self) * lam_self / lam), the same latent), so the switch to a wider barrier does not start from
@@ -75,7 +79,10 @@ def convert(a: torch.Tensor, lat: int, lam_from: float, lam_to: float) -> torch.
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run-name", required=True)
-    ap.add_argument("--init", required=True, help="starting executor (also the hitting teacher)")
+    ap.add_argument("--init", required=True, help="starting executor (also the hitting teacher by default)")
+    ap.add_argument("--hit-teacher", default=None, help="hitting teacher checkpoint (default: --init)")
+    ap.add_argument("--hit-loss", choices=["joint", "latent"], default="joint")
+    ap.add_argument("--hit-weight", type=float, default=1.0)
     ap.add_argument("--teacher", default=TEACHER, help="walking teacher (move-to-spot episodes)")
     ap.add_argument("--task", default=TASK)
     ap.add_argument("--lam-self", type=float, default=1.0, help="barrier the starting executor was trained with")
@@ -106,6 +113,10 @@ def main():
     start_it = int(torch.load(args.init, map_location="cpu", weights_only=False).get("iter", 0))
     actor = runner.alg.actor
     self_teacher = copy.deepcopy(actor).eval()
+    if args.hit_teacher:
+        r2 = MjlabOnPolicyRunner(venv, copy.deepcopy(rl), device="cuda")
+        r2.load(args.hit_teacher, load_cfg={"actor": True}, strict=True, map_location="cuda")
+        self_teacher = r2.alg.actor.eval()
     for p in self_teacher.parameters():
         p.requires_grad_(False)
     term = env.action_manager.get_term("latent")
@@ -128,7 +139,7 @@ def main():
     while True:
         el = time.time() - t0
         beta = max(0.0, 1.0 - el / max(1e-6, args.beta_frac * args.max_seconds))
-        O, C, Y, M, rew_sum, done_sum, n_move = [], [], [], [], 0.0, 0, 0
+        O, C, Y, M, A, rew_sum, done_sum, n_move = [], [], [], [], [], 0.0, 0, 0
         with torch.no_grad():  # the actor stays in train mode so its observation normaliser updates
             for _ in range(STEPS):
                 x = obs["actor"]
@@ -143,6 +154,7 @@ def main():
                 C.append(ctrl.clone())
                 Y.append(torch.where(move.unsqueeze(-1), y_walk, y_self))
                 M.append(move)
+                A.append(a_self.clone())
                 a = actor(obs)
                 if beta > 0.0:
                     use = torch.rand(args.envs, generator=gen, device="cuda") < beta
@@ -153,11 +165,11 @@ def main():
                 rew_sum += float(rew.mean())
                 done_sum += int(dones.sum())
                 n_move += int(move.sum())
-        bufs.append((torch.cat(O), torch.cat(C), torch.cat(Y), torch.cat(M)))
+        bufs.append((torch.cat(O), torch.cat(C), torch.cat(Y), torch.cat(M), torch.cat(A)))
         bufs = bufs[-args.buffer:]
         stats, n = {"mse_move": 0.0, "mse_hit": 0.0, "lat": 0.0}, 0
         for _ in range(args.epochs):
-            for o_, c_, y_, m_ in bufs:
+            for o_, c_, y_, m_, s_ in bufs:
                 perm = torch.randperm(len(o_), device="cuda")
                 for i in range(0, len(o_), args.batch):
                     idx = perm[i:i + args.batch]
@@ -165,6 +177,11 @@ def main():
                     q = joint_target(term, a, c_[idx], lam)
                     err = ((q - y_[idx]) ** 2).mean(-1)
                     mv = m_[idx].float()
+                    if args.hit_loss == "latent":  # ball episodes: match the hitting teacher's latent and wrist exactly
+                        at = s_[idx]
+                        e_lat = ((lam * torch.tanh(a[:, :lat]) - args.lam_self * torch.tanh(at[:, :lat])) ** 2).mean(-1)
+                        e_w = ((torch.tanh(a[:, lat:]) - torch.tanh(at[:, lat:])) ** 2).mean(-1)
+                        err = torch.where(mv > 0, err, args.hit_weight * (e_lat + e_w))
                     lat_pen = ((lam * torch.tanh(a[:, :lat])) ** 2).mean()
                     loss = err.mean() + args.w_lat * lat_pen
                     opt.zero_grad()
