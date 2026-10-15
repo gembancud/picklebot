@@ -81,7 +81,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 9 | s5c-09-agility-l3-fresh | run 8 without the warm start (fresh policy): the lineage from reach-06 never stepped left/back | none | model_2800 | 1.5 m within 25 cm: fwd 63 %, right 26 %, **left 0.2 %, back 0 %** | |
 | 10 | s5c-10-h1footwork | **H1** on tennis-lafan4: + the walking teacher's footwork clips (D-081); teacher run 3b | latent-07/latent_10651 | latent_12135 (cap) | 91.1 / 91.0; 86.4 / 87.2; footwork 100 / 100 | 0.51-0.59 % |
 | 11 | s5c-11-agility-f-l3 | run 9 (fresh walker, lambda 3) on the run-10 controller; only the controller changes | none | model_2800 (WSL shut down at 1:51:42; same iteration as run 9's endpoint) | 1.5 m within 25 cm: fwd 74 %, right 27 %, **left 0.5 %, back 0 %** | |
-| 12 | s5c-12-kickstart | **kickstart** (D-082): walking teacher on move episodes + the starting executor on ball episodes, distilled through latent-07 at lambda 3 | s5c-02/model_28400 | checkpoint at the 6,900 s cap | | |
+| 12 | s5c-12-kickstart | **kickstart** (D-082): walking teacher on move episodes + the starting executor on ball episodes, distilled through latent-07 at lambda 3 | s5c-02/model_28400 | model_29585 (cap) | **22.1 %**; 3/55 cells; **move arrival 76-99 % per direction** | **3.585** |
+| 13 | s5c-13-court-l3 | PPO on the court drill at lambda 3 (task Picklebot-Latent-Court-L3-G1) from the kickstarted executor | s5c-12/model_29585 | last checkpoint before the cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -130,4 +131,10 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - The footwork controller does worse (0.099 / 0.061).
   - The footwork is inside latent-07's reach at lambda 3; PPO does not find it.
 - **D-082:** kickstart the executor's footwork from the walking teacher through latent-07 at lambda 3 (`scripts/kickstart_h4.py`, `tests/test_kickstart_h4.py`), then PPO.
+- **Run 12 evaluation** (model_29585, dev seeds 4200730-733, `stage5c-s5c-12-*.json`; Stage 5B check on `Picklebot-Latent-Drill3-Prior5-L3-G1`).
+  - **Move-to-spot arrival, for the first time in any executor:** fwd 94.4, fwd-left 75.6, left 86.8, back-left 99.0, back 98.9, back-right 96.2, right 94.6, fwd-right 84.9 %. Every executor before scored 0 %.
+  - **Style improved to 3.585** (run 2: 3.817).
+  - **Hitting collapsed:** court main metric 22.1 % (run 2: 71.3 %); Stage 5B families 43-92 points below h4-25b; falls 4.7 %; recovery 1.58 m.
+  - In training the ball-episode imitation error was small (0.002 joint MSE against 0.04 for footwork). But a return needs paddle timing to within centimetres, which joint-space imitation through a different barrier does not keep.
+  - **Run 13:** PPO from this endpoint to win hitting back. The move-to-spot rewards stay in the task, so the footwork should hold.
 

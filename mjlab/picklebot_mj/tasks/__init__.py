@@ -926,3 +926,18 @@ def _latent_court_l3(play=False):
 register_mjlab_task(task_id=TASK_LATENT_COURT_L3, env_cfg=_latent_court_l3(), play_env_cfg=_latent_court_l3(True),
                     rl_cfg=_latent_drill3_lowent_rl_cfg())
 
+
+# Stage 5C (D-082): the Stage 5B drill (h4-25b's task) at lambda 3, for the Stage 5B regression check of lambda-3
+# executors (h5c_eval.sh's 6th argument).
+TASK_LATENT_DRILL3_PRIOR5_L3 = "Picklebot-Latent-Drill3-Prior5-L3-G1"
+
+
+def _latent_drill3_prior5_l3(play=False):
+    cfg = _latent_drill3_prior5(play)
+    cfg.actions["latent"].lam = 3.0
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_PRIOR5_L3, env_cfg=_latent_drill3_prior5_l3(),
+                    play_env_cfg=_latent_drill3_prior5_l3(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
