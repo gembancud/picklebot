@@ -2123,3 +2123,25 @@ Decision (run 15): kickstart again (`mjlab/scripts/kickstart_h4.py`, extended):
 - **Still open after that:** recovery after the hit (the walking teacher's skill, needed in ball episodes), volleys, lobs and reach_deep, falls, and style.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
+
+### D-085 — Stage 5C: walk back to the recovery spot after every hit (walking teacher in the recovery phase)
+
+- Date: 2026-10-16
+- Status: Accepted (loop)
+- Amends: D-084
+
+Context: **run 15** (two-teacher kickstart, D-084; dev seeds 4200760-763; `mjlab/results/stage5c-s5c-15-*.json`) is the first executor with both skills.
+- **Hitting:** court main metric 74.5 %, 42/55 cells (run 14: 74.9 %). Stage 5B families within 5 points of h4-25b except backspin (-11.4) and reach_deep (-58).
+- **Footwork:** move-to-spot arrival fwd 88.5, fwd-left 45.5, left 67.1, back-left 95.0, back 96.5, back-right 95.2, right 92.4, fwd-right 82.7 %.
+- **Still failing:** recovery 1.68 m, falls 4.0 %, style 3.872.
+
+Recovery is the pelvis distance to the commanded recovery spot when the next feed fires (`recover_hist`, hit feeds only). In ball episodes every target comes from run 14, which never learned to walk back.
+
+Decision (run 16, `mjlab/scripts/kickstart_h4.py --recover`):
+- **Recovery phase:** in a ball episode, from 0.2 s after the robot's first legal contact, or once the rally is dead, the target switches to the walking teacher.
+- **What the teacher sees:** the robot, the recovery spot and a ball parked as in move-to-spot episodes. Its ball inputs are recomputed for the parked ball, with the rally flags a move episode shows.
+- **Unchanged from run 15:** move episodes still copy the walking teacher, and the hitting part still copies run 14's latent exactly.
+- **Start:** from run 15's endpoint (no beta phase). Fixed endpoint: the checkpoint at the 6,900 s cap.
+- **Smoke run:** about a third of all steps are recovery phase.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.

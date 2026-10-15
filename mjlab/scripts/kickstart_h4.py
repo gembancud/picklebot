@@ -13,6 +13,10 @@ With --hit-loss latent (D-084), ball episodes instead match the hitting teacher'
     |lam tanh(a_lat) - lam_self tanh(a_self_lat)|^2 (prior sigmas, mean over dims) + |tanh(a_w) - tanh(a_self_w)|^2,
 which the wider barrier can represent exactly, so the hitting motion is copied rather than approximated through the
 decoder's joint outputs. --hit-teacher sets the hitting teacher separately from --init (default: --init).
+With --recover (D-085), a ball episode switches to the walking teacher --recover-delay seconds after the robot's
+first legal contact (or once the rally is dead): the walking teacher sees the robot, its recovery spot and a ball
+parked as in move-to-spot episodes (ball inputs recomputed for the parked ball, the move episodes' rally flags), so
+the executor learns to walk back to its recovery spot after every hit.
 Rollouts are DAgger-style on the student's own states. During the first --beta-frac of the wall-clock budget, a
 share beta (1 -> 0) of envs instead executes the starting executor's action converted to the student's barrier
 (a = atanh(tanh(a_self) * lam_self / lam), the same latent), so the switch to a wider barrier does not start from
@@ -83,6 +87,8 @@ def main():
     ap.add_argument("--hit-teacher", default=None, help="hitting teacher checkpoint (default: --init)")
     ap.add_argument("--hit-loss", choices=["joint", "latent"], default="joint")
     ap.add_argument("--hit-weight", type=float, default=1.0)
+    ap.add_argument("--recover", action="store_true", help="walking teacher after the hit in ball episodes (D-085)")
+    ap.add_argument("--recover-delay", type=float, default=0.2, help="seconds after first contact")
     ap.add_argument("--teacher", default=TEACHER, help="walking teacher (move-to-spot episodes)")
     ap.add_argument("--task", default=TASK)
     ap.add_argument("--lam-self", type=float, default=1.0, help="barrier the starting executor was trained with")
@@ -126,6 +132,31 @@ def main():
     obs_dim = venv.get_observations()["actor"].shape[1]
     t_obs_dim = obs_dim - (sl.stop - sl.start) + term.n_joint
     walker = build_teacher(args.teacher, t_obs_dim, term.n_joint, rl["actor"], "cuda")
+    # Teacher-layout column ranges of the ball terms (the student's 35-d last action becomes 29-d).
+    cols, start = {}, 0
+    for nm, dm in zip(env.observation_manager.active_terms["actor"], env.observation_manager.group_obs_term_dim["actor"]):
+        w = term.n_joint if nm == "actions" else int(torch.tensor(dm).prod())
+        cols[nm] = slice(start, start + w)
+        start += w
+    assert start == t_obs_dim
+    from picklebot_mj.tasks.move_drill import PARK_POS
+    from picklebot_mj.tasks.return_stand import _rotate_inv
+    park = torch.tensor(PARK_POS, device="cuda")
+    robot = env.scene["robot"]
+    since_hit = torch.zeros(args.envs, device="cuda")
+    flags_move = torch.zeros(2, device="cuda")
+
+    def parked_view(tx: torch.Tensor) -> torch.Tensor:
+        """The walking teacher's observation with the ball parked as in move-to-spot episodes."""
+        root = robot.data.root_link_pose_w
+        paddle = robot.data.body_link_pose_w[:, ball.paddle_id, :3]
+        pw = park + env.scene.env_origins
+        out = tx.clone()
+        out[:, cols["ball_pos"]] = _rotate_inv(root[:, 3:7], pw - root[:, :3])
+        out[:, cols["ball_vel"]] = 0.0
+        out[:, cols["ball_from_paddle"]] = _rotate_inv(root[:, 3:7], pw - paddle)
+        out[:, cols["rally_flags"]] = flags_move
+        return out
     opt = torch.optim.Adam(actor.parameters(), lr=args.lr)
 
     out = os.path.join(args.log_root, datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + "_" + args.run_name)
@@ -139,7 +170,7 @@ def main():
     while True:
         el = time.time() - t0
         beta = max(0.0, 1.0 - el / max(1e-6, args.beta_frac * args.max_seconds))
-        O, C, Y, M, A, rew_sum, done_sum, n_move = [], [], [], [], [], 0.0, 0, 0
+        O, C, Y, M, A, rew_sum, done_sum, n_move, n_rec = [], [], [], [], [], 0.0, 0, 0, 0
         with torch.no_grad():  # the actor stays in train mode so its observation normaliser updates
             for _ in range(STEPS):
                 x = obs["actor"]
@@ -147,6 +178,14 @@ def main():
                 ctrl = term.controller_obs()
                 move = ball.drill.move_ep.clone()
                 tx = torch.cat([x[:, :sl.start], last_exec, x[:, sl.stop:]], dim=-1)
+                if args.recover:
+                    if move.any():  # the rally flags a move episode shows (closed rally)
+                        flags_move = tx[move][:, cols["rally_flags"]].mean(0).round()
+                    since_hit = torch.where(ball.hit_done & ~move, since_hit + env.step_dt, torch.zeros_like(since_hit))
+                    rec = ~move & ((since_hit >= args.recover_delay) | ball.rules.dead)
+                    tx = torch.where(rec.unsqueeze(-1), parked_view(tx), tx)
+                    n_rec += int(rec.sum())
+                    move = move | rec  # imitate the walking teacher here too
                 y_walk = walker(TensorDict({"actor": tx}, batch_size=[args.envs]))
                 a_self = self_teacher(obs)
                 y_self = joint_target(term, a_self, ctrl, args.lam_self)
@@ -194,7 +233,8 @@ def main():
                     n += 1
         it += 1
         row = {"it": it, "beta": round(beta, 3), **{k: round(v / max(1, n), 5) for k, v in stats.items()},
-               "move_share": round(n_move / (STEPS * args.envs), 3), "reward_per_step": round(rew_sum / STEPS, 4),
+               "move_share": round(n_move / (STEPS * args.envs), 3), "recover_share": round(n_rec / (STEPS * args.envs), 3),
+               "reward_per_step": round(rew_sum / STEPS, 4),
                "episode_ends": done_sum, "elapsed_s": round(time.time() - t0, 1)}
         log.append(row)
         print(json.dumps(row), flush=True)

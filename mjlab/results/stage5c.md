@@ -84,7 +84,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 12 | s5c-12-kickstart | **kickstart** (D-082): walking teacher on move episodes + the starting executor on ball episodes, distilled through latent-07 at lambda 3 | s5c-02/model_28400 | model_29585 (cap) | **22.1 %**; 3/55 cells; **move arrival 76-99 % per direction** | **3.585** |
 | 13 | s5c-13-court-l3 | PPO on the court drill at lambda 3 (task Picklebot-Latent-Court-L3-G1) from the kickstarted executor | s5c-12/model_29585 | **stopped after about 200 of an expected 1,000 iterations** (counted): falls 158-315 per logging interval, legal 0 | - | - |
 | 14 | s5c-14-court-l3-std | run 13 with the latent action-noise std x 1/3 (`scripts/rescale_action_std.py`) | s5c-12/model_29585_std3 | model_30500 | **74.9 %**; 42/55 cells; **move arrival 0 %** | 3.868 |
-| 15 | s5c-15-kickstart2 | kickstart (D-084): ball episodes copy run 14's latent exactly, move episodes copy the walking teacher; no PPO | s5c-14/model_30500 | checkpoint at the 6,900 s cap | | |
+| 15 | s5c-15-kickstart2 | kickstart (D-084): ball episodes copy run 14's latent exactly, move episodes copy the walking teacher; no PPO | s5c-14/model_30500 | model_31675 (cap) | **74.5 %**; 42/55 cells; **move arrival 46-97 %** | 3.872 |
+| 16 | s5c-16-recover | run 15's kickstart + the walking teacher in the recovery phase of ball episodes (D-085) | s5c-15/model_31675 | checkpoint at the 6,900 s cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -145,4 +146,10 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - **Move-to-spot arrival 0 %.** Style 3.868, recovery 1.68 m, falls 4.2 %.
   - Under PPO's action noise the robot never holds still long enough to "arrive", so nothing in training defended the footwork, and the prior penalty pulled the latent back.
 - **Kickstart diagnostic** (`artifacts/eval/ks_diag.py`): on evaluation states run 12 matched its starting executor's joint targets (MSE 0.004), but its latent was off by a median 0.14 prior sigmas per dimension. Hence D-084's exact latent copy for hitting.
+- **Run 15** (dev seeds 4200760-763), the **first executor with both skills**:
+  - **Hitting:** court main metric 74.5 %, 42/55 cells.
+  - **Footwork:** move-to-spot arrival fwd 88.5, fwd-left 45.5, left 67.1, back-left 95.0, back 96.5, back-right 95.2, right 92.4, fwd-right 82.7 %.
+  - **Still failing:** recovery 1.68 m, falls 4.0 %, style 3.872; Stage 5B backspin -11.4 and reach_deep -58.
+  - Volleys and lobs 0-1 %, reach_deep 0-28 %, cross_backhand 50-53 %.
+  - Ball episodes copy run 14, which never walks back to the recovery spot, hence D-085.
 
