@@ -296,6 +296,7 @@ register_mjlab_task(task_id=TASK_TRACKING_TENNIS_PREVIEW,
 # Stage 5B style prior (stage5b-style.md): S-D3b's task plus an AMP-style discriminator reward (picklebot_mj/style.py)
 # against the Tennis-MoCap strokes (v5) and LAFAN1 footwork (24 clips). One change: the style reward, weight 0.5.
 import os  # noqa: E402
+from dataclasses import asdict  # noqa: E402
 
 from mjlab.managers.reward_manager import RewardTermCfg  # noqa: E402
 
@@ -963,4 +964,36 @@ def _latent_court_volley_l3(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_COURT_VOLLEY_L3, env_cfg=_latent_court_volley_l3(),
                     play_env_cfg=_latent_court_volley_l3(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# Stage 5C run 19 (D-086): the residual executor. The lambda-3 court task with the latent action term replaced by a
+# residual around a frozen two-skill executor (RES_BASE, chosen after run 18's evaluation), lam_r 1, wrist_r 0.1, and the
+# prior penalty replaced by the residual penalty (same weight 0.05, 3x in move-to-spot episodes). PICKLEBOT_RES_BASE
+# overrides the frozen executor for checks only (the zero-residual reproduction test); training runs use RES_BASE.
+import os  # noqa: E402
+
+from picklebot_mj.tasks.latent_reach import ResidualLatentActionCfg, residual_prior_nll  # noqa: E402
+
+TASK_LATENT_COURT_RES = "Picklebot-Latent-Court-Res-G1"
+RES_BASE = str(Path(__file__).resolve().parents[2] / "artifacts" / "train" / "logs" / "picklebot_return_stand"
+               / "2026-10-16_05-35-35_s5c-18-merge17" / "model_32874.pt")
+
+
+def _latent_court_res(play=False):
+    cfg = _latent_court_l3(play)
+    lt = cfg.actions["latent"]
+    rl = asdict(_latent_drill3_lowent_rl_cfg())["actor"]
+    res = ResidualLatentActionCfg(entity_name=lt.entity_name, actuator_names=lt.actuator_names, scale=lt.scale,
+                                  use_default_offset=lt.use_default_offset, checkpoint=lt.checkpoint, lam=lt.lam,
+                                  wrist_residual=lt.wrist_residual, latent=lt.latent,
+                                  base_checkpoint=os.environ.get("PICKLEBOT_RES_BASE", RES_BASE),
+                                  base_actor_cfg={k: rl[k] for k in ("activation", "obs_normalization", "distribution_cfg")},
+                                  lam_r=1.0, wrist_r=0.1)
+    cfg.actions = {"latent": res, "ball": cfg.actions["ball"]}
+    cfg.rewards["latent_prior"] = RewardTermCfg(func=residual_prior_nll, weight=-0.05)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_RES, env_cfg=_latent_court_res(), play_env_cfg=_latent_court_res(True),
+                    rl_cfg=_latent_drill3_lowent_rl_cfg())
 

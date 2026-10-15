@@ -144,11 +144,13 @@ LP_EASY.update({
     "lob": replace(COURT_FAMILIES_CFG["lob"], bounce_x=(-6.2, -5.8)),  # about 0.5 m behind
     "cross_forehand": replace(COURT_FAMILIES_CFG["cross_forehand"], lateral_y=(-2.5, -1.8)),
     "cross_backhand": replace(COURT_FAMILIES_CFG["cross_backhand"], lateral_y=(1.8, 2.5)),
-    # narrower: about 0.75-1.2 m at the pelvis, the spread mostly from the court zone (D-078)
-    "volley_forehand": replace(COURT_FAMILIES_CFG["volley_forehand"], start_z=(1.05, 1.15), flight_time=(0.78, 0.82),
-                               bounce_x=(-8.5, -8.3)),
-    "volley_backhand": replace(COURT_FAMILIES_CFG["volley_backhand"], start_z=(1.05, 1.15), flight_time=(0.78, 0.82),
-                               bounce_x=(-8.5, -8.3)),
+    # Volley on-ramp (D-086): the slowest ball the net feeder can send that still passes the pelvis at paddle height:
+    # 0.7-1.2 m high at 5.7-7.7 m/s (mid to front zone; artifacts/eval/volley_soft.py), against 7-10.5 m/s for the full
+    # family. A gentler ball from the net would arc above the robot (gravity), so 4-6 m/s is not reachable this way.
+    "volley_forehand": replace(COURT_FAMILIES_CFG["volley_forehand"], start_z=(0.95, 1.05), flight_time=(0.98, 1.02),
+                               bounce_x=(-7.5, -7.3)),
+    "volley_backhand": replace(COURT_FAMILIES_CFG["volley_backhand"], start_z=(0.95, 1.05), flight_time=(0.98, 1.02),
+                               bounce_x=(-7.5, -7.3)),
 })
 
 # Court zones by the robot's pelvis x at feed time (court-local; baseline x = -6.71, kitchen line x = -2.13).

@@ -13,6 +13,9 @@ bash scripts/stage2_eval.sh $RUN $CK --task $T --envs 2048 --seconds 24 --move-p
 bash scripts/stage2_eval.sh $RUN $CK --task $T --envs 2048 --seconds 24 --move-prob 1.0 --swing-prob 0.0 --families every --target A --no-hint --seed $((S+1)) --json $R-move.json > /tmp/h5c_${TAG}.log 2>&1; check $? $R-move.json
 # 3. Regression on the Stage 5B drill (its task: baseline starts, fixed recovery), no hint.
 bash scripts/stage2_eval.sh $RUN $CK --task $T5B --envs 2048 --seconds 16 --move-prob 0.0 --swing-prob 0.0 --families drill5b --target A --no-hint --seed $((S+2)) --json $R-drill5b.json > /tmp/h5c_${TAG}.log 2>&1; check $? $R-drill5b.json
+# 5. Recovery (D-086): court drill with an 8 s pause before the next feed, so the time-model deadline (1.5 s + 1.25 s/m
+#    after contact) comes first; also gives the stand-still baseline (gap to the spot at contact).
+bash scripts/stage2_eval.sh $RUN $CK --task $T --envs 1024 --seconds 30 --move-prob 0.0 --swing-prob 0.0 --families every --target A --no-hint --recovery random --refeed-delay 8 --seed $((S+4)) --json $R-recovery.json > /tmp/h5c_${TAG}.log 2>&1; check $? $R-recovery.json
 # 4. Style score on the court drill.
 DIR="$(ls -d artifacts/train/logs/picklebot_return_stand/*_"$RUN" | tail -1)"  # exact run name (D-086)
 $P scripts/motion/style_score.py --checkpoint "$DIR/$CK" --task $T --seed $((S+3)) --json $R-style.json > /tmp/h5c_${TAG}_style.log 2>&1; check $? $R-style.json

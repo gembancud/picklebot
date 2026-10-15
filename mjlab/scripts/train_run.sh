@@ -11,6 +11,7 @@ OUT="$REPO/mjlab/artifacts/train"
 mkdir -p "$OUT"
 source "$HOME/envs/picklebot-mj/bin/activate"
 export PYTHONWARNINGS=ignore
+export TORCH_ALLOW_TF32_CUBLAS_OVERRIDE=1  # TF32 matmuls (D-086)
 cd "$REPO/mjlab"
 echo "{\"run\": \"$RUN\", \"task\": \"$TASK\", \"envs\": \"${PICKLEBOT_ENVS:-4096}\", \"extra\": \"$*\", \"started\": \"$(date -Is)\", \"wall_cap_s\": 7000}" > "$OUT/$RUN.launch.json"
 timeout 7000s train "$TASK" --env.scene.num-envs "${PICKLEBOT_ENVS:-4096}" --agent.save-interval 100 --agent.logger tensorboard \

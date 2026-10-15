@@ -288,3 +288,98 @@ def latent_reach_env_cfg(checkpoint: str, motion_file: str, play: bool = False, 
     cfg.events = keep
     cfg.episode_length_s = 10.0
     return cfg
+
+
+# Stage 5C run 19 (D-086): a residual executor around a frozen two-skill executor.
+#   z = mu_p(s) + lam * sigma_p(s) * tanh(a_ref) + lam_r * sigma_p(s) * tanh(a)
+# a_ref is the frozen executor's own (deterministic) action on the same actor observation, with that observation's
+# last-action term replaced by the frozen executor's own last action (not the residual's). With a = 0 the term
+# reproduces the frozen executor exactly. The wrist residual adds wrist_r * tanh(a_wrist) to the frozen executor's.
+@dataclass(kw_only=True)
+class ResidualLatentActionCfg(LatentJointPositionActionCfg):
+    base_checkpoint: str = ""
+    base_actor_cfg: dict = field(default_factory=dict)  # MLPModel kwargs: activation, obs_normalization, distribution_cfg
+    lam_r: float = 1.0
+    wrist_r: float = 0.1
+
+    def build(self, env):
+        return ResidualLatentAction(self, env)
+
+
+class ResidualLatentAction(LatentJointPositionAction):
+    cfg: ResidualLatentActionCfg
+
+    def __init__(self, cfg, env):
+        super().__init__(cfg, env)
+        self._env_ref = env
+        self.base = None  # built on the first step, once the observation manager exists
+        self.base_last = torch.zeros(self.num_envs, self._action_dim, device=self.device)
+        self.a_ref = torch.zeros(self.num_envs, self._action_dim, device=self.device)
+
+    def _build_base(self, obs_dim: int):
+        from rsl_rl.models.mlp_model import MLPModel
+        from tensordict import TensorDict
+
+        sd = torch.load(self.cfg.base_checkpoint, map_location=self.device, weights_only=False)["actor_state_dict"]
+        ws = sorted((int(k.split(".")[1]), v.shape[0]) for k, v in sd.items()
+                    if k.startswith("mlp.") and k.endswith(".weight"))
+        kw = dict(self.cfg.base_actor_cfg)
+        kw["hidden_dims"] = tuple(n for _, n in ws[:-1])
+        base = MLPModel(TensorDict({"actor": torch.zeros(1, obs_dim)}, batch_size=[1]), {"actor": ["actor"]}, "actor",
+                        self._action_dim, **kw).to(self.device)
+        base.load_state_dict(sd, strict=True)
+        base.eval()
+        for p in base.parameters():
+            p.requires_grad_(False)
+        om = self._env_ref.observation_manager
+        start = 0
+        for n, d in zip(om.active_terms["actor"], om.group_obs_term_dim["actor"]):
+            w = int(torch.tensor(d).prod())
+            if n == "actions":
+                self._act_slice = slice(start, start + w)
+            start += w
+        self.base = base
+
+    def base_action(self) -> torch.Tensor:
+        from tensordict import TensorDict
+
+        x = self._env_ref.obs_buf["actor"]
+        if self.base is None:
+            self._build_base(x.shape[1])
+        x = x.clone()
+        x[:, self._act_slice] = self.base_last
+        with torch.no_grad():
+            return self.base(TensorDict({"actor": x}, batch_size=[x.shape[0]])).clone()
+
+    def process_actions(self, actions: torch.Tensor):
+        self._raw_actions[:] = actions
+        a_ref = self.base_action()
+        self.a_ref = a_ref
+        self.base_last = a_ref.clone()
+        L = self.cfg.latent
+        with torch.no_grad():
+            obs = self.controller_obs()
+            mu, logstd = self.model.prior_dist(obs)
+            sig = logstd.exp()
+            z = mu + self.cfg.lam * sig * torch.tanh(a_ref[:, :L]) + self.cfg.lam_r * sig * torch.tanh(actions[:, :L])
+            dec = self.model.decode(obs, z)
+        self.dec = dec.clone()
+        self._processed_actions = dec * self._scale + self._offset
+        self._processed_actions[:, self.wrist] += (self.cfg.wrist_residual * torch.tanh(a_ref[:, L:])
+                                                   + self.cfg.wrist_r * torch.tanh(actions[:, L:]))
+
+    def reset(self, env_ids=None):
+        super().reset(env_ids)
+        self.base_last[env_ids] = 0.0  # the action manager zeroes the last action at a reset, as the base was trained
+
+
+def residual_prior_nll(env, action_name="latent", move_weight=3.0):
+    """Residual penalty (D-086): sum over latent dims of (lam_r * tanh(a))^2, the squared distance of the latent from
+    the frozen executor's in prior-std units; move_weight times heavier in move-to-spot episodes (protects footwork)."""
+    term = env.action_manager.get_term(action_name)
+    a = term.raw_action[:, :term.cfg.latent]
+    pen = (term.cfg.lam_r * torch.tanh(a)).pow(2).sum(-1)
+    ball = env.action_manager.get_term("ball")
+    if getattr(ball, "drill", None) is not None:
+        pen = pen * (1.0 + (move_weight - 1.0) * ball.drill.move_ep.float())
+    return pen

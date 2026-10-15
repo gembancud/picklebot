@@ -65,6 +65,8 @@ def main():
     ap.add_argument("--no-hint", action="store_true", help="real-ball episodes without the stance hint (spot input = recovery)")
     ap.add_argument("--recovery", choices=["fixed", "random"], default="fixed",
                     help="recovery spot in evaluation: baseline centre (Stage 5) or random over the task's recovery box (5C)")
+    ap.add_argument("--refeed-delay", type=float, default=None,
+                    help="seconds between a rally's end and the next feed (recovery evaluation, D-086: 8 s)")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
@@ -92,6 +94,8 @@ def main():
         cfg.actions["ball"].feed_anchor = "start"
     if cfg.actions["ball"].recovery:
         cfg.actions["ball"].recovery_mode = args.recovery  # baseline centre (default) or court-wide random (5C)
+    if args.refeed_delay is not None:
+        cfg.actions["ball"].refeed_delay_s = args.refeed_delay
     cfg.scene.num_envs = args.envs
     cfg.seed = args.seed
     cfg.actions["ball"].seed = args.seed
@@ -139,6 +143,10 @@ def main():
         term.ep_zone_family.zero_()
     term.land_family.zero_()
     term.recover_hist.zero_()
+    if hasattr(term, "recover_hist_tm"):
+        term.recover_hist_tm.zero_()
+        term.gap_hist.zero_()
+        term.rec_tm_unscored.zero_()
     for v in term.ep.values():
         v.zero_()
     obs = venv.get_observations()
@@ -214,7 +222,19 @@ def main():
         cdf = h.cumsum(0) / max(n_rec, 1)
         q = lambda p: round(float(((cdf < p).sum() + 0.5) * 0.05), 3) if n_rec else None
         out["recovery"] = {"feeds_scored": n_rec, "error_median_m": q(0.5), "error_p90_m": q(0.9),
-                           "spot": "fixed baseline centre", "bin_m": 0.05}
+                           "spot": args.recovery, "bin_m": 0.05}
+        if hasattr(term, "recover_hist_tm"):  # D-086: time-model score and the stand-still baseline (gap at contact)
+            def med(hist, p=0.5):
+                h2 = hist.cpu().double()
+                n2 = int(h2.sum())
+                c2 = h2.cumsum(0) / max(n2, 1)
+                return (round(float(((c2 < p).sum() + 0.5) * 0.05), 3) if n2 else None), n2
+            tm, n_tm = med(term.recover_hist_tm)
+            g0, _ = med(term.gap_hist)
+            out["recovery"].update({"time_model_error_median_m": tm, "time_model_error_p90_m": med(term.recover_hist_tm, 0.9)[0],
+                                    "time_model_scored": n_tm, "stand_still_gap_median_m": g0,
+                                    "time_model_unscored_next_feed_first": int(term.rec_tm_unscored),
+                                    "refeed_delay_s": term.cfg.refeed_delay_s})
     print(json.dumps(out, indent=1))
     print(f"{'family':14s} {'episodes':>8s} {'contact':>8s} {'legal return [95% CI]':>24s} {'fall':>6s}")
     for name, r in table.items():

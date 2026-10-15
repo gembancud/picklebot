@@ -35,7 +35,15 @@ arr = {SECTOR_NAMES[v["sector"]]: v.get("arrival_rate") for v in sectors}
 bad = {k: r for k, r in arr.items() if r is None or r < 0.9}
 checks["move arrival >= 90 % per direction"] = (not bad and bool(arr), f"{arr}")
 rec = court.get("recovery", {}).get("error_median_m")
-checks["recovery <= 0.5 m"] = (rec is not None and rec <= 0.5, f"{rec}")
+try:  # D-086: the gate reads the time-model score; the at-next-feed score and the stand-still gap are reported with it
+    rr = json.load(open(f"{R}-recovery.json"))["recovery"]
+    rec_tm = rr.get("time_model_error_median_m")
+    checks["recovery <= 0.5 m"] = (rec_tm is not None and rec_tm <= 0.5,
+                                   f"time model {rec_tm} (stand-still gap {rr.get('stand_still_gap_median_m')}, "
+                                   f"scored {rr.get('time_model_scored')}, unscored {rr.get('time_model_unscored_next_feed_first')}); "
+                                   f"at next feed {rec}")
+except FileNotFoundError:
+    checks["recovery <= 0.5 m"] = (rec is not None and rec <= 0.5, f"at next feed {rec} (no time-model evaluation)")
 falls_court, falls_move = court["robot_fall_rate_per_episode"], move.get("robot_fall_rate_per_episode", 0.0)
 falls = max(falls_court, falls_move)
 checks["falls <= 1 %"] = (falls <= 0.01, f"court {falls_court}, move drill {falls_move}")

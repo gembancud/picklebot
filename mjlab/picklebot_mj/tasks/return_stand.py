@@ -59,6 +59,9 @@ RECOVERY_BOX = ((-6.2, -5.0), (-1.5, 1.5))  # training: sampled per feed (x rang
 RECOVERY_FIXED = (-5.6, 0.0)  # evaluation: baseline centre
 RECOVERY_STD = 0.5  # reward exp(-(d / std)^2)
 RECOVERY_BIN = 0.05  # error histogram bin width (m), 100 bins
+# Time-model recovery score (D-086): the error is read 1.5 s + 1.25 s/m (the move drill's time limit) after the first
+# legal contact, the distance being the gap to the recovery spot at contact. Reported next to the at-next-feed score.
+RECOVERY_TM_BASE_S, RECOVERY_TM_PER_M = 1.5, 1.25
 REACH_PROMOTE, REACH_MIN_FEEDS, REACH_STEP = 0.7, 300, 0.1  # Drill 3 curriculum: widen at 70 % legal over 300+ feeds
 WIDE_SHAPING_STD = 1.5  # run F2: approach_far and recovery kernels (m)
 
@@ -165,6 +168,13 @@ class BallPhysicsAction(ActionTerm):
         self.recover_xy = torch.tensor(RECOVERY_FIXED, device=dev).repeat(n, 1)
         # Recovery error at the next feed's launch, for feeds the robot hit: histogram (no host sync).
         self.recover_hist = torch.zeros(100, dtype=torch.long, device=dev)
+        # Time-model recovery score and the stand-still baseline (gap to the spot at contact), D-086.
+        self.recover_hist_tm = torch.zeros(100, dtype=torch.long, device=dev)
+        self.gap_hist = torch.zeros(100, dtype=torch.long, device=dev)
+        self.rec_tm_unscored = torch.zeros((), dtype=torch.long, device=dev)  # next feed came before the deadline
+        self.rec_t = torch.full((n,), -1.0, device=dev)
+        self.rec_gap0 = torch.zeros(n, device=dev)
+        self.rec_scored = torch.zeros(n, dtype=torch.bool, device=dev)
         self.fam_sampler = None
         # Drill 3 reach curriculum: per-family scale between the near version and the full family.
         near_set = REACH_NEAR_V2 if getattr(cfg, "reach_near_set", "v1") == "v2" else REACH_NEAR
@@ -303,6 +313,9 @@ class BallPhysicsAction(ActionTerm):
         for f in (self.hit_done, self.hit_now, self.return_done, self.return_now, self.lost_now, self._prev_dead,
                   self.tallied):
             f[env_ids] = False
+        if self.cfg.recovery:
+            self.rec_t[env_ids] = -1.0
+            self.rec_scored[env_ids] = False
         self.wrench[env_ids] = 0.0
         self.refeed_timer[env_ids] = -1.0
         if self.drill is not None:
@@ -401,6 +414,10 @@ class BallPhysicsAction(ActionTerm):
             self.rules.begin_from_feed_masked(fire & volley, FEEDER_PLAYER, must_bounce=False)
         else:
             self.rules.begin_from_feed_masked(fire, FEEDER_PLAYER, must_bounce=True)
+        if self.cfg.recovery:  # a feed that came before its time-model deadline is counted, not scored
+            self.rec_tm_unscored += (fire & (self.rec_t >= 0) & ~self.rec_scored).sum()
+            self.rec_t = torch.where(fire, torch.full_like(self.rec_t, -1.0), self.rec_t)
+            self.rec_scored = self.rec_scored & ~fire
         for name in ("hit_done", "return_done", "tallied", "_prev_dead"):
             setattr(self, name, getattr(self, name) & ~fire)
         self.refeed_timer = torch.where(fire, torch.full_like(self.refeed_timer, -1.0), self.refeed_timer)
@@ -606,6 +623,18 @@ class BallPhysicsAction(ActionTerm):
         if self.shadow is not None:
             self.shadow.step(dt, ev.court_contact & live, paddle.pos, paddle.lin_vel,
                              data.root_link_lin_vel_b[:, :2].norm(dim=-1))
+        if self.cfg.recovery:  # time-model recovery score (D-086), masked tensor math (no host sync)
+            first_c = self.hit_done & (self.rec_t < 0)
+            gap = (self.pelvis_xy() - self.recover_xy).norm(dim=-1)
+            self.rec_gap0 = torch.where(first_c, gap, self.rec_gap0)
+            self.rec_t = torch.where(first_c, torch.zeros_like(self.rec_t), self.rec_t)
+            act = self.rec_t >= 0
+            self.rec_t = torch.where(act, self.rec_t + dt, self.rec_t)
+            due = act & ~self.rec_scored & (self.rec_t >= RECOVERY_TM_BASE_S + RECOVERY_TM_PER_M * self.rec_gap0)
+            nb = self.recover_hist_tm.shape[0] - 1
+            self.recover_hist_tm.index_add_(0, (gap.nan_to_num(1e3) / RECOVERY_BIN).clamp(0, nb).long(), due.long())
+            self.gap_hist.index_add_(0, (self.rec_gap0.nan_to_num(1e3) / RECOVERY_BIN).clamp(0, nb).long(), due.long())
+            self.rec_scored = self.rec_scored | due
         # Feeding machine: count the finished rally, wait, then feed the next ball (no robot reset).
         over = (self.rules.dead | self.return_done) & ~self.tallied
         self._tally(over, torch.zeros_like(over))

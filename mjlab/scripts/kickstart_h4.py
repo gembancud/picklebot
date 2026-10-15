@@ -88,7 +88,10 @@ def main():
     ap.add_argument("--hit-loss", choices=["joint", "latent"], default="joint")
     ap.add_argument("--hit-weight", type=float, default=1.0)
     ap.add_argument("--family-teacher", action="append", default=[],
-                    help="FAMILIES=CK: ball episodes of these comma-separated families copy CK's latent instead (D-086)")
+                    help="FAMILIES=CK[@LAM]: ball episodes of these comma-separated families copy CK's latent instead; "
+                         "LAM is that teacher's barrier (default --lam-self) (D-086)")
+    ap.add_argument("--early-stop", type=float, default=0.0,
+                    help="> 0: stop once mse_move improved by less than this fraction over the last 100 iterations")
     ap.add_argument("--recover", action="store_true", help="walking teacher after the hit in ball episodes (D-085)")
     ap.add_argument("--recover-delay", type=float, default=0.2, help="seconds after first contact")
     ap.add_argument("--teacher", default=TEACHER, help="walking teacher (move-to-spot episodes)")
@@ -138,10 +141,12 @@ def main():
     fam_teachers = []  # (family mask over FAMILY_NAMES, actor) for --family-teacher
     for spec in args.family_teacher:
         fams, ck = spec.split("=", 1)
+        ck, _, lam_f = ck.partition("@")
+        lam_f = float(lam_f) if lam_f else args.lam_self
         r3 = MjlabOnPolicyRunner(venv, copy.deepcopy(rl), device="cuda")
         r3.load(ck, load_cfg={"actor": True}, strict=True, map_location="cuda")
         mask = torch.tensor([f in fams.split(",") for f in FAMILY_NAMES], device="cuda")
-        fam_teachers.append((mask, r3.alg.actor.eval()))
+        fam_teachers.append((mask, r3.alg.actor.eval(), lam_f))
     # Teacher-layout column ranges of the ball terms (the student's 35-d last action becomes 29-d).
     cols, start = {}, 0
     for nm, dm in zip(env.observation_manager.active_terms["actor"], env.observation_manager.group_obs_term_dim["actor"]):
@@ -179,8 +184,9 @@ def main():
     it = start_it
     while True:
         el = time.time() - t0
-        beta = max(0.0, 1.0 - el / max(1e-6, args.beta_frac * args.max_seconds))
-        O, C, Y, M, A, rew_sum, done_sum, n_move, n_rec = [], [], [], [], [], 0.0, 0, 0, 0
+        # D-086: --beta-frac 0 means no beta phase at all (it used to give beta ~0.5 on the first iteration).
+        beta = 0.0 if args.beta_frac <= 0 else max(0.0, 1.0 - el / (args.beta_frac * args.max_seconds))
+        O, C, Y, M, A, LS, rew_sum, done_sum, n_move, n_rec = [], [], [], [], [], [], 0.0, 0, 0, 0
         with torch.no_grad():  # the actor stays in train mode so its observation normaliser updates
             for _ in range(STEPS):
                 x = obs["actor"]
@@ -198,30 +204,33 @@ def main():
                     move = move | rec  # imitate the walking teacher here too
                 y_walk = walker(TensorDict({"actor": tx}, batch_size=[args.envs]))
                 a_self = self_teacher(obs)
-                for fmask, fteach in fam_teachers:  # family specialists override the hitting teacher
+                lam_t = torch.full((args.envs, 1), args.lam_self, device="cuda")  # each teacher's own barrier
+                for fmask, fteach, lam_f in fam_teachers:  # family specialists override the hitting teacher
                     use_f = fmask[ball.family] & ~ball.drill.move_ep
                     a_self = torch.where(use_f.unsqueeze(-1), fteach(obs), a_self)
-                y_self = joint_target(term, a_self, ctrl, args.lam_self)
+                    lam_t = torch.where(use_f.unsqueeze(-1), torch.full_like(lam_t, lam_f), lam_t)
+                y_self = joint_target(term, a_self, ctrl, lam_t)
                 O.append(x.clone())
                 C.append(ctrl.clone())
                 Y.append(torch.where(move.unsqueeze(-1), y_walk, y_self))
                 M.append(move)
                 A.append(a_self.clone())
+                LS.append(lam_t.clone())
                 a = actor(obs)
                 if beta > 0.0:
                     use = torch.rand(args.envs, generator=gen, device="cuda") < beta
-                    a = torch.where(use.unsqueeze(-1), convert(a_self, lat, args.lam_self, lam), a)
+                    a = torch.where(use.unsqueeze(-1), convert(a_self, lat, lam_t, lam), a)
                 obs, rew, dones, _ = venv.step(a)
                 last_exec = executed_joint_action(term).clone()
                 last_exec[dones.bool()] = 0.0  # the action term resets its last action at an episode end
                 rew_sum += float(rew.mean())
                 done_sum += int(dones.sum())
                 n_move += int(move.sum())
-        bufs.append((torch.cat(O), torch.cat(C), torch.cat(Y), torch.cat(M), torch.cat(A)))
+        bufs.append((torch.cat(O), torch.cat(C), torch.cat(Y), torch.cat(M), torch.cat(A), torch.cat(LS)))
         bufs = bufs[-args.buffer:]
         stats, n = {"mse_move": 0.0, "mse_hit": 0.0, "lat": 0.0}, 0
         for _ in range(args.epochs):
-            for o_, c_, y_, m_, s_ in bufs:
+            for o_, c_, y_, m_, s_, l_ in bufs:
                 perm = torch.randperm(len(o_), device="cuda")
                 for i in range(0, len(o_), args.batch):
                     idx = perm[i:i + args.batch]
@@ -231,7 +240,7 @@ def main():
                     mv = m_[idx].float()
                     if args.hit_loss == "latent":  # ball episodes: match the hitting teacher's latent and wrist exactly
                         at = s_[idx]
-                        e_lat = ((lam * torch.tanh(a[:, :lat]) - args.lam_self * torch.tanh(at[:, :lat])) ** 2).mean(-1)
+                        e_lat = ((lam * torch.tanh(a[:, :lat]) - l_[idx] * torch.tanh(at[:, :lat])) ** 2).mean(-1)
                         e_w = ((torch.tanh(a[:, lat:]) - torch.tanh(at[:, lat:])) ** 2).mean(-1)
                         err = torch.where(mv > 0, err, args.hit_weight * (e_lat + e_w))
                     lat_pen = ((lam * torch.tanh(a[:, :lat])) ** 2).mean()
@@ -252,6 +261,11 @@ def main():
         log.append(row)
         print(json.dumps(row), flush=True)
         stop = time.time() - t0 > args.max_seconds
+        if args.early_stop > 0 and len(log) > 100:
+            old, new = log[-101]["mse_move"], row["mse_move"]
+            if old > 0 and (old - new) / old < args.early_stop:
+                stop = True
+                print(json.dumps({"early_stop": "mse_move plateau", "it": it}), flush=True)
         if it % args.save_every == 0 or stop:
             torch.save({"actor_state_dict": actor.state_dict(), "critic_state_dict": runner.alg.critic.state_dict(),
                         "optimizer_state_dict": runner.alg.optimizer.state_dict(), "iter": it, "infos": None},

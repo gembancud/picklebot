@@ -87,7 +87,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 15 | s5c-15-kickstart2 | kickstart (D-084): ball episodes copy run 14's latent exactly, move episodes copy the walking teacher; no PPO | s5c-14/model_30500 | model_31675 (cap) | **74.5 %**; 42/55 cells; **move arrival 46-97 %** | 3.872 |
 | 16 | s5c-16-recover | run 15's kickstart + the walking teacher in the recovery phase of ball episodes (D-085) | s5c-15/model_31675 | model_32841 (cap) | **47.3 %**; 8/55 cells; move arrival 79-96 %; **falls 24 %** | 4.099 |
 | 17 | s5c-17-court-l3-more | PPO continuation of run 14 (the hitting teacher), seed 2; nothing else | s5c-14/model_30500 | model_31400 | **80.4 %**; 42/55 cells; falls in every move episode | 4.016 |
-| 18 | s5c-18-merge17 | run 15's kickstart recipe (D-084) with run 17 as the hitting teacher, from run 15 | s5c-15/model_31675 | checkpoint at the 6,900 s cap | | |
+| 18 | s5c-18-merge17 | run 15's kickstart recipe (D-084) with run 17 as the hitting teacher, from run 15 | s5c-15/model_31675 | model_32874 (cap) | **79.9 %**; 42/55 cells; **move arrival 84-98 %**; move-drill falls 0.99 % | 4.008 |
+| 19 | s5c-19-residual | **residual executor** around frozen run 18 (D-086): lam_r 1, wrist_r 0.1, residual penalty 0.05 (3x in move episodes), residual output zero-initialised, std 0.1 | s5c-19-init/model_0 (= run 18) | last checkpoint before the cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -172,4 +173,14 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - Recovery as scored gives 1.675 m whatever the policy.
   - From now on: falls = the worse of the court and move-to-spot drills, cells under 30 episodes are unresolved, evaluation failures stop the summary, and the final evaluation pools 4+ seeds per cell.
   - Re-scored with the new fall rule: run 15 falls 4.0 % (court) / 1.4 % (move); run 17 falls 3.6 % / **100 %** (move).
+- **Run 18** (dev seeds 4200790-794; D-086 evaluation with the time-model recovery job):
+  - **Hitting:** main metric 79.9 % (run 17: 80.4 %).
+  - **Footwork:** move-to-spot arrival fwd 91.9, fwd-left 83.8, left 91.9, back-left 97.7, back 96.3, back-right 98.5, right 96.7, fwd-right 84.4 %.
+  - **Falls:** 3.6 % court, 0.99 % move drill.
+  - **Recovery:** 1.375 m on the time model against a stand-still gap of 2.075 m (1.675 m at the next feed).
+  - **Style:** 4.008.
+  - **Stage 5B regression:** backspin -11.8 and reach_deep -25.4.
+  - **Still near zero:** volleys 0 %, lob 35-47 %, reach_deep 12-18 % (mid, front).
+  - Run 18 is the best two-skill executor and the base for run 19.
+  - All 24 court tests pass with the D-086 code changes.
 
