@@ -86,7 +86,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 14 | s5c-14-court-l3-std | run 13 with the latent action-noise std x 1/3 (`scripts/rescale_action_std.py`) | s5c-12/model_29585_std3 | model_30500 | **74.9 %**; 42/55 cells; **move arrival 0 %** | 3.868 |
 | 15 | s5c-15-kickstart2 | kickstart (D-084): ball episodes copy run 14's latent exactly, move episodes copy the walking teacher; no PPO | s5c-14/model_30500 | model_31675 (cap) | **74.5 %**; 42/55 cells; **move arrival 46-97 %** | 3.872 |
 | 16 | s5c-16-recover | run 15's kickstart + the walking teacher in the recovery phase of ball episodes (D-085) | s5c-15/model_31675 | model_32841 (cap) | **47.3 %**; 8/55 cells; move arrival 79-96 %; **falls 24 %** | 4.099 |
-| 17 | s5c-17-court-l3-more | PPO continuation of run 14 (the hitting teacher), seed 2; nothing else | s5c-14/model_30500 | last checkpoint before the cap | | |
+| 17 | s5c-17-court-l3-more | PPO continuation of run 14 (the hitting teacher), seed 2; nothing else | s5c-14/model_30500 | model_31400 | **80.4 %**; 42/55 cells; falls in every move episode | 4.016 |
+| 18 | s5c-18-merge17 | run 15's kickstart recipe (D-084) with run 17 as the hitting teacher, from run 15 | s5c-15/model_31675 | checkpoint at the 6,900 s cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -159,4 +160,9 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - Run 15 stays the best two-skill executor.
 - **Plateau count** (executor runs; main metric; best so far 74.9 %, run 14): run 15 (-0.4) and run 16 (-27.6) are the first two in a row under +1 point.
 - **Run 17:** the most likely +1 point is more PPO on the hitting teacher. Run 14's legal-return reward was still rising at its cap (0.66 -> 0.73 over its last 600 iterations). The footwork can then be put back by kickstarting (run 15's recipe).
+- **Run 17** (dev seeds 4200780-783): **main metric 80.4 % (+5.5 over run 14), so the plateau count resets.**
+  - Lob 41-48 % (from 1-2 %), reach_deep 68 % (back) / 13-17 % (mid, front), cross_backhand 70-74 %.
+  - Volleys still 0 % (contact 0 / 0.4 %). Style 4.016, falls 3.6 %.
+  - Stage 5B families within 5 points of h4-25b except backspin (-15) and reach_deep (-19.5).
+  - In move-only episodes it falls every time (robot fall rate 1.0 per episode), so PPO keeps no footwork. It serves as the hitting teacher for run 18.
 
