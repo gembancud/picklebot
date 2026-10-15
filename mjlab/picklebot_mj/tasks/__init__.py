@@ -892,3 +892,21 @@ def _tracking_tennis_lafan4(play=False):
 register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN4_HUGE, env_cfg=_tracking_tennis_lafan4(),
                     play_env_cfg=_tracking_tennis_lafan4(True), rl_cfg=_tracking_huge_rl_cfg(),
                     runner_cls=MotionTrackingOnPolicyRunner)
+
+
+# Stage 5C run 11 (D-081): the agility walker at lambda 3 (run 9's task) on the H1 controller distilled with the
+# walking teacher's footwork (s5c-10-h1footwork/latent_12135, from latent-07). Only the controller changes from run 9.
+LATENT_CONTROLLER_F = str(Path(__file__).resolve().parents[2] / "artifacts" / "train" / "latent" / "s5c-10-h1footwork"
+                          / "latent_12135.pt")
+TASK_LATENT_REACH_AGILITY_F_L3 = "Picklebot-Latent-Reach-Agility-F-L3-G1"
+
+
+def _latent_reach_agility_f_l3(play=False):
+    cfg = _latent_reach_agility_l3(play)
+    cfg.actions["latent"].checkpoint = LATENT_CONTROLLER_F
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_REACH_AGILITY_F_L3, env_cfg=_latent_reach_agility_f_l3(),
+                    play_env_cfg=_latent_reach_agility_f_l3(True), rl_cfg=_latent_reach_rl_cfg())
+
