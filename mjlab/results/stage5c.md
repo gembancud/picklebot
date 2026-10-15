@@ -85,7 +85,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 13 | s5c-13-court-l3 | PPO on the court drill at lambda 3 (task Picklebot-Latent-Court-L3-G1) from the kickstarted executor | s5c-12/model_29585 | **stopped after about 200 of an expected 1,000 iterations** (counted): falls 158-315 per logging interval, legal 0 | - | - |
 | 14 | s5c-14-court-l3-std | run 13 with the latent action-noise std x 1/3 (`scripts/rescale_action_std.py`) | s5c-12/model_29585_std3 | model_30500 | **74.9 %**; 42/55 cells; **move arrival 0 %** | 3.868 |
 | 15 | s5c-15-kickstart2 | kickstart (D-084): ball episodes copy run 14's latent exactly, move episodes copy the walking teacher; no PPO | s5c-14/model_30500 | model_31675 (cap) | **74.5 %**; 42/55 cells; **move arrival 46-97 %** | 3.872 |
-| 16 | s5c-16-recover | run 15's kickstart + the walking teacher in the recovery phase of ball episodes (D-085) | s5c-15/model_31675 | checkpoint at the 6,900 s cap | | |
+| 16 | s5c-16-recover | run 15's kickstart + the walking teacher in the recovery phase of ball episodes (D-085) | s5c-15/model_31675 | model_32841 (cap) | **47.3 %**; 8/55 cells; move arrival 79-96 %; **falls 24 %** | 4.099 |
+| 17 | s5c-17-court-l3-more | PPO continuation of run 14 (the hitting teacher), seed 2; nothing else | s5c-14/model_30500 | last checkpoint before the cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -152,4 +153,10 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - **Still failing:** recovery 1.68 m, falls 4.0 %, style 3.872; Stage 5B backspin -11.4 and reach_deep -58.
   - Volleys and lobs 0-1 %, reach_deep 0-28 %, cross_backhand 50-53 %.
   - Ball episodes copy run 14, which never walks back to the recovery spot, hence D-085.
+- **Run 16** (dev seeds 4200770-773): **D-085's recovery phase failed.** Main metric 47.3 % (run 15: 74.5 %), falls 24 %, style 4.10.
+  - Recovery (1.23 m vs 1.68 m) and move arrival (79-96 %) improved.
+  - Switching teachers 0.2 s after contact leaves the robot walking when the next feed comes. The hitting teacher never handled that state, so the robot falls.
+  - Run 15 stays the best two-skill executor.
+- **Plateau count** (executor runs; main metric; best so far 74.9 %, run 14): run 15 (-0.4) and run 16 (-27.6) are the first two in a row under +1 point.
+- **Run 17:** the most likely +1 point is more PPO on the hitting teacher. Run 14's legal-return reward was still rising at its cap (0.66 -> 0.73 over its last 600 iterations). The footwork can then be put back by kickstarting (run 15's recipe).
 
