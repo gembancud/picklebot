@@ -2059,3 +2059,42 @@ Decision:
 5. **Walker (run 11)** on the run-10 controller at lam = 3, measured per direction as before. The style of the footwork, and so of anything built on it, is judged by the style score in later executor runs (gate <= 3.86).
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
+
+### D-082 — Stage 5C: kickstart the executor's footwork from the walking teacher at lambda = 3
+
+- Date: 2026-10-15
+- Status: Accepted (loop)
+- Amends: D-081 (footwork path); D-057 (the distillation reasoning, for footwork only)
+
+Context:
+- **Run 11** (s5c-11-agility-f-l3; the fresh lambda-3 walker on the footwork controller s5c-10/latent_12135; dev seed 4200710). Within 25 cm at 1.5 m: forward 74 %, right 27 %, left 0.5 %, back 0 %.
+  - The run was cut at 1:51:42 of its cap when WSL shut down (no exit record; WSL was found stopped at 18:11).
+  - Its last checkpoint, model_2800, is at the same iteration as run 9's endpoint, so the two compare directly.
+- **Five walker runs, three controllers, two barriers: left and back never open up.** Travel toward 1.5 m targets in 2 s is about 0.35 m/s left and 0.25 m/s back, against 0.75 m/s forward.
+- **Expressiveness floor** (`mjlab/scripts/latent_reach_floor.py`, now with `--task/--latent/--move-prob`; walking teacher on move-only episodes, dev seed 4200720; `mjlab/results/stage5c-floor-move-*.json`). Per state, the best latent command reproduces the walking teacher's *leg* actions as follows (action variance 0.389):
+
+  | Controller | lam = 1 | lam = 3 |
+  |---|---:|---:|
+  | latent-07 | 0.072 MSE (59 % of latent commands saturated) | **0.027 MSE (93 % explained)** |
+  | Footwork controller s5c-10 | 0.099 | 0.061 |
+
+  The footwork controller fits worse: its decoder imitates H0's tracking actions on those clips, not the walking teacher's actions.
+- **Conclusion.** Through latent-07 at lambda = 3 the decoder can produce the walking teacher's footwork. PPO over the latent just never finds it from a ready stance.
+
+Decision: copy the footwork in directly, by kickstarting (two-teacher policy distillation; `mjlab/scripts/kickstart_h4.py`, tested).
+- **Teachers:**
+  - The walking teacher (`Picklebot-Teacher-Move-G1`/model_15900) gives the joint-space target in move-to-spot episodes.
+  - A frozen copy of the starting executor gives it in every other episode, scored with its own barrier, lam = 1, so hitting is kept.
+- **Student:** the executor on `Picklebot-Latent-Court-L3-G1` (the court drill with lam = 3), trained by MSE through the frozen latent-07 prior and decoder.
+- **Rollouts:** DAgger on the student's states, with 50 % move episodes. In the first 20 % of the budget, a decaying share of envs executes the starting executor's action converted to lam = 3 (the same latent), so the barrier switch does not start with falls.
+
+D-057's objection was that imitating the flat hitting student would push the executor to the edge of the human-motion space. Here only the footwork is imitated, and the floor shows it fits inside the lam = 3 barrier (93 % explained, 26 % saturated).
+
+Runs:
+- **Run 12:** the kickstart from s5c-02/model_28400. Fixed endpoint: the checkpoint at the 6,900 s cap. Evaluated with `h5c_eval.sh ... Picklebot-Latent-Court-L3-G1` on fresh dev seeds.
+  - Primary: move-to-spot arrival per direction, where all runs so far score 0 %.
+  - Kept: court legal returns, style, falls.
+- **Run 13:** PPO on the lam = 3 court task from run 12's endpoint, to win back what the distillation costs in hitting.
+- The style gate (<= 3.86) applies as before. The leg motion now comes from the walking teacher through the human-motion decoder, and the style score will show what that costs.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.

@@ -80,7 +80,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 8 | s5c-08-agility-l3 | run 1's walker on latent-07 with the latent barrier lambda 1 -> 3 (D-080); nothing else | s5c-01-agility/model_37300 | model_40100 | 1.5 m within 25 cm: fwd 63 %, right 33 %, **left 0.4 %, back 0 %** | |
 | 9 | s5c-09-agility-l3-fresh | run 8 without the warm start (fresh policy): the lineage from reach-06 never stepped left/back | none | model_2800 | 1.5 m within 25 cm: fwd 63 %, right 26 %, **left 0.2 %, back 0 %** | |
 | 10 | s5c-10-h1footwork | **H1** on tennis-lafan4: + the walking teacher's footwork clips (D-081); teacher run 3b | latent-07/latent_10651 | latent_12135 (cap) | 91.1 / 91.0; 86.4 / 87.2; footwork 100 / 100 | 0.51-0.59 % |
-| 11 | s5c-11-agility-f-l3 | run 9 (fresh walker, lambda 3) on the run-10 controller; only the controller changes | none | last checkpoint before the cap | | |
+| 11 | s5c-11-agility-f-l3 | run 9 (fresh walker, lambda 3) on the run-10 controller; only the controller changes | none | model_2800 (WSL shut down at 1:51:42; same iteration as run 9's endpoint) | 1.5 m within 25 cm: fwd 74 %, right 27 %, **left 0.5 %, back 0 %** | |
+| 12 | s5c-12-kickstart | **kickstart** (D-082): walking teacher on move episodes + the starting executor on ball episodes, distilled through latent-07 at lambda 3 | s5c-02/model_28400 | checkpoint at the 6,900 s cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -123,4 +124,10 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - Footwork 100 / 100 %. **The check is met.**
   - Serve 77.3 / 78.7 % (89.3 %) and smash 83.3 / 81.3 % (89.1 %) fall again, as in run 6. Serve is not part of any Stage 5C drill; smash will matter for lobs.
   - latent-07 also tracks the footwork windows at 100 % through its encoder. As with the mirrored clips, the question is the prior, which the walker tests.
+- **Run 11** (dev seed 4200710): no left/back gain on the footwork controller either. That makes five walker runs, three controllers and two barriers with left <= 0.5 % and back 0 %.
+- **Expressiveness floor** (`scripts/latent_reach_floor.py`; walking teacher, move-only, dev seed 4200720; `stage5c-floor-move-*.json`).
+  - Best per-state fit of the walking teacher's leg actions (variance 0.389) through latent-07: 0.072 MSE at lambda 1 (59 % of latent commands saturated) and **0.027 at lambda 3 (26 % saturated)**.
+  - The footwork controller does worse (0.099 / 0.061).
+  - The footwork is inside latent-07's reach at lambda 3; PPO does not find it.
+- **D-082:** kickstart the executor's footwork from the walking teacher through latent-07 at lambda 3 (`scripts/kickstart_h4.py`, `tests/test_kickstart_h4.py`), then PPO.
 

@@ -910,3 +910,19 @@ def _latent_reach_agility_f_l3(play=False):
 register_mjlab_task(task_id=TASK_LATENT_REACH_AGILITY_F_L3, env_cfg=_latent_reach_agility_f_l3(),
                     play_env_cfg=_latent_reach_agility_f_l3(True), rl_cfg=_latent_reach_rl_cfg())
 
+
+# Stage 5C (D-082): the court-wide executor task with the latent barrier widened, lambda 1 -> 3. At lambda 3 latent-07
+# reproduces the walking teacher's leg actions to 0.027 MSE (variance 0.389; lambda 1: 0.072), stage5c-floor-move-l07.json.
+# The executor is moved onto it by kickstart distillation (scripts/kickstart_h4.py), then PPO.
+TASK_LATENT_COURT_L3 = "Picklebot-Latent-Court-L3-G1"
+
+
+def _latent_court_l3(play=False):
+    cfg = _latent_court(play)
+    cfg.actions["latent"].lam = 3.0
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_L3, env_cfg=_latent_court_l3(), play_env_cfg=_latent_court_l3(True),
+                    rl_cfg=_latent_drill3_lowent_rl_cfg())
+

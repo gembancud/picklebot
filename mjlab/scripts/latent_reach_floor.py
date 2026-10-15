@@ -46,6 +46,9 @@ def main():
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--checkpoint", default=TEACHER)
+    ap.add_argument("--task", default=FLAT_TASK, help="the flat policy's task (Stage 5C: Picklebot-Teacher-Move-G1)")
+    ap.add_argument("--latent", default=LATENT, help="latent controller checkpoint")
+    ap.add_argument("--move-prob", type=float, default=0.0, help="share of move-to-spot episodes")
     ap.add_argument("--envs", type=int, default=256)
     ap.add_argument("--seconds", type=float, default=8.0)
     ap.add_argument("--every", type=int, default=5)
@@ -56,17 +59,18 @@ def main():
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
 
-    cfg = load_env_cfg(FLAT_TASK)
+    cfg = load_env_cfg(args.task)
     cfg.rewards.pop("style", None)
     ball = cfg.actions["ball"]
-    ball.move_prob, ball.swing_prob, ball.hit_hint = 0.0, 0.0, False
+    ball.move_prob, ball.swing_prob, ball.hit_hint = args.move_prob, 0.0, False
+    ball.move_sector_weights = None
     ball.adaptive_curriculum, ball.reach_curriculum = False, False
     ball.feed_mix = FeedMix({f: 1.0 for f in FAMILY_NAMES})
     cfg.scene.num_envs, cfg.seed, ball.seed = args.envs, args.seed, args.seed
     cfg.observations["actor"].enable_corruption = False
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda")
-    venv = RslRlVecEnvWrapper(env, clip_actions=load_rl_cfg(FLAT_TASK).clip_actions)
-    runner = MjlabOnPolicyRunner(venv, copy.deepcopy(asdict(load_rl_cfg(FLAT_TASK))), device="cuda")
+    venv = RslRlVecEnvWrapper(env, clip_actions=load_rl_cfg(args.task).clip_actions)
+    runner = MjlabOnPolicyRunner(venv, copy.deepcopy(asdict(load_rl_cfg(args.task))), device="cuda")
     runner.load(args.checkpoint, load_cfg={"actor": True}, strict=True, map_location="cuda")
     policy = runner.get_inference_policy(device="cuda")
     term = env.action_manager.get_term("joint_pos")
@@ -92,13 +96,13 @@ def main():
     env.close()
 
     model = LatentController().cuda()
-    model.load_state_dict(torch.load(LATENT, map_location="cuda", weights_only=False)["model"])
+    model.load_state_dict(torch.load(args.latent, map_location="cuda", weights_only=False)["model"])
     model.eval()
     for p in model.parameters():
         p.requires_grad_(False)
     with torch.no_grad():
         mu, logstd = model.prior_dist(c)
-    out = {"checkpoint": args.checkpoint, "seed": args.seed, "states": len(y),
+    out = {"checkpoint": args.checkpoint, "latent": args.latent, "task": args.task, "seed": args.seed, "states": len(y),
            "action_var": {g: float(y[:, [i for i, n in enumerate(names) if re.search(rx, n)]].var(0).mean())
                           for g, rx in GROUPS.items()},
            "action_var_all": float(y.var(0).mean()), "fits": {}}
