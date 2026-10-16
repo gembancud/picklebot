@@ -979,8 +979,8 @@ RES_BASE = str(Path(__file__).resolve().parents[2] / "artifacts" / "train" / "lo
                / "2026-10-16_05-35-35_s5c-18-merge17" / "model_32874.pt")
 
 
-def _latent_court_res(play=False):
-    cfg = _latent_court_l3(play)
+def _residualize(cfg):
+    """Replace a lambda-3 task's latent action term by the residual around RES_BASE (D-086)."""
     lt = cfg.actions["latent"]
     rl = asdict(_latent_drill3_lowent_rl_cfg())["actor"]
     res = ResidualLatentActionCfg(entity_name=lt.entity_name, actuator_names=lt.actuator_names, scale=lt.scale,
@@ -994,6 +994,20 @@ def _latent_court_res(play=False):
     return cfg
 
 
+def _latent_court_res(play=False):
+    return _residualize(_latent_court_l3(play))
+
+
+# The Stage 5B drill with the same residual action term: the regression check of residual executors (h5c_eval arg 6).
+TASK_LATENT_DRILL3_PRIOR5_RES = "Picklebot-Latent-Drill3-Prior5-Res-G1"
+
+
+def _latent_drill3_prior5_res(play=False):
+    return _residualize(_latent_drill3_prior5_l3(play))
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_PRIOR5_RES, env_cfg=_latent_drill3_prior5_res(),
+                    play_env_cfg=_latent_drill3_prior5_res(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
 register_mjlab_task(task_id=TASK_LATENT_COURT_RES, env_cfg=_latent_court_res(), play_env_cfg=_latent_court_res(True),
                     rl_cfg=_latent_drill3_lowent_rl_cfg())
 

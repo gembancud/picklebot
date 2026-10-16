@@ -2189,3 +2189,28 @@ Plan:
 - **5. Reserve and report.** Two runs are kept in reserve. The final candidate is named before the paired final evaluation, and the report states the gate result with the distance and CI on each criterion and lists every rule deviation.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`; `mjlab/scripts/h5c_summary.py`, `h5c_eval.sh`, `stage2_eval.sh`.
+
+### D-087 — Stage 5C: run 19 result, the style kill rule, and the volley specialist (run 20)
+
+- Date: 2026-10-16
+- Status: Accepted (loop, under D-086)
+- Amends: D-086 (record of run 19; run 20 launch)
+
+Run 19, the residual executor around frozen run 18 (D-086; dev seeds 4200810-815, `mjlab/results/stage5c-s5c-19-*.json`):
+- **Move-to-spot arrival passes the gate in every direction**, the first gate item met in Stage 5C: fwd 99.7, fwd-left 94.8, left 96.9, back-left 98.2, back 98.0, back-right 99.7, right 99.8, fwd-right 99.5 %. Move-drill falls 0.07 %.
+- **Court main metric 79.3 % / 79.5 % on two seeds** (run 18: 79.9 / 81.0 %). Court falls 4.6 %. Backspin@back fell to 58 %.
+- **Recovery** (time model) 1.325 m, against a stand-still gap of 2.075 m.
+- **Rally** P(>= 10) 0.0, mean ended rally 0.19 shots.
+- **Endpoint:** the run hit its 2 h cap at iteration about 990, slowed while a rally smoke test shared the GPU, so the fixed endpoint is the last checkpoint, model_900.
+
+**The kill rule fixed at launch, "style above 3.86", triggered: style 4.162.** It was written without noticing that the base (run 18) was already at 4.008, so as written it could never pass from that base. It stands as triggered: run 19 is not continued, and the residual's style remains open. No post-hoc reinterpretation.
+
+**Plateau count:** run 18 (80.5 % pooled, vs run 17's 80.4 %) is strike 1, run 19 (79.4 % pooled) strike 2. The next executor run must reach at least 81.5 % court main metric (two-seed mean when within 2 points), or the loop ends.
+
+**Run 20: volley specialist (a teacher run, not counted for the plateau rule).**
+- PPO on `Picklebot-Latent-Court-Volley-L3-G1`: volley feeds only, starts and recovery spots in the mid and front zones, no move or ghost episodes, lambda 3, learning-progress curriculum with the D-086 on-ramp (level 0: 5.7-7.7 m/s at 0.7-1.2 m), hint probability 0.2 as in every executor run.
+- Starts from run 18 (the lambda-3 two-skill executor; volley contact 0 %). Fixed endpoint: iteration 1,000, or the last checkpoint before the cap.
+- **Kill rule:** volley contact below 5 % at the endpoint, on the unchanged gate feeds (court drill, volley families, no hint), ends volley work for this stage.
+- If it passes, run 21 merges it with `kickstart_h4.py --family-teacher` (per-teacher lambda).
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
