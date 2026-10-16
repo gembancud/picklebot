@@ -103,6 +103,9 @@ def main():
         cfg.actions["ball"].recovery_mode = args.recovery  # baseline centre (default) or court-wide random (5C)
     if args.rally:
         cfg.actions["ball"].feed_anchor = "start"
+        # D-090 fix: the training episode length (EPISODE_S) fits only about 7-8 feeds, so a 10-shot rally could never
+        # complete. Rally evaluations run one episode as long as the evaluation (time-outs still end a rally).
+        cfg.episode_length_s = max(cfg.episode_length_s, args.seconds + 1.0)
     if args.start_x is not None:  # review videos: start near a given court x (e.g. the kitchen line)
         from picklebot_mj.tasks.return_stand import ROBOT_START
         pr = cfg.events["reset_base"].params["pose_range"]

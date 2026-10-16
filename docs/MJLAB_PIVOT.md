@@ -793,3 +793,20 @@ Its measured capability envelope is published as a contract. It must hold across
 - 2026-10-14 - Stage 5C run 1 s5c-01-agility -> model_37300 (cap); root reward flat (about 0.20; mean distance about 1.22 m). Direction evaluation running. Run 2 s5c-02-court: H4 on the court-wide drill, from h4-25b/model_27700.
 - 2026-10-14 - D-077: agility walker shows a controller limit (left 0.1 %, back 0 % at 1.5 m vs forward 32 %, right 27 %; flat training). Mirrored LAFAN1 built and verified (FK mirror error <= 1e-5 m); motion set tennis-lafan3 (tennis/LAFAN/mirrored 0.5/0.25/0.25). Next: H0 continuation on it.
 - 2026-10-14 - Stage 5C run 3 s5c-03-h0mirror: H0 tracking teacher continued on tennis-lafan3 (Picklebot-Tracking-TennisLafan3-Huge-G1, 4096 envs), from tracking-20-decay/model_60800, alongside run 2. H0 gate fixed (tennis and LAFAN1 within 3 points of H0, mirrored LAFAN1 >= 86.2 %, falls <= 1 %); tracking_eval reports mirrored clips separately.
+- 2026-10-14..16 - Stage 5C runs 2-22 (mjlab/results/stage5c.md; D-078 to D-090).
+  - Volley feeds re-aimed (D-078).
+  - H0 and H1 retrained with mirrored LAFAN1 and with walking-teacher footwork clips (D-077, D-079, D-081): neither fixed left/back footwork.
+  - Latent barrier found to reach almost nothing at lambda 1 (D-080).
+  - Footwork kickstarted from the flat walking teacher at lambda 3 (D-082, D-084).
+  - Review round with five reviewers and a user-approved plan (D-086): evaluation fixes, residual executor, time-model recovery score, rally evaluation.
+  - Volley specialists failed (D-087 to D-089).
+- 2026-10-16 - **Stage 5C gate NOT MET; loop ended under the plateau rule (D-090).** 21 of 30 runs used.
+  - Final candidate: run 22 (s5c-22-res-rally/model_900, a residual around run 18), paired against h4-25b on dev seeds 4200900-903, pooled per cell.
+  - Met:
+    - Move-to-spot arrival 99.4-99.95 % in every direction (gate met).
+    - Court main metric 78.8 % against 51.9 %.
+  - Not met:
+    - 41/55 cells; volleys 0 %; lob, reach_deep, backspin@back and cross_backhand below 75 %.
+    - Recovery 1.325 m (time model), court falls 3.3 %, style 4.017; Stage 5B backspin -35, fast -6.8, reach_deep -9.5.
+  - Rally (court-anchored feeds, reported, not gated): legal 61.8 %, P(rally >= 10) 1.6 %.
+  - Report and recommended next steps: mjlab/results/stage5c-gate.md. Review videos: mjlab/artifacts/videos/h5c/s5c-22-*. Not pushed (the stage did not pass).

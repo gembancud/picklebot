@@ -2261,3 +2261,30 @@ Run 22: the most valuable remaining executor run, per the D-086 plan step 3.
 - **Plateau:** this is an executor run. It must reach 81.5 % on the main metric (two-seed mean if within 2 points of the best), or the plateau rule ends the loop and the final evaluation follows.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
+
+### D-090 — Stage 5C: plateau stop; final candidate named (run 22); rally evaluation fix
+
+- Date: 2026-10-16
+- Status: Accepted (loop, D-075 rule 6)
+- Amends: D-086, D-089
+
+Run 22 (residual around frozen run 18, half the training feeds court-anchored; dev seeds 4200850-855; `mjlab/results/stage5c-s5c-22-*.json`):
+- **Gate drill (pelvis-anchored):** court main metric 78.5 %, 40/55 cells.
+- **Footwork:** move-to-spot arrival 99.4-99.9 % in every direction (gate met), move-drill falls 0.05 %.
+- **Court falls** 3.8 %.
+- **Recovery** (time model) 1.275 m, the best so far (stand-still gap 2.075 m).
+- **Style** 4.026, under its kill line of 4.16 but above the gate's 3.86.
+- **Stage 5B regression:** backspin -37 (backspin@back 50 %), fast -6.5, reach_deep -9.5.
+- **Court-anchored (rally) feeds:** legal 43.3 % (run 18: 36.2 %, run 19: 38.6 %).
+
+**Plateau stop.** Runs 18 (80.5 % two-seed mean against run 17's 80.4 %), 19 (79.4 %) and 22 (78.5 %) are three executor runs in a row each improving the main metric by less than 1 point. Run 22 is 2.0 points below the best, so no repeat was needed. Under D-075 rule 6 the loop ends: paired final evaluation, review videos, gate report. Runs used: 21 counted (1, 2, 3b, 5-19, 20b, 21, 22), 9 unused.
+
+**Final candidate, named before the final evaluation: run 22, s5c-22-res-rally/model_900.** Among the two-skill executors it meets the most gate items: arrival, and move-drill falls under the D-086 rule. It also has the best recovery and the best court-anchored legal rate. Run 18 has the higher main metric but fails arrival.
+
+**Final evaluation:**
+- `scripts/h5c_final.sh`: candidate and stage baseline h4-25b on the same four fresh dev seeds 4200900-903, pooled per cell (the D-086 rule). Then the candidate's other gate jobs on 4200904.
+- Review videos: `scripts/h5c_videos.sh`, seed 4200910.
+
+**Rally evaluation fix.** P(rally >= 10) read 0 for every run because a training-length episode (EPISODE_S) fits only about 7-8 feeds: a 10-shot rally could never complete. Rally evaluations now run one episode as long as the evaluation. Runs 18 and 22 are re-scored (90 s, seed 4200860; `stage5c-s5c-18-rally90.json`, `-22-rally90.json`). Earlier rally numbers are kept but marked capped.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`; `mjlab/results/stage5c-gate.md`.

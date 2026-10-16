@@ -10,6 +10,6 @@ for i in 0 1 2 3; do
   bash scripts/stage2_eval.sh $RUN $CK --task $T $C --seed $((S+i)) --json $R-cand-court-$i.json > /tmp/fin.log 2>&1; echo "cand court $i: $?"
   bash scripts/stage2_eval.sh h4-25b-more model_27700.pt --task Picklebot-Latent-Court-G1 $C --seed $((S+i)) --json $R-base-court-$i.json > /tmp/fin.log 2>&1; echo "base court $i: $?"
 done
-$P scripts/h5c_pool.py $R-cand-court.json $R-cand-court-[0-3].json
-$P scripts/h5c_pool.py $R-base-court.json $R-base-court-[0-3].json
+$P scripts/h5c_pool.py $R-cand-pooled.json $R-cand-court-[0-3].json
+$P scripts/h5c_pool.py $R-base-pooled.json $R-base-court-[0-3].json
 bash scripts/h5c_eval.sh $RUN $CK final-cand $((S+4)) $T $T5B

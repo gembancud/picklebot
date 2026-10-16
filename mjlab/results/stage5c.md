@@ -92,7 +92,7 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 20 | s5c-20-volley | **crashed at start-up, not counted**: the back zone's curriculum sampler had no valid family in the volley-only mix (fixed: such a zone falls back to the whole mix; test added) | - | - | - | - |
 | 20 | s5c-20b-volley | **volley specialist** (teacher run): PPO on volley feeds only, mid/front starts, D-086 on-ramp | s5c-18/model_32874 | **stopped at model_33000** (counted): falls 4 -> 222 per logging interval | volley contact 13.6 / 0 %, legal 0 %, falls 72-77 % | - |
 | 21 | s5c-21-volley-res | volley specialist as a **residual around frozen run 18**, lam_r 2 (D-088) | s5c-19-init/model_0 (= run 18) | model_999 | volley contact 0.0 / 3.2 %: **kill rule triggered, volley work ends** | - |
-| 22 | s5c-22-res-rally | residual around frozen run 18 (as run 19) with **half the training feeds court-anchored** (D-089) | s5c-19-init/model_0 (= run 18) | iteration 1,000 or last before the cap | | |
+| 22 | s5c-22-res-rally | residual around frozen run 18 (as run 19) with **half the training feeds court-anchored** (D-089) | s5c-19-init/model_0 (= run 18) | model_900 (cap) | 78.5 %; 40/55 cells; **move arrival 99.4-99.9 %**; move falls 0.05 %; rally legal 61.8 %, P(>= 10) 1.6 % | 4.026 |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -199,4 +199,11 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 - **Run 21:** the volley specialist as a residual around frozen run 18 (lam_r 2).
   - Kill rule: pooled volley contact < 10 % or volley falls > 20 % on the gate feeds.
   - If it passes, a residual-space merge (`scripts/residual_merge.py`) copies its residual on volley feeds and zero elsewhere, which leaves run 18 unchanged there.
+- **Run 22 and the end of the loop** (D-090): main metric 78.5 % is plateau strike 3, so the loop ends.
+  - Final candidate: run 22, model_900.
+  - Rally evaluation fixed (it was capped by the 8 s episode length): run 18 50.7 % legal, P(>= 10) 0.35 %; run 22 61.8 %, 1.63 %.
+- **Final paired evaluation** (dev seeds 4200900-903 pooled per cell; 4200904 for the other jobs): **gate NOT MET**.
+  - Main metric 78.8 % [78.5, 79.1] against h4-25b's 51.9 %; 41/55 cells against 14/55.
+  - Arrival met; volleys 0 %; recovery 1.325 m; court falls 3.3 %; style 4.017.
+  - Full report in `stage5c-gate.md`.
 
