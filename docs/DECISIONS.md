@@ -2288,3 +2288,38 @@ Run 22 (residual around frozen run 18, half the training feeds court-anchored; d
 **Rally evaluation fix.** P(rally >= 10) read 0 for every run because a training-length episode (EPISODE_S) fits only about 7-8 feeds: a 10-shot rally could never complete. Rally evaluations now run one episode as long as the evaluation. Runs 18 and 22 are re-scored (90 s, seed 4200860; `stage5c-s5c-18-rally90.json`, `-22-rally90.json`). Earlier rally numbers are kept but marked capped.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`; `mjlab/results/stage5c-gate.md`.
+
+### D-091 — Stage 5D: rally training (user-approved plan, gate and budget)
+
+- Date: 2026-10-17
+- Status: Accepted (user: rally target P(rally >= 10) >= 20 %, 15 runs)
+- Amends: roadmap (Stage 5D inserted before Stage 6)
+
+Context: Stage 5C ended with the gate not met (D-090). The candidate (run 22) returns 79 % of pelvis-anchored balls but only 62 % of court-anchored ones, and 1.6 % of rallies reach 10 shots. Training on court-anchored feeds (run 22) moved rallies most. Volleys, falls and style did not respond to more training, and the residual executor cannot move more than lam_r sigma from its base. The user asked for rally training that bundles the fixes practice cannot supply.
+
+**Gate (thresholds never loosened):**
+- **Rally:** P(rally >= 10) >= 20 % on the rally evaluation: court-anchored feeds, 90 s episodes, no hint. Final evaluation pooled over 4 fresh dev seeds.
+- **Falls:** court falls <= 1 % (the worse of court and move drill, D-086).
+- **Style:** <= 3.86.
+- **Arrival:** move-to-spot >= 90 % in every direction.
+- **Court drill:** main metric (pelvis-anchored, 55 cells) no more than 2 points below run 22's final 78.8 %. Volleys are excluded from this stage.
+
+**Budget and loop rules:**
+- Up to 15 training runs, each <= 2 h with a fixed endpoint written before launch. One change per run, written down before launch. Warm starts where sensible. Fresh dev seeds for every evaluation; final seeds never used.
+- Main metric for the plateau rule: P(rally >= 10). The loop stops after 3 executor runs in a row each improving it by less than 2 points absolute. Changes within 3 points of the best are re-evaluated on a second seed before they count.
+- Kill rules are fixed at launch, against the base's actual values.
+- Stop and ask the user before sudo or system changes, Unity or the feat/hierarchical-control checkout, deleting anything, any download, any run over 2 h, or using final seeds.
+- End: paired final evaluation, review videos (side, behind, a long rally), `mjlab/results/stage5d-gate.md`, commit, push.
+
+**Plan:**
+1. **Build first (no runs):**
+   - a rally drill task: a scripted far-court opponent whose shots are aimed at court regions, long episodes, the recovery spot set by a simple court-position rule, and a reward for each legal return in a rally;
+   - a falls diagnosis of run 22 (phase, family, zone, posture at the fall);
+   - consolidation support: kickstart a new base from a residual executor read as one composite policy;
+   - tests for each.
+2. **Training:** residual PPO from run 22 on the rally drill. One change per run after that:
+   - a style anchor;
+   - a falls fix chosen from the diagnosis;
+   - consolidation merges every 3-4 PPO runs, to lift the residual's bound.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (new Stage 5D section); `mjlab/results/stage5d.md`.

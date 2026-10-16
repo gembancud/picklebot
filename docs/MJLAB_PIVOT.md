@@ -275,6 +275,16 @@ The H4 executor plays a baseline game: it starts and recovers near the baseline 
 
   Report `mjlab/results/stage5c-gate.md` with full-court review videos.
 
+## Stage 5D â rally training (D-091)
+
+Goal: an executor that sustains rallies against court-anchored shots, without losing Stage 5C's footwork or court-wide hitting.
+
+- [ ] Rally drill task (scripted far-court opponent, court-anchored shots, long episodes, rally reward) + tests.
+- [ ] Falls diagnosis of run 22 (phase, family, zone, posture) and a targeted fix.
+- [ ] Consolidation: kickstart a new base from a residual executor (composite teacher) + tests.
+- [ ] Residual PPO on the rally drill from run 22; style anchor; consolidation every 3-4 PPO runs.
+- [ ] **Gate:** P(rally >= 10) >= 20 % (rally evaluation, 90 s, no hint, final pooled over 4 seeds); court falls <= 1 %; style <= 3.86; move-to-spot arrival >= 90 % in every direction; court drill main metric no more than 2 points below 78.8 %. Up to 15 runs; plateau rule on P(rally >= 10) (< 2 points, 3 runs).
+
 ## Stage 6 — System 1: the full executor command interface, robust and distilled
 System 1 is the fast executor that a later strategy layer (System 2, Stage 8) commands. By the end of this stage it must follow every command the strategy layer will use:
 - **where to land the ball** (any point in the far court, not just two regions);
