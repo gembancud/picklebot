@@ -1,0 +1,178 @@
+{
+ "checkpoint": "artifacts/train/logs/picklebot_return_stand/2026-10-16_10-48-39_s5c-21-volley-res/model_999.pt",
+ "seed": 4200840,
+ "envs": 1024,
+ "sim_seconds": 24.0,
+ "episodes": 13226,
+ "contact_rate": 0.0159,
+ "contact_ci95": [
+  0.0139,
+  0.0182
+ ],
+ "legal_return_rate": 0.0,
+ "legal_return_ci95": [
+  0.0,
+  0.0003
+ ],
+ "fall_rate": 0.0,
+ "fall_ci95": [
+  0.0,
+  0.0003
+ ],
+ "hits": 210,
+ "legal_returns": 0,
+ "falls": 0,
+ "rally_endings": {
+  "OUT": 3966,
+  "WRONG_SIDE": 149,
+  "BODY_CONTACT": 40,
+  "LOST": 9071
+ },
+ "grip": "default",
+ "families": [
+  "volley_forehand",
+  "volley_backhand"
+ ],
+ "task": "Picklebot-Latent-Court-Res2-G1",
+ "target": "A",
+ "robot_episodes": 3072,
+ "robot_falls": 0,
+ "censored_feeds": 2187,
+ "robot_fall_rate_per_episode": 0.0,
+ "per_family": {
+  "volley_forehand": {
+   "episodes": 6578,
+   "contact": 0.0,
+   "contact_ci95": [
+    0.0,
+    0.0006
+   ],
+   "legal_return": 0.0,
+   "legal_return_ci95": [
+    0.0,
+    0.0006
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0006
+   ],
+   "landings_in_A": 0,
+   "landings_in_B": 0,
+   "target_hits": 0
+  },
+  "volley_backhand": {
+   "episodes": 6648,
+   "contact": 0.0316,
+   "contact_ci95": [
+    0.0276,
+    0.0361
+   ],
+   "legal_return": 0.0,
+   "legal_return_ci95": [
+    0.0,
+    0.0006
+   ],
+   "fall": 0.0,
+   "fall_ci95": [
+    0.0,
+    0.0006
+   ],
+   "landings_in_A": 0,
+   "landings_in_B": 0,
+   "target_hits": 0
+  }
+ },
+ "per_zone_family": {
+  "volley_forehand@back": {
+   "episodes": 2448,
+   "contact": 0.0,
+   "legal_return": 0.0,
+   "legal_return_ci95": [
+    0.0,
+    0.0016
+   ],
+   "fall": 0.0
+  },
+  "volley_backhand@back": {
+   "episodes": 2427,
+   "contact": 0.0865,
+   "legal_return": 0.0,
+   "legal_return_ci95": [
+    0.0,
+    0.0016
+   ],
+   "fall": 0.0
+  },
+  "volley_forehand@mid": {
+   "episodes": 2729,
+   "contact": 0.0,
+   "legal_return": 0.0,
+   "legal_return_ci95": [
+    0.0,
+    0.0014
+   ],
+   "fall": 0.0
+  },
+  "volley_backhand@mid": {
+   "episodes": 2809,
+   "contact": 0.0,
+   "legal_return": 0.0,
+   "legal_return_ci95": [
+    0.0,
+    0.0014
+   ],
+   "fall": 0.0
+  },
+  "volley_forehand@front": {
+   "episodes": 1401,
+   "contact": 0.0,
+   "legal_return": 0.0,
+   "legal_return_ci95": [
+    0.0,
+    0.0027
+   ],
+   "fall": 0.0
+  },
+  "volley_backhand@front": {
+   "episodes": 1412,
+   "contact": 0.0,
+   "legal_return": 0.0,
+   "legal_return_ci95": [
+    0.0,
+    0.0027
+   ],
+   "fall": 0.0
+  }
+ },
+ "contact_diagnostics": {
+  "first_contacts": 221,
+  "paddle_speed_mean": 0.418,
+  "paddle_speed_std": 0.197,
+  "ball_speed_in_mean": 9.749,
+  "ball_speed_out_mean": 5.043,
+  "contact_height_mean": 0.508,
+  "net_crossings": 0,
+  "net_clearance_mean_m": 0.0,
+  "legal_landings": 0,
+  "landing_x_mean": 0.0,
+  "landing_x_std": 0.0,
+  "landing_abs_y_mean": 0.0,
+  "landings_in_A": 0,
+  "landings_in_B": 0,
+  "target_hits": 0
+ },
+ "recovery": {
+  "feeds_scored": 167,
+  "error_median_m": 2.375,
+  "error_p90_m": 3.875,
+  "spot": "random",
+  "bin_m": 0.05,
+  "time_model_error_median_m": null,
+  "time_model_error_p90_m": null,
+  "time_model_scored": 0,
+  "stand_still_gap_median_m": null,
+  "time_model_unscored_next_feed_first": 167,
+  "refeed_delay_s": 0.5
+ }
+}

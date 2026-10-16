@@ -102,6 +102,9 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # Feed geometry reference: "start" = fixed ROBOT_START (Stage 2-4); "pelvis" = the robot's
     # current pelvis position (footwork tasks), read from qpos so it is valid right after a reset.
     feed_anchor: str = "start"
+    # D-089: share of feeds aimed at the court (anchored at the start spot, as in the rally evaluation) instead of at
+    # the pelvis, drawn per feed; 0 keeps every feed pelvis-anchored (feed_anchor "pelvis") as before.
+    court_anchor_prob: float = 0.0
     recovery: bool = False  # sample a recovery spot per feed (footwork tasks)
     recovery_mode: str = "random"  # "random" (RECOVERY_BOX) or "fixed" (RECOVERY_FIXED; evaluation)
     move_prob: float = 0.0  # Drill 1 (D-041): fraction of robot episodes that are move-to-spot episodes
@@ -455,10 +458,18 @@ class BallPhysicsAction(ActionTerm):
             return (torch.full((k,), ROBOT_START[0], device=self.device),
                     torch.full((k,), ROBOT_START[1], device=self.device))
         q = self.pelvis_xy(env_ids)
+        if getattr(self.cfg, "court_anchor_prob", 0.0) > 0.0:  # D-089: this feed's draw, made once at the feed's start
+            m = self._court_anch[env_ids]
+            return (torch.where(m, torch.full_like(q[:, 0], ROBOT_START[0]), q[:, 0]),
+                    torch.where(m, torch.full_like(q[:, 1], ROBOT_START[1]), q[:, 1]))
         return q[:, 0], q[:, 1]
 
     def _feed(self, env_ids):
         k = len(env_ids)
+        if getattr(self.cfg, "court_anchor_prob", 0.0) > 0.0:
+            if not hasattr(self, "_court_anch"):
+                self._court_anch = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+            self._court_anch[env_ids] = torch.rand(k, generator=self.gen, device=self.device) < self.cfg.court_anchor_prob
         if getattr(self.cfg, "court_wide", False):  # court zone from the pelvis x at feed time (D-076)
             self.zone[env_ids] = torch.bucketize(self._anchor(env_ids)[0].contiguous(), self._zone_edges, right=True)
         if getattr(self, "lp_zone_samplers", None) is not None:  # zone-conditioned learning-progress units

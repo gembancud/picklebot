@@ -2239,3 +2239,25 @@ Decision, run 21, the last volley attempt:
 - **Teacher run:** not counted for the plateau rule.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
+
+### D-089 — Stage 5C: volley work ends; run 22 trains the residual executor on court-aimed feeds
+
+- Date: 2026-10-16
+- Status: Accepted (loop, under D-086)
+- Amends: D-088
+
+Run 21 (residual volley specialist, lam_r 2, around frozen run 18):
+- **Training:** paddle contact 0.0000 and falls 0 for all 1,000 iterations.
+- **Kill rule check** on the gate feeds (dev seed 4200840, `mjlab/results/stage5c-s5c-21-volley-kill.json`): contact forehand 0.0 %, backhand 3.2 %, pooled 1.6 % < 10 %.
+- **The kill rule triggers: volley work ends for Stage 5C.** The volley gate items (4 cells, "volleys >= 75 %") are reported as not met.
+- Three ways were tried: feed re-aim (D-078), plain PPO specialist (run 20), residual specialist (run 21). None produced a single legal volley.
+
+Run 22: the most valuable remaining executor run, per the D-086 plan step 3.
+- **What it targets:** the rally evaluation shows the gap. Run 18 returns 80 % of pelvis-anchored feeds but 36 % of court-anchored ones, with no 10-shot rally: it hits balls aimed at it but cannot get itself to the ball.
+- **Change** (one, against run 19's setup): half of the *training* feeds are court-anchored. The feed anchor is the start spot, drawn per feed (`court_anchor_prob` 0.5, `Picklebot-Latent-Court-Res-Rally-G1`, test added). The 55-cell gate drill keeps D-076's pelvis-anchored feeds.
+- **Setup:** a fresh residual around frozen run 18 (lam_r 1, zero-initialised, std 0.1, `s5c-19-init/model_0`). It does not continue run 19, per its kill rule.
+- **Endpoint:** iteration 1,000, or the last checkpoint before the cap.
+- **Kill rules, fixed now** (written against the base's actual values this time): style above 4.16 (run 18's 4.008 + 0.15), move arrival below 90 % in any direction, or move-drill falls above 1 %.
+- **Plateau:** this is an executor run. It must reach 81.5 % on the main metric (two-seed mean if within 2 points of the best), or the plateau rule ends the loop and the final evaluation follows.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.

@@ -1048,3 +1048,19 @@ def _latent_drill3_prior5_res2(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_DRILL3_PRIOR5_RES2, env_cfg=_latent_drill3_prior5_res2(),
                     play_env_cfg=_latent_drill3_prior5_res2(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# Stage 5C run 22 (D-089): run 19's residual executor task with half the training feeds aimed at the court (anchored at
+# the start spot, as in the rally evaluation) instead of at the pelvis, so the robot must get to the ball and back.
+TASK_LATENT_COURT_RES_RALLY = "Picklebot-Latent-Court-Res-Rally-G1"
+
+
+def _latent_court_res_rally(play=False):
+    cfg = _latent_court_res(play)
+    cfg.actions["ball"].court_anchor_prob = 0.5
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_RES_RALLY, env_cfg=_latent_court_res_rally(),
+                    play_env_cfg=_latent_court_res_rally(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+

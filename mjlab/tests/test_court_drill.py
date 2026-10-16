@@ -124,3 +124,21 @@ def test_volley_only_task_builds_with_an_empty_zone():
     for _ in range(5):
         env.step(torch.zeros(env.num_envs, env.action_manager.total_action_dim, device="cuda"))
     env.close()
+
+
+def test_mixed_court_anchor_aims_about_half_the_feeds_at_the_start_spot():
+    """D-089: with court_anchor_prob 0.5, about half of the feeds use the start spot as their anchor."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks  # noqa: F401
+
+    cfg = load_env_cfg("Picklebot-Latent-Court-Res-Rally-G1")
+    cfg.scene.num_envs = 256
+    env = ManagerBasedRlEnv(cfg=cfg, device="cuda")
+    env.reset()
+    t = env.action_manager.get_term("ball")
+    share = float(t._court_anch.float().mean())
+    assert 0.35 < share < 0.65, share
+    env.close()

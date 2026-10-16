@@ -91,7 +91,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 19 | s5c-19-residual | **residual executor** around frozen run 18 (D-086): lam_r 1, wrist_r 0.1, residual penalty 0.05 (3x in move episodes), residual output zero-initialised, std 0.1 | s5c-19-init/model_0 (= run 18) | model_900 (cap) | 79.3 / 79.5 %; 41/55 cells; **move arrival 94.8-99.8 % (gate met)**; move falls 0.07 % | **4.162 (kill rule triggered)** |
 | 20 | s5c-20-volley | **crashed at start-up, not counted**: the back zone's curriculum sampler had no valid family in the volley-only mix (fixed: such a zone falls back to the whole mix; test added) | - | - | - | - |
 | 20 | s5c-20b-volley | **volley specialist** (teacher run): PPO on volley feeds only, mid/front starts, D-086 on-ramp | s5c-18/model_32874 | **stopped at model_33000** (counted): falls 4 -> 222 per logging interval | volley contact 13.6 / 0 %, legal 0 %, falls 72-77 % | - |
-| 21 | s5c-21-volley-res | volley specialist as a **residual around frozen run 18**, lam_r 2 (D-088) | s5c-19-init/model_0 (= run 18) | iteration 1,000 or last before the cap | | |
+| 21 | s5c-21-volley-res | volley specialist as a **residual around frozen run 18**, lam_r 2 (D-088) | s5c-19-init/model_0 (= run 18) | model_999 | volley contact 0.0 / 3.2 %: **kill rule triggered, volley work ends** | - |
+| 22 | s5c-22-res-rally | residual around frozen run 18 (as run 19) with **half the training feeds court-anchored** (D-089) | s5c-19-init/model_0 (= run 18) | iteration 1,000 or last before the cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
