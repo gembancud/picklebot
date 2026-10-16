@@ -275,7 +275,7 @@ The H4 executor plays a baseline game: it starts and recovers near the baseline 
 
   Report `mjlab/results/stage5c-gate.md` with full-court review videos.
 
-## Stage 5D â rally training (D-091)
+## Stage 5D — rally training (D-091)
 
 Goal: an executor that sustains rallies against court-anchored shots, without losing Stage 5C's footwork or court-wide hitting.
 
