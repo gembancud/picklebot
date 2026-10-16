@@ -7,3 +7,4 @@ Start point: Stage 5C candidate run 22 (`s5c-22-res-rally/model_900`): rally P(>
 ## Runs
 | # | Run | Change (written before launch) | From | Endpoint | P(rally >= 10) | Court main | Falls | Style |
 |---|---|---|---|---|---|---|---|---|
+| 1 | s5d-01-rally | PPO continuation of run 22 on the rally drill (D-092) | s5c-22/model_900 | iteration 1,900 or last before the cap | | | | |

@@ -105,6 +105,9 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # D-089: share of feeds aimed at the court (anchored at the start spot, as in the rally evaluation) instead of at
     # the pelvis, drawn per feed; 0 keeps every feed pelvis-anchored (feed_anchor "pelvis") as before.
     court_anchor_prob: float = 0.0
+    # D-092 rally drill: court-anchored feeds send the robot back to the fixed baseline-centre recovery spot (as in the
+    # rally evaluation); consecutive legal returns are counted per env (rally_streak) for the rally_bonus reward.
+    rally_fixed_recovery: bool = False
     recovery: bool = False  # sample a recovery spot per feed (footwork tasks)
     recovery_mode: str = "random"  # "random" (RECOVERY_BOX) or "fixed" (RECOVERY_FIXED; evaluation)
     move_prob: float = 0.0  # Drill 1 (D-041): fraction of robot episodes that are move-to-spot episodes
@@ -320,6 +323,8 @@ class BallPhysicsAction(ActionTerm):
         for f in (self.hit_done, self.hit_now, self.return_done, self.return_now, self.lost_now, self._prev_dead,
                   self.tallied):
             f[env_ids] = False
+        if hasattr(self, "rally_streak"):
+            self.rally_streak[env_ids] = 0
         if self.cfg.recovery:
             self.rec_t[env_ids] = -1.0
             self.rec_scored[env_ids] = False
@@ -403,6 +408,7 @@ class BallPhysicsAction(ActionTerm):
         pos, vel, spin = self.ball.pos.clone(), self.ball.vel.clone(), self.ball.spin.clone()
         fam_old, tgt_old, unit_old = self.family.clone(), self.target.clone(), self.feed_unit.clone()
         zone_old = self.zone.clone()
+        anch_old = self._court_anch.clone() if hasattr(self, "_court_anch") else None
         self._feed(self.all_ids)
         m = fire.unsqueeze(-1)
         self.ball = BallState(torch.where(m, self.ball.pos, pos), torch.where(m, self.ball.vel, vel),
@@ -410,6 +416,8 @@ class BallPhysicsAction(ActionTerm):
         self.family = torch.where(fire, self.family, fam_old)
         self.feed_unit = torch.where(fire, self.feed_unit, unit_old)  # D-066 fix: keep in-flight feeds' units
         self.zone = torch.where(fire, self.zone, zone_old)
+        if anch_old is not None:  # D-092 fix: keep in-flight feeds' court-anchor draw (as their zone and unit)
+            self._court_anch = torch.where(fire, self._court_anch, anch_old)
         self.target = torch.where(fire, self.target, tgt_old)
         self.recover_xy = torch.where(fire.unsqueeze(-1), self.recover_xy, rec_old)
         self.hit_hint_on = torch.where(fire, self.hit_hint_on, hint_old)
@@ -511,6 +519,10 @@ class BallPhysicsAction(ActionTerm):
             lo = _const(("rec_lo", box), lambda: [box[0][0], box[1][0]], self.device)
             hi = _const(("rec_hi", box), lambda: [box[0][1], box[1][1]], self.device)
             rec = lo + (hi - lo) * u
+        if getattr(self.cfg, "rally_fixed_recovery", False) and getattr(self.cfg, "court_anchor_prob", 0.0) > 0.0:
+            from picklebot_mj.tasks.shadow_swing import _const
+            fixed = _const("rec_fixed", lambda: list(RECOVERY_FIXED), self.device).repeat(k, 1)
+            rec = torch.where(self._court_anch[env_ids].unsqueeze(-1), fixed, rec)
         self.recover_xy[env_ids] = rec
         x0, z0 = self._u("start_x", fam), self._u("start_z", fam)
         ax, ay = self._anchor(env_ids)
@@ -652,6 +664,10 @@ class BallPhysicsAction(ActionTerm):
             self.rec_scored = self.rec_scored | due
         # Feeding machine: count the finished rally, wait, then feed the next ball (no robot reset).
         over = (self.rules.dead | self.return_done) & ~self.tallied
+        if not hasattr(self, "rally_streak"):
+            self.rally_streak = torch.zeros(self.num_envs, dtype=torch.long, device=self.device)
+        self.rally_streak = torch.where(over & self.return_done, self.rally_streak + 1,
+                                        torch.where(over, torch.zeros_like(self.rally_streak), self.rally_streak))
         self._tally(over, torch.zeros_like(over))
         self.tallied = self.tallied | over
         self.refeed_timer = torch.where(over, torch.full_like(self.refeed_timer, self.cfg.refeed_delay_s),
@@ -838,6 +854,16 @@ def return_shaping(env, margin: float = 0.0) -> torch.Tensor:
     """One-shot at the first legal contact: return_quality of the outgoing ball (read before legal_return)."""
     t = _term(env)
     return return_quality(t.hit_out_pos, t.hit_out_vel, margin) * t.hit_now.float()
+
+
+def rally_bonus(env, cap: int = 10) -> torch.Tensor:
+    """Rally drill (D-092): at a legal return, min(streak, cap) / cap, the streak counting this return; must be read
+    before legal_return (which clears the step flags)."""
+    t = _term(env)
+    streak = getattr(t, "rally_streak", None)
+    if streak is None:
+        return torch.zeros(env.num_envs, device=env.device)
+    return t.return_now.float() * streak.clamp(max=cap).float() / cap
 
 
 def legal_return(env) -> torch.Tensor:

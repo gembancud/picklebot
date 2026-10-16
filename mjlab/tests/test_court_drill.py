@@ -142,3 +142,36 @@ def test_mixed_court_anchor_aims_about_half_the_feeds_at_the_start_spot():
     share = float(t._court_anch.float().mean())
     assert 0.35 < share < 0.65, share
     env.close()
+
+
+def test_rally_drill_fixed_recovery_streak_and_bonus():
+    """D-092 rally drill: court-anchored feeds send the robot to the fixed recovery spot; streaks are counted and the
+    rally bonus sits just before legal_return."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks  # noqa: F401
+    from picklebot_mj.tasks.return_stand import RECOVERY_FIXED
+
+    cfg = load_env_cfg("Picklebot-Latent-Court-Rally-G1")
+    names = list(cfg.rewards)
+    assert names[-1] == "legal_return" and names[-2] == "rally_bonus"
+    assert cfg.episode_length_s == 30.0
+    cfg.scene.num_envs = 128
+    env = ManagerBasedRlEnv(cfg=cfg, device="cuda")
+    env.reset()
+    for _ in range(40):
+        env.step(torch.zeros(env.num_envs, env.action_manager.total_action_dim, device="cuda"))
+    t = env.action_manager.get_term("ball")
+    m = t._court_anch
+    assert 0.6 < float(m.float().mean()) < 0.9
+    m = m & ~t.drill.move_ep  # move episodes carry their move spot in the same recovery input
+    if t.shadow is not None:
+        m = m & ~t.shadow.swing_ep
+    fixed = torch.tensor(RECOVERY_FIXED, device="cuda")
+    # hinted feeds show the stance spot until contact; the true recovery spot is kept in hit_rec_true
+    true_rec = torch.where(t.hit_hint_on.unsqueeze(-1), t.hit_rec_true, t.recover_xy)
+    assert torch.allclose(true_rec[m], fixed.expand(int(m.sum()), 2))
+    assert hasattr(t, "rally_streak") and int(t.rally_streak.min()) >= 0
+    env.close()

@@ -2323,3 +2323,38 @@ Context: Stage 5C ended with the gate not met (D-090). The candidate (run 22) re
    - consolidation merges every 3-4 PPO runs, to lift the residual's bound.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (new Stage 5D section); `mjlab/results/stage5d.md`.
+
+### D-092 — Stage 5D build: rally drill, falls diagnosis, consolidation; run 1
+
+- Date: 2026-10-17
+- Status: Accepted (loop, under D-091)
+- Amends: D-091
+
+**Falls diagnosis of run 22** (`mjlab/scripts/diag/falls_diag.py`, court drill, dev seed 4200920, `mjlab/results/stage5d-falls-run22.json`):
+- **When:** 289 falls in 12,333 robot episodes, 61 % while the ball is still incoming (before any contact), 20 % between feeds, 13 % after the hit, 6 % in the contact window.
+- **Speed:** median pelvis speed one step before a fall 1.59 m/s, against 0.58 m/s otherwise.
+- **Where:** concentrated in the long-reach families (lob 50, cross_backhand 41, reach_deep 38, cross_forehand 36, drop 23) and in the mid (147) and front (95) zones.
+- **Conclusion:** the falls come from running too fast for balls far away. That sets the falls fix for a later run: a speed or balance term, one change.
+
+**Rally drill** (`Picklebot-Latent-Court-Rally-G1`, residual around run 18 as in Stage 5C runs 19 and 22):
+- **Feeds:** 75 % court-anchored. Those feeds send the robot to the fixed baseline-centre recovery spot, as the rally evaluation does.
+- **Episodes:** 30 s, so that rallies can build.
+- **Rally bonus:** at each legal return, 2.5 / step_dt x min(streak, 10) / 10, read just before legal_return. The streak counts consecutive legal returns and is reset by a missed feed or a reset. Tests added.
+- **Bug fix:** the per-feed court-anchor draw was re-drawn for in-flight feeds at every refeed. It is now restored as the feed's zone and unit are. Run 22's feeds were unaffected, since the draw was only used inside the same feed call.
+- **Deviation from D-091's wording:** the "scripted far-court opponent" keeps the existing feed origin (start x 0.8-1.2 m). The gate's rally evaluation uses that origin, so training and gate match. A far-baseline opponent would change every family's flight geometry and invalidate the tuned feeds.
+
+**Consolidation** (`mjlab/scripts/consolidate.py`, `tests/test_consolidate.py`):
+- It distils a residual executor into one lambda-3 executor by DAgger. The composite is read exactly in the lambda-3 action space: tanh(a) = tanh(a_base) + (lam_r / lam) tanh(a_res), clamped, wrist likewise, each part fed its own last action.
+- Smoke run (run 22 into a student starting from run 18): the loss fell 0.037 -> 0.020 in 14 iterations, and about 4 % of target values hit the clamp.
+- The student task is `Picklebot-Latent-Court-Rally-L3-G1`. `_residualize` now takes the base checkpoint, for the next residual stage.
+
+**Run 1 (s5d-01-rally):**
+- **Change:** PPO continuation of run 22's residual policy (around frozen run 18) on the rally drill. The only change from run 22 is the task (the rally drill).
+- **Endpoint:** iteration 1,900 (1,000 more), or the last checkpoint before the cap.
+- **Kill rules, fixed now against run 22's final values:**
+  - style > 4.17 (4.017 + 0.15);
+  - move arrival < 90 % in any direction;
+  - move-drill falls > 1 %;
+  - court main metric < 76.8 % (the gate floor).
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5D; `mjlab/results/stage5d.md`.

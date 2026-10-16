@@ -979,14 +979,14 @@ RES_BASE = str(Path(__file__).resolve().parents[2] / "artifacts" / "train" / "lo
                / "2026-10-16_05-35-35_s5c-18-merge17" / "model_32874.pt")
 
 
-def _residualize(cfg, lam_r: float = 1.0):
-    """Replace a lambda-3 task's latent action term by the residual around RES_BASE (D-086)."""
+def _residualize(cfg, lam_r: float = 1.0, base: str | None = None):
+    """Replace a lambda-3 task's latent action term by the residual around `base` (default RES_BASE, D-086)."""
     lt = cfg.actions["latent"]
     rl = asdict(_latent_drill3_lowent_rl_cfg())["actor"]
     res = ResidualLatentActionCfg(entity_name=lt.entity_name, actuator_names=lt.actuator_names, scale=lt.scale,
                                   use_default_offset=lt.use_default_offset, checkpoint=lt.checkpoint, lam=lt.lam,
                                   wrist_residual=lt.wrist_residual, latent=lt.latent,
-                                  base_checkpoint=os.environ.get("PICKLEBOT_RES_BASE", RES_BASE),
+                                  base_checkpoint=os.environ.get("PICKLEBOT_RES_BASE", base or RES_BASE),
                                   base_actor_cfg={k: rl[k] for k in ("activation", "obs_normalization", "distribution_cfg")},
                                   lam_r=lam_r, wrist_r=0.1)
     cfg.actions = {"latent": res, "ball": cfg.actions["ball"]}
@@ -1063,4 +1063,42 @@ def _latent_court_res_rally(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_COURT_RES_RALLY, env_cfg=_latent_court_res_rally(),
                     play_env_cfg=_latent_court_res_rally(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# Stage 5D (D-092): the rally drill. Run 22's residual executor task with three-quarters of the feeds court-anchored
+# (as in the rally evaluation), those feeds sending the robot to the fixed baseline-centre recovery spot, 30 s episodes so
+# rallies can build, and a rally bonus at each legal return: 2.5 / step_dt x min(streak, 10) / 10.
+from picklebot_mj.tasks.return_stand import rally_bonus  # noqa: E402
+
+TASK_LATENT_COURT_RALLY = "Picklebot-Latent-Court-Rally-G1"
+
+
+def _rally_settings(cfg, play=False):
+    b = cfg.actions["ball"]
+    b.court_anchor_prob, b.rally_fixed_recovery = 0.75, True
+    if not play:
+        cfg.episode_length_s = 30.0
+    legal = cfg.rewards.pop("legal_return")  # keep legal_return last (it clears the step flags)
+    cfg.rewards["rally_bonus"] = RewardTermCfg(func=rally_bonus, weight=2.5 / cfg.sim.mujoco.timestep / cfg.decimation)
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+def _latent_court_rally(play=False):
+    return _rally_settings(_latent_court_res(play), play)
+
+
+# The rally drill on the plain lambda-3 action term (no residual): the student task of consolidation runs
+# (scripts/consolidate.py, D-092) and of evaluating consolidated executors.
+TASK_LATENT_COURT_RALLY_L3 = "Picklebot-Latent-Court-Rally-L3-G1"
+
+
+def _latent_court_rally_l3(play=False):
+    return _rally_settings(_latent_court_l3(play), play)
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_RALLY_L3, env_cfg=_latent_court_rally_l3(),
+                    play_env_cfg=_latent_court_rally_l3(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+register_mjlab_task(task_id=TASK_LATENT_COURT_RALLY, env_cfg=_latent_court_rally(), play_env_cfg=_latent_court_rally(True),
+                    rl_cfg=_latent_drill3_lowent_rl_cfg())
 
