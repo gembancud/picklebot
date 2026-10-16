@@ -67,6 +67,11 @@ def main():
                     help="recovery spot in evaluation: baseline centre (Stage 5) or random over the task's recovery box (5C)")
     ap.add_argument("--refeed-delay", type=float, default=None,
                     help="seconds between a rally's end and the next feed (recovery evaluation, D-086: 8 s)")
+    ap.add_argument("--rally", action="store_true",
+                    help="rally evaluation (D-086): court-anchored feeds (feed anchor = the start spot, so every shot "
+                         "lands at a fixed court place the robot must reach), fixed recovery spot, consecutive legal "
+                         "returns counted per robot; reports P(rally >= --rally-n)")
+    ap.add_argument("--rally-n", type=int, default=10)
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
@@ -94,6 +99,8 @@ def main():
         cfg.actions["ball"].feed_anchor = "start"
     if cfg.actions["ball"].recovery:
         cfg.actions["ball"].recovery_mode = args.recovery  # baseline centre (default) or court-wide random (5C)
+    if args.rally:
+        cfg.actions["ball"].feed_anchor = "start"
     if args.refeed_delay is not None:
         cfg.actions["ball"].refeed_delay_s = args.refeed_delay
     cfg.scene.num_envs = args.envs
@@ -152,11 +159,29 @@ def main():
     obs = venv.get_observations()
     frames = []
     steps = int(round(args.seconds / env.step_dt))
+    n_env = env.num_envs
+    streak = torch.zeros(n_env, dtype=torch.long, device=env.device)
+    prev_tallied = term.tallied.clone()
+    reached = torch.zeros((), dtype=torch.long, device=env.device)  # streaks that reached rally_n returns
+    failed = torch.zeros((), dtype=torch.long, device=env.device)  # streaks that ended (miss, fault, fall) below it
+    ended_len = torch.zeros(64, dtype=torch.long, device=env.device)  # lengths of streaks ended by a miss or a fall
     with torch.inference_mode():
         for _ in range(steps):
             obs, _, dones, _ = venv.step(policy(obs))
             if args.video:
                 frames.append(env.render())
+            if args.rally:  # a finished feed extends or ends each robot's rally; an episode end (fall, time-out) ends it
+                newly = term.tallied & ~prev_tallied
+                ok = newly & term.return_done
+                miss = newly & ~term.return_done
+                streak = torch.where(ok, streak + 1, streak)
+                reached += (ok & (streak == args.rally_n)).sum()
+                stop = miss | dones.bool()
+                fell_or_miss = miss | (dones.bool() & env.termination_manager.terminated)
+                failed += (fell_or_miss & (streak < args.rally_n)).sum()
+                ended_len.index_add_(0, streak.clamp(max=63), fell_or_miss.long())
+                streak = torch.where(stop, torch.zeros_like(streak), streak)
+                prev_tallied = term.tallied.clone()
     # Completed episodes only (outcomes tallied by the ball term at each episode end).
     episodes = int(term.ep["episodes"])
     hits, rets, falls = int(term.ep["contact"]), int(term.ep["legal_return"]), int(term.ep["fall"])
@@ -183,6 +208,15 @@ def main():
             la, lb, lt = (int(v) for v in term.land_family[i].tolist())
             table[name].update({"landings_in_A": la, "landings_in_B": lb, "target_hits": lt})
     out["per_family"] = table
+    if args.rally:
+        r_, f_ = int(reached), int(failed)
+        h = ended_len.cpu().double()
+        n_end = int(h.sum())
+        mean_len = float((h * torch.arange(64, dtype=torch.double)).sum() / max(n_end, 1))
+        out["rally"] = {"n": args.rally_n, "p_reach_n": round(r_ / max(r_ + f_, 1), 4), "p_reach_n_ci95": wilson(r_, r_ + f_),
+                        "reached": r_, "ended_below_n": f_, "mean_length_of_ended_rallies": round(mean_len, 2),
+                        "ended_rallies": n_end, "feeds": "court-anchored (feed anchor = start spot)",
+                        "note": "time-outs end a rally without counting as a failure"}
     if getattr(term.cfg, "court_wide", False):  # Stage 5C: outcomes per court zone and family (D-076)
         from picklebot_mj.feeds import COURT_ZONES
         zt = {}

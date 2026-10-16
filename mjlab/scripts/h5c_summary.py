@@ -54,6 +54,12 @@ worse = {f: x for f, x in reg.items() if x < -0.05}
 checks["5B families within 5 points of h4-25b"] = (not worse, f"diffs {reg}")
 main = court["legal_return_rate"]
 print(f"{a.tag}: main metric (court drill, pooled no-hint legal) {main:.4f}; falls {falls}; recovery {rec}; style {style:.3f}")
+try:  # D-086 north-star, reported, not gated
+    ra = json.load(open(f"{R}-rally.json"))["rally"]
+    print(f"  rally (court-anchored feeds): P(rally >= {ra['n']}) {ra['p_reach_n']} {ra['p_reach_n_ci95']}; "
+          f"mean length of ended rallies {ra['mean_length_of_ended_rallies']} (n {ra['ended_rallies']})")
+except FileNotFoundError:
+    pass
 for k, (ok, why) in checks.items():
     print(f"  [{'pass' if ok else 'FAIL'}] {k}: {why}")
 zones = {}
