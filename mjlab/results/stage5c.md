@@ -90,7 +90,8 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
 | 18 | s5c-18-merge17 | run 15's kickstart recipe (D-084) with run 17 as the hitting teacher, from run 15 | s5c-15/model_31675 | model_32874 (cap) | **79.9 %**; 42/55 cells; **move arrival 84-98 %**; move-drill falls 0.99 % | 4.008 |
 | 19 | s5c-19-residual | **residual executor** around frozen run 18 (D-086): lam_r 1, wrist_r 0.1, residual penalty 0.05 (3x in move episodes), residual output zero-initialised, std 0.1 | s5c-19-init/model_0 (= run 18) | model_900 (cap) | 79.3 / 79.5 %; 41/55 cells; **move arrival 94.8-99.8 % (gate met)**; move falls 0.07 % | **4.162 (kill rule triggered)** |
 | 20 | s5c-20-volley | **crashed at start-up, not counted**: the back zone's curriculum sampler had no valid family in the volley-only mix (fixed: such a zone falls back to the whole mix; test added) | - | - | - | - |
-| 20 | s5c-20b-volley | **volley specialist** (teacher run): PPO on volley feeds only, mid/front starts, D-086 on-ramp | s5c-18/model_32874 | iteration 1,000 or last before the cap | | |
+| 20 | s5c-20b-volley | **volley specialist** (teacher run): PPO on volley feeds only, mid/front starts, D-086 on-ramp | s5c-18/model_32874 | **stopped at model_33000** (counted): falls 4 -> 222 per logging interval | volley contact 13.6 / 0 %, legal 0 %, falls 72-77 % | - |
+| 21 | s5c-21-volley-res | volley specialist as a **residual around frozen run 18**, lam_r 2 (D-088) | s5c-19-init/model_0 (= run 18) | iteration 1,000 or last before the cap | | |
 
 ### Run notes
 - **Run 2 endpoint** (fixed 17:40, before any evaluation): `--agent.max-iterations 3000` was mis-sized; at 12,288 envs an iteration takes about 6.7 s, so the 7000 s wall cap ends the run near iteration 28,500. The endpoint is **model_28400**, the last checkpoint certain to be written before the cap. Iterations 27,700-27,880 ran at about 1.7k steps/s while run 3 shared the GPU.
@@ -191,4 +192,10 @@ Starting executor: `h4-25b-more/model_27700` (the Stage 5B gate). Budget: 30 tra
   - The style kill rule, as written at launch, triggered, so run 19 is not continued.
   - Recovery 1.325 m (stand-still gap 2.075 m). Rally P(>= 10) 0.0.
   - The next executor run must reach at least 81.5 %, or the plateau rule ends the loop.
+- **Run 20** (D-088): plain PPO from the kickstarted run 18 collapsed into falls within 60 iterations, as runs 13-14 had.
+  - Kill-rule check (seed 4200830): volley contact 13.6 % forehand / 0 % backhand (pooled 6.8 %, above the 5 % line), legal 0 %, falls 72-77 %.
+  - Not a usable teacher.
+- **Run 21:** the volley specialist as a residual around frozen run 18 (lam_r 2).
+  - Kill rule: pooled volley contact < 10 % or volley falls > 20 % on the gate feeds.
+  - If it passes, a residual-space merge (`scripts/residual_merge.py`) copies its residual on volley feeds and zero elsewhere, which leaves run 18 unchanged there.
 

@@ -2214,3 +2214,28 @@ Run 19, the residual executor around frozen run 18 (D-086; dev seeds 4200810-815
 - If it passes, run 21 merges it with `kickstart_h4.py --family-teacher` (per-teacher lambda).
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.
+
+### D-088 — Stage 5C: run 20 result; the volley specialist as a residual (run 21)
+
+- Date: 2026-10-16
+- Status: Accepted (loop, under D-086)
+- Amends: D-087
+
+Run 20 (s5c-20b-volley; plain PPO from run 18 on the volley-only task):
+- **It collapsed:** falls 4 -> 222 per logging interval and episode length 56 steps (1.1 s) by iteration 33,050.
+- **Stopped early at model_33000 and counted.** The first launch, s5c-20-volley, crashed at start-up on an empty back-zone sampler (fixed, test added) and is not counted.
+- **Kill-rule check on the gate feeds** (dev seed 4200830, `mjlab/results/stage5c-s5c-20-volley-kill.json`):
+  - Volley contact: forehand 13.6 %, backhand 0 %, pooled 6.8 %, above the 5 % line.
+  - Legal returns 0 %; falls 72-77 % of volley episodes.
+- **The kill rule formally did not trigger, but run 20 is not a usable teacher.**
+
+Pattern: plain PPO started from a kickstarted (distilled) executor has blown up into falls every time (runs 13, 14, 20). PPO as a residual around a frozen executor did not (run 19).
+
+Decision, run 21, the last volley attempt:
+- **Setup:** the volley specialist as a residual around frozen run 18, lam_r = 2 (so it can reach volley motions run 18 lacks), on `Picklebot-Latent-Court-Volley-Res2-G1`. Otherwise run 20's task and settings.
+- **Start:** residual zero-initialised, std 0.1 (`scripts/residual_init.py` from run 18).
+- **Endpoint:** fixed at iteration 1,000, or the last checkpoint before the cap.
+- **Kill rule, fixed now:** on the gate's volley feeds (court drill, no hint), pooled contact < 10 % or volley-episode falls > 20 % ends volley work for this stage. Only then would a merge run follow.
+- **Teacher run:** not counted for the plateau rule.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5C; `mjlab/results/stage5c.md`.

@@ -979,7 +979,7 @@ RES_BASE = str(Path(__file__).resolve().parents[2] / "artifacts" / "train" / "lo
                / "2026-10-16_05-35-35_s5c-18-merge17" / "model_32874.pt")
 
 
-def _residualize(cfg):
+def _residualize(cfg, lam_r: float = 1.0):
     """Replace a lambda-3 task's latent action term by the residual around RES_BASE (D-086)."""
     lt = cfg.actions["latent"]
     rl = asdict(_latent_drill3_lowent_rl_cfg())["actor"]
@@ -988,7 +988,7 @@ def _residualize(cfg):
                                   wrist_residual=lt.wrist_residual, latent=lt.latent,
                                   base_checkpoint=os.environ.get("PICKLEBOT_RES_BASE", RES_BASE),
                                   base_actor_cfg={k: rl[k] for k in ("activation", "obs_normalization", "distribution_cfg")},
-                                  lam_r=1.0, wrist_r=0.1)
+                                  lam_r=lam_r, wrist_r=0.1)
     cfg.actions = {"latent": res, "ball": cfg.actions["ball"]}
     cfg.rewards["latent_prior"] = RewardTermCfg(func=residual_prior_nll, weight=-0.05)
     return cfg
@@ -1011,3 +1011,40 @@ register_mjlab_task(task_id=TASK_LATENT_DRILL3_PRIOR5_RES, env_cfg=_latent_drill
 register_mjlab_task(task_id=TASK_LATENT_COURT_RES, env_cfg=_latent_court_res(), play_env_cfg=_latent_court_res(True),
                     rl_cfg=_latent_drill3_lowent_rl_cfg())
 
+
+# Stage 5C run 21 (D-088): the volley specialist as a residual around frozen run 18 (RES_BASE), lam_r 2 so it can reach
+# volley motions the base lacks (each latent dim up to 2 prior sigmas from the base's), on the volley-only task.
+# Run 20 (plain PPO from the kickstarted run 18) collapsed into falls within 60 iterations, as runs 13-14 had.
+TASK_LATENT_COURT_VOLLEY_RES2 = "Picklebot-Latent-Court-Volley-Res2-G1"
+
+
+def _latent_court_volley_res2(play=False):
+    return _residualize(_latent_court_volley_l3(play), lam_r=2.0)
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_VOLLEY_RES2, env_cfg=_latent_court_volley_res2(),
+                    play_env_cfg=_latent_court_volley_res2(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+
+# Stage 5C (D-088): the court drill with run 21's residual space (lam_r 2 around RES_BASE), for merging residual
+# specialists into one residual executor (scripts/residual_merge.py) and evaluating it.
+TASK_LATENT_COURT_RES2 = "Picklebot-Latent-Court-Res2-G1"
+
+
+def _latent_court_res2(play=False):
+    return _residualize(_latent_court_l3(play), lam_r=2.0)
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_RES2, env_cfg=_latent_court_res2(), play_env_cfg=_latent_court_res2(True),
+                    rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+TASK_LATENT_DRILL3_PRIOR5_RES2 = "Picklebot-Latent-Drill3-Prior5-Res2-G1"
+
+
+def _latent_drill3_prior5_res2(play=False):
+    return _residualize(_latent_drill3_prior5_l3(play), lam_r=2.0)
+
+
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_PRIOR5_RES2, env_cfg=_latent_drill3_prior5_res2(),
+                    play_env_cfg=_latent_drill3_prior5_res2(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
