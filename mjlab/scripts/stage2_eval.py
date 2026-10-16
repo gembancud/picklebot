@@ -67,6 +67,8 @@ def main():
                     help="recovery spot in evaluation: baseline centre (Stage 5) or random over the task's recovery box (5C)")
     ap.add_argument("--refeed-delay", type=float, default=None,
                     help="seconds between a rally's end and the next feed (recovery evaluation, D-086: 8 s)")
+    ap.add_argument("--start-x", type=float, default=None,
+                    help="court-local pelvis start x (+-0.15 m), e.g. -2.6 for kitchen-line play (review videos)")
     ap.add_argument("--rally", action="store_true",
                     help="rally evaluation (D-086): court-anchored feeds (feed anchor = the start spot, so every shot "
                          "lands at a fixed court place the robot must reach), fixed recovery spot, consecutive legal "
@@ -101,6 +103,11 @@ def main():
         cfg.actions["ball"].recovery_mode = args.recovery  # baseline centre (default) or court-wide random (5C)
     if args.rally:
         cfg.actions["ball"].feed_anchor = "start"
+    if args.start_x is not None:  # review videos: start near a given court x (e.g. the kitchen line)
+        from picklebot_mj.tasks.return_stand import ROBOT_START
+        pr = cfg.events["reset_base"].params["pose_range"]
+        pr["x"] = (args.start_x - 0.15 - ROBOT_START[0], args.start_x + 0.15 - ROBOT_START[0])
+        pr["y"] = (-0.3 - ROBOT_START[1], 0.3 - ROBOT_START[1])
     if args.refeed_delay is not None:
         cfg.actions["ball"].refeed_delay_s = args.refeed_delay
     cfg.scene.num_envs = args.envs
