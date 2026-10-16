@@ -215,8 +215,12 @@ class BallPhysicsAction(ActionTerm):
                                         mastered_weight=getattr(cfg, "lp_mastered_weight", None),
                                         rehearse_mask=top if getattr(cfg, "lp_rehearse_top_only", False) else None)
             if getattr(cfg, "court_wide", False):  # one sampler per zone, over the families valid there (D-076)
+                def zone_mix(z):  # a zone where no mixed family is valid (volley-only task, back zone) uses the whole mix
+                    m = self._mix * self._zone_valid[z].float()
+                    return m if float(m.sum()) > 0 else self._mix
+
                 self.lp_zone_samplers = [
-                    LPSampler((self._mix * self._zone_valid[z].float()).repeat_interleave(L), device=dev,
+                    LPSampler(zone_mix(z).repeat_interleave(L), device=dev,
                               mastered_weight=getattr(cfg, "lp_mastered_weight", None),
                               rehearse_mask=top if getattr(cfg, "lp_rehearse_top_only", False) else None)
                     for z in range(self._zone_valid.shape[0])]

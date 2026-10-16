@@ -106,3 +106,21 @@ def test_zone_table_matches_the_offline_feed_check():
     assert COURT_ZONE_FAMILIES["lob"] == {"mid", "front"}
     assert COURT_ZONE_FAMILIES["volley_forehand"] == {"mid", "front"}
     assert COURT_ZONE_FAMILIES["short"] == {"back", "mid", "front"}  # valid from the front (0.16 m travel)
+
+
+def test_volley_only_task_builds_with_an_empty_zone():
+    """The volley specialist task (D-087) mixes only families invalid in the back zone; its back-zone sampler falls
+    back to the whole mix instead of failing."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks  # noqa: F401
+
+    cfg = load_env_cfg("Picklebot-Latent-Court-Volley-L3-G1")
+    cfg.scene.num_envs = 4
+    env = ManagerBasedRlEnv(cfg=cfg, device="cuda")
+    env.reset()
+    for _ in range(5):
+        env.step(torch.zeros(env.num_envs, env.action_manager.total_action_dim, device="cuda"))
+    env.close()
