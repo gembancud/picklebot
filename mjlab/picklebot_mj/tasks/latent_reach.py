@@ -383,3 +383,14 @@ def residual_prior_nll(env, action_name="latent", move_weight=3.0):
     if getattr(ball, "drill", None) is not None:
         pen = pen * (1.0 + (move_weight - 1.0) * ball.drill.move_ep.float())
     return pen
+
+
+def composite_prior_nll(env, action_name="latent"):
+    """Style anchor for residual executors (Stage 5D, D-093): the prior-likelihood penalty of D-072 on the composite
+    latent, sum over dims of (lam tanh(a_base) + lam_r tanh(a))^2 = |z - mu_p|^2 / sigma_p^2. Residual tasks had
+    replaced it by the penalty toward the base, so nothing pulled the composite towards the prior mean (human-like
+    poses); style drifted 4.0 -> 4.2."""
+    term = env.action_manager.get_term(action_name)
+    L = term.cfg.latent
+    off = term.cfg.lam * torch.tanh(term.a_ref[:, :L]) + term.cfg.lam_r * torch.tanh(term.raw_action[:, :L])
+    return off.pow(2).sum(-1)

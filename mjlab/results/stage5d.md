@@ -7,4 +7,12 @@ Start point: Stage 5C candidate run 22 (`s5c-22-res-rally/model_900`): rally P(>
 ## Runs
 | # | Run | Change (written before launch) | From | Endpoint | P(rally >= 10) | Court main | Falls | Style |
 |---|---|---|---|---|---|---|---|---|
-| 1 | s5d-01-rally | PPO continuation of run 22 on the rally drill (D-092) | s5c-22/model_900 | iteration 1,900 or last before the cap | | | | |
+| 1 | s5d-01-rally | PPO continuation of run 22 on the rally drill (D-092) | s5c-22/model_900 | model_1800 (cap) | **9.67 %** [9.05, 10.34] | 77.9 % | court 6.1 %, move 0.15 % | **4.199 (kill rule)** |
+| 2 | s5d-02-rally-style | run 1's recipe + style anchor: prior penalty on the composite latent, 0.05 (D-093) | s5c-22/model_900 | iteration 1,900 or last before the cap | | | | |
+
+## Notes
+- **Run 1** (dev seeds 4200930-935): rally P(>= 10) 1.6 -> **9.67 %**, mean ended rally 2.68.
+  - Arrival 99.5-100 %, recovery 1.175 m, court 77.9 %.
+  - Court falls rose to 6.1 %, and style 4.199 triggers the kill rule (> 4.17), so run 1 is not built on.
+  - Style drifts because the residual tasks dropped the prior penalty on the composite latent (D-093).
+

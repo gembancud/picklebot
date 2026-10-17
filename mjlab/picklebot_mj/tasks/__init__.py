@@ -1102,3 +1102,22 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_RALLY_L3, env_cfg=_latent_court_ra
 register_mjlab_task(task_id=TASK_LATENT_COURT_RALLY, env_cfg=_latent_court_rally(), play_env_cfg=_latent_court_rally(True),
                     rl_cfg=_latent_drill3_lowent_rl_cfg())
 
+
+
+# Stage 5D run 2 (D-093): the rally drill with a style anchor, the D-072 prior-likelihood penalty on the composite
+# latent (weight 0.05, Stage 5B's Prior5 value, which held style at 3.81), next to the residual penalty.
+from picklebot_mj.tasks.latent_reach import composite_prior_nll  # noqa: E402
+
+TASK_LATENT_COURT_RALLY_STYLE = "Picklebot-Latent-Court-Rally-Style-G1"
+
+
+def _latent_court_rally_style(play=False):
+    cfg = _latent_court_rally(play)
+    legal = cfg.rewards.pop("legal_return")  # keep legal_return last (it clears the step flags)
+    cfg.rewards["composite_prior"] = RewardTermCfg(func=composite_prior_nll, weight=-0.05)
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_RALLY_STYLE, env_cfg=_latent_court_rally_style(),
+                    play_env_cfg=_latent_court_rally_style(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

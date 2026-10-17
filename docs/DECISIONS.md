@@ -2358,3 +2358,28 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (new Stage 5D section); `mjlab/re
   - court main metric < 76.8 % (the gate floor).
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md Stage 5D; `mjlab/results/stage5d.md`.
+
+### D-093 — Stage 5D run 1 result (style kill rule) and run 2 with a style anchor
+
+- Date: 2026-10-17
+- Status: Accepted (loop, under D-091)
+- Amends: D-092
+
+Run 1 (s5d-01-rally; PPO continuation of run 22 on the rally drill; endpoint model_1800, the last checkpoint before the cap; dev seeds 4200930-935, `mjlab/results/stage5c-s5d-01-*.json`):
+- **Rally P(>= 10) 9.67 %** [9.05, 10.34], mean ended rally 2.68 (run 22: 1.6 %, 1.44). That is +8.1 points on the main metric.
+- **Arrival** 99.5-100 % in every direction; move-drill falls 0.15 %.
+- **Court** main metric 77.9 % (gate floor 76.8 %).
+- **Recovery** (time model) 1.175 m.
+- **Court falls 6.1 %** (run 22: 3.3 %).
+- **Style 4.199: the kill rule fixed at launch (style > 4.17) triggers.** As in D-087, run 1 is not continued or built on.
+
+Cause of the style drift (code reading): the residual tasks replaced D-072's prior-likelihood penalty with a penalty toward the frozen base. Nothing pulls the composite latent toward the prior mean any more, so PPO moves it into poses far from the clips.
+
+**Run 2 (s5d-02-rally-style):**
+- **Change:** run 1's recipe from run 22 (the rally drill), plus the style anchor `composite_prior_nll`: sum (lam tanh(a_base) + lam_r tanh(a))^2 = |z - mu_p|^2 / sigma_p^2 on the composite latent, weight 0.05 (Stage 5B's Prior5 value, which held style at 3.81), next to the residual penalty. Task `Picklebot-Latent-Court-Rally-Style-G1`, test added.
+- **Measured against run 1:** the one change is the style anchor. It starts again from run 22 because run 1's kill rule triggered.
+- **Endpoint:** iteration 1,900, or the last checkpoint before the cap.
+- **Kill rules** (against run 22, the base): style > 4.17, arrival < 90 % in any direction, move-drill falls > 1 %, court main metric < 76.8 %.
+- **Court falls:** they rose to 6.1 % in run 1. The falls fix (D-092 diagnosis) is the next change after style.
+
+Affected roadmap/spec sections: `mjlab/results/stage5d.md`.

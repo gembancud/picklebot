@@ -175,3 +175,25 @@ def test_rally_drill_fixed_recovery_streak_and_bonus():
     assert torch.allclose(true_rec[m], fixed.expand(int(m.sum()), 2))
     assert hasattr(t, "rally_streak") and int(t.rally_streak.min()) >= 0
     env.close()
+
+
+def test_composite_prior_penalty_is_the_composite_latent_offset():
+    """D-093: the style anchor equals sum (lam tanh(a_base) + lam_r tanh(a))^2 and is zero-residual = base offset."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks  # noqa: F401
+    from picklebot_mj.tasks.latent_reach import composite_prior_nll
+
+    cfg = load_env_cfg("Picklebot-Latent-Court-Rally-Style-G1")
+    assert list(cfg.rewards)[-1] == "legal_return" and "composite_prior" in cfg.rewards
+    cfg.scene.num_envs = 8
+    env = ManagerBasedRlEnv(cfg=cfg, device="cuda")
+    env.reset()
+    env.step(torch.zeros(env.num_envs, env.action_manager.total_action_dim, device="cuda"))
+    term = env.action_manager.get_term("latent")
+    L = term.cfg.latent
+    expect = (term.cfg.lam * torch.tanh(term.a_ref[:, :L])).pow(2).sum(-1)  # residual is zero
+    assert torch.allclose(composite_prior_nll(env), expect, atol=1e-4)
+    env.close()
