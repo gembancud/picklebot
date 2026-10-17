@@ -197,3 +197,15 @@ def test_composite_prior_penalty_is_the_composite_latent_offset():
     expect = (term.cfg.lam * torch.tanh(term.a_ref[:, :L])).pow(2).sum(-1)  # residual is zero
     assert torch.allclose(composite_prior_nll(env), expect, atol=1e-4)
     env.close()
+
+
+def test_overspeed_penalty_is_zero_at_rest_and_quadratic_above_vmax():
+    """D-094 falls fix: (v - vmax)^2 above vmax only."""
+    from types import SimpleNamespace
+
+    from picklebot_mj.tasks.latent_reach import overspeed
+
+    v = torch.tensor([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.5, 0.0, 0.0], [0.0, 2.0, 0.0]])
+    env = SimpleNamespace(scene={"robot": SimpleNamespace(data=SimpleNamespace(root_link_lin_vel_w=v))})
+    r = overspeed(env, vmax=1.2)
+    assert torch.allclose(r, torch.tensor([0.0, 0.0, 0.09, 0.64]), atol=1e-6)

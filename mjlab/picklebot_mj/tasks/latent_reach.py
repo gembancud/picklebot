@@ -394,3 +394,10 @@ def composite_prior_nll(env, action_name="latent"):
     L = term.cfg.latent
     off = term.cfg.lam * torch.tanh(term.a_ref[:, :L]) + term.cfg.lam_r * torch.tanh(term.raw_action[:, :L])
     return off.pow(2).sum(-1)
+
+
+def overspeed(env, vmax: float = 1.2, asset_name: str = "robot"):
+    """Falls fix (Stage 5D, D-092 diagnosis): squared pelvis ground speed above vmax (m/s). Run 22's falls happen
+    mostly while running for far balls, at a median 1.59 m/s one step before the fall (0.58 m/s otherwise)."""
+    v = env.scene[asset_name].data.root_link_lin_vel_w[:, :2].norm(dim=-1)
+    return (v - vmax).clamp(min=0.0).pow(2)

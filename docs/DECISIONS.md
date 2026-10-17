@@ -2383,3 +2383,39 @@ Cause of the style drift (code reading): the residual tasks replaced D-072's pri
 - **Court falls:** they rose to 6.1 % in run 1. The falls fix (D-092 diagnosis) is the next change after style.
 
 Affected roadmap/spec sections: `mjlab/results/stage5d.md`.
+
+### D-094 — Stage 5D run 2 result; style breakdown; run 3 with an overspeed penalty
+
+- Date: 2026-10-17
+- Status: Accepted (loop, under D-091)
+- Amends: D-093
+
+Run 2 (s5d-02-rally-style, model_1800; dev seeds 4200940-945, repeats 4200950-953; `mjlab/results/stage5c-s5d-02-*.json`):
+- **Rally P(>= 10)** 7.57 % / 7.73 % (mean 7.65 %).
+- **Style** 4.148 / 4.133: the anchor at weight 0.05 moved style by only about -0.05.
+- **Arrival right** 85.8 % / 86.6 %: **the kill rule (arrival < 90 % in any direction) triggers.**
+- Court 77.8 %; court falls 5.1 %.
+- The run 1 style repeat (4.196) confirms run 1's kill rule.
+- **Plateau:** run 1 improved the main metric by +8.1 points; run 2 is strike 1 (7.65 % against 9.67 %).
+
+**Style breakdown** (`mjlab/scripts/diag/style_breakdown.py`, court drill as the gate's style job, dev seed 4200960, `mjlab/results/stage5d-stylebd-*.json`):
+
+| Executor | Style median | Slow poses (< 0.8 m/s) | Fast poses (>= 0.8 m/s) | Fast share |
+|---|---:|---:|---:|---:|
+| h4-25b (Stage 5B gate executor) | 3.88 | 3.44 | 4.48 | 32 % |
+| run 22 | 4.02 | 3.58 | 4.50 | 34 % |
+| run 1 (s5d-01) | 4.22 | 3.75 | 4.59 | 39 % |
+
+- **h4-25b itself scores 3.88 on the court drill** (3.81 on the Stage 5B drill), above the 3.86 gate.
+- **Fast poses sit at about 4.5 for every executor.** The running gait with the paddle is far from the clip set.
+- **Rally training raises the fast share and the slow-pose distance.**
+- **No feature group dominates:** legs 26-30 %, right wrist 15-17 %, left arm 14-17 %, waist 11-12 %.
+- **Reported, not acted on:** the style gate (never loosened) may be out of reach on this drill for any executor that moves this much. It stays as written.
+
+**Run 3 (s5d-03-rally-speed):**
+- **Change:** run 1's recipe from run 22 (the rally drill), plus the falls fix, a penalty -0.5 (v - 1.2)^2 on pelvis ground speed above 1.2 m/s (`overspeed`, `Picklebot-Latent-Court-Rally-Speed-G1`, test added).
+- **Measured against run 1:** this is the only change, chosen because run 22's falls happen at a median 1.59 m/s (D-092) and fast poses are the costly ones for style.
+- **No style anchor:** run 2 showed it cost rally and arrival for little style.
+- **Endpoint and kill rules:** endpoint iteration 1,900 or the last checkpoint before the cap. Kill rules as runs 1-2 (against run 22): style > 4.17, arrival < 90 % in any direction, move-drill falls > 1 %, court < 76.8 %.
+
+Affected roadmap/spec sections: `mjlab/results/stage5d.md`.

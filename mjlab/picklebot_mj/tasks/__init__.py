@@ -1121,3 +1121,38 @@ def _latent_court_rally_style(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_COURT_RALLY_STYLE, env_cfg=_latent_court_rally_style(),
                     play_env_cfg=_latent_court_rally_style(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# Stage 5D falls fix (D-094): the style-anchored rally drill plus a penalty on pelvis ground speed above 1.2 m/s,
+# weight 0.5 ((v - 1.2)^2 per step), aimed at the running falls of the D-092 diagnosis.
+from picklebot_mj.tasks.latent_reach import overspeed  # noqa: E402
+
+TASK_LATENT_COURT_RALLY_STYLE_SPEED = "Picklebot-Latent-Court-Rally-Style-Speed-G1"
+
+
+def _latent_court_rally_style_speed(play=False):
+    cfg = _latent_court_rally_style(play)
+    legal = cfg.rewards.pop("legal_return")  # keep legal_return last (it clears the step flags)
+    cfg.rewards["overspeed"] = RewardTermCfg(func=overspeed, weight=-0.5, params={"vmax": 1.2})
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_RALLY_STYLE_SPEED, env_cfg=_latent_court_rally_style_speed(),
+                    play_env_cfg=_latent_court_rally_style_speed(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# Stage 5D run 3 (D-094): run 1's rally drill (no style anchor) plus the overspeed penalty.
+TASK_LATENT_COURT_RALLY_SPEED = "Picklebot-Latent-Court-Rally-Speed-G1"
+
+
+def _latent_court_rally_speed(play=False):
+    cfg = _latent_court_rally(play)
+    legal = cfg.rewards.pop("legal_return")  # keep legal_return last (it clears the step flags)
+    cfg.rewards["overspeed"] = RewardTermCfg(func=overspeed, weight=-0.5, params={"vmax": 1.2})
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_RALLY_SPEED, env_cfg=_latent_court_rally_speed(),
+                    play_env_cfg=_latent_court_rally_speed(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
