@@ -279,11 +279,17 @@ The H4 executor plays a baseline game: it starts and recovers near the baseline 
 
 Goal: an executor that sustains rallies against court-anchored shots, without losing Stage 5C's footwork or court-wide hitting.
 
-- [ ] Rally drill task (scripted far-court opponent, court-anchored shots, long episodes, rally reward) + tests.
-- [ ] Falls diagnosis of run 22 (phase, family, zone, posture) and a targeted fix.
-- [ ] Consolidation: kickstart a new base from a residual executor (composite teacher) + tests.
-- [ ] Residual PPO on the rally drill from run 22; style anchor; consolidation every 3-4 PPO runs.
+- [x] Rally drill task (scripted far-court opponent, court-anchored shots, long episodes, rally reward) + tests.
+- [x] Falls diagnosis of run 22 (phase, family, zone, posture) (done, D-092); the targeted fix was not run before the plateau stop and moves to Stage 5E.
+- [x] Consolidation: kickstart a new base from a residual executor (composite teacher) + tests (built; no consolidation run was reached before the plateau stop).
+- [x] Residual PPO on the rally drill from run 22; style anchor; runs 1-4 (style, overspeed and gait anchors); no consolidation run was reached.
 - [ ] **Gate:** P(rally >= 10) >= 20 % (rally evaluation, 90 s, no hint, final pooled over 4 seeds); court falls <= 1 %; style <= 3.86; move-to-spot arrival >= 90 % in every direction; court drill main metric no more than 2 points below 78.8 %. Up to 15 runs; plateau rule on P(rally >= 10) (< 2 points, 3 runs).
+
+  - Not met (D-099):
+    - P(rally >= 10) 9.59 % (run 1, pooled over 4 seeds) vs 1.75 % for run 22.
+    - Court falls 5.9 %, style 4.202.
+  - Met: arrival 99.7-100 %, court main metric 78.3 %.
+  - Report: mjlab/results/stage5d-gate.md.
 
 ## Stage 5E — rally drill v2, stance spot, footwork style (D-096..D-098)
 
@@ -870,3 +876,9 @@ Its measured capability envelope is published as a contract. It must hold across
     - Recovery 1.325 m (time model), court falls 3.3 %, style 4.017; Stage 5B backspin -35, fast -6.8, reach_deep -9.5.
   - Rally (court-anchored feeds, reported, not gated): legal 61.8 %, P(rally >= 10) 1.6 %.
   - Report and recommended next steps: mjlab/results/stage5c-gate.md. Review videos: mjlab/artifacts/videos/h5c/s5c-22-*. Not pushed (the stage did not pass).
+- 2026-10-17 - **Stage 5D gate NOT MET; loop ended under the plateau rule (D-099).** 4 of 15 runs used.
+  - Candidate: run 1 `s5d-01-rally/model_1800`, "best rally, failed kill rules" (style).
+  - P(rally >= 10) 9.59 % vs run 22's 1.75 % (pooled over 4 seeds); per-shot p 77.4 % vs 62.5 %.
+  - Court main metric 78.3 %, arrival 99.7-100 % (both met); court falls 5.9 % and style 4.20 (not met).
+  - Misses concentrate in volleys, reach_deep, lob, backspin@back and cross_backhand.
+  - Report: mjlab/results/stage5d-gate.md. Next: Stage 5E (D-097/D-098).

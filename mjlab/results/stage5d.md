@@ -27,3 +27,15 @@ Start point: Stage 5C candidate run 22 (`s5c-22-res-rally/model_900`): rally P(>
 - **Run 4** (dev seeds 4200990-995): the gait anchor did not lower style (4.184, kill rule), and rally fell to 8.0 %. That is plateau strike 3 (< 11.67 %). It lies within 3 points of the best, so it is repeated on a second seed in the same-seed comparison below. Reviewers judged the anchor flawed: it covers all joints and pays only while the ball is more than 1 m away (D-096).
 - **Plateau stop:** Stage 5D ends after run 4 (D-096). The direction review and the next stage plan are in D-096..D-098.
 - **Final candidate (D-097/D-098):** runs 1-4 are rally-evaluated on the same two fresh dev seeds, 4200961 and 4200962; D-097 named out-of-range seeds, corrected in D-098. The highest mean is labelled "best rally, failed kill rules" and paired against run 22 on seeds 4200325-4200350.
+
+## Same-seed rally comparison (D-097/D-098; dev seeds 4200961, 4200962; 90 s, no hint)
+| Run | P(rally >= 10), each seed | Mean | Legal (court-anchored) | Kill rule hit |
+|---|---|---|---|---|
+| 1 s5d-01-rally | 9.70 / 9.45 % | **9.58 %** | 77.7 / 77.6 % | style 4.199 |
+| 2 s5d-02-rally-style | 7.99 / 7.84 % | 7.91 % | 75.8 / 75.3 % | arrival right 85.8 % |
+| 3 s5d-03-rally-speed | 8.73 / 8.14 % | 8.44 % | 76.4 / 76.3 % | style 4.210 |
+| 4 s5d-04-rally-gait | 7.54 / 8.20 % | 7.87 % | 75.4 / 76.0 % | style 4.184 |
+
+- **Candidate:** run 1 (`s5d-01-rally/model_1800`), labelled "best rally, failed kill rules" (style).
+- **Run 4's second seed:** 7.87 % confirms plateau strike 3, so Stage 5D ends.
+- **Paired final:** run 1 vs run 22 on dev seeds 4200325-4200350 (`scripts/h5d_final.sh`).

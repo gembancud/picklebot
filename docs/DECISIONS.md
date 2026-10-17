@@ -2552,3 +2552,30 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E to be written); `mjlab/
 - paired final (h5d_final.sh): S = 4200325 (uses 4200325-4200350).
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E); `mjlab/results/stage5d.md`; `mjlab/artifacts/eval/samesd.sh`.
+
+### D-099 — Stage 5D gate: not met (plateau stop); candidate run 1; Stage 5E next
+
+- Date: 2026-10-17
+- Status: Accepted (loop end, D-091)
+- Amends: none (records the Stage 5D result)
+
+**Plateau stop.** Runs 2-4 did not improve on run 1's P(rally >= 10) by 2 points. Run 4's second-seed repeat confirmed the third strike. 4 of the 15 runs were used.
+
+**Candidate (rule D-096, kept in D-098):** run 1, `s5d-01-rally/model_1800`, labelled "best rally, failed kill rules" (style). It has the best same-seed mean on dev seeds 4200961/2: 9.58 % vs 7.91 / 8.44 / 7.87 % for runs 2-4.
+
+**Paired final vs run 22** (dev seeds 4200325-4200350, no final seeds):
+
+| Item | Run 1 | Run 22 | Gate |
+|---|---|---|---|
+| P(rally >= 10), pooled over 4 seeds | 9.59 % [9.27, 9.91] | 1.75 % [1.64, 1.87] | >= 20 %: fail |
+| Per-shot p on court-anchored feeds | 77.4 % | 62.5 % | — |
+| Court main metric | 78.3 % [78.0, 78.6] | 78.8 % | >= 76.8 %: pass |
+| Court falls | 5.9 % | 3.3 % | <= 1 %: fail |
+| Style | 4.202 | 4.017 | <= 3.86: fail |
+| Arrival, every direction | 99.7-100 % | 99.4-99.95 % | >= 90 %: pass |
+
+2 of 5 gate items are met.
+
+**Next:** Stage 5E as planned in D-097/D-098 (MJLAB_PIVOT.md). Report: `mjlab/results/stage5d-gate.md`.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5D checklist, log); `mjlab/results/stage5d-gate.md`; `mjlab/results/stage5d.md`.
