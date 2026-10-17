@@ -2442,3 +2442,27 @@ Run 3 (s5d-03-rally-speed, model_1800; dev seeds 4200970-975, rally repeat 42009
 - **Kill rules** (against run 22): style > 4.17, arrival < 90 % in any direction, move-drill falls > 1 %, court < 76.8 %.
 
 Affected roadmap/spec sections: `mjlab/results/stage5d.md`.
+
+### D-096 — Direction review (five reviewers) and user decisions; Stage 5D end rule and final candidate rule
+
+- Date: 2026-10-17
+- Status: Accepted (user, recorded before run 4's evaluation result)
+- Amends: D-091 (Stage 5D end), roadmap (next stage)
+
+A second five-reviewer round (RL methods, motion and style, pickleball drill design, experiment design, architecture) reviewed Stage 5D runs 1-3 while run 4 was training. Shared findings:
+1. **Rally length is a per-shot reliability problem.** Feeds are independent, so P(rally >= 10) is about p^10 (run 1: p = 77.4 %, 0.774^10 = 7.7 %; the gate's 20 % needs p of about 0.85). Five families carry most of the misses on court-anchored feeds: reach_deep 46 %, backspin 52 %, fast 56 %, low 66 %, cross_backhand 67 %. The other 12 sit at 79-93 %. Runs 1-3 changed nothing for those families.
+2. **The style gate as measured is likely out of reach on this drill.** h4-25b scores 3.88; fast poses cost about 4.5 for every executor because the reference has no running with a paddle; rally training raises the fast share.
+3. **The gait anchor (run 4) is flawed:** it matches all joints, arms included, during the approach, and its reward is only paid while the ball is more than 1 m away.
+4. **The rally drill design itself pushes falls and style up:** uniform extreme feeds, sprints back to the baseline centre, machine-set pacing.
+5. **The loop rules interact badly:** the plateau bar came from a killed run, no run compounded on another, the kill rules do not watch court falls, and runs 2-3 had undersized reward weights.
+
+Disagreement: the architecture reviewer recommends replacing H1, H4 and the residual stack with a goal-conditioned controller plus an analytic interception planner. The others recommend keeping the stack and changing what it is trained on.
+
+**User decisions:**
+1. **Stage 5D rules unchanged.** If run 4 does not reach 11.67 %, the plateau rule ends Stage 5D (final evaluation, videos, gate report).
+2. **Style:** obtain real human footwork motion capture for the reference and the controller data. That is a download, so the dataset, source, size and licence go to the user for approval before anything is fetched.
+3. **Next stage:** keep the stack. Fix the rally drill (realistic feed mix, position-dependent recovery, pacing from the robot's own return), weight feeds by failure rate, add a backspin family teacher, and give the executor the interception (stance) spot on every feed. A controller rebuild is decided from that stage's evidence.
+
+**Final candidate rule for Stage 5D (fixed now, before run 4's result):** the candidate is the run among 1-4 with the highest P(rally >= 10), taking the mean over the seeds evaluated, whatever its kill rules. The report states every kill-rule result and the best run that passed its kill rules (run 22).
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5D end, next stage); `mjlab/results/stage5d.md`.
