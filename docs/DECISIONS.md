@@ -2517,3 +2517,38 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5D end, next stage); `mjla
    - otherwise H0 -> H1 retraining.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E to be written); `mjlab/results/stage5d.md`.
+
+### D-098 — Round-3 review of D-097, user answers, seed correction
+
+- Date: 2026-10-17
+- Status: Accepted (user)
+- Amends: D-097 (seeds, 5E details)
+
+**Review.** Five reviewers checked the D-097 decisions. Four agreed with caveats. The pickleball reviewer objected to the 5D candidate rule: only runs that passed their kill rules should be eligible, and the candidate should be picked before the paired final on fresh seeds.
+
+**User answers.**
+- **5D candidate:** unchanged from D-097. The best mean P(rally >= 10) of runs 1-4 on the same two seeds is the candidate, labelled "best rally, failed kill rules". It is paired against run 22, the best run that passed its kill rules, on fresh seeds disjoint from the selection seeds. Every kill-rule failure is listed as a deviation.
+- **Style threshold on the new reference:** stays absolute at 3.86. h4-25b's re-score is reported for information only, and the old-reference score is always reported.
+
+**Caveats adopted for Stage 5E.**
+- **Style reference:**
+  - A held-out 100STYLE slice is used only as style reference and never for training.
+  - The filter rule is written against 100STYLE's own style labels: neutral walking and sidestep only.
+  - Retarget quality is checked (foot sliding, ground contact) before any clip is used.
+  - Wrist joints are excluded from the style discriminator.
+  - The tracking teacher is checked on held-out clips.
+  - The reference, filter and shares are frozen before any scoring.
+- **Download:** confirm the exact download size before fetching, and record the CC BY 4.0 attribution.
+- **Group floors:** judged on Wilson lower bounds.
+- **Falls fix:** its mechanism is written down before its run.
+- **Action delay:** 0-20 ms.
+- **Stance spot:**
+  - Run 0 evaluates the spot-given baseline first.
+  - At evaluation the spot comes from the noisy, delayed planner.
+- **Gate scope:** the report states that the 5E gate of p >= 0.80 implies about 11 % P(rally >= 10), below 5D's 20 %. Only the 0.85 stretch target matches it.
+
+**Seed correction (D-097 erratum).** D-097 named seeds 4201000/4201001, which lie outside DEV_EVAL_SEEDS (4200000-4200999). The evaluator's guard rejected them before anything ran. Replacements, from text-searched unused blocks:
+- same-seed rally comparison: 4200961 and 4200962;
+- paired final (h5d_final.sh): S = 4200325 (uses 4200325-4200350).
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E); `mjlab/results/stage5d.md`; `mjlab/artifacts/eval/samesd.sh`.
