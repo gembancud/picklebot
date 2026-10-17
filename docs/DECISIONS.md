@@ -2466,3 +2466,54 @@ Disagreement: the architecture reviewer recommends replacing H1, H4 and the resi
 **Final candidate rule for Stage 5D (fixed now, before run 4's result):** the candidate is the run among 1-4 with the highest P(rally >= 10), taking the mean over the seeds evaluated, whatever its kill rules. The report states every kill-rule result and the best run that passed its kill rules (run 22).
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5D end, next stage); `mjlab/results/stage5d.md`.
+
+### D-097 — Realigned plan (reviewer round 2) and user decisions; Stage 5D run 4 result; end procedure
+
+- Date: 2026-10-17
+- Status: Accepted (user)
+- Amends: D-096
+
+**Run 4** (s5d-04-rally-gait, model_1700, the last checkpoint before the cap; dev seeds 4200990-995):
+- Rally P(>= 10) 8.0 % [7.4, 8.6].
+- Court 77.0 %, court falls 5.9 %.
+- **Style 4.184: the kill rule (> 4.17) triggers.** Arrival 99.5-100 %.
+- **Plateau:** it falls short of run 1's 9.67 % + 2. It lies within 3 points of the best, so it is repeated on a second seed (below).
+
+**Reviewer round 2:** the five reviewers voted on the realigned plan. Amendments adopted:
+- **5D final candidate:** runs 1-4 are rally-evaluated on the same two fresh dev seeds (4201000, 4201001), which also serves as run 4's second-seed repeat. The candidate is the run with the highest mean. It is labelled "best rally, failed kill rules" and evaluated in the paired final evaluation next to run 22, the best run that passed its kill rules.
+- **5D report:** every kill-rule result; per-shot p with CIs next to P(rally >= 10), and the p^10 finding; the style finding; runs 2-3 under-dosed; run 1's bundled bug fix; court falls 3-6 % since Stage 5C.
+- **Next stage (5E), before any training run:**
+  1. **Freeze drill v2 and its evaluation:**
+     - feed groups, evenly weighted inside each group, never two extremes in a row: neutral 60 % (easy_forehand, wide_forehand, backhand, deep, short, high, low, topspin), moderate 25 % (fast, backspin, reach_forehand, reach_backhand, reach_short), extreme 15 % (cross_forehand, cross_backhand, reach_deep, drop);
+     - recovery x = clamp(x_contact, -5.6, -4.5), y = clamp(0.4 y_contact, -1.2, 1.2);
+     - next feed 0.2 s after the robot's return lands or is ruled dead;
+     - failure-weighted sampling in training only, with the extreme share capped at 25 %.
+  2. **Stance (interception) spot computed by a planner from noisy, delayed ball observations,** not the feed geometry. Evaluations are reported with the spot clean, perturbed and absent.
+  3. **Sim-to-real from the start:** 20-40 ms observation latency and ball-state noise, and a check of the actuator limits.
+  4. **Run 0:** run 22, and the consolidated base, scored on the frozen evaluation.
+  5. **Loop rules:**
+     - kill thresholds fixed for the whole stage from the base's drill-v2 values, including court falls;
+     - a killed run still counts as a plateau strike, measured against the best passing run;
+     - a consolidation is a counted run under the same kill rules;
+     - each new term is sized offline (10-30 % of the task reward magnitude) and logged in training;
+     - gamma 0.995 with a critic warm-up.
+- **Run order, one change each:** consolidation, then a properly sized falls fix, then the stance spot on every feed, then failure-weighted feeds, then the backspin family teacher.
+- **Rebuild decision rule, fixed now.**
+  - No controller rebuild if, with the spot on every feed (pooled over 4 seeds), all three hold: per-shot p >= 0.85 on drill v2; lob, reach_deep, cross_backhand and backspin@back each >= 75 %; court falls <= 2 %.
+  - Rebuild if any of these holds: p plateaus below 0.80; a weak family stays below 65 %; volley contact stays below 20 % with the spot given.
+- **Offline (no GPU) in parallel:** a planner module with tests, the goal-conditioned controller's command spec, and a reachability map.
+
+**User decisions:**
+1. **Stage 5E gate:**
+   - per-shot legal p >= 0.80 on drill v2, with group floors neutral >= 0.92, moderate >= 0.80, extreme >= 0.55;
+   - stretch target p >= 0.85;
+   - court falls <= 1 %, move-to-spot arrival >= 90 % in every direction, court main metric >= 76.8 %;
+   - P(rally >= 5), P(rally >= 10) and the old 5D rally evaluation reported, with no-hint and perturbed-spot results.
+2. **Download approved:** 100STYLE (Zenodo record 8127870, CC BY 4.0, raw BVH only, about 1.5 GB), into the git-ignored `mjlab/artifacts/motion/`. Clips are filtered to neutral and athletic styles by a rule written before any robot is scored, and the dataset is credited.
+3. **Style gated on a new reference:** style <= 3.86 is measured against tennis-v5 + LAFAN1 + the filtered 100STYLE footwork clips, with h4-25b re-scored on it as calibration. Each source's share of the reference sample is fixed in advance. The old-reference score is always reported alongside. The user approved this as a partial loosening (a larger, footwork-heavy reference lowers distances mechanically).
+4. **Footwork path:**
+   - first a free check: track the new clips through latent-07's encoder;
+   - if >= 90 %, use a discriminator style reward with the new clips;
+   - otherwise H0 -> H1 retraining.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E to be written); `mjlab/results/stage5d.md`.
