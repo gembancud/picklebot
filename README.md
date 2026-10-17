@@ -10,18 +10,20 @@ Unitree G1 (29 DoF, paddle on the right wrist) · mjlab / MuJoCo Warp on the GPU
 | **Kitchen-line play** | **Move to any spot** |
 | ![G1 playing from the kitchen line](docs/media/g1-kitchen.gif) | ![G1 walking to spots in every direction](docs/media/g1-move.gif) |
 
-Executor `s5c-22-res-rally/model_900`, deterministic, no hints, dev seed 4200910. [Stage 5C report](mjlab/results/stage5c-gate.md)
+Deterministic, no hints.
+- **Rally GIF:** Stage 5D executor `s5d-01-rally/model_1800`, dev seed 4200364 ([Stage 5D report](mjlab/results/stage5d-gate.md)).
+- **Other GIFs:** Stage 5C executor `s5c-22-res-rally/model_900`, dev seed 4200910 ([Stage 5C report](mjlab/results/stage5c-gate.md)).
 
-## Where it stands (Stage 5C, 2026-10-16)
+## Where it stands (Stage 5D, 2026-10-17)
 
 | Working | Still learning |
 |---|---|
-| **Court-wide returns:** 78.8 % legal over 20 feed families x 3 court zones; 41 of 55 cells >= 75 % | **Volleys:** 0 %; lobs 37-51 %; deep reaches from mid and front court 15-27 % |
-| **Footwork:** walks to spots 0.5-3 m away in every direction, 99.4-99.95 % arrival | **Recovery:** about 1.3 m from the recovery spot after a hit (gate 0.5 m) |
-| **Movement style:** human-like, from a motion prior learned on tennis mocap and LAFAN1 | **Falls** 3.3 % on court; style score 4.0 (gate 3.86) |
-| **Rally test:** 61.8 % of shots aimed at fixed court spots returned; 1.6 % of rallies reach 10 shots | **Sustained rallies:** the robot hits balls aimed at it, but often doesn't reach balls placed elsewhere |
+| **Rallies:** 77.4 % of shots aimed at fixed court spots returned (Stage 5C: 62.5 %); 9.6 % of rallies reach 10 shots (5C: 1.75 %) | **Rally length:** 20 % of rallies reaching 10 needs about 85 % per shot; volleys 0 %, lobs 31-49 %, deep reaches 18-61 %, deep backspin 53 % |
+| **Court-wide returns:** 78.3 % legal over 20 feed families x 3 court zones; 39 of 55 cells >= 75 % | **Falls:** 5.9 % on court (gate 1 %) |
+| **Footwork:** walks to spots 0.5-3 m away in every direction, 99.7-100 % arrival | **Movement style:** score 4.2 (gate 3.86); fast running poses have no human reference yet |
+| **Motion prior:** human-like movement learned from tennis mocap and LAFAN1 | **Recovery:** about 1.2 m from the recovery spot after a hit |
 
-Final numbers are pooled over four fresh development seeds and paired against the stage's starting executor (51.9 %, 14/55 cells). The Stage 5C gate was **not met** (1 of 7 items). The report gives the distance on every criterion and every rule deviation.
+Final numbers are pooled over four fresh development seeds and paired against the stage's starting executor. The Stage 5D gate was **not met** (2 of 5 items). The report gives the distance on every criterion and every rule deviation.
 
 ## From Unity to mjlab
 
@@ -37,7 +39,7 @@ The project started in Unity with ML-Agents. Its last checkpoint (24M steps) and
 | **Footwork** | Central returns; wide, deep and short movement still learning | Walks to any spot 0.5-3 m away (99 %+ in every direction) |
 | **Shots** | Fixed-ball serve, returns after a bounce, airborne returns | 20 feed families (incl. topspin, backspin, drops, lobs, cross-court) from anywhere on the half court; no serves or volleys yet |
 | **Rules** | Two-bounce and kitchen rules in the match engine | The same rules on the GPU (two-bounce, kitchen and momentum faults, out, net) |
-| **Best tests** | 224/224 narrow, 260/384 wide, 352/448 randomized returns; 64/64 serves | 78.8 % legal over 55 zone x family cells; 99 %+ move-to-spot arrival; 1.6 % of rallies reach 10 shots |
+| **Best tests** | 224/224 narrow, 260/384 wide, 352/448 randomized returns; 64/64 serves | 78-79 % legal over 55 zone x family cells; 99 %+ move-to-spot arrival; 9.6 % of rallies reach 10 shots (77 % per shot) |
 
 The two sets of numbers come from different tasks, bodies and test batteries, so they are not directly comparable.
 
@@ -49,8 +51,11 @@ The two sets of numbers come from different tasks, bodies and test batteries, so
 4. **Stage 5C — full court:** court zones, volleys and kitchen rules, a move-to-spot drill and a rally test.
    - Footwork in the latent space came from **kickstarting** the flat walking teacher.
    - PPO then improves as a **residual** around a frozen two-skill executor, which keeps both skills.
+5. **Stage 5D — rally training:** court-anchored feeds from a scripted far-court opponent, long episodes and a rally bonus.
+   - Per-shot reliability rose from 62 % to 77 %, and rallies reaching 10 shots from 1.75 % to 9.6 %.
+   - Style, speed and gait penalties on the residual did not lower the style score.
 
-[Roadmap and log](docs/MJLAB_PIVOT.md) · [Decision log](docs/DECISIONS.md) (D-038 onward for mjlab) · [Stage 5C runs](mjlab/results/stage5c.md)
+[Roadmap and log](docs/MJLAB_PIVOT.md) · [Decision log](docs/DECISIONS.md) (D-038 onward for mjlab) · [Stage 5C runs](mjlab/results/stage5c.md) · [Stage 5D runs](mjlab/results/stage5d.md)
 
 ## Try it
 
@@ -58,8 +63,12 @@ Linux or WSL2 with a CUDA GPU. To set up the environment, run `mjlab/env/setup_w
 
 ## Next
 
-1. **Rally training:** court-anchored feeds from a scripted opponent, scored by P(rally >= 10), with style and falls brought under their gates.
-2. **Volleys and net play:** likely a goal-conditioned motion controller that takes hand and root targets.
+1. **Stage 5E — per-shot reliability:**
+   - a realistic rally drill (feed mix, position-dependent recovery, pacing set by the robot's own return);
+   - a stance-spot planner fed by noisy, delayed ball state;
+   - targeted fixes for falls and the weak shot families;
+   - human footwork style from the 100STYLE mocap dataset (CC BY 4.0).
+2. **Volleys and net play:** possibly a goal-conditioned motion controller that takes hand and root targets, decided by Stage 5E's rebuild rule.
 3. **Later:** robustness and distillation (Stage 6), two-robot rallies, a learned strategy and doubles (Stage 7+).
 
 This is a learning prototype in simulation; nothing here has run on a real robot.
