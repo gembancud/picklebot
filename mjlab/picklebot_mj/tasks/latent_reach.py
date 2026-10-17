@@ -401,3 +401,81 @@ def overspeed(env, vmax: float = 1.2, asset_name: str = "robot"):
     mostly while running for far balls, at a median 1.59 m/s one step before the fall (0.58 m/s otherwise)."""
     v = env.scene[asset_name].data.root_link_lin_vel_w[:, :2].norm(dim=-1)
     return (v - vmax).clamp(min=0.0).pow(2)
+
+
+def gait_anchor(env, teacher: str, actor_cfg: dict, std: float = 0.22, approach_dist: float = 1.0,
+                action_name: str = "latent"):
+    """Gait anchor (Stage 5D, D-095): exp(-mean((q - q_walk)^2) / std^2), where q is this step's executed joint action
+    (teacher units, (target - default) / scale) and q_walk the flat walking teacher's action on the observation the
+    policy acted on (its last-action term replaced by the last executed joint action).
+    - Move-to-spot episodes: the teacher sees the observation as is.
+    - Ball episodes, while the ball is still incoming and farther than approach_dist from the pelvis: the teacher sees a
+      parked ball (as in its move episodes) and the feed's ideal stance spot as its spot input, so it walks there in its
+      own gait. Run 12's distilled walking-teacher footwork scored style 3.585; fast poses cost about 4.5 (D-094).
+    Zero elsewhere (contact window, after the hit, between feeds)."""
+    from rsl_rl.models.mlp_model import MLPModel
+    from tensordict import TensorDict
+
+    from picklebot_mj.tasks.move_drill import PARK_POS
+    from picklebot_mj.tasks.return_stand import _rotate_inv
+
+    term = env.action_manager.get_term(action_name)
+    ball = env.action_manager.get_term("ball")
+    robot = env.scene["robot"]
+    st = getattr(env, "_picklebot_gait", None)
+    x = env.obs_buf.get("actor") if isinstance(env.obs_buf, dict) else None
+    if x is None:
+        return torch.zeros(env.num_envs, device=env.device)
+    if st is None:
+        om = env.observation_manager
+        cols, start = {}, 0
+        for nm, dm in zip(om.active_terms["actor"], om.group_obs_term_dim["actor"]):
+            w = term.n_joint if nm == "actions" else int(torch.tensor(dm).prod())
+            cols[nm] = slice(start, start + w)
+            start += w
+        sl, s0 = None, 0
+        for nm, dm in zip(om.active_terms["actor"], om.group_obs_term_dim["actor"]):
+            w = int(torch.tensor(dm).prod())
+            if nm == "actions":
+                sl = slice(s0, s0 + w)
+            s0 += w
+        sd = torch.load(teacher, map_location=env.device, weights_only=False)["actor_state_dict"]
+        ws = sorted((int(k.split(".")[1]), v.shape[0]) for k, v in sd.items()
+                    if k.startswith("mlp.") and k.endswith(".weight"))
+        kw = dict(actor_cfg)
+        kw["hidden_dims"] = tuple(n for _, n in ws[:-1])
+        tch = MLPModel(TensorDict({"actor": torch.zeros(1, start)}, batch_size=[1]), {"actor": ["actor"]}, "actor",
+                       term.n_joint, **kw).to(env.device)
+        tch.load_state_dict(sd, strict=True)
+        tch.eval()
+        for p in tch.parameters():
+            p.requires_grad_(False)
+        st = {"teacher": tch, "cols": cols, "sl": sl, "last": torch.zeros(env.num_envs, term.n_joint, device=env.device),
+              "park": torch.tensor(PARK_POS, device=env.device), "flags": torch.zeros(2, device=env.device)}
+        env._picklebot_gait = st
+    q = ((term._processed_actions - term._offset) / term._scale).detach()
+    move = ball.drill.move_ep if getattr(ball, "drill", None) is not None else torch.zeros_like(ball.hit_done)
+    pel = ball.pelvis_xy()
+    d_ball = (ball.ball.pos[:, :2] - pel).norm(dim=-1)
+    approach = ~move & ~ball.hit_done & ~ball.rules.dead & ~ball.tallied & (d_ball > approach_dist)
+    with torch.no_grad():
+        tx = torch.cat([x[:, :st["sl"].start], st["last"], x[:, st["sl"].stop:]], dim=-1)
+        if move.any():
+            st["flags"] = tx[move][:, st["cols"]["rally_flags"]].mean(0).round()
+        c = st["cols"]
+        root = robot.data.root_link_pose_w
+        paddle = robot.data.body_link_pose_w[:, ball.paddle_id, :3]
+        pw = st["park"] + env.scene.env_origins
+        pv = tx.clone()
+        pv[:, c["ball_pos"]] = _rotate_inv(root[:, 3:7], pw - root[:, :3])
+        pv[:, c["ball_vel"]] = 0.0
+        pv[:, c["ball_from_paddle"]] = _rotate_inv(root[:, 3:7], pw - paddle)
+        pv[:, c["rally_flags"]] = st["flags"]
+        rel = torch.zeros(env.num_envs, 3, device=env.device)
+        rel[:, :2] = ball.stance_xy - pel
+        pv[:, c["recovery"]] = _rotate_inv(root[:, 3:7], rel)[:, :2] / 3.0
+        tx = torch.where(approach.unsqueeze(-1), pv, tx)
+        q_walk = st["teacher"](TensorDict({"actor": tx}, batch_size=[env.num_envs]))
+    st["last"] = torch.where((env.episode_length_buf <= 1).unsqueeze(-1), torch.zeros_like(q), q)
+    r = torch.exp(-((q - q_walk) ** 2).mean(-1) / std ** 2)
+    return r * (move | approach).float()

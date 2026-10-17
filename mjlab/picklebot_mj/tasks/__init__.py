@@ -1156,3 +1156,27 @@ def _latent_court_rally_speed(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_COURT_RALLY_SPEED, env_cfg=_latent_court_rally_speed(),
                     play_env_cfg=_latent_court_rally_speed(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# Stage 5D run 4 (D-095): run 1's rally drill plus the gait anchor: reward 1.0 x exp(-mean((q - q_walk)^2) / 0.22^2) for
+# matching the flat walking teacher's joint action while walking (move episodes; ball episodes before the ball is
+# within 1 m, with the teacher walking to the feed's ideal stance spot).
+from picklebot_mj.tasks.latent_reach import gait_anchor  # noqa: E402
+
+WALK_TEACHER = str(Path(__file__).resolve().parents[2] / "artifacts" / "train" / "logs" / "picklebot_return_stand"
+                   / "2026-10-06_10-30-12_teacher-move-01" / "model_15900.pt")
+TASK_LATENT_COURT_RALLY_GAIT = "Picklebot-Latent-Court-Rally-Gait-G1"
+
+
+def _latent_court_rally_gait(play=False):
+    cfg = _latent_court_rally(play)
+    rl = asdict(_latent_drill3_lowent_rl_cfg())["actor"]
+    legal = cfg.rewards.pop("legal_return")  # keep legal_return last (it clears the step flags)
+    cfg.rewards["gait_anchor"] = RewardTermCfg(func=gait_anchor, weight=1.0, params={
+        "teacher": WALK_TEACHER, "actor_cfg": {k: rl[k] for k in ("activation", "obs_normalization", "distribution_cfg")}})
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_RALLY_GAIT, env_cfg=_latent_court_rally_gait(),
+                    play_env_cfg=_latent_court_rally_gait(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

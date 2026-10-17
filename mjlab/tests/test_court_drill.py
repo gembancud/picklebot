@@ -209,3 +209,30 @@ def test_overspeed_penalty_is_zero_at_rest_and_quadratic_above_vmax():
     env = SimpleNamespace(scene={"robot": SimpleNamespace(data=SimpleNamespace(root_link_lin_vel_w=v))})
     r = overspeed(env, vmax=1.2)
     assert torch.allclose(r, torch.tensor([0.0, 0.0, 0.09, 0.64]), atol=1e-6)
+
+
+def test_gait_anchor_runs_and_is_bounded_and_masked():
+    """D-095: the gait anchor is in [0, 1], zero outside move episodes and the approach phase, positive somewhere."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks  # noqa: F401
+    from picklebot_mj.tasks.latent_reach import gait_anchor
+
+    cfg = load_env_cfg("Picklebot-Latent-Court-Rally-Gait-G1")
+    params = cfg.rewards["gait_anchor"].params
+    cfg.scene.num_envs = 64
+    env = ManagerBasedRlEnv(cfg=cfg, device="cuda")
+    env.reset()
+    seen = torch.zeros(env.num_envs, device="cuda")
+    for _ in range(30):
+        env.step(torch.zeros(env.num_envs, env.action_manager.total_action_dim, device="cuda"))
+        r = gait_anchor(env, **params)
+        assert float(r.min()) >= 0.0 and float(r.max()) <= 1.0
+        ball = env.action_manager.get_term("ball")
+        off = ball.hit_done & ~ball.drill.move_ep
+        assert float(r[off].abs().sum()) == 0.0
+        seen = torch.maximum(seen, r)
+    assert float(seen.max()) > 0.0
+    env.close()

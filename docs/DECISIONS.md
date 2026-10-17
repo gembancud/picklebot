@@ -2419,3 +2419,26 @@ Run 2 (s5d-02-rally-style, model_1800; dev seeds 4200940-945, repeats 4200950-95
 - **Endpoint and kill rules:** endpoint iteration 1,900 or the last checkpoint before the cap. Kill rules as runs 1-2 (against run 22): style > 4.17, arrival < 90 % in any direction, move-drill falls > 1 %, court < 76.8 %.
 
 Affected roadmap/spec sections: `mjlab/results/stage5d.md`.
+
+### D-095 — Stage 5D run 3 result; run 4 with a gait anchor
+
+- Date: 2026-10-17
+- Status: Accepted (loop, under D-091)
+- Amends: D-094
+
+Run 3 (s5d-03-rally-speed, model_1800; dev seeds 4200970-975, rally repeat 4200980; `mjlab/results/stage5c-s5d-03-*.json`):
+- **Rally P(>= 10)** 8.44 % / 8.96 % (mean 8.70 %).
+- **Court falls 4.7 %** (run 1: 6.1 %); move-drill falls 0.1 %; arrival 98.7-99.9 %.
+- Court 78.0 %; recovery 1.225 m.
+- **Style 4.210: the kill rule (> 4.17) triggers.** The overspeed penalty barely engaged (about -0.006 per episode), so the robot rarely exceeds 1.2 m/s, and it did not move style.
+- **Plateau:** strike 2 (run 2: 7.65 %, run 3: 8.70 %, against run 1's 9.67 %). Run 4 must reach at least 11.67 %, or the plateau rule ends Stage 5D.
+
+**Run 4 (s5d-04-rally-gait):**
+- **Change:** run 1's recipe from run 22 (the rally drill), plus a gait anchor (`gait_anchor`, `Picklebot-Latent-Court-Rally-Gait-G1`, test added). The reward is 1.0 x exp(-mean((q - q_walk)^2) / 0.22^2) for matching the flat walking teacher's joint action while walking.
+  - **Move-to-spot episodes:** the teacher sees the real observation.
+  - **Ball episodes before the ball is within 1 m and before contact:** the teacher sees a parked ball, with the feed's ideal stance spot as its target.
+- **Why:** fast poses cost about 4.5 in style for every executor (D-094), while run 12, whose footwork was distilled from this teacher, scored 3.585. Run 22's falls happen while running (D-092).
+- **Endpoint:** iteration 1,900, or the last checkpoint before the cap.
+- **Kill rules** (against run 22): style > 4.17, arrival < 90 % in any direction, move-drill falls > 1 %, court < 76.8 %.
+
+Affected roadmap/spec sections: `mjlab/results/stage5d.md`.
