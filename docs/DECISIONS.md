@@ -2647,3 +2647,52 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E).
 **Tests:** `tests/test_drill_v2.py`, 10 tests, all passing. The related existing suites pass (80/81). The one failure, the gait-anchor test, passes alone: in a long run torch.compile hits its recompile limit across environment sizes. That failure is not caused by this change.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E build items); `mjlab/results/stage5e-style-reference.md`.
+
+### D-102 — Stage 5E run 0 results, stage kill thresholds, latency finding; run 1 (consolidation) and run 2 defined
+
+- Date: 2026-10-18
+- Status: Accepted (loop; recorded before run 1's launch)
+- Amends: D-097 (run order: a plain PPO run on drill v2 is inserted before the falls fix)
+
+**Run 0** (`mjlab/results/stage5e.md`, dev seeds 4200365-4200399; frozen battery D-101):
+
+| | Stage 5D run 1 (start) | run 22 |
+|---|---|---|
+| Drill v2 p, noisy spot | 0.306 | 0.296 |
+| Drill v2 p, clean spot / no spot | 0.307 / 0.318 | 0.298 / 0.311 |
+| Court main metric | 78.9 % | 78.5 % |
+| Court falls | 6.2 % | 3.6 % |
+| Arrival, every direction | >= 99.7 % | >= 99.2 % |
+| Style, old / new reference | 4.214 / 4.258 | 4.023 / 4.064 |
+
+- **h4-25b's style re-score:** 3.878 on the old reference and 3.910 on the new one.
+
+**Findings:**
+1. **Latency is the main loss on drill v2, not the drill.**
+   - Diagnosis on Stage 5D run 1: with every sim-to-real effect off, p is 0.72 (0.69 with the noisy spot).
+   - Each effect alone: ball noise 0.71; ball observations 20-40 ms late 0.51; joint commands 0-20 ms late 0.49.
+   - No executor or controller was ever trained with delays. The H1 controller is frozen and was trained without command delay, which is a risk for the D-097 rebuild rule.
+   - The evaluation is unchanged, with sim-to-real on.
+2. **The new style reference is stricter, not looser.** The old reference was about 70 % LAFAN1 by frame count; the frozen new shares give 25 % LAFAN1 and 25 % 100STYLE. Every executor scores higher (worse) on it, and h4-25b is above 3.86. Both scores are reported, and the gate is unchanged.
+3. **The spot barely matters yet:** clean, noisy and absent are within 1-2 points. These executors were not trained to use a planner spot.
+
+**Stage kill thresholds** (from the base, Stage 5D run 1; fixed for the whole stage). A run is killed by any of:
+- v2 p (noisy) < 0.276;
+- court main metric < 76.8 %;
+- court falls > 7.2 %;
+- arrival < 90 % in any direction;
+- style on the new reference > 4.41.
+
+**Run 1, s5e-01-consolidate** (counted run; change: none to behaviour, consolidation only):
+- **Method:** `scripts/consolidate.py`. The composite of RES_BASE (run 18) and Stage 5D run 1's residual is distilled into one lambda-3 executor, initialised from run 18.
+- **Task:** Stage 5D's rally drill task `Picklebot-Latent-Court-Rally-L3-G1` (D-092), without latency, where the teacher is competent. Under latency it returns 31 % and would be a poor teacher.
+- **Settings:** 4,096 envs, training seed 61, at most 3,600 s, early stop at < 3 % loss gain over 100 iterations.
+- **Endpoint:** the checkpoint at the stop.
+- **Evaluation:** `h5e_eval.sh` with `Picklebot-Latent-Court-V2-L3-G1`, `Picklebot-Latent-Court-L3-G1` and `Picklebot-Latent-Drill3-Prior5-L3-G1`. The run 0 kill thresholds apply.
+
+**Run 2, s5e-02-v2-ppo** (inserted before the D-097 falls fix):
+- **Method:** residual PPO around run 1's consolidated base on drill v2 with sim-to-real on. The only change is the training task: drill v2 and its latency and noise.
+- **Why:** every later change (falls fix, spot, failure weighting, backspin teacher) is a PPO run on drill v2. Without this run, the first of them would carry two changes.
+- Its endpoint and settings are written down before its launch.
+
+Affected roadmap/spec sections: `mjlab/results/stage5e.md`.

@@ -1244,3 +1244,18 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES, env_cfg=_latent_court_v2_r
                     play_env_cfg=_latent_court_v2_res(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_L3, env_cfg=_latent_court_v2_l3(),
                     play_env_cfg=_latent_court_v2_l3(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# Stage 5E footwork check (D-097/D-101): tennis-v5 plus the 100STYLE training part (Neutral FW, BW, SW), sources 0 and
+# 1, so tracking_eval.py --per-stroke scores tennis strokes and 4 s windows of the 100STYLE clips. Evaluation only.
+TASK_TRACKING_TENNIS_STYLE100 = "Picklebot-Tracking-TennisStyle100-G1"
+TENNIS_STYLE100_MOTION = str(_MOTION_DIR / "tennis-style100.npz")
+
+
+def _tracking_tennis_style100(play=False):
+    return paddle_tracking_env_cfg(TENNIS_STYLE100_MOTION, play=play)
+
+
+register_mjlab_task(task_id=TASK_TRACKING_TENNIS_STYLE100, env_cfg=_tracking_tennis_style100(),
+                    play_env_cfg=_tracking_tennis_style100(True), rl_cfg=_tracking_huge_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)

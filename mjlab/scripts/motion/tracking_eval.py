@@ -181,6 +181,9 @@ def main():
         if p["clip"].startswith("footwork_"):  # walking-teacher footwork clips (D-081)
             by_stroke["footwork"].append(p)
             continue
+        if p["clip"].startswith("Neutral_"):  # 100STYLE footwork (D-101): Neutral_FW_train -> style100_FW
+            by_stroke["style100_" + p["clip"].split("_")[1]].append(p)
+            continue
         tag = p["clip"].split("_", 1)[1]
         if tag.startswith("subject"):  # LAFAN1 clip: walk1_subject1 -> lafan_walk; mirrored (D-077) -> lafanmirror_walk
             pre = "lafanmirror_" if p["clip"].endswith("_mirror") else "lafan_"
@@ -196,6 +199,7 @@ def main():
     pooled = defaultdict(list)  # success pooled by source: tennis strokes, LAFAN1, mirrored LAFAN1, footwork
     for k, g in by_stroke.items():
         src = ("lafan_mirror" if k.startswith("lafanmirror_") else "lafan" if k.startswith("lafan_")
+               else "style100" if k.startswith("style100_")
                else "footwork" if k == "footwork" else "tennis")
         pooled[src].extend(p["success"] for p in g)
     summary["by_source"] = {k: float(np.mean(v)) for k, v in pooled.items()}

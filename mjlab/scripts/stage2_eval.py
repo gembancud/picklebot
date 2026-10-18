@@ -78,6 +78,8 @@ def main():
                     help="Stage 5E stance-spot planner: the task's setting, absent, clean (true state) or noisy (D-098)")
     ap.add_argument("--no-sim2real", action="store_true",
                     help="Stage 5E diagnostics only: exact, undelayed ball observations and joint commands")
+    ap.add_argument("--sim2real-only", choices=["obs", "act", "noise"], default=None,
+                    help="Stage 5E diagnostics only: keep just one sim-to-real effect")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
@@ -119,9 +121,12 @@ def main():
         cfg.actions["ball"].refeed_delay_s = args.refeed_delay
     if args.planner != "task":
         cfg.actions["ball"].planner_mode = args.planner
-    if args.no_sim2real:
-        from picklebot_mj.tasks import _sim2real
-        _sim2real(cfg, obs_lag=(0, 0), act_lag=(0, 0), noise=(0.0, 0.0))
+    if args.no_sim2real or args.sim2real_only:
+        from picklebot_mj.tasks import SIM2REAL_ACT_LAG, SIM2REAL_BALL_NOISE, SIM2REAL_OBS_LAG, _sim2real
+        keep = args.sim2real_only or ""
+        _sim2real(cfg, obs_lag=SIM2REAL_OBS_LAG if keep == "obs" else (0, 0),
+                  act_lag=SIM2REAL_ACT_LAG if keep == "act" else (0, 0),
+                  noise=SIM2REAL_BALL_NOISE if keep == "noise" else (0.0, 0.0))
     cfg.scene.num_envs = args.envs
     cfg.seed = args.seed
     cfg.actions["ball"].seed = args.seed
@@ -251,7 +256,7 @@ def main():
             k_g = sum(round(table[f]["legal_return"] * table[f]["episodes"]) for f in gfams if f in table)
             grp[gname] = {"episodes": n_g, "legal_return": round(k_g / max(n_g, 1), 4), "ci95": wilson(k_g, n_g)}
         out["drill_v2"] = {"per_shot_p": round(rets / max(episodes, 1), 4), "per_shot_ci95": wilson(rets, episodes),
-                           "groups": grp, "planner": term.cfg.planner_mode, "sim2real": not args.no_sim2real,
+                           "groups": grp, "planner": term.cfg.planner_mode, "sim2real": "off" if args.no_sim2real else (args.sim2real_only or "all"),
                            "court_falls_per_episode": out["robot_fall_rate_per_episode"]}
     if getattr(term.cfg, "court_wide", False):  # Stage 5C: outcomes per court zone and family (D-076)
         from picklebot_mj.feeds import COURT_ZONES
