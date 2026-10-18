@@ -94,6 +94,37 @@ class LatentJointPositionAction(JointPositionAction):
     def reset(self, env_ids=None):
         self._raw_actions[env_ids] = 0.0
         self.dec[env_ids] = 0.0
+        if getattr(self, "_cmd_fresh", None) is not None:
+            self._cmd_fresh[env_ids] = True
+
+    def apply_actions(self):
+        """Stage 5E run 4 (D-105): when the ball term draws a per-episode command delay (cmd_lag, physics steps), each
+        env's joint targets are the command of cmd_lag physics steps ago; otherwise mjlab's apply, unchanged."""
+        ball = getattr(self, "_ball_term", None)
+        if ball is None:
+            try:
+                ball = self._env.action_manager.get_term("ball")
+            except Exception:
+                ball = False
+            self._ball_term = ball
+        lag = getattr(ball, "cmd_lag", None) if ball else None
+        if lag is None:
+            return super().apply_actions()
+        cur = self._processed_actions
+        if getattr(self, "_cmd_hist", None) is None:
+            k = int(ball.cfg.episode_cmd_lag[1]) + 1
+            self._cmd_hist = cur.unsqueeze(0).repeat(k, 1, 1)
+            self._cmd_ar = torch.arange(self.num_envs, device=self.device)
+            self._cmd_fresh = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        # A reset env's history starts at its first command (no command from before the reset).
+        hist = torch.where(self._cmd_fresh.view(1, -1, 1), cur.unsqueeze(0), self._cmd_hist)
+        self._cmd_fresh = torch.zeros_like(self._cmd_fresh)
+        self._cmd_hist = torch.cat([cur.unsqueeze(0), hist[:-1]], 0)
+        self._processed_actions = self._cmd_hist[lag, self._cmd_ar]
+        try:
+            super().apply_actions()
+        finally:
+            self._processed_actions = cur
 
 
 def _yaw_frame(quat):

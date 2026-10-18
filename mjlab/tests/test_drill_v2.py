@@ -224,3 +224,54 @@ def test_noisy_actor_ball_observation_differs_from_the_critic():
     a, c = term("actor", "ball_vel"), term("critic", "ball_vel")
     assert float((a - c).abs().mean()) > 0.01  # noise and a 1-2 step lag
     env.close()
+
+
+def test_episode_latency_task_config():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+    cfg = load_env_cfg("Picklebot-Latent-Court-V2-Res-PPO-EpLat-G1")
+    b = cfg.actions["ball"]
+    assert b.episode_latency and b.episode_latency_prob == 0.5 and b.drill_v2
+    assert b.obs_ball_pos_noise > 0 and b.obs_ball_vel_noise > 0
+    for name in ("ball_pos", "ball_vel", "ball_from_paddle"):  # mjlab's delay buffers are off; the ball term delays
+        t = cfg.observations["actor"].terms[name]
+        assert t.delay_max_lag == 0 and t.params.get("noisy")
+    assert all(a.delay_max_lag == 0 for a in cfg.scene.entities["robot"].articulation.actuators)
+
+
+@needs
+def test_episode_latency_clean_and_delayed_episodes():
+    env = _env("Picklebot-Latent-Court-V2-Res-PPO-EpLat-G1", n=512)
+    t = env.action_manager.get_term("ball")
+    lat = env.action_manager.get_term("latent")
+    on = t.lat_on
+    assert 0.35 < float(on.float().mean()) < 0.65
+    assert ((t.obs_lag[on] >= 1) & (t.obs_lag[on] <= 2)).all() and (t.obs_lag[~on] == 0).all()
+    assert ((t.cmd_lag[on] >= 0) & (t.cmd_lag[on] <= 4)).all() and (t.cmd_lag[~on] == 0).all()
+    om = env.observation_manager
+
+    def term(obs, group, name):
+        start = 0
+        for nm, d in zip(om.active_terms[group], om.group_obs_term_dim[group]):
+            w = int(torch.tensor(d).prod())
+            if nm == name:
+                return obs[group][:, start:start + w]
+            start += w
+    g = torch.Generator(device=env.device).manual_seed(0)
+    with torch.inference_mode():
+        for _ in range(6):
+            act = 0.5 * torch.randn(env.num_envs, env.action_manager.total_action_dim, generator=g, device=env.device)
+            env.step(act)
+        obs = env.observation_manager.compute()
+        a, c = term(obs, "actor", "ball_vel"), term(obs, "critic", "ball_vel")
+        same = t.lat_on == False  # noqa: E712  (episodes may have reset; read the current draw)
+        assert torch.allclose(a[same], c[same], atol=1e-5)  # clean episodes: exact, undelayed ball
+        assert float((a[~same] - c[~same]).abs().mean()) > 0.01  # delayed episodes: lagged and noisy
+        # Joint commands: each env applies the command cmd_lag physics steps old (the history's row cmd_lag).
+        applied = lat._cmd_hist[t.cmd_lag, lat._cmd_ar]
+        newest = lat._cmd_hist[0]
+        clean = t.cmd_lag == 0
+        assert torch.equal(applied[clean], newest[clean])
+        late = t.cmd_lag >= 1
+        assert late.any() and float((applied[late] - newest[late]).abs().mean()) > 1e-4
+    env.close()

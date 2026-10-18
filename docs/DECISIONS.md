@@ -2774,3 +2774,50 @@ Affected roadmap/spec sections: `mjlab/results/stage5e.md`.
 - **Kill rules:** those of D-102.
 
 Affected roadmap/spec sections: `mjlab/results/stage5e.md`.
+
+### D-105 — Stage 5E run 3 killed (strike 2); diagnosis; run 4 trains with per-episode latency
+
+- Date: 2026-10-19
+- Status: Accepted (user chose run 4's change)
+- Amends: D-104 (training latency from run 4 on)
+
+**Run 3, s5e-03-v2-mixlat/model_2700** (dev seeds 4200576-4200591):
+
+| Item | Value |
+|---|---|
+| Drill v2 p, noisy spot | **0.589**, the best so far |
+| Drill v2 p, no spot | 0.573 |
+| Groups, Wilson low (neutral / moderate / extreme) | 0.682 / 0.511 / 0.248 |
+| Rally evaluation on drill v2, P(rally >= 5) | 9.1 % |
+| Court main metric | **41.6 % (kill rule)** |
+| Arrival, worst direction | **69.6 % (kill rule)** |
+| Court falls | 3.9 % |
+| Style, old / new reference | **3.844 / 3.862**, the best of any executor |
+
+Killed: plateau strike 2.
+
+**Diagnosis** (dev seeds 4200592-4200593, the Stage 5E latency added to the battery tasks):
+
+| | Run 3, no delay | Run 3, with delay | Stage 5D run 1, with delay |
+|---|---|---|---|
+| Court drill | 41.6 % | 51.7 % | 43.0 % |
+| Arrival, range over directions | 70-92 % | 40-84 % | 68-91 % (99-100 % with no delay) |
+
+1. **Run 3 still plays as if delayed:** better on the court drill with delay than without. Under the uniform 0-2 / 0-4 lags, few training steps have no delay at all.
+2. **The frozen H1 controller is not robust to command delay:** the start point's walking drops from 99 % to 68-91 % arrival under delay. This is the D-102 risk, measured.
+
+**Run 4, s5e-04-v2-eplat** (user decision; one change from run 3: per-episode latency):
+- **Per-episode draw** at each reset:
+  - **Clean (p = 0.5):** no delay and no ball noise.
+  - **Delayed:** ball observations 1-2 control steps late (20-40 ms) and joint commands 0-4 physics steps late (0-20 ms), both drawn per episode, with ball noise on.
+- **Implementation:** the ball term draws the latency and its observation functions apply it; the latent action term applies the command delay. mjlab's per-term delay buffers are off. Tests: 3 more in `tests/test_drill_v2.py`.
+- **Task:** `Picklebot-Latent-Court-V2-Res-PPO-EpLat-G1`.
+- **Start:** PPO from Stage 5D run 1 (killed runs are not built on).
+- **Settings:** Stage 5E PPO settings, 12,288 envs, training seed 64, 1,000 iterations.
+- **Endpoint:** iteration 2,800, or the last checkpoint before the 7,000 s cap.
+- **Evaluation:** `h5e_eval.sh` on dev seeds 4200283-4200298.
+- **Kill rules:** those of D-102. A kill would be strike 3 and end the stage (D-100).
+
+Every evaluation task and the gate are unchanged.
+
+Affected roadmap/spec sections: `mjlab/results/stage5e.md`.

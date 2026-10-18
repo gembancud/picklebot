@@ -151,6 +151,13 @@ class BallPhysicsActionCfg(ActionTermCfg):
     planner_prob: float = 1.0  # share of real-ball feeds that get the spot
     obs_ball_pos_noise: float = 0.0  # m per axis, actor ball observations
     obs_ball_vel_noise: float = 0.0  # m/s per axis
+    # Stage 5E run 4 (D-105): per-episode latency. Each robot episode is either clean (no delay, no ball noise) or delayed
+    # (ball observations episode_obs_lag control steps late, joint commands episode_cmd_lag physics steps late, ball
+    # noise on), with probability episode_latency_prob. Replaces mjlab's per-term delay buffers in the tasks that use it.
+    episode_latency: bool = False
+    episode_latency_prob: float = 0.5
+    episode_obs_lag: tuple = (1, 2)  # control steps, inclusive
+    episode_cmd_lag: tuple = (0, 4)  # physics steps, inclusive
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -270,6 +277,14 @@ class BallPhysicsAction(ActionTerm):
             self.plan_pending = torch.zeros(n, dtype=torch.bool, device=dev)
             self.plan_t = torch.zeros(n, device=dev)
             self._phys_i = 0  # host-side physics-step counter: the planner runs once per control step
+        self.lat_on = None
+        if getattr(cfg, "episode_latency", False):  # Stage 5E run 4 (D-105): drawn per robot episode at each reset
+            self.gen_lat = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 314161)  # own stream
+            self.lat_on = torch.zeros(n, dtype=torch.bool, device=dev)
+            self.obs_lag = torch.zeros(n, dtype=torch.long, device=dev)
+            self.cmd_lag = torch.zeros(n, dtype=torch.long, device=dev)
+            self._seen_hist = torch.zeros(int(cfg.episode_obs_lag[1]) + 1, n, 6, device=dev)  # newest first
+            self._hist_step = -1
         self.shadow = None
         if cfg.swing_prob > 0.0:
             from picklebot_mj.tasks.shadow_swing import ShadowSwing
@@ -349,6 +364,17 @@ class BallPhysicsAction(ActionTerm):
             self.v2_rec[env_ids] = _const("rec_fixed", lambda: list(RECOVERY_FIXED), self.device)
             self.v2.last_ext[env_ids] = False
         self._feed(env_ids)
+        if getattr(self, "lat_on", None) is not None:  # D-105: this episode's latency; the history starts at its ball
+            c, k = self.cfg, len(env_ids)
+            on = torch.rand(k, generator=self.gen_lat, device=self.device) < c.episode_latency_prob
+            ol = torch.randint(int(c.episode_obs_lag[0]), int(c.episode_obs_lag[1]) + 1, (k,), generator=self.gen_lat,
+                               device=self.device)
+            cl = torch.randint(int(c.episode_cmd_lag[0]), int(c.episode_cmd_lag[1]) + 1, (k,), generator=self.gen_lat,
+                               device=self.device)
+            self.lat_on[env_ids] = on
+            self.obs_lag[env_ids] = torch.where(on, ol, torch.zeros_like(ol))
+            self.cmd_lag[env_ids] = torch.where(on, cl, torch.zeros_like(cl))
+            self._seen_hist[:, env_ids] = torch.cat([self.ball.pos[env_ids], self.ball.vel[env_ids]], -1)
         self.rules.begin_from_feed(env_ids, torch.full_like(env_ids, FEEDER_PLAYER), must_bounce=True)
         if getattr(self.cfg, "court_wide", False):  # volley feeds: rally phase, may be taken before the bounce
             m = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
@@ -808,6 +834,16 @@ def _ball_seen(env, noisy: bool) -> tuple[torch.Tensor, torch.Tensor]:
     shared by every ball term, with the ball term's obs_ball_*_noise; the critic's terms stay exact."""
     t = _term(env)
     sp, sv = getattr(t.cfg, "obs_ball_pos_noise", 0.0), getattr(t.cfg, "obs_ball_vel_noise", 0.0)
+    if noisy and getattr(t, "lat_on", None) is not None:  # D-105: per-episode delay and noise
+        step = env.common_step_counter
+        if t._hist_step != step:  # once per control step: push the true state, then read each env's lagged one
+            t._hist_step = step
+            t._seen_hist = torch.cat([torch.cat([t.ball.pos, t.ball.vel], -1).unsqueeze(0), t._seen_hist[:-1]], 0)
+            s = t._seen_hist[t.obs_lag, t.all_ids]
+            on = t.lat_on.unsqueeze(-1).float()
+            t._seen_pos = s[:, :3] + on * sp * torch.randn_like(s[:, :3])
+            t._seen_vel = s[:, 3:] + on * sv * torch.randn_like(s[:, 3:])
+        return t._seen_pos, t._seen_vel
     if not noisy or (sp <= 0.0 and sv <= 0.0):
         return t.ball.pos, t.ball.vel
     step = env.common_step_counter

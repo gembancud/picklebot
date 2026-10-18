@@ -1363,3 +1363,20 @@ def _latent_court_v2_res_mix(play=False):
 TASK_LATENT_COURT_V2_RES_PPO_MIX = "Picklebot-Latent-Court-V2-Res-PPO-Mix-G1"
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_MIX, env_cfg=_latent_court_v2_res_mix(),
                     runner_cls=CriticWarmupRunner, play_env_cfg=_latent_court_v2_res_mix(True), rl_cfg=_s5e_rl_cfg())
+
+
+# Stage 5E run 4 (D-105, user decision): per-episode latency. Half of the robot episodes are clean (no delay, no ball
+# noise), half delayed (ball observations 1-2 control steps late, joint commands 0-4 physics steps late, ball noise on),
+# drawn at each reset by the ball term and applied by its observation functions and the latent action term. mjlab's
+# per-term delay buffers are off in this task. Training only: every evaluation task is unchanged.
+def _latent_court_v2_res_eplat(play=False):
+    cfg = _sim2real(_latent_court_v2_res(play), obs_lag=(0, 0), act_lag=(0, 0))
+    b = cfg.actions["ball"]
+    b.episode_latency, b.episode_latency_prob = True, 0.5
+    b.episode_obs_lag, b.episode_cmd_lag = (1, 2), (0, 4)
+    return cfg
+
+
+TASK_LATENT_COURT_V2_RES_PPO_EPLAT = "Picklebot-Latent-Court-V2-Res-PPO-EpLat-G1"
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_EPLAT, env_cfg=_latent_court_v2_res_eplat(),
+                    runner_cls=CriticWarmupRunner, play_env_cfg=_latent_court_v2_res_eplat(True), rl_cfg=_s5e_rl_cfg())
