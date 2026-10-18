@@ -44,7 +44,8 @@ h4-25b style (information only, D-098): 3.878 on the old reference, **3.910 on t
 | # | Run | Change (written before launch) | From | Endpoint | v2 p (noisy) | Groups (Wilson low) | Court main | Court falls | Arrival min | Style old / new |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | s5e-01-consolidate | consolidation only (D-102): composite of run 18 + Stage 5D run 1 residual -> one lambda-3 executor, on the Stage 5D rally drill (no latency) | run 18 init; teacher s5d-01/model_1800 | model_126 (loss plateau, 11 min) | 0.295 | 0.327 / 0.239 / 0.205 | **76.66 % (kill rule < 76.8)** | 6.7 % | 96.5 % (back) | 4.221 / 4.272 |
-| 2 | s5e-02-v2-ppo | PPO on drill v2 with sim-to-real on (D-102/D-103); Stage 5E PPO settings (gamma 0.995, 50-update critic warm-up) | s5d-01-rally/model_1800 (residual around run 18) | iteration 2,800 or the last checkpoint before the 7,000 s cap | | | | | | |
+| 2 | s5e-02-v2-ppo | PPO on drill v2 with sim-to-real on (D-102/D-103); Stage 5E PPO settings (gamma 0.995, 50-update critic warm-up) | s5d-01-rally/model_1800 (residual around run 18) | model_2600 (wall cap at 2,661) | **0.553** [0.548, 0.558] | 0.624 / 0.493 / 0.277 | **26.9 % (kill rule); 47.7 % with latency (start: 42.2 %)** | 4.0 % | 90.4 % (back-right) | 4.015 / 4.039 |
+| 3 | s5e-03-v2-mixlat | run 2 with mixed training latency: 0-40 ms observations, 0-20 ms commands, both including zero (D-104, user) | s5d-01-rally/model_1800 | iteration 2,800 or the last checkpoint before the 7,000 s cap | | | | | | |
 
 ## Notes
 - **Run 0 diagnosis: latency, not the drill** (dev seed 4200398; 256 robots, 30 s rallies; Stage 5D run 1).
@@ -72,3 +73,7 @@ h4-25b style (information only, D-098): 3.878 on the old reference, **3.910 on t
   - The copy lost rally skill on the old Stage 5D rally evaluation: P(rally >= 10) 10.2 % -> 5.5 %, and per-shot p on drill v2 0.306 -> 0.295.
   - It counts as plateau strike 1 (D-097/D-100: killed runs count).
   - Run 2 therefore continues the unconsolidated Stage 5D run 1 residual (D-103).
+- **Run 2: killed, not a strike** (D-104, user). It is latency-specialised: court drill 47.7 % with latency (start point 42.2 %) but 26.9 % without it (start point 78.9 %).
+  - **Gains:** drill v2 p 0.306 -> 0.553; drill v2 falls per feed 6.2 -> 3.2 %; style 4.214 -> 4.015 (old reference) and 4.258 -> 4.039 (new).
+  - **Spot:** not used; p is the same with the noisy spot and without one.
+  - **Next:** run 3 trains with mixed latency (0 ms included).

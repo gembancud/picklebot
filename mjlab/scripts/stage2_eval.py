@@ -78,6 +78,8 @@ def main():
                     help="Stage 5E stance-spot planner: the task's setting, absent, clean (true state) or noisy (D-098)")
     ap.add_argument("--no-sim2real", action="store_true",
                     help="Stage 5E diagnostics only: exact, undelayed ball observations and joint commands")
+    ap.add_argument("--sim2real-on", action="store_true",
+                    help="Stage 5E diagnostics only: add the Stage 5E latency and noise to a task without them")
     ap.add_argument("--sim2real-only", choices=["obs", "act", "noise"], default=None,
                     help="Stage 5E diagnostics only: keep just one sim-to-real effect")
     ap.add_argument("--json", default=None)
@@ -121,6 +123,9 @@ def main():
         cfg.actions["ball"].refeed_delay_s = args.refeed_delay
     if args.planner != "task":
         cfg.actions["ball"].planner_mode = args.planner
+    if args.sim2real_on:  # diagnostics: a task without sim-to-real, measured with the Stage 5E latency and noise
+        from picklebot_mj.tasks import _sim2real
+        _sim2real(cfg)
     if args.no_sim2real or args.sim2real_only:
         from picklebot_mj.tasks import SIM2REAL_ACT_LAG, SIM2REAL_BALL_NOISE, SIM2REAL_OBS_LAG, _sim2real
         keep = args.sim2real_only or ""

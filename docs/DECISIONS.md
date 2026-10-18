@@ -2726,3 +2726,51 @@ The distilled copy lost part of the residual executor's skill. Run 1 is killed a
 - **Kill rules:** those of D-102.
 
 Affected roadmap/spec sections: `mjlab/results/stage5e.md`.
+
+### D-104 — Stage 5E run 2: latency-specialised (killed, not a strike); run 3 trains with mixed latency
+
+- Date: 2026-10-19
+- Status: Accepted (user, both answers)
+- Amends: D-100 (strike count for run 2), D-101 (training latency of Stage 5E PPO runs from run 3 on; every evaluation is unchanged)
+
+**Run 2, s5e-02-v2-ppo/model_2600** (wall cap at iteration 2,661; dev seeds 4200877-4200892):
+
+| Item | Value |
+|---|---|
+| Drill v2 p, noisy spot | **0.553**, from 0.306 |
+| Drill v2 p, clean spot / no spot | 0.561 / 0.553 |
+| Rally evaluation on drill v2, P(rally >= 5) | 7.1 % |
+| Drill v2 falls per feed | 3.2 % (start: 6.2 %) |
+| Court drill, as frozen (no latency) | **26.9 % (kill rule: < 76.8 %)** |
+| Court falls, as frozen | 4.0 % |
+| Arrival, every direction | >= 90.4 % |
+
+**Diagnosis** (dev seed 4200893, court drill with the Stage 5E latency and noise added):
+
+| Court drill | Run 2 | Stage 5D run 1 |
+|---|---|---|
+| With latency | 47.7 % | 42.2 % |
+| Without latency (as frozen) | 26.9 % | 78.9 % |
+
+- **Run 2 specialised to the delay.** With latency it is the better executor on the court drill as well. Without latency it collapses.
+- **Design flaw in D-101:** it measures the Stage 5C retention checks without the latency the stage trains under.
+
+**User decisions:**
+1. **Run 2's kill:** it is killed, as frozen, but does not count as a plateau strike, because the kill rule measured it outside the conditions it was trained for. The strike count stays at 1 (run 1).
+2. **Mixed latency in training, from run 3 on:**
+   - ball observations 0-2 control steps late (0-40 ms), held 50 steps;
+   - joint commands 0-4 physics steps late (0-20 ms), held 200 steps;
+   - ball noise unchanged.
+
+   One policy must then play both without delay (court drill) and with it (drill v2).
+   - Task `Picklebot-Latent-Court-V2-Res-PPO-Mix-G1`.
+   - Every evaluation task and the gate are unchanged.
+
+**Run 3, s5e-03-v2-mixlat** (one change from run 2: the training latency range includes zero):
+- **Start:** PPO from Stage 5D run 1 (`s5d-01-rally/model_1800`); killed run 2 is not built on.
+- **Settings:** Stage 5E PPO settings, 12,288 envs, training seed 63, 1,000 iterations.
+- **Endpoint:** iteration 2,800, or the last checkpoint before the 7,000 s cap.
+- **Evaluation:** `h5e_eval.sh` on dev seeds 4200576-4200591.
+- **Kill rules:** those of D-102.
+
+Affected roadmap/spec sections: `mjlab/results/stage5e.md`.

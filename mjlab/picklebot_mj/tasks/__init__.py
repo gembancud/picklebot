@@ -1348,3 +1348,18 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RESC, env_cfg=_latent_court_v2_
 TASK_LATENT_COURT_V2_RES_PPO = "Picklebot-Latent-Court-V2-Res-PPO-G1"
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO, env_cfg=_latent_court_v2_res(), runner_cls=CriticWarmupRunner,
                     play_env_cfg=_latent_court_v2_res(True), rl_cfg=_s5e_rl_cfg())
+
+
+# Stage 5E run 3 (D-104, user decision): mixed-latency training. Ball observations 0-2 control steps late (0-40 ms) and
+# joint commands 0-4 physics steps late (0-20 ms), so one policy plays both with and without delay (run 2, trained at
+# 20-40 ms only, fell to 26.9 % on the undelayed court drill). Training only: every evaluation task is unchanged.
+SIM2REAL_OBS_LAG_MIXED = (0, 2)
+
+
+def _latent_court_v2_res_mix(play=False):
+    return _sim2real(_latent_court_v2_res(play), obs_lag=SIM2REAL_OBS_LAG_MIXED)
+
+
+TASK_LATENT_COURT_V2_RES_PPO_MIX = "Picklebot-Latent-Court-V2-Res-PPO-Mix-G1"
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_MIX, env_cfg=_latent_court_v2_res_mix(),
+                    runner_cls=CriticWarmupRunner, play_env_cfg=_latent_court_v2_res_mix(True), rl_cfg=_s5e_rl_cfg())
