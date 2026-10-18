@@ -2579,3 +2579,25 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E); `mjlab/results/stage5
 **Next:** Stage 5E as planned in D-097/D-098 (MJLAB_PIVOT.md). Report: `mjlab/results/stage5d-gate.md`.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5D checklist, log); `mjlab/results/stage5d-gate.md`; `mjlab/results/stage5d.md`.
+
+### D-100 — Stage 5E start point, budget and plateau rule
+
+- Date: 2026-10-18
+- Status: Accepted (user)
+- Amends: D-097, D-098 (Stage 5E loop rules)
+
+**User decisions:**
+1. **Start point:** Stage 5D candidate run 1 (`s5d-01-rally/model_1800`).
+   - The first training run is its consolidation into a fresh lambda-3 base (`scripts/consolidate.py`, a counted run).
+   - Run 22 stays as the comparison executor in run 0 and in the final paired evaluation.
+2. **Budget:** up to 15 training runs, each <= 2 h with a fixed endpoint and one change written down before launch.
+3. **Plateau:** stop after 3 executor runs in a row each improving per-shot legal p on drill v2 by < 1 point absolute.
+   - Killed runs count as strikes against the best passing run (D-097).
+   - A run within 1.5 points of the best is repeated on a second seed.
+
+**Unchanged:**
+- **Build order:** drill v2 and its frozen evaluation, the stance-spot planner, latency and noise, the style reference; then run 0, then training.
+- **Gate:** D-097/D-098.
+- **Stop and ask the user before:** sudo or system changes, Unity or the feat/hierarchical-control checkout, deleting anything, any download, any run over 2 h, or using final seeds.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E).

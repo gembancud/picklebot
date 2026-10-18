@@ -312,6 +312,10 @@ Goal: per-shot reliability on a realistic rally drill, which drives rally length
   - ball-state noise;
   - an actuator-limit check.
 - [ ] **Run 0:** run 22 and the consolidated base scored on the frozen evaluation, first with the spot given on every feed. These scores fix the stage's kill thresholds, including court falls.
+- **Loop rules (D-100):**
+  - **Start:** run 1 (`s5d-01-rally/model_1800`), consolidated first; run 22 is the comparison executor.
+  - **Budget:** up to 15 runs, each <= 2 h.
+  - **Plateau:** 3 executor runs in a row each < 1 point gain in per-shot p on drill v2. Killed runs count as strikes; a run within 1.5 points of the best is repeated on a second seed.
 - [ ] **Runs, one change each,** in this order:
   1. consolidation (a counted run);
   2. a falls fix, with its mechanism written before the run;
