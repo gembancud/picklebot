@@ -2821,3 +2821,36 @@ Killed: plateau strike 2.
 Every evaluation task and the gate are unchanged.
 
 Affected roadmap/spec sections: `mjlab/results/stage5e.md`.
+
+### D-106 — Stage 5E ends (plateau rule: strike 3); final candidate and end procedure
+
+- Date: 2026-10-19
+- Status: Accepted (loop end, D-100; fixed before any final-evaluation result)
+- Amends: none
+
+**Run 4, s5e-04-v2-eplat/model_2799** (dev seeds 4200283-4200298):
+
+| Item | Value | Kill line |
+|---|---|---|
+| Drill v2 p, noisy spot | 0.550 | |
+| Court main metric | **53.4 %** | < 76.8 % |
+| Arrival, worst direction (back) | **71.9 %** | < 90 % |
+| Court falls | 4.6 % | |
+
+Court and arrival trigger kill rules, both better than run 3 (41.6 %, 69.6 %). The kill is strike 3 (runs 1, 3 and 4; run 2 is not counted, D-104), so the D-100 plateau rule ends Stage 5E.
+
+**Final candidate.** The Stage 5D rule (D-096, kept in D-098) is applied: the run with the best plateau metric, whatever its kill rules.
+- **Candidate:** run 3, `s5e-03-v2-mixlat/model_2700` (drill v2 p 0.589), labelled "best drill v2, failed kill rules".
+- **Comparison:** run 22, the stage's comparison executor.
+- **Reported alongside:** Stage 5D run 1 (run 0's start, the best run that passed its kill rules) and run 4 (the most balanced run).
+
+**Paired final** (`scripts/h5e_final.sh`):
+- **Drill v2,** noisy spot, sim-to-real on: candidate and run 22 pooled over dev seeds 4200472-4200475.
+- **Court drill:** the candidate pooled over 4200476-4200479.
+- **Stage 5C battery:** the candidate once on 4200894-4200899.
+
+No final seeds are used.
+
+**Review videos:** candidate and run 22, from `h5c_videos.sh` (side, behind, kitchen, move, long rally; dev seeds 4200360-4200364, as in Stage 5D so the clips are comparable), plus GIF previews and streaming MP4s. Then `mjlab/results/stage5e-gate.md`, commit and push.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E checklist, log); `mjlab/results/stage5e.md`.
