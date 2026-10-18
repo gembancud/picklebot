@@ -36,6 +36,36 @@ POSE = np.r_[0:29, 65:68, 68:80]  # joint_pos, projected gravity, key bodies (se
 EXPERT_SAMPLE = 60_000
 
 
+# Stage 5E new reference (D-101, results/stage5e-style-reference.md): fixed source shares of the EXPERT_SAMPLE poses,
+# standardised by the composed sample itself. The 100STYLE part is the held-out reference slice only.
+NEW_REF_100STYLE = MOTION / "style100-ref.npz"
+NEW_REF_SHARES = (("tennis-v5.npz", 0.50), ("lafan-g1.npz", 0.25), ("style100-ref.npz", 0.25))
+
+
+def new_reference_score(raw: torch.Tensor, body_names: list[str]) -> dict:
+    """Nearest-clip pose distance of raw robot pose features against the new composed reference."""
+    pose = torch.tensor(POSE, device=raw.device)
+    g = torch.Generator(device=raw.device).manual_seed(1)
+    parts, held = [], []
+    for name, share in NEW_REF_SHARES:
+        ea, _ = expert_transitions([MOTION / name], body_names, raw.device)
+        k = int(round(share * EXPERT_SAMPLE))
+        perm = torch.randperm(len(ea), generator=g, device=raw.device)
+        # A source with fewer poses than its share (the 100STYLE slice: 5,083) fills the share by repeating them: a
+        # nearest-pose distance is unchanged by repeats, and they weight the standardisation as the share says.
+        take = perm.repeat(-(-k // len(ea)))[:k]
+        parts.append(ea[take][:, pose])
+        held.append(ea[perm[k:k + int(round(share * 20_000))]][:, pose])  # empty for a source used up by its share
+    sample = torch.cat(parts)
+    mean, std = sample.mean(0), sample.std(0).clamp(min=1e-3)
+    ref = (sample - mean) / std
+    dist = nearest_distance((raw - mean) / std, ref)
+    floor = nearest_distance((torch.cat(held) - mean) / std, ref)
+    return {"shares": {n: s for n, s in NEW_REF_SHARES}, "nearest_clip_distance_median": float(dist.median()),
+            "nearest_clip_distance_mean": float(dist.mean()), "nearest_clip_distance_p90": float(dist.quantile(0.9)),
+            "human_floor_median": float(floor.median())}
+
+
 def nearest_distance(x, ref, chunk=2048):
     out = []
     for i in range(0, len(x), chunk):
@@ -88,12 +118,14 @@ def main():
     ref = ((ea[:, pose] - mean) / std)[torch.randperm(len(ea), generator=g, device="cuda")[:EXPERT_SAMPLE]]
     env.reset()  # apply the reset events before the first step (see scripts/stage2_eval.py)
     obs = venv.get_observations()
-    poses = []
+    poses, raw = [], []
     with torch.inference_mode():
         for t in range(int(round(args.seconds / env.step_dt))):
             obs, *_ = venv.step(policy(obs))
             if t % args.every == 0:
-                poses.append(((robot_features(robot, keys)[:, pose] - mean) / std).clone())
+                f = robot_features(robot, keys)[:, pose].clone()
+                raw.append(f)
+                poses.append((f - mean) / std)
     x = torch.cat(poses)
     dist = nearest_distance(x, ref)
     # Reference: the same distance for held-out clip frames (how close human poses are to other human poses).
@@ -104,6 +136,8 @@ def main():
            "nearest_clip_distance_median": float(dist.median()), "nearest_clip_distance_mean": float(dist.mean()),
            "nearest_clip_distance_p90": float(dist.quantile(0.9)),
            "human_floor_median": float(floor.median())}
+    if NEW_REF_100STYLE.exists():  # Stage 5E: the new reference, scored on the same robot poses (D-101)
+        out["new_reference"] = new_reference_score(torch.cat(raw), list(robot.body_names))
     print(json.dumps(out, indent=1))
     if args.json:
         json.dump(out, open(args.json, "w"), indent=1)

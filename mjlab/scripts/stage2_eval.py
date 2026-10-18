@@ -74,6 +74,10 @@ def main():
                          "lands at a fixed court place the robot must reach), fixed recovery spot, consecutive legal "
                          "returns counted per robot; reports P(rally >= --rally-n)")
     ap.add_argument("--rally-n", type=int, default=10)
+    ap.add_argument("--planner", choices=["task", "off", "clean", "noisy"], default="task",
+                    help="Stage 5E stance-spot planner: the task's setting, absent, clean (true state) or noisy (D-098)")
+    ap.add_argument("--no-sim2real", action="store_true",
+                    help="Stage 5E diagnostics only: exact, undelayed ball observations and joint commands")
     ap.add_argument("--json", default=None)
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
@@ -113,6 +117,11 @@ def main():
         pr["y"] = (-0.3 - ROBOT_START[1], 0.3 - ROBOT_START[1])
     if args.refeed_delay is not None:
         cfg.actions["ball"].refeed_delay_s = args.refeed_delay
+    if args.planner != "task":
+        cfg.actions["ball"].planner_mode = args.planner
+    if args.no_sim2real:
+        from picklebot_mj.tasks import _sim2real
+        _sim2real(cfg, obs_lag=(0, 0), act_lag=(0, 0), noise=(0.0, 0.0))
     cfg.scene.num_envs = args.envs
     cfg.seed = args.seed
     cfg.actions["ball"].seed = args.seed
@@ -174,6 +183,8 @@ def main():
     prev_tallied = term.tallied.clone()
     reached = torch.zeros((), dtype=torch.long, device=env.device)  # streaks that reached rally_n returns
     failed = torch.zeros((), dtype=torch.long, device=env.device)  # streaks that ended (miss, fault, fall) below it
+    reached5 = torch.zeros((), dtype=torch.long, device=env.device)  # the same for 5 returns (Stage 5E report)
+    failed5 = torch.zeros((), dtype=torch.long, device=env.device)
     ended_len = torch.zeros(64, dtype=torch.long, device=env.device)  # lengths of streaks ended by a miss or a fall
     with torch.inference_mode():
         for _ in range(steps):
@@ -186,9 +197,11 @@ def main():
                 miss = newly & ~term.return_done
                 streak = torch.where(ok, streak + 1, streak)
                 reached += (ok & (streak == args.rally_n)).sum()
+                reached5 += (ok & (streak == 5)).sum()
                 stop = miss | dones.bool()
                 fell_or_miss = miss | (dones.bool() & env.termination_manager.terminated)
                 failed += (fell_or_miss & (streak < args.rally_n)).sum()
+                failed5 += (fell_or_miss & (streak < 5)).sum()
                 ended_len.index_add_(0, streak.clamp(max=63), fell_or_miss.long())
                 streak = torch.where(stop, torch.zeros_like(streak), streak)
                 prev_tallied = term.tallied.clone()
@@ -227,6 +240,19 @@ def main():
                         "reached": r_, "ended_below_n": f_, "mean_length_of_ended_rallies": round(mean_len, 2),
                         "ended_rallies": n_end, "feeds": "court-anchored (feed anchor = start spot)",
                         "note": "time-outs end a rally without counting as a failure"}
+        r5, f5 = int(reached5), int(failed5)
+        out["rally"].update({"p_reach_5": round(r5 / max(r5 + f5, 1), 4), "p_reach_5_ci95": wilson(r5, r5 + f5),
+                             "reached_5": r5, "ended_below_5": f5})
+    if getattr(term, "v2", None) is not None:  # Stage 5E: per-shot p over the drill v2 mix, and per group (D-097/D-098)
+        from picklebot_mj.drill_v2 import DRILL_V2_GROUPS
+        grp = {}
+        for gname, gfams in DRILL_V2_GROUPS.items():
+            n_g = sum(table.get(f, {}).get("episodes", 0) for f in gfams)
+            k_g = sum(round(table[f]["legal_return"] * table[f]["episodes"]) for f in gfams if f in table)
+            grp[gname] = {"episodes": n_g, "legal_return": round(k_g / max(n_g, 1), 4), "ci95": wilson(k_g, n_g)}
+        out["drill_v2"] = {"per_shot_p": round(rets / max(episodes, 1), 4), "per_shot_ci95": wilson(rets, episodes),
+                           "groups": grp, "planner": term.cfg.planner_mode, "sim2real": not args.no_sim2real,
+                           "court_falls_per_episode": out["robot_fall_rate_per_episode"]}
     if getattr(term.cfg, "court_wide", False):  # Stage 5C: outcomes per court zone and family (D-076)
         from picklebot_mj.feeds import COURT_ZONES
         zt = {}

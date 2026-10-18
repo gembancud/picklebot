@@ -1180,3 +1180,67 @@ def _latent_court_rally_gait(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_COURT_RALLY_GAIT, env_cfg=_latent_court_rally_gait(),
                     play_env_cfg=_latent_court_rally_gait(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# Stage 5E (D-097..D-101): rally drill v2 with the stance-spot planner, plus sim-to-real latency and ball-state noise.
+# Feeds come from picklebot_mj.drill_v2 (feed groups, no two extremes in a row), court-anchored at the start spot. The
+# recovery spot follows the robot's contact position, and the next feed comes 0.2 s after the return lands. The noisy
+# planner's spot (picklebot_mj.planner) is shown through the spot input until the first contact. The rally bonus is
+# Stage 5D's. The actor's ball observations are 1-2 control steps late (20-40 ms) and noisy (3 cm, 0.15 m/s per axis);
+# joint commands are 0-4 physics steps late (0-20 ms). The critic's observations stay exact.
+import dataclasses as _dc  # noqa: E402
+
+from picklebot_mj.drill_v2 import REFEED_V2_S  # noqa: E402
+
+SIM2REAL_OBS_LAG = (1, 2)  # control steps (20 ms each)
+SIM2REAL_ACT_LAG = (0, 4)  # physics steps (5 ms each)
+SIM2REAL_BALL_NOISE = (0.03, 0.15)  # m, m/s per axis
+
+
+def _sim2real(cfg, obs_lag=SIM2REAL_OBS_LAG, act_lag=SIM2REAL_ACT_LAG, noise=SIM2REAL_BALL_NOISE):
+    b = cfg.actions["ball"]
+    b.obs_ball_pos_noise, b.obs_ball_vel_noise = noise
+    for name in ("ball_pos", "ball_vel", "ball_from_paddle"):
+        term = cfg.observations["actor"].terms[name]
+        term.params = {**(term.params or {}), "noisy": True}
+        term.delay_min_lag, term.delay_max_lag, term.delay_update_period = obs_lag[0], obs_lag[1], 50
+    robot = cfg.scene.entities["robot"]  # new articulation and actuator configs (the originals may be shared constants)
+    art = robot.articulation
+    robot.articulation = _dc.replace(art, actuators=tuple(
+        _dc.replace(a, delay_min_lag=act_lag[0], delay_max_lag=act_lag[1], delay_update_period=200)
+        for a in art.actuators))
+    return cfg
+
+
+def _drill_v2_settings(cfg, play=False):
+    b = cfg.actions["ball"]
+    b.drill_v2, b.feed_anchor, b.court_anchor_prob, b.rally_fixed_recovery = True, "start", 0.0, False
+    b.lp_curriculum, b.adaptive_curriculum, b.reach_curriculum = False, False, False
+    b.refeed_delay_s = REFEED_V2_S
+    b.hit_hint, b.planner_mode = False, "noisy"
+    if not play:
+        cfg.episode_length_s = 30.0
+    legal = cfg.rewards.pop("legal_return")  # keep legal_return last (it clears the step flags)
+    cfg.rewards["rally_bonus"] = RewardTermCfg(func=rally_bonus, weight=2.5 / cfg.sim.mujoco.timestep / cfg.decimation)
+    cfg.rewards["legal_return"] = legal
+    return _sim2real(cfg)
+
+
+# Evaluation tasks of the frozen Stage 5E battery (scripts/h5e_eval.sh): residual executors around RES_BASE (run 22,
+# Stage 5D run 1) and plain lambda-3 executors (consolidated bases).
+TASK_LATENT_COURT_V2_RES = "Picklebot-Latent-Court-V2-Res-G1"
+TASK_LATENT_COURT_V2_L3 = "Picklebot-Latent-Court-V2-L3-G1"
+
+
+def _latent_court_v2_res(play=False):
+    return _drill_v2_settings(_latent_court_res(play), play)
+
+
+def _latent_court_v2_l3(play=False):
+    return _drill_v2_settings(_latent_court_l3(play), play)
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES, env_cfg=_latent_court_v2_res(),
+                    play_env_cfg=_latent_court_v2_res(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_L3, env_cfg=_latent_court_v2_l3(),
+                    play_env_cfg=_latent_court_v2_l3(True), rl_cfg=_latent_drill3_lowent_rl_cfg())

@@ -44,6 +44,7 @@ ROBOT_PLAYER = 0  # near team, player 0
 FEEDER_PLAYER = 2  # far team
 EPISODE_S = 8.0  # several feeds per episode (feeding machine); 3 s until lateral-a01, 4 s in lateral-a02
 REFEED_DELAY_S = 0.5  # pause between the end of one rally and the next feed
+PLAN_BATCH = 512  # Stage 5E planner: envs planned per control step (tasks.return_stand._plan_step)
 # Aiming targets (court-local, far court): A = deep left, B = deep right from the robot's view
 # (it faces +x, so its left is +y). Hit = legal landing within TARGET_RADIUS of the target.
 TARGET_CENTRES = ((4.5, 1.6), (4.5, -1.6))
@@ -138,6 +139,18 @@ class BallPhysicsActionCfg(ActionTermCfg):
     reach_start: float = 0.0  # initial curriculum scale (0 = near version, 1 = full family)
     reach_near_set: str = "v1"  # "v1" (REACH_NEAR, S-D3) or "v2" (REACH_NEAR_V2, gentler, S-D3b)
     lost_back_margin: float = 0.5  # ball lost this far behind the baseline (Drill 3: room to play deep balls)
+    # Stage 5E (D-097..D-101): rally drill v2 (picklebot_mj.drill_v2: feed groups, contact-dependent recovery), the
+    # stance-spot planner (picklebot_mj.planner) shown through the spot input until the first contact, and ball-state
+    # noise on the actor's ball observations (terms built with noisy=True; tasks._sim2real).
+    drill_v2: bool = False
+    v2_fail_weighting: bool = False  # training only: failure-weighted feeds, extreme share <= 25 %
+    planner_mode: str = "off"  # "off", "clean" (true state and spin, no delay) or "noisy" (delay, noise, spin unknown)
+    planner_delay_s: float = 0.10
+    planner_pos_noise: float = 0.03
+    planner_vel_noise: float = 0.15
+    planner_prob: float = 1.0  # share of real-ball feeds that get the spot
+    obs_ball_pos_noise: float = 0.0  # m per axis, actor ball observations
+    obs_ball_vel_noise: float = 0.0  # m/s per axis
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -240,6 +253,23 @@ class BallPhysicsAction(ActionTerm):
         if cfg.move_prob > 0.0:
             from picklebot_mj.tasks.move_drill import MoveDrill
             self.drill = MoveDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights)
+        self.v2 = None
+        if getattr(cfg, "drill_v2", False):  # Stage 5E drill v2 (D-097)
+            from picklebot_mj.drill_v2 import DrillV2Sampler
+            self.v2 = DrillV2Sampler(n, dev, self.gen, getattr(cfg, "v2_fail_weighting", False))
+            self.v2_rec = torch.tensor(RECOVERY_FIXED, device=dev).repeat(n, 1)  # true recovery spot (hint aside)
+        self.plan_on = getattr(cfg, "planner_mode", "off") != "off"
+        if self.plan_on:  # Stage 5E stance-spot planner (D-097/D-098)
+            from picklebot_mj.planner import PlannerCfg
+            assert cfg.planner_mode in ("clean", "noisy"), cfg.planner_mode
+            assert not cfg.hit_hint, "the planner replaces the privileged stance hint"
+            self._plan_clean = cfg.planner_mode == "clean"
+            self._plan_cfg = PlannerCfg(delay_s=0.0 if self._plan_clean else cfg.planner_delay_s,
+                                        pos_noise=cfg.planner_pos_noise, vel_noise=cfg.planner_vel_noise)
+            self.gen_plan = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 271829)  # own stream
+            self.plan_pending = torch.zeros(n, dtype=torch.bool, device=dev)
+            self.plan_t = torch.zeros(n, device=dev)
+            self._phys_i = 0  # host-side physics-step counter: the planner runs once per control step
         self.shadow = None
         if cfg.swing_prob > 0.0:
             from picklebot_mj.tasks.shadow_swing import ShadowSwing
@@ -314,6 +344,10 @@ class BallPhysicsAction(ActionTerm):
             self.ep["env_falls"] += fell.sum()  # includes falls between feeds
         if self.shadow is not None:
             self.shadow.assign(env_ids, self.cfg.move_prob)
+        if getattr(self, "v2", None) is not None:  # a new robot episode starts from the baseline centre, any family allowed
+            from picklebot_mj.tasks.shadow_swing import _const
+            self.v2_rec[env_ids] = _const("rec_fixed", lambda: list(RECOVERY_FIXED), self.device)
+            self.v2.last_ext[env_ids] = False
         self._feed(env_ids)
         self.rules.begin_from_feed(env_ids, torch.full_like(env_ids, FEEDER_PLAYER), must_bounce=True)
         if getattr(self.cfg, "court_wide", False):  # volley feeds: rally phase, may be taken before the bounce
@@ -355,6 +389,8 @@ class BallPhysicsAction(ActionTerm):
         self.ep["legal_return"] += outcome[:, 2].sum()
         self.ep["fall"] += outcome[:, 3].sum()
         self.ep_family.index_add_(0, self.family, outcome)
+        if getattr(self, "v2", None) is not None:  # drill v2 failure weighting (a no-op unless enabled)
+            self.v2.update(self.family, self.return_done & mask, mask)
         if getattr(self.cfg, "court_wide", False):
             self.ep_zone_family.view(-1, 4).index_add_(0, self.zone * len(FAMILY_NAMES) + self.family, outcome)
             if getattr(self, "lp_zone_samplers", None) is not None:
@@ -409,7 +445,14 @@ class BallPhysicsAction(ActionTerm):
         fam_old, tgt_old, unit_old = self.family.clone(), self.target.clone(), self.feed_unit.clone()
         zone_old = self.zone.clone()
         anch_old = self._court_anch.clone() if hasattr(self, "_court_anch") else None
+        v2_last_old = self.v2.last_ext.clone() if getattr(self, "v2", None) is not None else None
+        plan_old = (self.plan_pending.clone(), self.plan_t.clone()) if getattr(self, "plan_on", False) else None
         self._feed(self.all_ids)
+        if v2_last_old is not None:  # only fired envs advance the no-two-extremes state
+            self.v2.last_ext = torch.where(fire, self.v2.last_ext, v2_last_old)
+        if plan_old is not None:
+            self.plan_pending = torch.where(fire, self.plan_pending, plan_old[0])
+            self.plan_t = torch.where(fire, self.plan_t, plan_old[1])
         m = fire.unsqueeze(-1)
         self.ball = BallState(torch.where(m, self.ball.pos, pos), torch.where(m, self.ball.vel, vel),
                               torch.where(m, self.ball.spin, spin))
@@ -480,7 +523,9 @@ class BallPhysicsAction(ActionTerm):
             self._court_anch[env_ids] = torch.rand(k, generator=self.gen, device=self.device) < self.cfg.court_anchor_prob
         if getattr(self.cfg, "court_wide", False):  # court zone from the pelvis x at feed time (D-076)
             self.zone[env_ids] = torch.bucketize(self._anchor(env_ids)[0].contiguous(), self._zone_edges, right=True)
-        if getattr(self, "lp_zone_samplers", None) is not None:  # zone-conditioned learning-progress units
+        if getattr(self, "v2", None) is not None:  # drill v2 groups, never two extremes in a row (D-097)
+            fam = self.v2.sample(env_ids)
+        elif getattr(self, "lp_zone_samplers", None) is not None:  # zone-conditioned learning-progress units
             L = int(self.cfg.lp_levels)
             W = torch.stack([zs.weights() for zs in self.lp_zone_samplers])  # [zone, unit]
             unit = torch.multinomial(W[self.zone[env_ids]], 1, replacement=True, generator=self.gen).squeeze(-1)
@@ -523,6 +568,8 @@ class BallPhysicsAction(ActionTerm):
             from picklebot_mj.tasks.shadow_swing import _const
             fixed = _const("rec_fixed", lambda: list(RECOVERY_FIXED), self.device).repeat(k, 1)
             rec = torch.where(self._court_anch[env_ids].unsqueeze(-1), fixed, rec)
+        if getattr(self, "v2", None) is not None:  # drill v2: the spot set at the robot's last contact (drill_v2.recovery_spot)
+            rec = self.v2_rec[env_ids]
         self.recover_xy[env_ids] = rec
         x0, z0 = self._u("start_x", fam), self._u("start_z", fam)
         ax, ay = self._anchor(env_ids)
@@ -547,6 +594,38 @@ class BallPhysicsAction(ActionTerm):
             self.hit_rec_true[env_ids] = rec
             self.hit_hint_on[env_ids] = hit_ep
             self.recover_xy[env_ids] = torch.where(hit_ep.unsqueeze(-1), spot, rec)
+        if getattr(self, "plan_on", False):  # Stage 5E: the planner's spot replaces the recovery spot once it is ready (apply_actions)
+            hit_ep = torch.ones(k, dtype=torch.bool, device=self.device)
+            if self.shadow is not None:
+                hit_ep &= ~self.shadow.swing_ep[env_ids]
+            if self.cfg.planner_prob < 1.0:
+                hit_ep &= torch.rand(k, generator=self.gen_hint, device=self.device) < self.cfg.planner_prob
+            self.hit_rec_true[env_ids] = rec
+            self.hit_hint_on[env_ids] = False
+            self.plan_pending[env_ids] = hit_ep
+            self.plan_t[env_ids] = 0.0
+
+    def _plan_step(self, dt: float, live: torch.Tensor) -> None:
+        """Stage 5E planner: once per control step, feeds whose observation window has passed get their stance spot
+        through the spot input until the first contact (masked, no host sync)."""
+        from picklebot_mj.planner import plan_stance
+        self.plan_t = self.plan_t + dt
+        self._phys_i += 1
+        if self._phys_i % int(self._env.cfg.decimation) != 0:
+            return
+        due = self.plan_pending & (self.plan_t >= self._plan_cfg.delay_s) & live & ~self.hit_done
+        # A fixed-size batch of envs, due ones first (no host sync, one compiled shape); about n * 0.02 / 1.6 feeds fall
+        # due per control step, so PLAN_BATCH rarely binds, and an env left over is planned on the next step.
+        idx = torch.topk(due.float(), min(PLAN_BATCH, self.num_envs)).indices
+        sel = due[idx]
+        spot = plan_stance(self.ball.pos[idx], self.ball.vel[idx], self.ball.spin[idx], self.pelvis_xy()[idx],
+                           self._plan_cfg, self.gen_plan, clean=self._plan_clean)
+        sm = sel.unsqueeze(-1)
+        self.stance_xy = self.stance_xy.index_copy(0, idx, torch.where(sm, spot, self.stance_xy[idx]))
+        self.recover_xy = self.recover_xy.index_copy(0, idx, torch.where(sm, spot, self.recover_xy[idx]))
+        upd = torch.zeros_like(due).index_copy(0, idx, sel)
+        self.hit_hint_on = self.hit_hint_on | upd
+        self.plan_pending = self.plan_pending & ~upd
 
     def apply_actions(self) -> None:
         env = self._env
@@ -561,6 +640,8 @@ class BallPhysicsAction(ActionTerm):
             sim_paddle = PaddleState(self.shadow.paddle_for_sim(paddle.pos), paddle.rot, paddle.lin_vel,
                                      paddle.ang_vel)
         live = ~self.rules.dead
+        if getattr(self, "plan_on", False):
+            self._plan_step(dt, live)
         if getattr(self.cfg, "court_wide", False):  # kitchen state from the feet (D-076)
             feet = data.body_link_pos_w[:, self._foot_ids] - origins.unsqueeze(1)
             in_k = feet[..., 0] >= -court.KITCHEN_DEPTH  # robot side x < 0; the kitchen line counts as kitchen
@@ -594,10 +675,19 @@ class BallPhysicsAction(ActionTerm):
         self.hit_now |= first
         self.hit_out_pos = torch.where(first.unsqueeze(-1), self.ball.pos, self.hit_out_pos)
         self.hit_out_vel = torch.where(first.unsqueeze(-1), self.ball.vel, self.hit_out_vel)
-        if getattr(self.cfg, "hit_hint", False):  # after the contact the spot input is the recovery spot again
+        if getattr(self.cfg, "hit_hint", False) or getattr(self, "plan_on", False):  # after the contact the spot input is the recovery spot
             back = first & self.hit_hint_on
             self.recover_xy = torch.where(back.unsqueeze(-1), self.hit_rec_true, self.recover_xy)
             self.hit_hint_on &= ~first
+            if getattr(self, "plan_on", False):
+                self.plan_pending &= ~first
+        if getattr(self, "v2", None) is not None:  # drill v2: recovery spot from the pelvis at the first legal contact (D-097)
+            from picklebot_mj.drill_v2 import recovery_spot
+            rec = recovery_spot(self.pelvis_xy())
+            fm = first.unsqueeze(-1)
+            self.v2_rec = torch.where(fm, rec, self.v2_rec)
+            self.recover_xy = torch.where(fm, rec, self.recover_xy)
+            self.hit_rec_true = torch.where(fm, rec, self.hit_rec_true)
         self.hit_done |= legal_hit
         # Height above the net when the returned ball crosses x = 0 (first crossing after the hit).
         crossing = self.hit_done & (before.pos[:, 0] < 0) & (self.ball.pos[:, 0] >= 0)
@@ -713,22 +803,37 @@ def _term(env) -> BallPhysicsAction:
 # Observations
 
 
-def ball_pos_b(env) -> torch.Tensor:
-    t, robot = _term(env), env.scene["robot"]
+def _ball_seen(env, noisy: bool) -> tuple[torch.Tensor, torch.Tensor]:
+    """Ball (pos, vel), court-local. noisy (actor terms, Stage 5E sim-to-real): one Gaussian estimate per control step,
+    shared by every ball term, with the ball term's obs_ball_*_noise; the critic's terms stay exact."""
+    t = _term(env)
+    sp, sv = getattr(t.cfg, "obs_ball_pos_noise", 0.0), getattr(t.cfg, "obs_ball_vel_noise", 0.0)
+    if not noisy or (sp <= 0.0 and sv <= 0.0):
+        return t.ball.pos, t.ball.vel
+    step = env.common_step_counter
+    if getattr(t, "_seen_step", None) != step or t._seen_pos.shape != t.ball.pos.shape:
+        t._seen_step = step
+        t._seen_pos = t.ball.pos + sp * torch.randn_like(t.ball.pos)
+        t._seen_vel = t.ball.vel + sv * torch.randn_like(t.ball.vel)
+    return t._seen_pos, t._seen_vel
+
+
+def ball_pos_b(env, noisy: bool = False) -> torch.Tensor:
+    robot = env.scene["robot"]
     root = robot.data.root_link_pose_w
-    return _rotate_inv(root[:, 3:7], t.ball.pos + env.scene.env_origins - root[:, :3])
+    return _rotate_inv(root[:, 3:7], _ball_seen(env, noisy)[0] + env.scene.env_origins - root[:, :3])
 
 
-def ball_vel_b(env) -> torch.Tensor:
-    t, robot = _term(env), env.scene["robot"]
-    return _rotate_inv(robot.data.root_link_pose_w[:, 3:7], t.ball.vel)
+def ball_vel_b(env, noisy: bool = False) -> torch.Tensor:
+    robot = env.scene["robot"]
+    return _rotate_inv(robot.data.root_link_pose_w[:, 3:7], _ball_seen(env, noisy)[1])
 
 
-def ball_from_paddle_b(env) -> torch.Tensor:
+def ball_from_paddle_b(env, noisy: bool = False) -> torch.Tensor:
     t, robot = _term(env), env.scene["robot"]
     root = robot.data.root_link_pose_w
     paddle = robot.data.body_link_pose_w[:, t.paddle_id, :3]
-    return _rotate_inv(root[:, 3:7], t.ball.pos + env.scene.env_origins - paddle)
+    return _rotate_inv(root[:, 3:7], _ball_seen(env, noisy)[0] + env.scene.env_origins - paddle)
 
 
 def rally_flags(env) -> torch.Tensor:

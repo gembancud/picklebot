@@ -2601,3 +2601,49 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5D checklist, log); `mjlab
 - **Stop and ask the user before:** sudo or system changes, Unity or the feat/hierarchical-control checkout, deleting anything, any download, any run over 2 h, or using final seeds.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E).
+
+### D-101 — Stage 5E build: drill v2, stance-spot planner, sim-to-real, frozen evaluation, 100STYLE reference
+
+- Date: 2026-10-18
+- Status: Accepted (loop build step, D-097/D-098/D-100; frozen before run 0)
+- Amends: none (implements D-097/D-098)
+
+**Drill v2** (`picklebot_mj/drill_v2.py`; task flag `drill_v2`):
+- **Feed mix:** the D-097 groups. Never two extremes in a row: after an extreme, the next feed is neutral or moderate, renormalised. So the long-run extreme share is 13.0 %, not 15 %.
+- **Feeds:** court-anchored at the start spot.
+- **Recovery spot,** set at the first legal contact from the pelvis: x = clamp(x, -5.6, -4.5), y = clamp(0.4 y, +-1.2). The baseline centre is used until the first contact of an episode.
+- **Pacing:** the next feed comes 0.2 s after the return lands or the ball is ruled dead.
+- **Failure weighting** (training only, flag `v2_fail_weighting`): weights scale with 0.05 + the EMA failure rate; the extreme share is capped at 25 %.
+
+**Stance-spot planner** (`picklebot_mj/planner.py`):
+- **Input:** the ball state 0.10 s after launch, with Gaussian estimation noise of 3 cm and 0.15 m/s per axis. Spin is unknown (assumed zero).
+- **Prediction:** it rolls the ball model forward (gravity, drag, Magnus, the court bounce impulse; RK4 at 12.5 ms, torch.compile, up to 512 envs per control step). It returns the stance spot beside the interception point, using the Stage 5 "top" rule and offsets.
+- **Accuracy (clean mode, true state and spin):** 1.6 cm median, 21 cm worst over the drill v2 families, against the full ball simulation.
+- **Hand-off:** the spot replaces the spot input once ready, until the first contact (tasks' `planner_mode` "noisy"; "clean" and "off" for diagnostics).
+
+**Sim-to-real** (`tasks._sim2real`, on every Stage 5E task):
+- the actor's ball observations are 1-2 control steps late (20-40 ms; lag held for 50 steps) and noisy (3 cm, 0.15 m/s per axis);
+- joint commands are 0-4 physics steps late (0-20 ms; lag held for 200 steps);
+- the critic's observations stay exact;
+- evaluations keep all of it on.
+
+**Tasks:**
+- `Picklebot-Latent-Court-V2-Res-G1`, for residual executors around run 18 (run 22, Stage 5D run 1);
+- `Picklebot-Latent-Court-V2-L3-G1`, for lambda-3 executors, such as consolidated bases.
+
+**Frozen evaluation** (`scripts/h5e_eval.sh`, development seeds S..S+15):
+1. **Drill v2 jobs:** 1,024 envs, 90 s rallies, no move or ghost episodes, with the planner spot noisy, clean and off (seeds S, S+1, S+2).
+2. **Stage 5C battery:** court drill, move drill, Stage 5B drill, recovery, the Stage 5D rally evaluation and style (`h5c_eval.sh`, seeds S+10..S+15).
+3. **Gate quantities:**
+   - per-shot legal p and the group floors (Wilson lower bounds) come from the **noisy-planner** drill v2 job;
+   - court falls, arrival and the court main metric come from the Stage 5C battery;
+   - style comes from `style_score.py`, which now reports the old and the new reference together.
+4. **Finals:** the noisy drill v2 job and the court drill pooled over 4 seeds, paired against run 22.
+
+**Style reference:** the frozen filter rule, split and acceptance thresholds are in `mjlab/results/stage5e-style-reference.md`, written before extraction.
+- **Retarget result:** Neutral FW, BW and SW are accepted. Neutral SR (sidestep running) fails foot sliding (0.13 / 0.11 m/s > 0.10, ankle roll at its limit) and is left out.
+- **New reference:** tennis-v5 0.50, LAFAN1 0.25 and the held-out 100STYLE slice 0.25. The slice's 5,083 poses are repeated to fill its share.
+
+**Tests:** `tests/test_drill_v2.py`, 10 tests, all passing. The related existing suites pass (80/81). The one failure, the gait-anchor test, passes alone: in a long run torch.compile hits its recompile limit across environment sizes. That failure is not caused by this change.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E build items); `mjlab/results/stage5e-style-reference.md`.
