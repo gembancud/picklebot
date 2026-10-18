@@ -43,7 +43,8 @@ h4-25b style (information only, D-098): 3.878 on the old reference, **3.910 on t
 
 | # | Run | Change (written before launch) | From | Endpoint | v2 p (noisy) | Groups (Wilson low) | Court main | Court falls | Arrival min | Style old / new |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | s5e-01-consolidate | consolidation only (D-102): composite of run 18 + Stage 5D run 1 residual -> one lambda-3 executor, on the Stage 5D rally drill (no latency) | run 18 init; teacher s5d-01/model_1800 | checkpoint at the stop (<= 3,600 s or loss plateau) | | | | | | |
+| 1 | s5e-01-consolidate | consolidation only (D-102): composite of run 18 + Stage 5D run 1 residual -> one lambda-3 executor, on the Stage 5D rally drill (no latency) | run 18 init; teacher s5d-01/model_1800 | model_126 (loss plateau, 11 min) | 0.295 | 0.327 / 0.239 / 0.205 | **76.66 % (kill rule < 76.8)** | 6.7 % | 96.5 % (back) | 4.221 / 4.272 |
+| 2 | s5e-02-v2-ppo | PPO on drill v2 with sim-to-real on (D-102/D-103); Stage 5E PPO settings (gamma 0.995, 50-update critic warm-up) | s5d-01-rally/model_1800 (residual around run 18) | iteration 2,800 or the last checkpoint before the 7,000 s cap | | | | | | |
 
 ## Notes
 - **Run 0 diagnosis: latency, not the drill** (dev seed 4200398; 256 robots, 30 s rallies; Stage 5D run 1).
@@ -67,3 +68,7 @@ h4-25b style (information only, D-098): 3.878 on the old reference, **3.910 on t
   - D-097 called the new reference a partial loosening, but for this executor it is stricter.
   - Both scores are reported, and the gate uses the new one (D-098).
 - **Footwork check (step 3, D-097): passed.** latent-07 tracks every 4 s window of the 100STYLE training clips: 57/57 (FW 20, BW 22, SW 15), with no falls. It tracks tennis-v5 strokes at 93.5 % (dev seed 4200399, `stage5e-footwork-check-latent07.json`). By the D-097 rule (>= 90 %), style uses a discriminator reward on these clips, wrists excluded; no H0 -> H1 retrain for style. The separate latency risk to the controller (D-102) is not tested by this check.
+- **Run 1 (consolidation) is killed:** court main metric 76.66 % < 76.8 %.
+  - The copy lost rally skill on the old Stage 5D rally evaluation: P(rally >= 10) 10.2 % -> 5.5 %, and per-shot p on drill v2 0.306 -> 0.295.
+  - It counts as plateau strike 1 (D-097/D-100: killed runs count).
+  - Run 2 therefore continues the unconsolidated Stage 5D run 1 residual (D-103).

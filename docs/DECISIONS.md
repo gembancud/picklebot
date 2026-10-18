@@ -2696,3 +2696,33 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E build items); `mjlab/re
 - Its endpoint and settings are written down before its launch.
 
 Affected roadmap/spec sections: `mjlab/results/stage5e.md`.
+
+### D-103 — Stage 5E run 1 (consolidation) killed; run 2 continues Stage 5D run 1 on drill v2
+
+- Date: 2026-10-18
+- Status: Accepted (loop; recorded before run 2's launch)
+- Amends: D-102 (run 2's start point)
+
+**Run 1, s5e-01-consolidate/model_126** (loss plateau after 11 min; dev seeds 4200861-4200876):
+
+| Item | Value |
+|---|---|
+| Drill v2 p, noisy spot | 0.295 |
+| Groups, Wilson low (neutral / moderate / extreme) | 0.327 / 0.239 / 0.205 |
+| Court main metric | **76.66 % (kill rule: < 76.8 %)** |
+| Court falls | 6.7 % |
+| Arrival, every direction | >= 96.5 % |
+| Style, old / new reference | 4.221 / 4.272 |
+| Stage 5D rally evaluation, P(rally >= 10) | 5.5 % (the start: 10.2 %) |
+
+The distilled copy lost part of the residual executor's skill. Run 1 is killed and counts as plateau strike 1.
+
+**Run 2, s5e-02-v2-ppo** (change: the training task, drill v2 with sim-to-real on):
+- **Method:** PPO continues Stage 5D run 1's residual (`s5d-01-rally/model_1800`, around run 18), not the killed consolidated base.
+- **Task:** `Picklebot-Latent-Court-V2-Res-PPO-G1`, with the same environment as the evaluation task V2-Res. Stage 5E PPO settings: gamma 0.995 and a 50-update critic warm-up.
+- **Settings:** 12,288 envs, training seed 62, 1,000 iterations.
+- **Endpoint:** iteration 2,800, or the last checkpoint before the 7,000 s wall cap.
+- **Evaluation:** `h5e_eval.sh` on dev seeds 4200877-4200892 with V2-Res, Court-Res and Drill3-Prior5-Res.
+- **Kill rules:** those of D-102.
+
+Affected roadmap/spec sections: `mjlab/results/stage5e.md`.

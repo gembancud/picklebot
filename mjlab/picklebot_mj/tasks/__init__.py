@@ -1341,3 +1341,10 @@ class CriticWarmupRunner(_MjlabRunner):
 
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RESC, env_cfg=_latent_court_v2_resc(), runner_cls=CriticWarmupRunner,
                     play_env_cfg=_latent_court_v2_resc(True), rl_cfg=_s5e_rl_cfg())
+
+
+# Stage 5E run 2 (D-103): PPO on drill v2 continuing Stage 5D run 1's residual around RES_BASE (run 18), with the Stage 5E
+# PPO settings. Same environment as the evaluation task Picklebot-Latent-Court-V2-Res-G1.
+TASK_LATENT_COURT_V2_RES_PPO = "Picklebot-Latent-Court-V2-Res-PPO-G1"
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO, env_cfg=_latent_court_v2_res(), runner_cls=CriticWarmupRunner,
+                    play_env_cfg=_latent_court_v2_res(True), rl_cfg=_s5e_rl_cfg())
