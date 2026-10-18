@@ -1259,3 +1259,85 @@ def _tracking_tennis_style100(play=False):
 register_mjlab_task(task_id=TASK_TRACKING_TENNIS_STYLE100, env_cfg=_tracking_tennis_style100(),
                     play_env_cfg=_tracking_tennis_style100(True), rl_cfg=_tracking_huge_rl_cfg(),
                     runner_cls=MotionTrackingOnPolicyRunner)
+
+
+# Stage 5E runs 2+ (D-102): residual PPO on drill v2 (sim-to-real on) around the consolidated base of run 1
+# (s5e-01-consolidate, its checkpoint at the stop). PICKLEBOT_V2_BASE overrides the base for checks only.
+def _s5e_base() -> str:
+    logs = Path(__file__).resolve().parents[2] / "artifacts" / "train" / "logs" / "picklebot_return_stand"
+    runs = sorted(logs.glob("*_s5e-01-consolidate"))
+    cks = sorted(runs[-1].glob("model_*.pt"), key=lambda p: int(p.stem.split("_")[1])) if runs else []
+    return str(cks[-1]) if cks else str(logs / "s5e-01-consolidate-missing.pt")
+
+
+TASK_LATENT_COURT_V2_RESC = "Picklebot-Latent-Court-V2-ResC-G1"
+
+
+def _latent_court_v2_resc(play=False):
+    base = os.environ.get("PICKLEBOT_V2_BASE", _s5e_base())
+    return _drill_v2_settings(_residualize(_latent_court_l3(play), base=base), play)
+
+
+
+
+# The Stage 5C battery tasks (court drill, Stage 5B drill) for residual executors around the consolidated base (h5e_eval
+# arguments 6 and 7 for runs 2+). No sim-to-real: the Stage 5C battery measures as before (D-101).
+TASK_LATENT_COURT_RESC = "Picklebot-Latent-Court-ResC-G1"
+TASK_LATENT_DRILL3_PRIOR5_RESC = "Picklebot-Latent-Drill3-Prior5-ResC-G1"
+
+
+def _latent_court_resc(play=False):
+    return _residualize(_latent_court_l3(play), base=os.environ.get("PICKLEBOT_V2_BASE", _s5e_base()))
+
+
+def _latent_drill3_prior5_resc(play=False):
+    return _residualize(_latent_drill3_prior5_l3(play), base=os.environ.get("PICKLEBOT_V2_BASE", _s5e_base()))
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_RESC, env_cfg=_latent_court_resc(), play_env_cfg=_latent_court_resc(True),
+                    rl_cfg=_latent_drill3_lowent_rl_cfg())
+register_mjlab_task(task_id=TASK_LATENT_DRILL3_PRIOR5_RESC, env_cfg=_latent_drill3_prior5_resc(),
+                    play_env_cfg=_latent_drill3_prior5_resc(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+
+# Stage 5E PPO settings for every run (D-097 loop rule): gamma 0.995, and a critic warm-up. The first CRITIC_WARMUP_ITERS
+# PPO updates leave the actor (and its action std) frozen, so the inherited critic adapts to drill v2's rewards and
+# dynamics before the policy moves. With the actor frozen its KL is 0, which rsl_rl's adaptive schedule ignores, so the
+# learning rate does not drift during the warm-up. PICKLEBOT_CRITIC_WARMUP overrides the count (smoke tests).
+from mjlab.rl import MjlabOnPolicyRunner as _MjlabRunner  # noqa: E402
+
+CRITIC_WARMUP_ITERS = 50
+S5E_GAMMA = 0.995
+
+
+def _s5e_rl_cfg():
+    cfg = _latent_drill3_lowent_rl_cfg()
+    cfg.algorithm.gamma = S5E_GAMMA
+    return cfg
+
+
+class CriticWarmupRunner(_MjlabRunner):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.critic_warmup = int(os.environ.get("PICKLEBOT_CRITIC_WARMUP", CRITIC_WARMUP_ITERS))
+        self._warm_updates = 0
+        update = self.alg.update
+
+        def warm_update(*a, **k):
+            frozen = self._warm_updates < self.critic_warmup
+            if frozen:
+                for p in self.alg.actor.parameters():
+                    p.requires_grad_(False)
+            try:
+                return update(*a, **k)
+            finally:
+                if frozen:
+                    for p in self.alg.actor.parameters():
+                        p.requires_grad_(True)
+                self._warm_updates += 1
+
+        self.alg.update = warm_update
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RESC, env_cfg=_latent_court_v2_resc(), runner_cls=CriticWarmupRunner,
+                    play_env_cfg=_latent_court_v2_resc(True), rl_cfg=_s5e_rl_cfg())
