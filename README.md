@@ -66,14 +66,26 @@ The last stage (5D) did not reach its gate: 2 of 5 items passed. [Stage 5D repor
 | 5B | Human-like movement from motion capture. | Passed: 93.9 % of returns legal |
 | 5C | Play on the whole court. Walk to any spot. | Not passed: walking passed, volleys and falls failed |
 | 5D | Rallies against balls that land at fixed places. | Not passed: rallies to 10 shots rose from 1.75 % to 9.6 % |
+| 5E | Reliable shots in a more realistic game, with real-world delays. | In progress |
+
+## Work in progress: Stage 5E
+
+**What is new in this stage:**
+- **A more realistic practice game.** Most balls are normal shots, some are difficult. The robot goes back to a sensible place after each hit, and the next ball comes soon after its return lands.
+- **A planner.** A planner tells the robot where to stand for each ball. It calculates this spot from the flight of the ball, with the small errors and delays that a real camera gives.
+- **Real-world delays.** A real robot sees the ball a little late, and its motors react a little late. The simulation now adds these delays: 20 to 40 thousandths of a second for the ball, and up to 20 thousandths for the motors.
+- **Human footwork.** Recordings of people who walk forward, walk backward and step sideways come from the 100STYLE dataset (Mason, Starke and Komura, CC BY 4.0). They make the robot's movement more human.
+
+**What we found so far:**
+- **Delays are the biggest problem.** Without training, the delays reduce the shots that the robot returns from about 72 % to 31 %.
+- **Training with delays fixes much of it.** After training with delays, the robot returns about 59 % of shots, and its movement is more human than before.
+- **A new problem: forgetting.** A robot that trains only with delays plays worse when there are no delays, and it walks less well. The current training run gives the robot both kinds of practice: half with delays, half without.
+
+The target for this stage is 80 % of shots returned.
 
 ## Next steps
 
-1. **Stage 5E: more reliable shots.**
-   - A practice game that is more like a real game.
-   - The robot gets the spot where it must stand for each ball. A planner calculates this spot from the flight of the ball. The planner gets ball data with small errors and delays, as a real camera gives.
-   - Fixes for the falls and for the difficult shots.
-   - Recordings of human footwork from the 100STYLE dataset (Mason, Starke and Komura, CC BY 4.0) for more human movement.
+1. **Finish Stage 5E:** a robot that plays well with and without delays, plus fixes for the falls and the difficult shots.
 2. **Volleys and play at the net.**
 3. **Later:**
    - a more robust robot;
