@@ -2885,3 +2885,146 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E checklist, log); `mjlab
 **Next:** for the user. The evidence points at a controller rebuild with latency, the D-097 rebuild rule (p plateaued below 0.80). Report: `mjlab/results/stage5e-gate.md`.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E checklist, log); `mjlab/results/stage5e-gate.md`; README.
+
+### D-108 — Stage 5F plan: a latency-robust stack, cheapest fixes first (five-reviewer round 4, user decisions)
+
+- Date: 2026-10-19
+- Status: Accepted (user)
+- Amends: roadmap (the next stage after 5E); D-097 rebuild rule (applied with the order below)
+
+**Reviewer round 4** (RL and sim-to-real, motion prior, pickleball, experiment design, architecture and compute): all five voted for a modified Option A (a controller fix with latency, not "set latency aside"). Shared points:
+1. **The two delays are different problems.**
+   - Ball-observation delay is state estimation: roll the delayed, noisy measurement forward by its known age with the planner's ball model. This is deployable and not a loosening.
+   - Command delay needs a controller fix.
+2. **The policies have no history,** so with per-episode latency they cannot tell which condition they are in. That explains the hedging and specialisation of runs 2-4.
+3. **H1's last-action input is the newest decoder output,** not the command actually applied under delay. Fix it.
+4. **Measure before rebuilding.** Find where the delay damage is (H0, H1, the walking teacher); retrain only what degrades.
+5. **Keep latent compatibility:** freeze H1's input normalisation, encoder and prior, and re-distil only the decoder. Check by transferring existing executors zero-shot.
+6. **Test on a fixed delay grid,** and make every kill rule and retention check cover every condition the training covers.
+7. **Realistic cost:** about 25-40 GPU-hours on the latent-compatible path.
+
+**User decisions:**
+1. **Plan:** the consensus plan below is adopted.
+2. **Court retention gate:** keep the no-delay line (court main >= 76.8 %, never loosened) and add with-delay lines (court, arrival, falls under delay), frozen from the new run 0 before training.
+3. **Pre-registered exit:** if the shot runs on the new controller plateau below p 0.80, the next stage is a goal-conditioned controller (root and paddle targets at a contact time, MaskedMimic-style) with an interception planner. No further residual layers.
+
+**Stage 5F plan.**
+
+**Step 0, no training:**
+- Delay-grid measurements of H0 tracking, latent-07 tracking and the flat walking teacher's arrival (command delay 0 / 10 / 20 ms).
+- The current executor's drill v2 ceiling with oracle ball forward-prediction.
+- The spin-blind forward-prediction error per feed family, offline.
+- A new development seed block, opened in `seeds.py` before any use, with a committed seed ledger.
+
+**Build, with tests:**
+- **Delay-grid evaluation:** ball delay {0, 20, 40} ms × command delay {0, 10, 20} ms, fixed per episode, each cell reported.
+- **A test** that the evaluation's conditions cover the training task's sim-to-real support.
+- **The applied-command input fix.**
+- **The ball latency compensator:** timestamped, spin-blind, using the planner's model.
+- **Executor history inputs:** the last 4 actions, proprioception and ball estimates.
+
+**Runs, one change each,** from Stage 5D run 1 (the last executor that passed its kill rules):
+1. ball forward-prediction;
+2. executor history;
+3. H0 delay fine-tune, only if step 0 shows H0 > 2 points down under delay;
+4. 100STYLE added to H0 as a separate run;
+5. H1 decoder re-distillation with the applied-command history; walking-teacher delay fine-tune if step 0 requires it;
+6. the zero-shot compatibility check (court within 3 points, arrival within 2, of latent-07 with no delay);
+7. then the shot work, in the coach's order:
+   - ready position and split step;
+   - turn-and-go footwork for deep balls (the falls fix);
+   - stance spot plus time-to-contact on every feed;
+   - failure-weighted feeds;
+   - backspin teacher.
+
+**Stage gate:** the Stage 5E gate, unchanged and measured as frozen in D-101, plus the with-delay retention lines of decision 2. Every metric is reported on the delay grid.
+
+**Loop rules:**
+- **Budget:** up to 15 runs, each <= 2 h, with a fixed endpoint and one change written down before launch.
+- **Sub-step budgets:** each controller sub-step has its own gate and at most 3 runs.
+- **Plateau:** 3 passing executor runs in a row each < 1 point gain in per-shot p.
+- **Kills:** 2 kills in a row stop the loop for a diagnosis with the user. Kills are no longer plateau strikes.
+- **Early check:** at about 30 % of each run, kill below the base.
+- **Final:** the candidate is named before the paired final on fresh seeds and repeated with a second training seed, or labelled single-seed.
+
+**Noted for later** (pickleball reviewer), not changed now because drill v2 is frozen:
+- The drill v2 recovery depth (1.1-2.2 m inside the baseline) is no-man's-land.
+- The 100STYLE straight backpedalling clips may reinforce backward falls. Report falls and arrival by direction.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5F section); `mjlab/results/stage5f-plan-review.md`.
+
+### D-109 — D-108 checked by the five reviewers (round 5): amendments and user decisions
+
+- Date: 2026-10-19
+- Status: Accepted (user)
+- Amends: D-108
+
+**Round 5 votes.** None of the five reviewers objected to D-108 as a whole. Every item drew AGREE or AGREE WITH CAVEAT, with one objection: the pickleball reviewer objected to item 8, where the straight-backpedal 100STYLE clips enter H0 training without a safeguard. Reviews are summarised in `mjlab/results/stage5f-plan-review.md`.
+
+**Adopted caveats** (they tighten or correct the plan, so no user choice was needed):
+1. **Numbers written before step 0:**
+   - retrain triggers for H0, latent-07 and the walking teacher;
+   - a frozen gate for every controller sub-step (H0: tracking within 2 points per source and per stroke type under delay; H1: see decision 1 below);
+   - the early-kill metric, cell and margin, defined per run type;
+   - a measurable metric for each shot item (e.g. split-step timing before the ball contact).
+2. **Step 0 measures each layer as the executor uses it,** per source and per walking direction:
+   - H0 and latent-07 per source (tennis, LAFAN1, footwork, 100STYLE);
+   - latent-07 both in encoder-tracking mode and driven as the executor drives it (prior plus up to 3 sigma);
+   - the oracle ball-prediction ceiling at command delay 0 and at 20 ms;
+   - the spin-blind compensator error per feed family;
+   - a check of 4 vs 8 history steps;
+   - a speed benchmark of the per-step ball compensator at 12,288 envs.
+3. **Delay grid:**
+   - **Gating:** only the D-101 frozen conditions and the with-delay bars of decision 1 gate; the other cells are descriptive.
+   - **Extrapolation:** one cell beyond the training support (ball 60 ms, command 30 ms) is reported as an extrapolation check.
+   - **Cost:** evaluation compute is budgeted separately from the 2 h training runs.
+4. **Command history, deployable:**
+   - The actor sees the history of commands it issued, covering the largest delay.
+   - The commands actually applied under delay go to the critic only.
+   - The change is defined at physics-step level.
+   - It also changes what the frozen prior reads (`controller_proprio` feeds both `prior_dist` and `decode`), so the compatibility check also runs under delay.
+5. **New inputs start at zero weight;** a check confirms the warm start reproduces its parent before the run counts.
+6. **H1 decoder re-distillation, with a fallback:**
+   - It keeps the input normalisation, encoder and prior frozen.
+   - If DAgger underfits under delay, a short PPO fine-tune of the decoder under delay follows, with the encoder and prior frozen.
+7. **Zero-shot compatibility check:**
+   - Court within 3 points of latent-07 **and** >= 76.8 % with no delay.
+   - It also runs under delay, and includes the Stage 5D rally P(rally >= 10).
+8. **Exit to the goal-conditioned controller.** It fires on any of:
+   - the shot-run plateau;
+   - the budget running out below p 0.80;
+   - 2 kills in a row on the shot runs;
+   - a controller sub-step failing its gate after its 3 runs;
+   - a failed compatibility check.
+
+   The delay grid, the compensator and the history inputs carry over. A fresh latent-07 is not the fallback.
+9. **Candidate and comparators:**
+   - The second training seed for the candidate is mandatory.
+   - A run within 1.5 points of the best is repeated on a second seed (D-100).
+   - Run 22 and Stage 5E run 3 are the comparators in run 0 and in the final.
+10. **Style data and baseline:**
+    - The held-out 100STYLE slice never enters training (D-098).
+    - The start point's known failures (court falls 6.2 %, style) are listed as baseline deviations.
+11. **Reporting:**
+    - Arrival and falls by direction.
+    - Falls per 100 shots as well as per episode.
+    - If the turn-and-go run fails its style line, the report notes that the frozen reference has no crossover or drop-step clips.
+
+**User decisions:**
+1. **With-delay bars are absolute:** arrival >= 90 % in every direction at 20 ms command delay, and falls <= 1 % with delays on. These are the same bars as without delay. The with-delay court line stays frozen from the new run 0.
+2. **100STYLE:**
+   - The "100STYLE into H0" run is dropped; a frozen encoder and prior cannot take in new H0 skills, and latent-07 already tracks the clips 57/57.
+   - The 100STYLE forward and sidestep walking training clips become a discriminator style reward on the executor, legs and torso only, wrists excluded.
+   - The straight-backpedal clips (BW) are left out of training.
+   - The frozen style reference and metric are unchanged.
+3. **Budget:**
+   - 15 runs, each <= 2 h.
+   - The controller steps are capped at 6 runs in total; at least 5 runs are reserved for the shot work.
+   - The candidate's second-seed repeat counts inside the 15.
+4. **Run order:**
+   1. ball forward-prediction;
+   2. the controller steps: H0 delay fine-tune (if step 0 triggers it), H1 decoder re-distillation, the walking teacher (if step 0 triggers it), then the compatibility check;
+   3. the executor history;
+   4. the shot work in the coach's order: ready position and split step; turn-and-go footwork; stance spot plus time-to-contact; failure-weighted feeds; backspin teacher; the style reward with its own run.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5F section); `mjlab/results/stage5f-plan-review.md`.

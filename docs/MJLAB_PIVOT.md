@@ -350,6 +350,61 @@ Goal: per-shot reliability on a realistic rally drill, which drives rally length
     - Latency is the main obstacle, and the frozen H1 controller is not robust to command delay.
     - Report: mjlab/results/stage5e-gate.md.
 
+## Stage 5F — a latency-robust stack, cheapest fixes first (D-108, D-109)
+
+Goal: the Stage 5E gate (unchanged), measured as frozen in D-101, plus absolute bars with delays on. The work order follows the reviewer consensus: fix the cheapest causes first and retrain only what measurement shows is broken.
+
+- [ ] **Step 0, no training:**
+  - **Before measuring:**
+    - a new development seed block, opened in `seeds.py`, plus a committed seed ledger;
+    - the numeric triggers and sub-step gates (D-109 item 1).
+  - **Delay-grid measurements** (command delay 0 / 10 / 20 ms), per source and per walking direction:
+    - H0 tracking;
+    - latent-07, both encoder-tracking and executor-driven;
+    - the flat walking teacher's arrival.
+  - **Ball prediction:**
+    - the oracle ball-prediction ceiling for Stage 5D run 1, at command delay 0 and 20 ms;
+    - the spin-blind prediction error per feed family.
+  - **Design checks:**
+    - 4 vs 8 history steps;
+    - a speed benchmark of the ball compensator.
+- [ ] **Build, with tests:**
+  - the delay-grid evaluation (ball 0 / 20 / 40 ms × command 0 / 10 / 20 ms, fixed per episode, plus an extrapolation cell);
+  - a coverage test (the evaluation covers the training conditions);
+  - the timestamped, spin-blind ball compensator;
+  - the issued-command history for the actor, with applied commands for the critic only;
+  - zero-initialised history inputs for the executor.
+- [ ] **Run 0:**
+  - Stage 5D run 1 (the start point), run 22 and Stage 5E run 3, on the frozen battery and the delay grid.
+  - Fixes the with-delay court line and the kill thresholds.
+- [ ] **Runs, one change each** (15 runs, each <= 2 h; the controller is capped at 6; at least 5 for the shot work):
+  1. Ball forward-prediction in the executor input.
+  2. **Controller steps:**
+     - H0 delay fine-tune, if step 0 triggers it;
+     - H1 decoder re-distillation with the encoder, prior and normaliser frozen (fallback: a PPO fine-tune of the decoder);
+     - walking-teacher delay fine-tune, if triggered;
+     - zero-shot compatibility check, with and without delay: court within 3 points and >= 76.8 %, arrival within 2 points, plus the Stage 5D rally evaluation.
+  3. Executor history inputs.
+  4. **Shot work, in the coach's order:**
+     - ready position and split step;
+     - turn-and-go footwork for deep balls;
+     - stance spot plus time-to-contact;
+     - failure-weighted feeds;
+     - backspin teacher;
+     - 100STYLE style reward: forward and sidestep walking, legs and torso only, no backpedal.
+- [ ] **Gate:**
+  - the Stage 5E gate as frozen in D-101 (with the 76.8 % no-delay court line);
+  - plus, with delays on: arrival >= 90 % in every direction at 20 ms command delay, falls <= 1 %, and the court line frozen from run 0.
+
+  Every metric is reported on the delay grid; only the frozen conditions and these bars gate.
+  - **Loop rules:**
+    - plateau: 3 passing executor runs in a row each < 1 point gain in per-shot p;
+    - 2 kills in a row: stop and ask;
+    - early kill at about 30 % of a run;
+    - mandatory second training seed for the candidate;
+    - near-best runs repeated.
+  - **Pre-registered exit:** a goal-conditioned controller with an interception planner (D-108 decision 3, D-109 item 8).
+
 ## Stage 6 — System 1: the full executor command interface, robust and distilled
 System 1 is the fast executor that a later strategy layer (System 2, Stage 8) commands. By the end of this stage it must follow every command the strategy layer will use:
 - **where to land the ball** (any point in the far court, not just two regions);
