@@ -208,3 +208,49 @@ def test_ready_task_reward_order():
     assert names[-1] == "legal_return" and names[-2] == "ready" and cfg.actions["ball"].ready_track
     assert [n for n in names if n != "ready"] == list(base.rewards)
     assert all(cfg.rewards[n].weight == base.rewards[n].weight for n in base.rewards)
+
+
+@needs
+def test_court_feed_mix_shares_families_recovery_and_planner():
+    """D-116: ~40 % court feeds (zone-valid court families, no planner spot, court recovery); drill v2 feeds keep their
+    families and the no-two-extremes rule counted over v2 feeds only; in-flight draws survive other envs' refeeds."""
+    from test_drill_v2 import _env
+    from picklebot_mj.tasks.return_stand import RECOVERY_FIXED
+    env = _env("Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-G1", n=512)
+    t = env.action_manager.get_term("ball")
+    fixed = torch.tensor(RECOVERY_FIXED, device=env.device)
+    act = torch.zeros(env.num_envs, env.action_manager.total_action_dim, device=env.device)
+    n_feeds = n_court = 0
+    last_v2_ext = torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
+    prev_fam, prev_cf = t.family.clone(), t.court_feed.clone()
+    with torch.inference_mode():
+        for step in range(400):
+            env.step(act)
+            new = (t.family != prev_fam) | (t.court_feed != prev_cf)  # a new feed (approximate; same-family refeeds are missed)
+            if step > 0 and new.any():
+                cf, fam = t.court_feed[new], t.family[new]
+                n_feeds += int(new.sum()); n_court += int(cf.sum())
+                assert t._zone_valid[t.zone[new][cf], fam[cf]].all()  # court feeds: zone-valid families
+                assert t.v2.in_v2[fam[~cf]].all()  # v2 feeds: drill v2 families
+                assert not t.plan_pending[new][cf].any() and not t.hit_hint_on[new][cf].any()
+                anch = t._court_anch[new] & cf
+                assert torch.allclose(t.recover_xy[new][anch], fixed.expand(int(anch.sum()), 2))
+                v2new = new & ~t.court_feed
+                both = v2new & last_v2_ext & t.v2.is_ext[t.family]
+                assert not both.any(), "two extremes in a row among v2 feeds"
+                last_v2_ext = torch.where(v2new, t.v2.is_ext[t.family], last_v2_ext)
+            prev_fam, prev_cf = t.family.clone(), t.court_feed.clone()
+    assert n_feeds > 300
+    assert 0.30 < n_court / n_feeds < 0.50, n_court / n_feeds
+    env.close()
+
+
+def test_court_feed_share_zero_is_the_drill_v2_task():
+    """D-116: the mix only adds court_feed_prob; share 0 is run 3's task."""
+    import dataclasses
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+    a = load_env_cfg("Picklebot-Latent-Court-V2-Res-PPO-Clean-G1").actions["ball"]
+    b = load_env_cfg("Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-G1").actions["ball"]
+    diff = [f.name for f in dataclasses.fields(a) if getattr(a, f.name) != getattr(b, f.name)]
+    assert diff == ["court_feed_prob"] and b.court_feed_prob == 0.4 and a.court_feed_prob == 0.0

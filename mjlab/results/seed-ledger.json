@@ -108,6 +108,14 @@
    ],
    "purpose": "smoke test of the ready / split-step metric (D-115) on s5d-01, 128 envs, 12 s",
    "date": "2026-10-20"
+  },
+  {
+   "seeds": [
+    4211200,
+    4211225
+   ],
+   "purpose": "run 4 s5f-04-mix-court40: 4211200-202 early kill (v2, move, court; parent and model_2100), 4211210-225 endpoint battery",
+   "date": "2026-10-20"
   }
  ],
  "retired": {
@@ -116,5 +124,24 @@
    4210999
   ],
   "why": "D-113: controller steps shelved after C1 (seeds 4210500-4210501 used); not re-used for selection"
+ },
+ "allocation_selfplay_readiness": {
+  "R2_record": [
+   4215000,
+   4215049
+  ],
+  "R2_replay": [
+   4215100,
+   4215149
+  ],
+  "R4_pair": [
+   4215200,
+   4215249
+  ],
+  "reserve": [
+   4215250,
+   4215999
+  ],
+  "rule": "D-116: fixed endpoints only, read once per run, never for checkpoint selection"
  }
 }

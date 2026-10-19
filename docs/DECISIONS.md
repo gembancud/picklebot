@@ -3208,3 +3208,56 @@ D-110 (the style-relaxation rule) is unchanged.
 - early kill and endpoint battery as run 2, on run 3's seeds (4211100-4211125).
 
 If run 3 is also killed, that is 2 kills in a row: the loop stops and asks the user.
+
+## D-115 - Ready-position metric; run 3 killed; decisions handed to a standing panel; new goal: ready for self-play (2026-10-20)
+
+**Ready-position and split-step metric** (shot item 1). `picklebot_mj/ready.py` measures, at each refeed:
+- **ready:** ankles at least 0.35 m apart and both below 0.12 m;
+- **dip:** pelvis drops at least 3 cm within +-0.25 s.
+
+It is reported in every evaluation, and an optional one-shot reward task exists (`...-Clean-Ready-G1`, not launched). Start point: 28 % ready, 28 % dip, 10.5 % both (seed 4213000, smoke test).
+
+**Run 3** (`s5f-03-v2-clean-hold`, endpoint model_2600) was killed by the stage rules:
+- court main 67.7 % (< 76.8 %);
+- falls 7.5 % (> 7.4 %).
+
+Its drill v2 p reached 0.830, and P(rally >= 10) 16 %. This is classic forgetting of the court-wide distribution it no longer trained on.
+
+**The exit trigger fired.** With run 2 that makes 2 kills in a row. Under D-113 this is both a stop-and-ask and a trigger of the pre-registered exit (goal-conditioned controller). The loop stopped. Review round 7 (`mjlab/results/stage5f-run4-review.md`) gave, 4 of 5, option B for run 4: court feeds on drill v2 terms, 40 % of feeds (3 of 5), from the start point.
+
+**Governance (user).** The user handed run- and plan-level decisions to a standing five-member panel that decides by consensus and corrects itself, with a rule against over-engineering (`docs/PANEL.md`). The hard stops stay with the user: system changes, Unity or the other checkout, deleting, downloads, runs over 2 h, final seeds.
+
+**New goal (user).** Hill-climb to a robot that can improve by self-play. The panel sets the reachable "ready for self-play" target and decides whether the exit trigger is taken (round 8).
+
+The Stage 5 gate is unchanged. A self-play readiness milestone is a separate milestone and never loosens it.
+
+## D-116 - Panel round 8: continue Stage 5F (exit trigger overridden once); readiness milestone for self-play frozen; run 4 (2026-10-20)
+
+**The exit trigger fired and was overridden by the panel** (5 of 5, under the D-115 delegation; `mjlab/results/selfplay-roadmap-review.md`).
+- **The trigger:** D-113's "2 kills in a row" (runs 2 and 3).
+- **Why the override:** the exit's premise, shot learning stalled, is not what the evidence shows. Run 2 died of a tooling bug (D-114). Run 3 reached the best drill v2 p so far (0.830) and failed on forgetting, which has a standard targeted fix.
+- **Terms:**
+  - no counter is reset, and run 2 stays a kill;
+  - this is the only override allowed in Stage 5F;
+  - **the next kill (3 in a row) takes the exit with no new vote**;
+  - readiness must be met by run 9.
+
+**Readiness milestone (frozen before run 4).** `mjlab/results/selfplay-readiness.md`, SHA-256 70d2246fe24e6efe6fd43793c8283eb36a60411618784556531d1db4bcb1a244.
+- **R1 skill:** every stage kill rule passes, and drill v2 p >= 0.80.
+- **R2 own-ball returns:** replay of mirrored recorded returns; >= 0.70 legal, with a Wilson lower bound >= 0.65.
+- **R3 falls:** court falls <= 4.0 % per episode.
+- **R4 two-robot smoke test:** >= 25 % of rallies with 4 or more consecutive legal shots, sides within 3 points.
+
+This is a separate milestone. The Stage 5 gate is unchanged. Readiness seed block: 4215000-4215999.
+
+**Run 4** (round-7 consensus: B). `s5f-04-mix-court40`, run 4 of 15.
+- **One change from run 3:** 40 % of feeds are court-task feeds on drill v2 terms (`Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-G1`, `court_feed_prob` 0.4):
+  - zone-valid court families;
+  - 75 % court-anchored with the fixed rally spot, otherwise pelvis-anchored with a random court spot;
+  - no planner spot;
+  - no hint, ball noise on, 0.2 s refeed.
+- **Parent and settings:** parent `s5d-01-rally/model_1800` (a killed run is never a parent); training seed 73; 12,288 envs.
+- **Endpoint:** iteration 2600 (800 iterations), or the last checkpoint before the 7,000 s cap.
+- **Kill rules:** the stage rules are unchanged. The early check at model_2100 adds a court-main item, tightening only: 256 envs, 24 s, kill if more than 5 points below the parent on the same protocol.
+- **Seeds:** 4211200-4211299.
+- **Tests:** `test_court_feed_mix_shares_families_recovery_and_planner` and `test_court_feed_share_zero_is_the_drill_v2_task` both pass.

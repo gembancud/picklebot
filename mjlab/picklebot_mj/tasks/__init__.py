@@ -1554,3 +1554,21 @@ def _latent_court_v2_res_clean_ready(play=False):
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_READY, env_cfg=_latent_court_v2_res_clean_ready(),
                     runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean_ready(True),
                     rl_cfg=_s5e_rl_cfg())
+
+
+# Stage 5F run 4 (D-116, review round 7, 4 of 5 reviewers): run 3's task with court-feed rehearsal. 40 % of feeds are
+# court-task feeds (court families valid in the zone, 75 % court-anchored with the fixed rally recovery spot, else
+# pelvis-anchored with a random court spot; no planner spot), on drill v2 terms (no hint, ball noise, 0.2 s refeed).
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-G1"
+COURT_FEED_PROB = 0.4
+
+
+def _latent_court_v2_res_clean_mix(play=False):
+    cfg = _latent_court_v2_res_clean(play)
+    cfg.actions["ball"].court_feed_prob = COURT_FEED_PROB
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX, env_cfg=_latent_court_v2_res_clean_mix(),
+                    runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean_mix(True),
+                    rl_cfg=_s5e_rl_cfg())

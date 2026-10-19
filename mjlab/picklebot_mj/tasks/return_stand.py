@@ -169,6 +169,13 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # Stage 5F shot item 1 (D-111 metric, D-115): track the ready position and split step at each refeed
     # (picklebot_mj/ready.py). Measurement only; the reward term `ready_reward` reads it when a task adds that term.
     ready_track: bool = False
+    # Stage 5F run 4 (D-116, review round 7): court-feed rehearsal inside drill v2. Each feed is a court-task feed with
+    # probability court_feed_prob (own generator, so 0 reproduces drill v2 exactly): a court family valid in the
+    # pelvis's zone (feed_mix), anchored to the court start spot with probability court_feed_anchor_prob and otherwise
+    # to the pelvis, recovery to the fixed rally spot (court-anchored) or a random court spot (pelvis-anchored), no
+    # planner spot. Everything else (no hint, ball noise, refeed timing, rewards) stays drill v2.
+    court_feed_prob: float = 0.0
+    court_feed_anchor_prob: float = 0.75
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -282,6 +289,11 @@ class BallPhysicsAction(ActionTerm):
             self.v2 = DrillV2Sampler(n, dev, self.gen, getattr(cfg, "v2_fail_weighting", False))
             self.v2_rec = torch.tensor(RECOVERY_FIXED, device=dev).repeat(n, 1)  # true recovery spot (hint aside)
         self.plan_on = getattr(cfg, "planner_mode", "off") != "off"
+        self.court_feed = torch.zeros(n, dtype=torch.bool, device=dev)  # D-116: this feed is a court-task feed
+        if getattr(cfg, "court_feed_prob", 0.0) > 0.0:
+            assert self.v2 is not None and getattr(cfg, "court_wide", False), "court-feed rehearsal is a drill v2 option"
+            self.gen_court = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 271829)
+            self._court_anch = torch.zeros(n, dtype=torch.bool, device=dev)
         if self.plan_on:  # Stage 5E stance-spot planner (D-097/D-098)
             from picklebot_mj.planner import PlannerCfg
             assert cfg.planner_mode in ("clean", "noisy"), cfg.planner_mode
@@ -489,6 +501,7 @@ class BallPhysicsAction(ActionTerm):
         fam_old, tgt_old, unit_old = self.family.clone(), self.target.clone(), self.feed_unit.clone()
         zone_old = self.zone.clone()
         anch_old = self._court_anch.clone() if hasattr(self, "_court_anch") else None
+        court_old = self.court_feed.clone()
         v2_last_old = self.v2.last_ext.clone() if getattr(self, "v2", None) is not None else None
         plan_old = (self.plan_pending.clone(), self.plan_t.clone()) if getattr(self, "plan_on", False) else None
         self._feed(self.all_ids)
@@ -505,6 +518,7 @@ class BallPhysicsAction(ActionTerm):
         self.zone = torch.where(fire, self.zone, zone_old)
         if anch_old is not None:  # D-092 fix: keep in-flight feeds' court-anchor draw (as their zone and unit)
             self._court_anch = torch.where(fire, self._court_anch, anch_old)
+        self.court_feed = torch.where(fire, self.court_feed, court_old)  # D-116: and their court-feed draw
         self.target = torch.where(fire, self.target, tgt_old)
         self.recover_xy = torch.where(fire.unsqueeze(-1), self.recover_xy, rec_old)
         self.hit_hint_on = torch.where(fire, self.hit_hint_on, hint_old)
@@ -550,8 +564,13 @@ class BallPhysicsAction(ActionTerm):
         """(x, y) court-local reference for feed geometry, per env in env_ids."""
         if self.cfg.feed_anchor == "start":
             k = len(env_ids)
-            return (torch.full((k,), ROBOT_START[0], device=self.device),
-                    torch.full((k,), ROBOT_START[1], device=self.device))
+            sx, sy = (torch.full((k,), ROBOT_START[0], device=self.device),
+                      torch.full((k,), ROBOT_START[1], device=self.device))
+            if getattr(self.cfg, "court_feed_prob", 0.0) > 0.0:  # D-116: court feeds anchor as the court task does
+                q = self.pelvis_xy(env_ids)
+                pel = self.court_feed[env_ids] & ~self._court_anch[env_ids]
+                sx, sy = torch.where(pel, q[:, 0], sx), torch.where(pel, q[:, 1], sy)
+            return sx, sy
         q = self.pelvis_xy(env_ids)
         if getattr(self.cfg, "court_anchor_prob", 0.0) > 0.0:  # D-089: this feed's draw, made once at the feed's start
             m = self._court_anch[env_ids]
@@ -561,6 +580,11 @@ class BallPhysicsAction(ActionTerm):
 
     def _feed(self, env_ids):
         k = len(env_ids)
+        cprob = getattr(self.cfg, "court_feed_prob", 0.0)
+        if cprob > 0.0:  # D-116: court-feed draw and its anchor draw, before the zone and the family
+            self.court_feed[env_ids] = torch.rand(k, generator=self.gen_court, device=self.device) < cprob
+            self._court_anch[env_ids] = (torch.rand(k, generator=self.gen_court, device=self.device)
+                                         < self.cfg.court_feed_anchor_prob)
         if getattr(self.cfg, "court_anchor_prob", 0.0) > 0.0:
             if not hasattr(self, "_court_anch"):
                 self._court_anch = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
@@ -568,7 +592,15 @@ class BallPhysicsAction(ActionTerm):
         if getattr(self.cfg, "court_wide", False):  # court zone from the pelvis x at feed time (D-076)
             self.zone[env_ids] = torch.bucketize(self._anchor(env_ids)[0].contiguous(), self._zone_edges, right=True)
         if getattr(self, "v2", None) is not None:  # drill v2 groups, never two extremes in a row (D-097)
+            ext_old = self.v2.last_ext[env_ids].clone()
             fam = self.v2.sample(env_ids)
+            if cprob > 0.0:  # D-116: court feeds draw a zone-valid court family; only v2 feeds advance last_ext
+                cf = self.court_feed[env_ids]
+                W = self._mix * self._zone_valid[self.zone[env_ids]].float()
+                W = torch.where(W.sum(-1, keepdim=True) > 0, W, self._mix.expand_as(W))
+                fam_c = torch.multinomial(W, 1, replacement=True, generator=self.gen_court).squeeze(-1)
+                fam = torch.where(cf, fam_c, fam)
+                self.v2.last_ext[env_ids] = torch.where(cf, ext_old, self.v2.last_ext[env_ids])
         elif getattr(self, "lp_zone_samplers", None) is not None:  # zone-conditioned learning-progress units
             L = int(self.cfg.lp_levels)
             W = torch.stack([zs.weights() for zs in self.lp_zone_samplers])  # [zone, unit]
@@ -613,7 +645,13 @@ class BallPhysicsAction(ActionTerm):
             fixed = _const("rec_fixed", lambda: list(RECOVERY_FIXED), self.device).repeat(k, 1)
             rec = torch.where(self._court_anch[env_ids].unsqueeze(-1), fixed, rec)
         if getattr(self, "v2", None) is not None:  # drill v2: the spot set at the robot's last contact (drill_v2.recovery_spot)
+            rec_court = rec
             rec = self.v2_rec[env_ids]
+            if cprob > 0.0:  # D-116: court feeds recover as the court rally task (fixed spot when court-anchored)
+                from picklebot_mj.tasks.shadow_swing import _const
+                fixed = _const("rec_fixed", lambda: list(RECOVERY_FIXED), self.device).expand(k, 2)
+                rc = torch.where(self._court_anch[env_ids].unsqueeze(-1), fixed, rec_court)
+                rec = torch.where(self.court_feed[env_ids].unsqueeze(-1), rc, rec)
         self.recover_xy[env_ids] = rec
         x0, z0 = self._u("start_x", fam), self._u("start_z", fam)
         ax, ay = self._anchor(env_ids)
@@ -644,6 +682,8 @@ class BallPhysicsAction(ActionTerm):
                 hit_ep &= ~self.shadow.swing_ep[env_ids]
             if self.cfg.planner_prob < 1.0:
                 hit_ep &= torch.rand(k, generator=self.gen_hint, device=self.device) < self.cfg.planner_prob
+            if cprob > 0.0:  # D-116: court feeds get no planner spot (the court evaluation shows none)
+                hit_ep &= ~self.court_feed[env_ids]
             self.hit_rec_true[env_ids] = rec
             self.hit_hint_on[env_ids] = False
             self.plan_pending[env_ids] = hit_ep
@@ -730,8 +770,9 @@ class BallPhysicsAction(ActionTerm):
             rec = recovery_spot(self.pelvis_xy())
             fm = first.unsqueeze(-1)
             self.v2_rec = torch.where(fm, rec, self.v2_rec)
-            self.recover_xy = torch.where(fm, rec, self.recover_xy)
-            self.hit_rec_true = torch.where(fm, rec, self.hit_rec_true)
+            fv = (first & ~self.court_feed).unsqueeze(-1)  # D-116: a court feed keeps its court recovery spot
+            self.recover_xy = torch.where(fv, rec, self.recover_xy)
+            self.hit_rec_true = torch.where(fv, rec, self.hit_rec_true)
         self.hit_done |= legal_hit
         # Height above the net when the returned ball crosses x = 0 (first crossing after the hit).
         crossing = self.hit_done & (before.pos[:, 0] < 0) & (self.ball.pos[:, 0] >= 0)
