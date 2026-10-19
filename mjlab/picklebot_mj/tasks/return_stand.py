@@ -166,6 +166,9 @@ class BallPhysicsActionCfg(ActionTermCfg):
     obs_lag_period: int = 0  # redraws both the ball and the command lag
     ball_compensate: bool = False
     ball_comp_age_error: int = 0
+    # Stage 5F shot item 1 (D-111 metric, D-115): track the ready position and split step at each refeed
+    # (picklebot_mj/ready.py). Measurement only; the reward term `ready_reward` reads it when a task adds that term.
+    ready_track: bool = False
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -264,6 +267,11 @@ class BallPhysicsAction(ActionTerm):
         if cfg.adaptive_curriculum:
             from picklebot_mj.curriculum import AdaptiveSampler
             self.fam_sampler = AdaptiveSampler(self._mix, device=dev)
+        self.ready = None
+        if getattr(cfg, "ready_track", False):
+            from picklebot_mj.ready import ReadyTracker
+            feet = [int(i) for i in self._entity.find_bodies(("left_ankle_roll_link", "right_ankle_roll_link"))[0]]
+            self.ready = ReadyTracker(n, dev, float(env.cfg.sim.mujoco.timestep), feet)
         self.drill = None
         if cfg.move_prob > 0.0:
             from picklebot_mj.tasks.move_drill import MoveDrill
@@ -365,6 +373,8 @@ class BallPhysicsAction(ActionTerm):
             self._tally(open_ & fell_all, fell_all)
             self.ep["env_episodes"] += len(env_ids)  # robot episodes (several feeds each)
             self.ep["env_falls"] += fell.sum()  # includes falls between feeds
+        if self.ready is not None:
+            self.ready.reset(env_ids)
         if self.shadow is not None:
             self.shadow.assign(env_ids, self.cfg.move_prob)
         if getattr(self, "v2", None) is not None:  # a new robot episode starts from the baseline centre, any family allowed
@@ -799,6 +809,9 @@ class BallPhysicsAction(ActionTerm):
         waiting = self.refeed_timer >= 0.0
         self.refeed_timer = torch.where(waiting, self.refeed_timer - dt, self.refeed_timer)
         fire = waiting & (self.refeed_timer <= 0.0)
+        if self.ready is not None:  # D-115: pelvis history, then the launch of this step's refeeds
+            self.ready.step(data.root_link_pos_w[:, 2])
+            self.ready.launch(fire, data.body_link_pos_w[:, self.ready.foot_ids] - origins.unsqueeze(1))
         self._refeed(fire)
         if self.shadow is not None:
             self.shadow.after_refeed(fire)
@@ -827,6 +840,8 @@ class BallPhysicsAction(ActionTerm):
         self.lost_now[:] = False
         self.placement_now.zero_()
         self.cross_now[:] = False
+        if self.ready is not None:
+            self.ready.consume()
 
 
 def _term(env) -> BallPhysicsAction:
@@ -1032,6 +1047,15 @@ def rally_bonus(env, cap: int = 10) -> torch.Tensor:
     if streak is None:
         return torch.zeros(env.num_envs, device=env.device)
     return t.return_now.float() * streak.clamp(max=cap).float() / cap
+
+
+def ready_reward(env, dip_weight: float = 1.0) -> torch.Tensor:
+    """D-115: one-shot ready-position score at each refeed launch plus the split-step dip score at the end of its
+    window (picklebot_mj/ready.py). Must be read before legal_return (which clears the step flags)."""
+    t = _term(env)
+    if t.ready is None:
+        return torch.zeros(env.num_envs, device=env.device)
+    return t.ready.launch_now + dip_weight * t.ready.split_now
 
 
 def legal_return(env) -> torch.Tensor:

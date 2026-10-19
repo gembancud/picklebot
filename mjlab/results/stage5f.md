@@ -155,3 +155,12 @@ Tracking success, per source:
   - Stage 5E runs 2-4 used the same warm-up.
 - **Smoke test of the fix** (`smoke-s5f03-holdlr`): the rate is held at 1.14e-4 through the warm-up, then adapts as usual.
 - **Run 3 seeds:** early kill 4211100-101; endpoint 4211110-125.
+- **Run 2's endpoint battery was run on its kill checkpoint `model_2100`** (descriptive; the run is killed):
+  - drill v2 p 0.584 (neutral / moderate / extreme 0.650 / 0.509 / 0.416);
+  - court main 55.4 %;
+  - falls 11.7 %;
+  - arrival min 96.7 %;
+  - style 4.254.
+
+  The battery ran from 01:24 to 02:37 and **overlapped run 3's first 40 minutes on the GPU**. That slowed run 3 to about 13 s per iteration (7.4 s after the overlap ended), so run 3 will likely reach the time cap before iteration 2800. Its endpoint is then the last checkpoint before the cap, as pre-registered. Later run scripts skip the endpoint battery after a kill.
+- **Run 3 training curve, warm-up to iteration 2015:** legal-return reward per episode went from 0.66 (iteration 1851) to 0.79-0.84 (iterations 1870-2015). No collapse, where run 2 had dropped to 0.13.

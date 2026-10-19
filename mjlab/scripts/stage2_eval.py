@@ -154,6 +154,7 @@ def main():
     cfg.scene.num_envs = args.envs
     cfg.seed = args.seed
     cfg.actions["ball"].seed = args.seed
+    cfg.actions["ball"].ready_track = True  # D-115: ready position and split step, measurement only
     cfg.observations["actor"].enable_corruption = False
     groups = {"all": list(STAGE4_FAMILIES), "reach": list(REACH_FAMILIES), "every": list(FAMILY_NAMES),
               "drill5b": list(STAGE4_FAMILIES) + list(REACH_FAMILIES)}  # the Stage 5B drill (14 families)
@@ -311,6 +312,8 @@ def main():
         "landings_in_A": int(d["land_in_A"]), "landings_in_B": int(d["land_in_B"]),
         "target_hits": int(d["target_hit"]),
     }
+    if getattr(term, "ready", None) is not None:
+        out["ready"] = term.ready.summary()
     if term.drill is not None:
         out["move_drill"] = term.drill.summary()
     if term.shadow is not None:

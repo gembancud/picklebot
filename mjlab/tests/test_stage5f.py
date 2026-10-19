@@ -166,3 +166,33 @@ def test_clean_ppo_task_matches_the_d113_instrument():
     assert b.drill_v2 and (b.obs_ball_pos_noise, b.obs_ball_vel_noise) == SIM2REAL_BALL_NOISE
     assert latency_support(cfg) == {(0, 0)}
     assert cfg.observations["actor"].terms["ball_pos"].params.get("noisy")
+
+
+def test_ready_tracker_scores_stance_and_split_step():
+    """D-115: ready = wide stance with both feet down at the launch; dip = pelvis drop >= 3 cm within +-0.25 s."""
+    from picklebot_mj.ready import ReadyTracker
+    dt = 0.005
+    tr = ReadyTracker(3, "cpu", dt, [0, 1])
+    tr.reset(torch.arange(3))
+    z = torch.full((3,), 0.75)
+    feet = torch.tensor([[[0.0, 0.2, 0.07], [0.0, -0.2, 0.07]],   # 0.40 m wide, both down
+                         [[0.0, 0.1, 0.07], [0.0, -0.1, 0.07]],   # 0.20 m: too narrow
+                         [[0.0, 0.2, 0.07], [0.0, -0.2, 0.30]]])  # one foot up
+    for _ in range(tr.h + 5):
+        tr.step(z)
+        tr.launch(torch.zeros(3, dtype=torch.bool), feet)
+    tr.step(z)
+    tr.launch(torch.ones(3, dtype=torch.bool), feet)
+    assert torch.allclose(tr.launch_now, torch.tensor([1.0, 0.0, 0.0]))
+    for i in range(tr.h):
+        dz = torch.tensor([0.04, 0.0, 0.02]) * min(1.0, i / 10)  # env 0 dips 4 cm, env 2 dips 2 cm
+        tr.step(z - dz)
+        tr.launch(torch.zeros(3, dtype=torch.bool), feet)
+    s = tr.summary()
+    assert s["feeds_scored"] == 3
+    assert s["ready"] == round(1 / 3, 4) and s["dip"] == round(1 / 3, 4) and s["ready_and_dip"] == round(1 / 3, 4)
+    tr2 = ReadyTracker(1, "cpu", dt, [0, 1])  # a launch right after a reset is not scored (no pelvis history)
+    tr2.reset(torch.arange(1))
+    tr2.step(torch.full((1,), 0.75))
+    tr2.launch(torch.ones(1, dtype=torch.bool), feet[:1])
+    assert not tr2.open.any()
