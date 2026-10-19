@@ -66,26 +66,28 @@ The last stage (5D) did not reach its gate: 2 of 5 items passed. [Stage 5D repor
 | 5B | Human-like movement from motion capture. | Passed: 93.9 % of returns legal |
 | 5C | Play on the whole court. Walk to any spot. | Not passed: walking passed, volleys and falls failed |
 | 5D | Rallies against balls that land at fixed places. | Not passed: rallies to 10 shots rose from 1.75 % to 9.6 % |
-| 5E | Reliable shots in a more realistic game, with real-world delays. | In progress |
+| 5E | Reliable shots in a more realistic game, with real-world delays. | Not passed: with delays, returns rose from 30 % to 59 % (target 80 %) |
 
-## Work in progress: Stage 5E
+## The last stage: 5E
 
-**What is new in this stage:**
+**What was new in this stage:**
 - **A more realistic practice game.** Most balls are normal shots, some are difficult. The robot goes back to a sensible place after each hit, and the next ball comes soon after its return lands.
 - **A planner.** A planner tells the robot where to stand for each ball. It calculates this spot from the flight of the ball, with the small errors and delays that a real camera gives.
 - **Real-world delays.** A real robot sees the ball a little late, and its motors react a little late. The simulation now adds these delays: 20 to 40 thousandths of a second for the ball, and up to 20 thousandths for the motors.
 - **Human footwork.** Recordings of people who walk forward, walk backward and step sideways come from the 100STYLE dataset (Mason, Starke and Komura, CC BY 4.0). They make the robot's movement more human.
 
-**What we found so far:**
+**What we found:**
 - **Delays are the biggest problem.** Without training, the delays reduce the shots that the robot returns from about 72 % to 31 %.
-- **Training with delays fixes much of it.** After training with delays, the robot returns about 59 % of shots, and its movement is more human than before.
-- **A new problem: forgetting.** A robot that trains only with delays plays worse when there are no delays, and it walks less well. The current training run gives the robot both kinds of practice: half with delays, half without.
+- **Training with delays fixes much of it.** After training with delays, the best robot returns 58.5 % of shots. Another robot without this training returns 30 %. About 1 rally in 11 now gets to 5 shots.
+- **Its movement is the most human so far.** Its style score is 3.90, near the target of 3.86.
+- **Robots that train with delays forget how to play without them.** The best robot returns only 41 % of shots on the normal practice court without delays (before: 79 %). It also walks less well backwards. We tried three ways to fix this. Each helped a little, but none was sufficient.
+- **The cause is in the lower layer.** The robot's movement controller turns the commands into joint movements and keeps the balance. It was trained without delays and does not keep good balance when its motors react late. Even before any new training, delays reduce the robot's arrival at walking spots from 99 % to 68-91 %.
 
-The target for this stage is 80 % of shots returned.
+The stage stopped by its own rule: three of its training runs failed a safety limit. [Stage 5E report](mjlab/results/stage5e-gate.md)
 
 ## Next steps
 
-1. **Finish Stage 5E:** a robot that plays well with and without delays, plus fixes for the falls and the difficult shots.
+1. **Train the movement controller again, with delays.** Then the lower layer keeps its balance when its motors react late. After that, the shot training of Stage 5E runs again on top of it.
 2. **Volleys and play at the net.**
 3. **Later:**
    - a more robust robot;
@@ -159,6 +161,6 @@ This section is for readers who know robot learning.
 **Links:**
 - [Roadmap and log](docs/MJLAB_PIVOT.md)
 - [Decision log](docs/DECISIONS.md) (D-038 onward for mjlab)
-- run logs: [Stage 5C](mjlab/results/stage5c.md), [Stage 5D](mjlab/results/stage5d.md)
-- gate reports: [Stage 5C](mjlab/results/stage5c-gate.md), [Stage 5D](mjlab/results/stage5d-gate.md)
+- run logs: [Stage 5C](mjlab/results/stage5c.md), [Stage 5D](mjlab/results/stage5d.md), [Stage 5E](mjlab/results/stage5e.md)
+- gate reports: [Stage 5C](mjlab/results/stage5c-gate.md), [Stage 5D](mjlab/results/stage5d-gate.md), [Stage 5E](mjlab/results/stage5e-gate.md)
 - [Unity README](docs/archive/README-unity-2026-10-17.md), [older technical archive](docs/archive/README-before-2026-09-11.md), [architecture history](docs/ARCHITECTURE.md)

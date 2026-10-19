@@ -2854,3 +2854,34 @@ No final seeds are used.
 **Review videos:** candidate and run 22, from `h5c_videos.sh` (side, behind, kitchen, move, long rally; dev seeds 4200360-4200364, as in Stage 5D so the clips are comparable), plus GIF previews and streaming MP4s. Then `mjlab/results/stage5e-gate.md`, commit and push.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E checklist, log); `mjlab/results/stage5e.md`.
+
+### D-107 — Stage 5E gate: not met (plateau stop); candidate run 3; the controller is the next target
+
+- Date: 2026-10-19
+- Status: Accepted (loop end, D-100/D-106)
+- Amends: none (records the Stage 5E result)
+
+**Paired final** (D-106; drill v2 on dev seeds 4200472-4200475, court 4200476-4200479, battery 4200894-4200899; no final seeds). Candidate run 3 `s5e-03-v2-mixlat/model_2700` against run 22:
+
+| Item | Run 3 | Run 22 | Gate |
+|---|---|---|---|
+| Drill v2 per-shot p, noisy spot, sim-to-real on | **0.585** [0.582, 0.587] | 0.297 | >= 0.80 |
+| Group Wilson lows: neutral / moderate / extreme | 0.678 / 0.512 / 0.262 | 0.320 / 0.263 / 0.233 | 0.92 / 0.80 / 0.55 |
+| P(rally >= 5) / P(rally >= 10) | 9.1 % / 1.1 % | 0.5 % / 0.0 % | (reported) |
+| Court main metric, no latency | 41.4 % | | >= 76.8 % |
+| Court falls | 4.1 % | | <= 1 % |
+| Arrival, every direction | >= 69.5 % | | >= 90 % |
+| Style, new / old reference | 3.895 / 3.869 | | new <= 3.86 |
+
+0 of 8 gate items are met.
+
+**Findings:**
+- Latency is the main obstacle: 0.72 -> 0.31 per-shot p without latency training.
+- Latency training roughly doubles p, but specialises the executor to delay.
+- The frozen H1 controller is not robust to command delay: arrival falls to 68-91 % under delay before any training.
+- Consolidation lost skill.
+- 100STYLE footwork and drill v2 training brought style to 3.86-3.90 on the new reference, the best of any executor.
+
+**Next:** for the user. The evidence points at a controller rebuild with latency, the D-097 rebuild rule (p plateaued below 0.80). Report: `mjlab/results/stage5e-gate.md`.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5E checklist, log); `mjlab/results/stage5e-gate.md`; README.

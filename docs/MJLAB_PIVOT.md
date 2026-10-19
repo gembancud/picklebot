@@ -295,7 +295,7 @@ Goal: an executor that sustains rallies against court-anchored shots, without lo
 
 Goal: per-shot reliability on a realistic rally drill, which drives rally length (P(rally >= 10) is about p^10), plus human footwork style from real mocap. Same discipline as Stage 5D: each run <= 2 h with a fixed endpoint, one change written down before launch, fresh dev seeds, decision entries for design changes.
 
-- [ ] **Drill v2 and its frozen evaluation (before any training run):**
+- [x] **Drill v2 and its frozen evaluation (before any training run):**
   - feed groups (even weights inside a group, never two extremes in a row):
     - neutral 60 %: easy_forehand, wide_forehand, backhand, deep, short, high, low, topspin;
     - moderate 25 %: fast, backspin, reach_forehand, reach_backhand, reach_short;
@@ -305,18 +305,18 @@ Goal: per-shot reliability on a realistic rally drill, which drives rally length
   - failure-weighted sampling in training only, extreme share <= 25 %.
 
   Tests for each.
-- [ ] **Stance-spot planner:** computes the stance spot from noisy, delayed ball state. Tests cover the planner on its own. Evaluations report the spot clean, perturbed and absent. The evaluation spot comes from the noisy planner.
-- [ ] **Sim-to-real from the start:**
+- [x] **Stance-spot planner:** computes the stance spot from noisy, delayed ball state. Tests cover the planner on its own. Evaluations report the spot clean, perturbed and absent. The evaluation spot comes from the noisy planner.
+- [x] **Sim-to-real from the start:**
   - 20-40 ms observation latency;
   - 0-20 ms action delay;
   - ball-state noise;
   - an actuator-limit check.
-- [ ] **Run 0:** run 22 and the consolidated base scored on the frozen evaluation, first with the spot given on every feed. These scores fix the stage's kill thresholds, including court falls.
+- [x] **Run 0:** run 22 and the consolidated base scored on the frozen evaluation, first with the spot given on every feed. These scores fix the stage's kill thresholds, including court falls.
 - **Loop rules (D-100):**
   - **Start:** run 1 (`s5d-01-rally/model_1800`), consolidated first; run 22 is the comparison executor.
   - **Budget:** up to 15 runs, each <= 2 h.
   - **Plateau:** 3 executor runs in a row each < 1 point gain in per-shot p on drill v2. Killed runs count as strikes; a run within 1.5 points of the best is repeated on a second seed.
-- [ ] **Runs, one change each,** in this order:
+- [ ] **Runs, one change each,** in this order (only consolidation was run from this list; runs 2-4 went to latency, D-102..D-105; the plateau rule ended the stage):
   1. consolidation (a counted run);
   2. a falls fix, with its mechanism written before the run;
   3. the stance spot on every feed;
@@ -324,7 +324,7 @@ Goal: per-shot reliability on a realistic rally drill, which drives rally length
   5. a backspin family teacher.
 
   Each new term is sized offline (10-30 % of the task reward) and logged. Gamma 0.995 with a critic warm-up. A killed run counts as a plateau strike against the best passing run.
-- [ ] **Footwork style (100STYLE, Zenodo 8127870, CC BY 4.0, Mason, Starke and Komura):**
+- [x] **Footwork style (100STYLE, Zenodo 8127870, CC BY 4.0, Mason, Starke and Komura):**
   1. A filter rule against 100STYLE's style labels keeps neutral walking and sidestep only.
   2. A held-out slice is used as style reference only and never for training.
   3. Retarget quality check: foot sliding and ground contact.
@@ -344,6 +344,11 @@ Goal: per-shot reliability on a realistic rally drill, which drives rally length
   - style <= 3.86 on the new reference (tennis-v5 + LAFAN1 + filtered 100STYLE), with the old-reference score and h4-25b's re-score reported alongside.
 
   Stretch target: p >= 0.85. The report states that p = 0.80 implies about 11 % P(rally >= 10), below Stage 5D's 20 %, and gives P(rally >= 5), P(rally >= 10) and the old 5D rally evaluation, with no-hint and perturbed-spot results.
+
+  - Not met (D-107): 0 of 8 items.
+    - Candidate run 3: drill v2 p 0.585 (run 22: 0.297); court 41.4 %; arrival >= 69.5 %; falls 4.1 %; style 3.895 (new reference).
+    - Latency is the main obstacle, and the frozen H1 controller is not robust to command delay.
+    - Report: mjlab/results/stage5e-gate.md.
 
 ## Stage 6 — System 1: the full executor command interface, robust and distilled
 System 1 is the fast executor that a later strategy layer (System 2, Stage 8) commands. By the end of this stage it must follow every command the strategy layer will use:
@@ -886,3 +891,9 @@ Its measured capability envelope is published as a contract. It must hold across
   - Court main metric 78.3 %, arrival 99.7-100 % (both met); court falls 5.9 % and style 4.20 (not met).
   - Misses concentrate in volleys, reach_deep, lob, backspin@back and cross_backhand.
   - Report: mjlab/results/stage5d-gate.md. Next: Stage 5E (D-097/D-098).
+- 2026-10-19 - **Stage 5E gate NOT MET; loop ended under the plateau rule (D-107).** 4 of 15 runs used.
+  - Candidate: run 3 `s5e-03-v2-mixlat/model_2700`, "best drill v2, failed kill rules".
+  - Drill v2 per-shot p 0.585 vs run 22's 0.297, with latency on; P(rally >= 5) 9.1 %.
+  - Court drill 41.4 % without latency; arrival >= 69.5 %; style 3.895 on the new reference.
+  - Findings: latency (0.72 -> 0.31 untrained); latency training specialises the executor; the H1 controller is not latency-robust; consolidation lost skill.
+  - Next: the user's call; the evidence points at an H0/H1 rebuild with latency. Report: mjlab/results/stage5e-gate.md.
