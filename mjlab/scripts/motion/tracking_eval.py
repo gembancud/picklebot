@@ -117,7 +117,8 @@ def main():
         lat.eval()
         policy = lambda o: lat(o["actor"])  # noqa: E731
     else:
-        runner.load(args.checkpoint, map_location="cuda")
+        # Actor only (Stage 5F C1: a delay-trained critic has an extra input the evaluation task does not build).
+        runner.load(args.checkpoint, load_cfg={"actor": True}, strict=True, map_location="cuda")
         policy = runner.get_inference_policy(device="cuda")
 
     cmd = env.command_manager.get_term("motion")

@@ -19,7 +19,8 @@ $TE --checkpoint $LAT --repeats 1 --seed 4210502 --json $R-parent-early.json > /
 ( # early-kill watcher
   while [ ! -f $D/latent_400.pt ]; do
     [ -f artifacts/train/$RUN.exit.json ] && { echo "training ended before the early check"; exit 0; }; sleep 60; done
-  $TE --checkpoint $D/latent_400.pt --repeats 1 --seed 4210502 --json $R-early.json > /tmp/c2e.log 2>&1
+  # D-112: a crashed early evaluation stops the watcher with an error; it never kills the training.
+  $TE --checkpoint $D/latent_400.pt --repeats 1 --seed 4210502 --json $R-early.json > /tmp/c2e.log 2>&1     || { echo "EARLY EVALUATION CRASHED (no kill): see /tmp/c2e.log"; exit 2; }
   python - "$R" <<'PY' && echo "early check: pass" || { echo "early check: KILL"; pkill -f "distill_latent.py --out .*$RUN"; }
 import json, sys
 R = sys.argv[1]

@@ -3091,3 +3091,15 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 6 onward, when relevant).
 - the reporting grid.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5F step 0); `mjlab/picklebot_mj/seeds.py`.
+
+## D-112 - Stage 5F run C1: a tooling fault, not a kill; the run continues to its endpoint (2026-10-19)
+
+**What happened.** C1's early-kill watcher stopped the training at about iteration 61,720. The early evaluation of `model_61700` had crashed: `tracking_eval.py` loaded the whole checkpoint, and the delay-trained critic has 287 inputs (the trailing `cmd_lag` term) while the evaluation task builds 286. No result file was written, and the watcher read the missing file as a kill. The gate evaluations at the end crashed the same way.
+
+**Fix.** `tracking_eval.py` now loads the actor only (as `stage2_eval.py` already does). The early check was re-run on the same protocol (seed 4210500, 1 repeat, clean). `model_61700` passes: tennis +0.9, LAFAN1 +1.0, mirrored LAFAN1 +1.9, footwork +0.0 points against the parent (the kill margin is -3).
+
+**Decision.** This is not a kill and does not count toward "2 kills in a row". C1 stays one run, and it continues from `model_61700` to its pre-registered endpoint (iteration 63,800) as `s5f-c1b-h0delay` (`scripts/h5f_c1b_continue.sh`):
+- same task, settings and training seed;
+- the wall-clock cap is what C1 had left (7,000 s - 2,231 s used, rounded down to 4,700 s), so the run stays within 2 h in total. If the cap comes first, the endpoint is the last checkpoint before it, as pre-registered.
+
+The gate (D-111) is unchanged. The watcher pattern is changed for later runs: a crashed early evaluation stops the watcher with an error, and it never kills the training.
