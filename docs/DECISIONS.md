@@ -3063,3 +3063,31 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5F section); `mjlab/result
 - **Style gate:** stays as written for the showcase executor. The competitive executor reports style without being gated on it. That split is recorded as a gate change in its own decision when it happens.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 6 onward, when relevant).
+
+### D-111 — Stage 5F setup: development seed block 2, seed ledger, frozen triggers and sub-step gates
+
+- Date: 2026-10-19
+- Status: Accepted (loop step 0a, D-108/D-109; recorded before any Stage 5F measurement)
+- Amends: D-038 (development seeds)
+
+**Seeds:**
+- `DEV_EVAL_SEEDS` gains block 2, 4210000-4219999. It is disjoint from training seeds and from final seeds; `check_disjoint` still holds, and final seeds 9200000-9200999 stay unused.
+- `mjlab/results/seed-ledger.json` allocates block 2 by purpose and records every use. The allocations are:
+  - step-0 diagnostics;
+  - build and smoke tests;
+  - run 0;
+  - controller sub-steps;
+  - 100 seeds per executor run;
+  - spare diagnostics;
+  - videos;
+  - a read-once block for the paired final.
+
+**Frozen numbers:** `mjlab/results/stage5f-thresholds.md` fixes, before step 0:
+- the step-0 triggers for the H0, H1 and walking-teacher sub-steps;
+- the H0 and H1 gates, including the zero-shot transfer and delay bars;
+- the early-kill rules (kill only);
+- the stage kill tolerances; their reference values come from run 0;
+- the shot-item metrics;
+- the reporting grid.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5F step 0); `mjlab/picklebot_mj/seeds.py`.
