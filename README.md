@@ -8,7 +8,7 @@
 | **Play near the net** | **Walk to a spot** |
 | ![The robot plays from the line near the net](docs/media/g1-kitchen.gif) | ![The robot walks to spots in all directions](docs/media/g1-move.gif) |
 
-Each GIF is a short part of one test. The robot gets no help signals during the test.
+Each GIF is a short part of one test. In the rally GIF, the robot plays with real-world delays and gets only the planner's spot where it must stand. In the other GIFs, it gets no help signals.
 
 ## What is this project?
 
@@ -146,7 +146,7 @@ This section is for readers who know robot learning.
   - residual PPO around a frozen executor;
   - a learning-progress curriculum over feed family, level and court zone.
 - **Shown executors:**
-  - rally GIF: Stage 5D `s5d-01-rally/model_1800`, dev seed 4200364;
+  - rally GIF: Stage 5E `s5e-03-v2-mixlat/model_2700` on drill v2 with the noisy planner and sim-to-real latency, dev seed 4200364;
   - other GIFs: Stage 5C `s5c-22-res-rally/model_900`, dev seed 4200910.
 
   All are deterministic, with no hints.
