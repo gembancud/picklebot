@@ -68,6 +68,29 @@
    ],
    "purpose": "run C1 (H0 delay fine-tune): 4210500 early-kill protocol (parent and model_61700), 4210501 gate evaluation (scripts/h5f_c1_h0delay.sh)",
    "date": "2026-10-19"
+  },
+  {
+   "seeds": [
+    4210011,
+    4210011
+   ],
+   "purpose": "step 0 compensator speed benchmark (scripts/diag/bench_compensator.py)",
+   "date": "2026-10-19"
+  },
+  {
+   "seeds": [
+    4210300,
+    4210355
+   ],
+   "purpose": "run 0 on the D-113 clean instrument (scripts/h5f_run0.sh): s5d-01 4210300-315, run 22 4210320-335, 5E run 3 4210340-355",
+   "date": "2026-10-19"
   }
- ]
+ ],
+ "retired": {
+  "controller_substeps": [
+   4210500,
+   4210999
+  ],
+  "why": "D-113: controller steps shelved after C1 (seeds 4210500-4210501 used); not re-used for selection"
+ }
 }

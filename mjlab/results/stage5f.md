@@ -69,13 +69,13 @@ Drill v2 (Stage 5D run 1), ball delay / command delay:
 ### Design checks (step 0)
 
 - **Compensator speed** (`scripts/diag/bench_compensator.py`, seed 4210011): 3.45 ms per control step at 12,288 envs (8 substeps, half the envs clean), measured while run C1 trained on the same GPU. That is small next to an environment step, so the compensator stays per-step.
-- **4 vs 8 history steps** (`scripts/diag/history_probe.py`, seed 4210012; rule written before the run): Stage 5D run 1 on the training-latency task, one lag pair per episode. A ridge probe reads the episode's command lag and ball lag from a K-step window of what the actor would see (issued actions, joint positions and velocities, ball estimate), trained on 70 % of the envs and scored on the rest. **Rule:** take the smallest K in {1, 2, 4, 8} within 1 point of K = 8 for both lags; adopt 4 (the D-108 default) unless 4 misses that bar, then 8. Result: pending (runs after C1, to keep C1's GPU time clean).
+- **4 vs 8 history steps** (`scripts/diag/history_probe.py`, seed 4210012; rule written before the run): Stage 5D run 1 on the training-latency task, one lag pair per episode. A ridge probe reads the episode's command lag and ball lag from a K-step window of what the actor would see (issued actions, joint positions and velocities, ball estimate), trained on 70 % of the envs and scored on the rest. **Rule:** take the smallest K in {1, 2, 4, 8} within 1 point of K = 8 for both lags; adopt 4 (the D-108 default) unless 4 misses that bar, then 8. Result: not run. Executor history is shelved under D-113, so the probe waits for a later sim-to-real stage.
 
 ## Runs
 
 | # | Run | Change (written before launch) | From | Endpoint | Result |
 |---|---|---|---|---|---|
-| C1 | s5f-c1-h0delay | H0 delay fine-tune (triggered, D-111): per-episode command delay, 30 % clean, otherwise 5-25 ms; the lag shown to the critic only (one trailing critic input, zero-initialised). Same task, motion set and settings as tracking-20-decay (fixed learning rate 1e-5, 4,096 envs, training seed 71). | tracking-20-decay/model_60800 | iteration 63,800 or the last checkpoint before the 7,000 s cap | |
+| C1 | s5f-c1-h0delay | H0 delay fine-tune (triggered, D-111): per-episode command delay, 30 % clean, otherwise 5-25 ms; the lag shown to the critic only (one trailing critic input, zero-initialised). Same task, motion set and settings as tracking-20-decay (fixed learning rate 1e-5, 4,096 envs, training seed 71). | tracking-20-decay/model_60800 | iteration 63,800 or the last checkpoint before the 7,000 s cap | **Gate not met (D-111); archived (D-113).** Endpoint `s5f-c1b-h0delay/model_63600` (the 4,700 s cap hit at iteration 63,634; last checkpoint before it). See below. |
 
 - **C1 early kill** (D-111): at iteration 61,700, clean tracking with 1 repeat on seed 4210500. The run is killed if any source is more than 3 points below the parent on the same protocol.
 - **C1 gate** (D-111): per source and per tennis stroke type, at 0 / 10 / 20 ms, >= the old H0 at 0 ms minus 2 points. Seed 4210501, 2 repeats, paired.
@@ -88,3 +88,21 @@ The user has no near-term physical-robot plan. After a fifth review round (round
 - **Battery:** `scripts/h5f_clean_eval.sh` (gate: drill v2 at 0/0 plus the clean Stage 5C battery; 8 gate items), summary `scripts/h5f_clean_summary.py`.
 - **Budget:** C1 (with its continuation C1b) is run 1 of 15; 14 remain. C1 is gated and archived, not adopted.
 - **Order:** run 0 on the new instrument (`scripts/h5f_run0.sh`), then run 2 = plain clean drill v2 PPO from Stage 5D run 1 (`scripts/h5f_run02.sh`), then the coach's order.
+
+### Run C1 result (H0 delay fine-tune; gate D-111; seed 4210501, 2 repeats, paired with the old H0 at 0 ms)
+
+Tracking success, per source:
+
+| Source | Old H0, 0 ms (bar = this - 2) | C1, 0 ms | C1, 10 ms | C1, 20 ms | Old H0, 20 ms (step 0, seed 4210000) |
+|---|---|---|---|---|---|
+| Tennis | 93.9 | 93.5 | 92.3 | **88.9** | 85.7 |
+| LAFAN1 | 89.7 | 89.8 | 89.0 | **85.1** | 80.2 |
+| Mirrored LAFAN1 | 83.0 | 83.8 | 82.3 | **79.8** | 74.1 |
+| Footwork | 100 | 100 | 100 | 100 | 99.3 |
+
+- **Gate not met.**
+  - At 20 ms every source except footwork is 3.1-5.0 points below the bar, and every tennis stroke type is 2.7-6.5 points below it.
+  - At 10 ms backhand volley (-2.2) and smash (-2.4) fail.
+  - At 0 ms forehand (-2.2) fails.
+- **What C1 did achieve:** it roughly halved H0's 20 ms loss (tennis 7.8 -> 5.0 points, LAFAN1 8.5 -> 4.6, mirrored 8.9 -> 3.1) and kept clean tracking within 1 point overall.
+- **Status (D-113):** archived as a sim-to-real asset. It does not enter the stack. Counted as run 1 of 15.
