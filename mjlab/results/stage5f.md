@@ -106,3 +106,44 @@ Tracking success, per source:
   - At 0 ms forehand (-2.2) fails.
 - **What C1 did achieve:** it roughly halved H0's 20 ms loss (tennis 7.8 -> 5.0 points, LAFAN1 8.5 -> 4.6, mirrored 8.9 -> 3.1) and kept clean tracking within 1 point overall.
 - **Status (D-113):** archived as a sim-to-real asset. It does not enter the stack. Counted as run 1 of 15.
+
+### Run 0 on the D-113 instrument (`scripts/h5f_run0.sh`)
+
+| Executor | Drill v2 p, 0/0 noisy spot [95 % CI] | Neutral / moderate / extreme (Wilson low) | p, exact spot | p, no spot | P(rally >= 5 / >= 10), drill v2 | Court main | Court falls | Arrival (min) | Style new / old | D-101 figure (reported) | p at 0/10 / 40/20 (reported) | Move drill at 10 ms: arrival min / falls (reported) | Gate items |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Stage 5D run 1 (start; seeds 4210300-315) | **0.753** [0.748, 0.757] | 0.820 / 0.659 / 0.625 (0.815 / 0.649 / 0.611) | 0.750 | 0.766 | 0.240 / 0.070 | 78.6 % | 6.4 % | 99.5 % (back-left) | 4.263 / 4.220 | 0.307 | 0.606 / 0.065 | 98.8 % / 0.7 % | 3/8 |
+| run 22 (seeds 4210320-335) | 0.618 [0.613, 0.622] | 0.657 / 0.571 / 0.524 (0.651 / 0.561 / 0.511) | 0.612 | 0.631 | 0.103 / 0.014 | 79.1 % | 3.2 % | 99.4 % (left) | 4.061 / 4.022 | 0.298 | 0.507 / 0.075 | 97.2 % / 0.9 % | 2/8 |
+| Stage 5E run 3 (seeds 4210340-355) | 0.462 [0.457, 0.467] | 0.523 / 0.458 / 0.182 (0.517 / 0.448 / 0.171) | 0.463 | 0.480 | 0.029 / 0.001 | 41.1 % | 3.7 % | 69.0 % (back-right) | 3.877 / 3.857 | 0.585 | 0.539 / 0.303 | 55.3 % / 0.6 % | 0/8 |
+
+- **Passing:** extreme floor, court main, arrival.
+- **Failing:**
+  - per-shot p, by 4.7 points;
+  - the neutral floor (0.815 vs 0.92), the largest gap;
+  - the moderate floor (0.649 vs 0.80);
+  - falls (6.4 % vs 1 %);
+  - style (4.263 vs 3.86).
+- **The planner's spot does not help this executor.** With no spot, p is 1.3 points higher; the exact spot changes nothing. The Stage 5D executor was trained without a hint and plays from the ball alone.
+
+**Stage kill rules for every run (D-113, from the start point's run 0):**
+- drill v2 p (0/0) below **0.723**;
+- court main below **76.8 %**;
+- arrival below **90 %** in any direction;
+- court falls above **7.4 %**;
+- style (new reference) above **4.413**.
+- **Comparators (descriptive).**
+  - **Stage 5E run 3 is worse without delay than with it** (0.462 vs 0.585 on the D-101 condition). It specialised to latency, which confirms the round-6 reading.
+  - **On the new instrument the start point leads both comparators by a wide margin:**
+    - run 22 by 13.5 points;
+    - Stage 5E run 3 by 29 points.
+  - **Run 22 falls less than the start point** (3.2 % vs 6.4 %) and has the better style (4.06 vs 4.26).
+
+## Run 2 (launched 2026-10-20 00:5x)
+
+| # | Run | Change (written before launch) | From | Endpoint | Result |
+|---|---|---|---|---|---|
+| 2 | s5f-02-v2-clean | Plain PPO on drill v2 in the clean simulator (ball noise on, no delay; `Picklebot-Latent-Court-V2-Res-PPO-Clean-G1`), Stage 5E PPO settings (gamma 0.995, 50-update critic warm-up), 12,288 envs, training seed 73 | s5d-01-rally/model_1800 | iteration 2800, or the last checkpoint before the 7,000 s cap | |
+
+- **Early kill at model_2100:**
+  - drill v2 at 0/0, 256 envs, 30 s, seed 4211000: killed if more than 5 points below the parent on the same protocol;
+  - move drill clean, seed 4211001: killed if arrival is below 90 %.
+- **Endpoint:** `h5f_clean_eval.sh`, seeds 4211010-4211025.
