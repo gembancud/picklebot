@@ -3103,3 +3103,87 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5F step 0); `mjlab/pickleb
 - the wall-clock cap is what C1 had left (7,000 s - 2,231 s used, rounded down to 4,700 s), so the run stays within 2 h in total. If the cap comes first, the endpoint is the last checkpoint before it, as pre-registered.
 
 The gate (D-111) is unchanged. The watcher pattern is changed for later runs: a crashed early evaluation stops the watcher with an error, and it never kills the training.
+
+## D-113 - Stage 5F re-scoped to the clean simulator: delay out of the gate and the training (2026-10-19)
+
+**Trigger (outside the results).** After step 0 and C1's early check had been seen, the user wrote: "i dont have any close objectives in getting this simulated in the physical world tho. is the delay still going to be important?" They asked for a group review before any frozen decision changed. Five reviewers (round 6, `mjlab/results/stage5f-delay-review.md`) all recommended taking delay out of the Stage 5F gate and training. The user adopted that consensus and chose the open points below.
+
+**Premise removed.** D-101, D-108, D-109 and the round-4 review assumed eventual real-robot deployment. That premise no longer holds. This decision supersedes round 4's verdict against "Option B". It does not refute round 4: its premise has been removed.
+
+**Gate change, stated as one.**
+- The drill v2 item (per-shot p and the group floors) moves from the D-101 mixed-latency condition to grid cell 0 / 0 (no ball or command delay), with ball-state noise and the noisy planner spot on.
+- **This loosens that item's instrument.** Stage 5D run 1 scores 0.306 on the old one and 0.741 on the new one.
+- Every bar is unchanged:
+  - p >= 0.80;
+  - group floors neutral >= 0.92, moderate >= 0.80, extreme >= 0.55 on Wilson lower bounds;
+  - court main >= 76.8 %;
+  - falls <= 1 %;
+  - arrival >= 90 % in every direction;
+  - style <= 3.86 on the new reference;
+  - the 0.85 stretch target and P(rally >= 10) reported.
+
+**Suspended, not deleted.** These bars return unchanged as the entry gate of any later sim-to-real stage:
+- arrival >= 90 % at 20 ms command delay;
+- falls <= 1 % under delay;
+- the with-delay court line.
+
+**Comparability.**
+- Stage 5E's verdict (D-107: 0/8, not met) and all its labels stand. Stage 5E is never re-judged on the new instrument.
+- Every Stage 5F run also reports, never gating:
+  - the frozen D-101 drill v2 figure;
+  - two delay cells: drill v2 at command 10 ms (0 / 10) and at 40 / 20, plus the move drill at command 10 ms.
+- Every figure names its instrument.
+
+**New run 0.** On the new instrument (`scripts/h5f_clean_eval.sh`, run-0 seeds 4210300-4210499), before any training run, for:
+- Stage 5D run 1 (start point);
+- run 22;
+- Stage 5E run 3.
+
+It re-bases the stage kill rules. The tolerances of D-111 are kept, with the delay lines removed:
+- drill v2 p below run-0 minus 3 points;
+- court main clean below 76.8 %;
+- arrival clean below 90 %;
+- court falls above run-0 plus 1 point;
+- style above run-0 plus 0.15.
+
+The early kill moves from cell 40 / 20 to cell 0 / 0: drill v2, 256 envs, 30 s, kill below parent minus 5 points; clean move arrival below 90 %.
+
+**Budget and counters carry over.**
+- C1 + C1b count as run 1 of 15, so 14 runs remain.
+- The controller cap no longer applies.
+- No counter is reset.
+
+**Seeds.** The ledger entries stay. Controller block 4210500-4210999 is retired after C1's gate and is not re-used for selection. Final seeds stay untouched.
+
+**C1** (user choice). It finishes, runs its pre-registered D-111 gate, and the result is recorded whether it passes or fails. It is archived as a sim-to-real asset and does not enter the stack; that would be a second change. C2, the walking-teacher fine-tune, executor history and the ball-prediction run are shelved.
+
+**Tooling kept dormant, tests left running:**
+- the delay-grid battery (`h5f_eval.sh`) and the coverage test;
+- the compensator;
+- the history inputs;
+- `distill_latent.py --decoder-only` and the C2 script;
+- the step-0 tables, frozen as the sim-to-real baseline.
+
+**No latency as regularisation by default.** If falls plateau, a 0-10 ms command jitter may be one pre-registered single-variable run.
+
+**D-109 item 6 still holds.** If any training run adds latency, evaluation covers it.
+
+**Run order** (user choice):
+1. Plain PPO of Stage 5D run 1 on drill v2 in clean conditions (untried; with latency the same step gave Stage 5E's largest gain).
+2. Then the coach's order:
+   - ready position and split step;
+   - turn-and-go footwork;
+   - stance spot plus time-to-contact;
+   - failure-weighted feeds;
+   - backspin teacher;
+   - 100STYLE style reward (forward and sidestep walking, legs and torso, no backpedal).
+
+**Pre-registered exit** (goal-conditioned controller). Triggers re-cut: the shot-run plateau, the budget running out below p 0.80, or 2 kills in a row. The controller-gate and compatibility-check triggers are dropped because those steps no longer run.
+
+**Guard against future goalpost moves:**
+- a gate may change only when a premise named in a decision changes;
+- at most one gate change per stage;
+- a changed gate never re-judges an earlier stage;
+- the old instrument keeps being reported.
+
+D-110 (the style-relaxation rule) is unchanged.

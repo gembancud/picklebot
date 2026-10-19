@@ -1491,3 +1491,17 @@ def _exec_history(cfg, k: int = EXEC_HISTORY):
     cfg.observations["critic"].terms["applied_cmd"] = _ObsTerm(func=applied_cmd_obs)
     cfg.observations["critic"].terms["latency"] = _ObsTerm(func=latency_obs)
     return cfg
+
+
+# Stage 5F run 2 (D-113, user choice): plain PPO of Stage 5D run 1 on drill v2 in the clean simulator. As
+# Picklebot-Latent-Court-V2-Res-PPO-G1 (Stage 5E run 2) with no ball or command delay; ball-state noise stays on, the
+# condition of the D-113 instrument (grid cell 0/0).
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN = "Picklebot-Latent-Court-V2-Res-PPO-Clean-G1"
+
+
+def _latent_court_v2_res_clean(play=False):
+    return _sim2real(_latent_court_v2_res(play), obs_lag=(0, 0), act_lag=(0, 0))
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN, env_cfg=_latent_court_v2_res_clean(),
+                    runner_cls=CriticWarmupRunner, play_env_cfg=_latent_court_v2_res_clean(True), rl_cfg=_s5e_rl_cfg())

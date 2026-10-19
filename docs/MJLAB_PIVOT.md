@@ -405,6 +405,14 @@ Goal: the Stage 5E gate (unchanged), measured as frozen in D-101, plus absolute 
     - near-best runs repeated.
   - **Pre-registered exit:** a goal-conditioned controller with an interception planner (D-108 decision 3, D-109 item 8).
 
+- **Re-scope (D-113, 2026-10-19).** The user has no near-term physical-robot plan. A sixth review round (5 of 5) recommended taking delay out of this stage.
+  - **Gate:** the drill v2 item is now measured at grid cell 0/0 (no delay, ball noise on). This loosens that item's instrument and is recorded as such. Every bar is unchanged.
+  - **Suspended:** the with-delay bars, kept for a later sim-to-real stage.
+  - **Shelved:** C2, executor history and the ball-prediction run.
+  - **C1:** gated and archived.
+  - **Next:** run 0 on the new instrument, then plain clean drill v2 PPO, then the coach's shot order.
+  - **Exit triggers:** the shot plateau, the budget running out below 0.80, or 2 kills in a row.
+
 ## Stage 6 — System 1: the full executor command interface, robust and distilled
 System 1 is the fast executor that a later strategy layer (System 2, Stage 8) commands. By the end of this stage it must follow every command the strategy layer will use:
 - **where to land the ball** (any point in the far court, not just two regions);

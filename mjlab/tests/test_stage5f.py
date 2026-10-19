@@ -154,3 +154,15 @@ def test_executor_history_config():
     assert "applied_cmd" not in cfg.observations["actor"].terms and "latency" not in cfg.observations["actor"].terms
     with pytest.raises(AssertionError):
         _exec_history(load_env_cfg("Picklebot-Latent-Court-V2-Res-G1"))  # mjlab per-term ball delay
+
+
+def test_clean_ppo_task_matches_the_d113_instrument():
+    """D-113: run 2 trains where the gate measures: drill v2, ball noise on, no ball or command delay."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+    from picklebot_mj.tasks import SIM2REAL_BALL_NOISE, latency_support
+    cfg = load_env_cfg("Picklebot-Latent-Court-V2-Res-PPO-Clean-G1")
+    b = cfg.actions["ball"]
+    assert b.drill_v2 and (b.obs_ball_pos_noise, b.obs_ball_vel_noise) == SIM2REAL_BALL_NOISE
+    assert latency_support(cfg) == {(0, 0)}
+    assert cfg.observations["actor"].terms["ball_pos"].params.get("noisy")

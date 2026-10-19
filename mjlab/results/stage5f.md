@@ -40,7 +40,7 @@ Tracking success by source (paired, same seed):
 
 ### Executor-driven move drill, walking teacher and drill v2 under delay (`scripts/h5f_step0.sh` D-F; seeds 4210002-4210004)
 
-Move drill (Stage 5D run 1, model_1800; executor drives latent-07). Arrival per direction (9 sectors) and robot falls per episode:
+Move drill (Stage 5D run 1, model_1800; executor drives latent-07). Arrival per direction (8 directions) and robot falls per episode:
 
 | Policy | Command delay | Arrival, lowest sector | Arrival, highest sector | Falls / episode |
 |---|---|---|---|---|
@@ -80,3 +80,11 @@ Drill v2 (Stage 5D run 1), ball delay / command delay:
 - **C1 early kill** (D-111): at iteration 61,700, clean tracking with 1 repeat on seed 4210500. The run is killed if any source is more than 3 points below the parent on the same protocol.
 - **C1 gate** (D-111): per source and per tennis stroke type, at 0 / 10 / 20 ms, >= the old H0 at 0 ms minus 2 points. Seed 4210501, 2 repeats, paired.
 - **C1 tooling fault (D-112):** the early evaluation of `model_61700` crashed (whole-checkpoint load; the delay-trained critic has one more input than the evaluation task), and the watcher read the missing file as a kill, stopping training at about iteration 61,720 after 2,231 s. Fixed (actor-only load); the same early check then **passes**: tennis 94.0 -> 94.8, LAFAN1 89.7 -> 90.8, mirrored LAFAN1 83.3 -> 85.2, footwork 100 -> 100 (parent -> C1, clean, 1 repeat, seed 4210500). Not a kill. C1 continues from `model_61700` to iteration 63,800 as `s5f-c1b-h0delay` with the 4,700 s it had left.
+
+## Re-scope (D-113, 2026-10-19): the clean-simulator instrument
+
+The user has no near-term physical-robot plan. After a fifth review round (round 6, `stage5f-delay-review.md`; 5 of 5 for taking delay out), D-113 moves the Stage 5F drill v2 gate item to grid cell 0/0 (no delay, ball noise on, noisy planner spot). **This loosens that item's instrument** (Stage 5D run 1: 0.306 on the D-101 condition, 0.741 on the new one). Every bar is unchanged. The with-delay bars are suspended for a later sim-to-real stage. The Stage 5E verdict stands. Every run also reports the D-101 figure and the 0/10 and 40/20 cells (never gating).
+
+- **Battery:** `scripts/h5f_clean_eval.sh` (gate: drill v2 at 0/0 plus the clean Stage 5C battery; 8 gate items), summary `scripts/h5f_clean_summary.py`.
+- **Budget:** C1 (with its continuation C1b) is run 1 of 15; 14 remain. C1 is gated and archived, not adopted.
+- **Order:** run 0 on the new instrument (`scripts/h5f_run0.sh`), then run 2 = plain clean drill v2 PPO from Stage 5D run 1 (`scripts/h5f_run02.sh`), then the coach's order.
