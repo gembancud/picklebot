@@ -254,3 +254,12 @@ def test_court_feed_share_zero_is_the_drill_v2_task():
     b = load_env_cfg("Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-G1").actions["ball"]
     diff = [f.name for f in dataclasses.fields(a) if getattr(a, f.name) != getattr(b, f.name)]
     assert diff == ["court_feed_prob"] and b.court_feed_prob == 0.4 and a.court_feed_prob == 0.0
+
+
+def test_mirror_ball_states_is_a_half_turn():
+    """D-116: the R2 mirror is a 180-degree rotation about the court centre (an involution, z and wz unchanged)."""
+    from picklebot_mj.tasks.return_stand import mirror_ball_states
+    st = torch.tensor([[-5.0, 1.2, 0.9, 7.0, -1.0, 3.0, 10.0, -20.0, 5.0]])
+    m = mirror_ball_states(st)
+    assert torch.allclose(m, torch.tensor([[5.0, -1.2, 0.9, -7.0, 1.0, 3.0, -10.0, 20.0, 5.0]]))
+    assert torch.allclose(mirror_ball_states(m), st)

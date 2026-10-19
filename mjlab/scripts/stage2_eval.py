@@ -75,6 +75,10 @@ def main():
                          "lands at a fixed court place the robot must reach), fixed recovery spot, consecutive legal "
                          "returns counted per robot; reports P(rally >= --rally-n)")
     ap.add_argument("--rally-n", type=int, default=10)
+    ap.add_argument("--record-returns", default=None,
+                    help="self-play readiness R2 (D-116): save the post-contact (pos, vel, spin) of every legal return")
+    ap.add_argument("--replay-file", default=None,
+                    help="self-play readiness R2 (D-116): every feed replays a recorded legal return, mirrored")
     ap.add_argument("--planner", choices=["task", "off", "clean", "noisy"], default="task",
                     help="Stage 5E stance-spot planner: the task's setting, absent, clean (true state) or noisy (D-098)")
     ap.add_argument("--no-sim2real", action="store_true",
@@ -155,6 +159,10 @@ def main():
     cfg.seed = args.seed
     cfg.actions["ball"].seed = args.seed
     cfg.actions["ball"].ready_track = True  # D-115: ready position and split step, measurement only
+    if args.record_returns:
+        cfg.actions["ball"].record_returns = True
+    if args.replay_file:
+        cfg.actions["ball"].replay_file = args.replay_file
     cfg.observations["actor"].enable_corruption = False
     groups = {"all": list(STAGE4_FAMILIES), "reach": list(REACH_FAMILIES), "every": list(FAMILY_NAMES),
               "drill5b": list(STAGE4_FAMILIES) + list(REACH_FAMILIES)}  # the Stage 5B drill (14 families)
@@ -342,6 +350,12 @@ def main():
     for name, r in table.items():
         ci = r['legal_return_ci95']
         print(f"{name:14s} {r['episodes']:8d} {r['contact']:8.3f} {r['legal_return']:8.3f} [{ci[0]:.3f}, {ci[1]:.3f}] {r['fall']:6.3f}")
+    if args.record_returns:  # R2 (D-116): the recorded legal returns, court-local, unmirrored
+        rec = torch.cat(term._recorded) if term._recorded else torch.zeros(0, 9, device=env.device)
+        torch.save(rec.cpu(), args.record_returns)
+        out["recorded_returns"] = {"file": args.record_returns, "n": int(rec.shape[0])}
+    if args.replay_file:
+        out["replay"] = {"file": args.replay_file, "states": int(term.replay.shape[0])}
     if args.json:
         json.dump(out, open(args.json, "w"), indent=1)
     if args.video:

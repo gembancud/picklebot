@@ -176,6 +176,11 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # planner spot. Everything else (no hint, ball noise, refeed timing, rewards) stays drill v2.
     court_feed_prob: float = 0.0
     court_feed_anchor_prob: float = 0.75
+    # Self-play readiness R2 (D-116): record the post-contact ball state (pos, vel, spin) of every legal return
+    # (evaluation only; read with returns_recorded()), or replay recorded returns, mirrored to the far side, as every
+    # feed. Replayed balls start in the rally phase (a return may be volleyed or taken after its bounce).
+    record_returns: bool = False
+    replay_file: str = ""
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -328,6 +333,12 @@ class BallPhysicsAction(ActionTerm):
         # Ball state just after the first legal contact (court-local), read by return_shaping (H4, D-057).
         self.hit_out_pos = torch.zeros(n, 3, device=dev)
         self.hit_out_vel = torch.zeros(n, 3, device=dev)
+        self.hit_out_spin = torch.zeros(n, 3, device=dev)
+        self._recorded = [] if getattr(cfg, "record_returns", False) else None
+        self.replay = None
+        if getattr(cfg, "replay_file", ""):
+            self.replay = mirror_ball_states(torch.load(cfg.replay_file, map_location=dev).float())
+            self.gen_replay = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 314159)
         # The returned ball's real clearance over the net tape when it crosses x = 0 (net_clearance, D-071).
         self.cross_now = torch.zeros(n, dtype=torch.bool, device=dev)
         self.cross_clear = torch.zeros(n, device=dev)
@@ -409,7 +420,8 @@ class BallPhysicsAction(ActionTerm):
         if getattr(self.cfg, "court_wide", False):  # volley feeds: rally phase, may be taken before the bounce
             m = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
             m[env_ids] = True
-            self.rules.begin_from_feed_masked(m & self._is_volley[self.family], FEEDER_PLAYER, must_bounce=False)
+            rally = self._is_volley[self.family] | (self.replay is not None)  # replayed returns: rally phase
+            self.rules.begin_from_feed_masked(m & rally, FEEDER_PLAYER, must_bounce=False)
         for f in (self.hit_done, self.hit_now, self.return_done, self.return_now, self.lost_now, self._prev_dead,
                   self.tallied):
             f[env_ids] = False
@@ -525,7 +537,7 @@ class BallPhysicsAction(ActionTerm):
         self.hit_rec_true = torch.where(fire.unsqueeze(-1), self.hit_rec_true, true_old)
         self.stance_xy = torch.where(fire.unsqueeze(-1), self.stance_xy, stance_old)
         if getattr(self.cfg, "court_wide", False):
-            volley = self._is_volley[self.family]
+            volley = self._is_volley[self.family] | (self.replay is not None)  # replayed returns: rally phase
             self.rules.begin_from_feed_masked(fire & ~volley, FEEDER_PLAYER, must_bounce=True)
             self.rules.begin_from_feed_masked(fire & volley, FEEDER_PLAYER, must_bounce=False)
         else:
@@ -664,6 +676,10 @@ class BallPhysicsAction(ActionTerm):
         self.ball.vel[env_ids] = torch.stack([vx, torch.zeros_like(vx), vz], -1)
         # spin_y > 0 is topspin for travel toward -x, i.e. world angular velocity about -y.
         self.ball.spin[env_ids] = torch.stack([torch.zeros_like(vx), -self._u("spin_y", fam), torch.zeros_like(vx)], -1)
+        if self.replay is not None:  # R2 (D-116): every feed is one of the robot's own recorded returns, mirrored
+            j = torch.randint(0, self.replay.shape[0], (k,), generator=self.gen_replay, device=self.device)
+            st = self.replay[j]
+            self.ball.pos[env_ids], self.ball.vel[env_ids], self.ball.spin[env_ids] = st[:, :3], st[:, 3:6], st[:, 6:9]
         if getattr(self.cfg, "hit_hint", False):  # real-ball episodes: stance hint until the first contact
             from picklebot_mj.tasks.shadow_swing import stance_spot
             hit_ep = torch.ones(k, dtype=torch.bool, device=self.device)
@@ -759,6 +775,7 @@ class BallPhysicsAction(ActionTerm):
         self.hit_now |= first
         self.hit_out_pos = torch.where(first.unsqueeze(-1), self.ball.pos, self.hit_out_pos)
         self.hit_out_vel = torch.where(first.unsqueeze(-1), self.ball.vel, self.hit_out_vel)
+        self.hit_out_spin = torch.where(first.unsqueeze(-1), self.ball.spin, self.hit_out_spin)
         if getattr(self.cfg, "hit_hint", False) or getattr(self, "plan_on", False):  # after the contact the spot input is the recovery spot
             back = first & self.hit_hint_on
             self.recover_xy = torch.where(back.unsqueeze(-1), self.hit_rec_true, self.recover_xy)
@@ -876,6 +893,9 @@ class BallPhysicsAction(ActionTerm):
 
     def consume_step_events(self):
         """Clear one-shot flags after rewards are computed (called by the reward terms' owner)."""
+        if self._recorded is not None:  # R2 recording (evaluation only; a host sync per step is acceptable here)
+            m = self.return_now
+            self._recorded.append(torch.cat([self.hit_out_pos, self.hit_out_vel, self.hit_out_spin], -1)[m])
         self.hit_now[:] = False
         self.return_now[:] = False
         self.lost_now[:] = False
@@ -883,6 +903,16 @@ class BallPhysicsAction(ActionTerm):
         self.cross_now[:] = False
         if self.ready is not None:
             self.ready.consume()
+
+
+def mirror_ball_states(st: torch.Tensor) -> torch.Tensor:
+    """Court-local ball states [N, 9] (pos, vel, spin) rotated 180 degrees about the court centre's vertical axis:
+    (x, y) -> (-x, -y), (vx, vy) -> (-vx, -vy), (wx, wy) -> (-wx, -wy); z, vz and wz unchanged. A return hit by the
+    robot (x < 0, moving to +x) becomes a ball from the far side coming at the robot (D-116)."""
+    out = st.clone()
+    for i in (0, 1, 3, 4, 6, 7):
+        out[:, i] = -st[:, i]
+    return out
 
 
 def _term(env) -> BallPhysicsAction:
