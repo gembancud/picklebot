@@ -147,7 +147,7 @@ Tracking success, per source:
   - drill v2 at 0/0, 256 envs, 30 s, seed 4211000: killed if more than 5 points below the parent on the same protocol;
   - move drill clean, seed 4211001: killed if arrival is below 90 %.
 - **Endpoint:** `h5f_clean_eval.sh`, seeds 4211010-4211025.
-| 3 | s5f-03-v2-clean-hold | Run 2 with the critic warm-up fixed (D-114): the learning rate is held during the 50 frozen-actor updates (`CriticWarmupHoldLrRunner`); nothing else changes (training seed 73) | s5d-01-rally/model_1800 | iteration 2800, or the last checkpoint before the 7,000 s cap | |
+| 3 | s5f-03-v2-clean-hold | Run 2 with the critic warm-up fixed (D-114): the learning rate is held during the 50 frozen-actor updates (`CriticWarmupHoldLrRunner`); nothing else changes (training seed 73) | s5d-01-rally/model_1800 | iteration 2800, or the last checkpoint before the 7,000 s cap | **Killed by the stage kill rules (D-113): court main 67.7 % (< 76.8 %), court falls 7.5 % (> 7.4 %).** Endpoint model_2600 (7,000 s cap). Drill v2 p **0.830** [0.826, 0.833]; neutral / moderate / extreme 0.893 / 0.748 / 0.688 (Wilson low 0.889 / 0.740 / 0.676); P(rally >= 10) 16.0 %. Arrival min 99.3 %; style 4.181 / 4.145. |
 
 - **Run 2 diagnosis (D-114):**
   - The adaptive schedule raised the learning rate 1.5x per warm-up update while the actor was frozen, from about 1e-4 to the 1e-2 cap.
@@ -164,3 +164,20 @@ Tracking success, per source:
 
   The battery ran from 01:24 to 02:37 and **overlapped run 3's first 40 minutes on the GPU**. That slowed run 3 to about 13 s per iteration (7.4 s after the overlap ended), so run 3 will likely reach the time cap before iteration 2800. Its endpoint is then the last checkpoint before the cap, as pre-registered. Later run scripts skip the endpoint battery after a kill.
 - **Run 3 training curve, warm-up to iteration 2015:** legal-return reward per episode went from 0.66 (iteration 1851) to 0.79-0.84 (iterations 1870-2015). No collapse, where run 2 had dropped to 0.13.
+
+### Run 3 at its endpoint (`model_2600`, seeds 4211110-125): killed, 2 kills in a row
+
+| Measure | Start point (run 0) | Run 3 | Kill rule / bar |
+|---|---|---|---|
+| Drill v2 p (0/0) | 0.753 | **0.830** | gate >= 0.80 (passes) |
+| Neutral / moderate / extreme (Wilson low) | 0.815 / 0.649 / 0.611 | 0.889 / 0.740 / 0.676 | floors 0.92 / 0.80 / 0.55 |
+| P(rally >= 5 / >= 10), drill v2 | 0.240 / 0.070 | 0.355 / 0.160 | |
+| Court main (clean) | 78.6 % | **67.7 %** | kill below 76.8 % |
+| Court falls | 6.4 % | **7.5 %** | kill above 7.4 % |
+| Arrival min | 99.5 % | 99.3 % | kill below 90 % |
+| Style new / old | 4.263 / 4.220 | 4.181 / 4.145 | kill above 4.413 |
+| D-101 figure / 0/10 / 40/20 (reported) | 0.307 / 0.606 / 0.065 | 0.395 / 0.674 / 0.093 | |
+| Ready / dip / both (reported, D-115) | 0.276 / 0.285 / 0.105 (smoke) | 0.240 / 0.253 / 0.087 | |
+
+- **The training feed set trades off against the court drill.** PPO on drill v2 alone lifted drill v2 by 7.7 points and P(rally >= 10) from 7 % to 16 %. It cost 10.9 points of court main, because the court-wide feeds and start spots are no longer trained, and court falls rose by 1.1 points.
+- **2 kills in a row** (run 2 early, run 3 at the stage rules). The loop stops and asks the user.

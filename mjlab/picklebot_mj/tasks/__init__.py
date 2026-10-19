@@ -1529,3 +1529,28 @@ TASK_LATENT_COURT_V2_RES_PPO_CLEAN_HOLD = "Picklebot-Latent-Court-V2-Res-PPO-Cle
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_HOLD, env_cfg=_latent_court_v2_res_clean(),
                     runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean(True),
                     rl_cfg=_s5e_rl_cfg())
+
+
+# Stage 5F run 4 (D-115): shot item 1, ready position and split step. Run 3's task plus a one-shot reward at each refeed
+# launch: the soft ready score (both feet down x stance width 0.20 -> 0.35 m) and, at the end of the +-0.25 s window,
+# the soft split-step dip score (pelvis drop / 3 cm, capped at 1); picklebot_mj/ready.py. Weight READY_WEIGHT / step_dt
+# per part, half a paddle contact each. Inserted before legal_return, which clears the step flags.
+from picklebot_mj.tasks.return_stand import ready_reward  # noqa: E402
+
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_READY = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Ready-G1"
+READY_WEIGHT = 0.5
+
+
+def _latent_court_v2_res_clean_ready(play=False):
+    cfg = _latent_court_v2_res_clean(play)
+    cfg.actions["ball"].ready_track = True
+    step_dt = cfg.sim.mujoco.timestep * cfg.decimation
+    legal = cfg.rewards.pop("legal_return")
+    cfg.rewards["ready"] = RewardTermCfg(func=ready_reward, weight=READY_WEIGHT / step_dt)
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_READY, env_cfg=_latent_court_v2_res_clean_ready(),
+                    runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean_ready(True),
+                    rl_cfg=_s5e_rl_cfg())

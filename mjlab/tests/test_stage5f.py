@@ -196,3 +196,15 @@ def test_ready_tracker_scores_stance_and_split_step():
     tr2.step(torch.full((1,), 0.75))
     tr2.launch(torch.ones(1, dtype=torch.bool), feet[:1])
     assert not tr2.open.any()
+
+
+def test_ready_task_reward_order():
+    """D-115: the ready reward is read before legal_return (which clears the one-shot flags); nothing else changes."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+    base = load_env_cfg("Picklebot-Latent-Court-V2-Res-PPO-Clean-G1")
+    cfg = load_env_cfg("Picklebot-Latent-Court-V2-Res-PPO-Clean-Ready-G1")
+    names = list(cfg.rewards)
+    assert names[-1] == "legal_return" and names[-2] == "ready" and cfg.actions["ball"].ready_track
+    assert [n for n in names if n != "ready"] == list(base.rewards)
+    assert all(cfg.rewards[n].weight == base.rewards[n].weight for n in base.rewards)
