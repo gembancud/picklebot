@@ -3028,3 +3028,38 @@ Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5F section); `mjlab/result
    4. the shot work in the coach's order: ready position and split step; turn-and-go footwork; stance spot plus time-to-contact; failure-weighted feeds; backspin teacher; the style reward with its own run.
 
 Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 5F section); `mjlab/results/stage5f-plan-review.md`.
+
+### D-110 — When the human style pressure may be relaxed (pre-registered, not applied in Stage 5F)
+
+- Date: 2026-10-19
+- Status: Accepted (user)
+- Amends: none (a rule for a later stage)
+
+**The question.** AlphaGo first imitated human games, then surpassed them by self-play; AlphaGo Zero dropped human data altogether. Should Picklebot do the same with human motion style?
+
+**Answer.**
+- **"Style" here means two things,** and only the second may be relaxed:
+  1. **The human motion prior (the H0 -> H1 latent controller).** This is the movement vocabulary every executor is built on, and it is **kept**.
+     - Flat joint-space policies without it had far weaker footwork (Stage 5).
+     - Unlike Go, the simulator is imperfect. A human prior guards against motions that exploit simulator flaws and fail on hardware.
+     - Missing skills (volleys, running with a paddle) are added by expanding the vocabulary, not by removing it.
+  2. **The style pressure:** prior penalties, the discriminator style reward and the style gate (<= 3.86). These may be relaxed late, as AlphaGo moved past human play.
+- **Not in Stage 5F,** which keeps style as decided in D-108/D-109.
+
+**Relaxation rule.** The style pressure may be relaxed in a later stage only when all three hold:
+1. **Skill has plateaued:** the stage's plateau rule has fired on the task metric (per-shot p).
+2. **Style costs points:** a "style tax" run, identical except that the style weight is halved, gains >= 2 points of per-shot p. Both runs are evaluated on the same fresh development seeds.
+3. **Realism holds without it.** The relaxed run still meets:
+   - falls <= 1 %;
+   - the delay grid, including the extrapolation cell, within 2 points of the full-style run;
+   - action jerk and energy at most 10 % above the full-style run;
+   - joint-limit and foot-slip rates no worse.
+
+   These guards take over style's role as a realism check.
+
+**How it is applied:**
+- **Selectively:** style pressure is kept where human data covers the motion (walking, ready stance, the recorded strokes) and relaxed only where none exists (fast lunges, volleys).
+- **Reporting:** a stage that relaxes style reports both a "showcase" executor (full style) and a "competitive" executor (relaxed style, all three conditions met).
+- **Style gate:** stays as written for the showcase executor. The competitive executor reports style without being gated on it. That split is recorded as a gate change in its own decision when it happens.
+
+Affected roadmap/spec sections: MJLAB_PIVOT.md (Stage 6 onward, when relevant).
