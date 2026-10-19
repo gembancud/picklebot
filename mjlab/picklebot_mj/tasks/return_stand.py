@@ -158,6 +158,14 @@ class BallPhysicsActionCfg(ActionTermCfg):
     episode_latency_prob: float = 0.5
     episode_obs_lag: tuple = (1, 2)  # control steps, inclusive
     episode_cmd_lag: tuple = (0, 4)  # physics steps, inclusive
+    # Stage 5F (D-108/D-109): the ball-observation lag of delayed episodes is redrawn every obs_lag_period control steps
+    # (0 = held for the episode; 50 = the frozen D-101 evaluation's hold). With ball_compensate, the actor's delayed,
+    # noisy ball measurement is rolled forward by its known age (timestamps on hardware) with the planner's spin-blind
+    # model (planner.compensate). ball_comp_age_error (evaluation only) misestimates that age by up to +- this many
+    # physics steps, uniformly per control step.
+    obs_lag_period: int = 0  # redraws both the ball and the command lag
+    ball_compensate: bool = False
+    ball_comp_age_error: int = 0
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -838,11 +846,30 @@ def _ball_seen(env, noisy: bool) -> tuple[torch.Tensor, torch.Tensor]:
         step = env.common_step_counter
         if t._hist_step != step:  # once per control step: push the true state, then read each env's lagged one
             t._hist_step = step
+            c = t.cfg
+            period = int(getattr(c, "obs_lag_period", 0))
+            if period > 0 and step % period == 0:  # D-109: redraw both lags of delayed envs (the D-101 hold)
+                ol = torch.randint(int(c.episode_obs_lag[0]), int(c.episode_obs_lag[1]) + 1, (t.num_envs,),
+                                   generator=t.gen_lat, device=t.device)
+                cl = torch.randint(int(c.episode_cmd_lag[0]), int(c.episode_cmd_lag[1]) + 1, (t.num_envs,),
+                                   generator=t.gen_lat, device=t.device)
+                t.obs_lag = torch.where(t.lat_on, ol, torch.zeros_like(ol))
+                t.cmd_lag = torch.where(t.lat_on, cl, torch.zeros_like(cl))
             t._seen_hist = torch.cat([torch.cat([t.ball.pos, t.ball.vel], -1).unsqueeze(0), t._seen_hist[:-1]], 0)
             s = t._seen_hist[t.obs_lag, t.all_ids]
             on = t.lat_on.unsqueeze(-1).float()
             t._seen_pos = s[:, :3] + on * sp * torch.randn_like(s[:, :3])
             t._seen_vel = s[:, 3:] + on * sv * torch.randn_like(s[:, 3:])
+            if getattr(c, "ball_compensate", False):  # D-108: roll the measurement forward by its (timestamped) age
+                from picklebot_mj.planner import compensate
+                dec = int(env.cfg.decimation)
+                sub = t.obs_lag * dec
+                err = int(getattr(c, "ball_comp_age_error", 0))
+                if err > 0:
+                    sub = (sub + torch.randint(-err, err + 1, sub.shape, generator=t.gen_lat, device=t.device)).clamp(min=0)
+                sub = torch.where(t.lat_on, sub, torch.zeros_like(sub))
+                t._seen_pos, t._seen_vel = compensate(t._seen_pos, t._seen_vel, sub,
+                                                      int(c.episode_obs_lag[1]) * dec + err)
         return t._seen_pos, t._seen_vel
     if not noisy or (sp <= 0.0 and sv <= 0.0):
         return t.ball.pos, t.ball.vel

@@ -1380,3 +1380,91 @@ def _latent_court_v2_res_eplat(play=False):
 TASK_LATENT_COURT_V2_RES_PPO_EPLAT = "Picklebot-Latent-Court-V2-Res-PPO-EpLat-G1"
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_EPLAT, env_cfg=_latent_court_v2_res_eplat(),
                     runner_cls=CriticWarmupRunner, play_env_cfg=_latent_court_v2_res_eplat(True), rl_cfg=_s5e_rl_cfg())
+
+
+# Stage 5F (D-108/D-109/D-111): the ball-latency compensator. The ball term's own history path delays the actor's ball
+# observations (so their age is known, as with timestamps on hardware) and rolls them forward with the planner's
+# spin-blind model; joint commands are delayed by the latent action term. mjlab's per-term delay buffers are off.
+def _own_latency(cfg, prob, obs_lag, cmd_lag, period, compensate):
+    cfg = _sim2real(cfg, obs_lag=(0, 0), act_lag=(0, 0))  # keeps the noisy actor terms and the ball-noise levels
+    b = cfg.actions["ball"]
+    b.episode_latency, b.episode_latency_prob = True, prob
+    b.episode_obs_lag, b.episode_cmd_lag, b.obs_lag_period, b.ball_compensate = obs_lag, cmd_lag, period, compensate
+    return cfg
+
+
+# Evaluation tasks for compensating executors. The latency reproduces the frozen D-101 evaluation exactly: every episode
+# delayed, ball 1-2 control steps and command 0-4 physics steps, both redrawn every 50 control steps. The court task
+# variant is clean by default (as the Stage 5C battery); stage2_eval --grid sets a fixed cell on either.
+TASK_LATENT_COURT_V2_RES_COMP = "Picklebot-Latent-Court-V2-Res-Comp-G1"
+TASK_LATENT_COURT_RES_COMP = "Picklebot-Latent-Court-Res-Comp-G1"
+
+
+def _latent_court_v2_res_comp(play=False):
+    return _own_latency(_latent_court_v2_res(play), 1.0, (1, 2), (0, 4), 50, True)
+
+
+def _latent_court_res_comp(play=False):
+    return _own_latency(_latent_court_res(play), 0.0, (1, 2), (0, 4), 50, True)
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_COMP, env_cfg=_latent_court_v2_res_comp(),
+                    play_env_cfg=_latent_court_v2_res_comp(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+register_mjlab_task(task_id=TASK_LATENT_COURT_RES_COMP, env_cfg=_latent_court_res_comp(),
+                    play_env_cfg=_latent_court_res_comp(True), rl_cfg=_latent_drill3_lowent_rl_cfg())
+
+# Stage 5F run 1 (training): Stage 5E run 4's per-episode latency (half clean, half delayed; D-105) plus the ball
+# compensator, so its one change against that sibling is the compensator.
+TASK_LATENT_COURT_V2_RES_PPO_COMP = "Picklebot-Latent-Court-V2-Res-PPO-Comp-G1"
+
+
+def _latent_court_v2_res_ppo_comp(play=False):
+    return _own_latency(_latent_court_v2_res(play), 0.5, (1, 2), (0, 4), 0, True)
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_COMP, env_cfg=_latent_court_v2_res_ppo_comp(),
+                    runner_cls=CriticWarmupRunner, play_env_cfg=_latent_court_v2_res_ppo_comp(True),
+                    rl_cfg=_s5e_rl_cfg())
+
+
+def latency_support(cfg) -> set:
+    """(ball lag in control steps, command lag in physics steps) pairs a task's actor can meet (D-109 coverage rule).
+    Own-history latency: (0, 0) for clean episodes plus every delayed pair; mjlab per-term delays: every pair in their
+    ranges (from the first ball term and the first actuator)."""
+    b = cfg.actions["ball"]
+    if getattr(b, "episode_latency", False):
+        out = set()
+        if b.episode_latency_prob < 1.0:
+            out.add((0, 0))
+        if b.episode_latency_prob > 0.0:
+            out |= {(o, c) for o in range(b.episode_obs_lag[0], b.episode_obs_lag[1] + 1)
+                    for c in range(b.episode_cmd_lag[0], b.episode_cmd_lag[1] + 1)}
+        return out
+    t = cfg.observations["actor"].terms["ball_pos"]
+    a = cfg.scene.entities["robot"].articulation.actuators[0]
+    return {(o, c) for o in range(t.delay_min_lag, t.delay_max_lag + 1)
+            for c in range(a.delay_min_lag, a.delay_max_lag + 1)}
+
+
+# Stage 5F H0 delay fine-tune (D-108/D-109/D-111): H0's own task (tennis + LAFAN1, the tracking-20-decay task) with a
+# per-episode command delay (30 % of episodes clean, the rest 5-25 ms), the lag shown to the critic only (a trailing
+# critic term; the checkpoint's critic is widened with scripts/expand_checkpoint.py). Nothing else changes.
+from mjlab.managers.observation_manager import ObservationTermCfg as _ObsTerm  # noqa: E402
+
+from picklebot_mj.tasks.delayed_action import DelayedJointPositionActionCfg, cmd_lag_obs  # noqa: E402
+
+TASK_TRACKING_TENNIS_LAFAN2_HUGE_DELAY = "Picklebot-Tracking-TennisLafan2-Huge-Delay-G1"
+
+
+def _tracking_tennis_lafan2_delay(play=False):
+    cfg = _tracking_tennis_lafan2(play)
+    old = cfg.actions["joint_pos"]
+    kw = {f.name: getattr(old, f.name) for f in _dc.fields(old) if f.init}
+    cfg.actions["joint_pos"] = DelayedJointPositionActionCfg(**kw, p_zero=0.3, max_lag=5)
+    cfg.observations["critic"].terms["cmd_lag"] = _ObsTerm(func=cmd_lag_obs, params={"action_name": "joint_pos"})
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN2_HUGE_DELAY, env_cfg=_tracking_tennis_lafan2_delay(),
+                    play_env_cfg=_tracking_tennis_lafan2_delay(True), rl_cfg=_tracking_huge_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)

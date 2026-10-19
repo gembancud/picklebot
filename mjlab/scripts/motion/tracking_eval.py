@@ -61,6 +61,8 @@ def main():
     ap.add_argument("--seed", type=int, default=4200300)
     ap.add_argument("--json", default=None)
     ap.add_argument("--window-s", type=float, default=4.0, help="per-stroke mode: window length for non-tennis clips")
+    ap.add_argument("--cmd-delay-ms", type=int, default=0,
+                    help="Stage 5F (D-111): fixed joint-command delay, a multiple of the 5 ms physics step")
     ap.add_argument("--latent", action="store_true",
                     help="--checkpoint is a latent controller (H1): act with encoder -> decoder (mean latent)")
     ap.add_argument("--per-stroke", action="store_true",
@@ -75,6 +77,13 @@ def main():
     cfg.events.pop("push_robot", None)
     cfg.observations["actor"].enable_corruption = False
     cfg.episode_length_s = 60.0  # longer than any clip: episodes end at the clip end or a termination
+    if args.cmd_delay_ms:  # D-111: every joint command applied cmd_delay_ms late (fixed lag on every actuator)
+        import dataclasses
+        assert args.cmd_delay_ms % 5 == 0, "whole physics steps (5 ms)"
+        k = args.cmd_delay_ms // 5
+        robot = cfg.scene.entities["robot"]
+        robot.articulation = dataclasses.replace(robot.articulation, actuators=tuple(
+            dataclasses.replace(a, delay_min_lag=k, delay_max_lag=k) for a in robot.articulation.actuators))
     motion = np.load(mc.motion_file)
     clip_starts = motion["clip_starts"]
     n_clips, total = len(clip_starts), len(motion["joint_pos"])
@@ -168,7 +177,8 @@ def main():
                          **{k: float((v[sel] / f).mean()) for k, v in sums.items()},
                          "causes": sorted({cause[i] for i in torch.where(sel)[0].tolist() if cause[i]})})
     f = frames.clamp(min=1)
-    summary = {"checkpoint": args.checkpoint, "seed": args.seed, "episodes": n, "clips": n_clips,
+    summary = {"checkpoint": args.checkpoint, "seed": args.seed, "cmd_delay_ms": args.cmd_delay_ms, "episodes": n,
+               "clips": n_clips,
                "scoring": "per-stroke segments" if args.per_stroke else "whole clips", "units": n_units,
                "success_rate": float(success.float().mean()), "fall_rate": float(fell.float().mean()),
                "fall_rate_raw": float(fell_raw.float().mean()),

@@ -78,6 +78,11 @@ def main():
                     help="Stage 5E stance-spot planner: the task's setting, absent, clean (true state) or noisy (D-098)")
     ap.add_argument("--no-sim2real", action="store_true",
                     help="Stage 5E diagnostics only: exact, undelayed ball observations and joint commands")
+    ap.add_argument("--grid", type=int, nargs=2, metavar=("BALL_MS", "CMD_MS"), default=None,
+                    help="Stage 5F delay-grid cell: fixed ball-observation delay (multiple of 20 ms) and joint-command delay "
+                         "(multiple of 5 ms), ball-state noise on; overrides the task's sim-to-real settings (D-111)")
+    ap.add_argument("--comp-age-error", type=int, default=0,
+                    help="Stage 5F robustness check: the compensator misestimates the ball age by up to +-N physics steps")
     ap.add_argument("--sim2real-on", action="store_true",
                     help="Stage 5E diagnostics only: add the Stage 5E latency and noise to a task without them")
     ap.add_argument("--sim2real-only", choices=["obs", "act", "noise"], default=None,
@@ -123,6 +128,19 @@ def main():
         cfg.actions["ball"].refeed_delay_s = args.refeed_delay
     if args.planner != "task":
         cfg.actions["ball"].planner_mode = args.planner
+    if args.grid is not None:  # D-111: one fixed cell of the delay grid
+        from picklebot_mj.tasks import SIM2REAL_BALL_NOISE, _sim2real
+        b_ms, c_ms = args.grid
+        assert b_ms % 20 == 0 and c_ms % 5 == 0, "grid delays are whole control (20 ms) and physics (5 ms) steps"
+        b = cfg.actions["ball"]
+        if getattr(b, "episode_latency", False):  # own-history latency (compensating executors): every episode at this cell
+            _sim2real(cfg, obs_lag=(0, 0), act_lag=(0, 0), noise=SIM2REAL_BALL_NOISE)
+            b.episode_latency_prob, b.obs_lag_period = 1.0, 0
+            b.episode_obs_lag, b.episode_cmd_lag = (b_ms // 20, b_ms // 20), (c_ms // 5, c_ms // 5)
+        else:  # mjlab's per-term delay buffers, fixed lags
+            _sim2real(cfg, obs_lag=(b_ms // 20, b_ms // 20), act_lag=(c_ms // 5, c_ms // 5), noise=SIM2REAL_BALL_NOISE)
+    if args.comp_age_error:
+        cfg.actions["ball"].ball_comp_age_error = args.comp_age_error
     if args.sim2real_on:  # diagnostics: a task without sim-to-real, measured with the Stage 5E latency and noise
         from picklebot_mj.tasks import _sim2real
         _sim2real(cfg)
@@ -261,7 +279,7 @@ def main():
             k_g = sum(round(table[f]["legal_return"] * table[f]["episodes"]) for f in gfams if f in table)
             grp[gname] = {"episodes": n_g, "legal_return": round(k_g / max(n_g, 1), 4), "ci95": wilson(k_g, n_g)}
         out["drill_v2"] = {"per_shot_p": round(rets / max(episodes, 1), 4), "per_shot_ci95": wilson(rets, episodes),
-                           "groups": grp, "planner": term.cfg.planner_mode, "sim2real": "off" if args.no_sim2real else (args.sim2real_only or "all"),
+                           "groups": grp, "planner": term.cfg.planner_mode, "sim2real": (f"grid {args.grid[0]}/{args.grid[1]} ms" if args.grid else "off" if args.no_sim2real else (args.sim2real_only or "all")),
                            "court_falls_per_episode": out["robot_fall_rate_per_episode"]}
     if getattr(term.cfg, "court_wide", False):  # Stage 5C: outcomes per court zone and family (D-076)
         from picklebot_mj.feeds import COURT_ZONES

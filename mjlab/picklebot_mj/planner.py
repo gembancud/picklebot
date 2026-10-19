@@ -106,6 +106,29 @@ def _compiled_chunk(p: BallParams, dt: float, k: int):
     return _COMPILED[key][1]
 
 
+COMP_DT = 0.005  # compensation sub-step (one physics step)
+
+
+def compensate(pos: torch.Tensor, vel: torch.Tensor, substeps: torch.Tensor, max_substeps: int,
+               params: BallParams | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+    """Stage 5F ball latency compensator (D-108/D-109): roll each env's delayed ball measurement forward by its own
+    age, substeps[i] x COMP_DT, with the spin-blind flight and bounce model. max_substeps is a host-side bound (no sync).
+    Offline (scripts/diag/ball_lag_error.py) this brings 20-40 ms of delay back to the noise floor for every family."""
+    p = params or _DEFAULT_PARAMS
+    x, v = pos.clone(), vel.clone()
+    w = torch.zeros_like(x)
+    bounced = torch.zeros(x.shape[0], dtype=torch.bool, device=x.device)
+    found, out = torch.zeros_like(bounced), x[:, :2].clone()
+    step = _compiled_chunk(p, COMP_DT, 1) if x.is_cuda else (lambda *a: _rollout_step(p, COMP_DT, *a))
+    for i in range(int(max_substeps)):
+        x1, v1, w1, b1, f1, out = step(x, v, w, bounced, found, out)
+        act = (substeps > i).unsqueeze(-1)
+        x, v, w = torch.where(act, x1, x), torch.where(act, v1, v), torch.where(act, w1, w)
+        bounced = torch.where(act.squeeze(-1), b1, bounced)
+        found = f1
+    return x, v
+
+
 def stance_from_intercept(xy: torch.Tensor, pelvis_xy: torch.Tensor) -> torch.Tensor:
     """Stance spot beside an interception point, as `shadow_swing.stance_spot` (v2 box)."""
     xi, yi = xy[:, 0], xy[:, 1]
