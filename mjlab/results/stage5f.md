@@ -196,3 +196,21 @@ Tracking success, per source:
   - mirrored replay feeds (rally phase);
   - `scripts/h5f_ownball.sh` (sha256 a69334af...), committed before its first use;
   - a mirror test.
+
+### Self-play tooling smoke tests (spare seeds 4213001-003; start point; 256 envs; not readiness measurements)
+
+- **Recording** (rally protocol, 30 s): 2,068 legal returns recorded. Post-contact ball:
+  - speed: median 11.5 m/s (10th-90th percentile 9.8-12.8);
+  - height: 0.66 m;
+  - vz: +4.2 m/s;
+  - spin: y about -50 rad/s, which is backspin, preserved by the mirror.
+- **Replay** (own returns, mirrored, 20 s): **legal 6.7 %** (158 of 2,350), falls 9.8 % per shot.
+  - The balls reach the robot at 5.7 m/s mean, against 3.4 m/s for the feeder's balls, at a 0.50 m contact height (0.70 m for feeder balls).
+  - The robot touches only about 20 % of them.
+- **Two-robot pairs** (30 s, 128 courts): 1,279 rallies, **none reached 4 shots** (lengths 0 / 1 / 2: 652 / 613 / 14).
+  - Side legal rate: A 0.351, B 0.313 (the feeder ball that starts each rally is included).
+  - Falls per shot: 5.6 % / 6.5 %.
+- **Reading:**
+  - The tools work end to end.
+  - **The robot cannot return its own shots.** Its returns are fast, low and heavily sliced, far outside the feed families it trains on. This is the round-8 coach's "winner-only" warning (`return_quality` rewards pace, 6 m/s reference).
+  - R2 and R4 are the binding readiness items. This goes to the panel after run 4's battery and the formal R2 measurements.
