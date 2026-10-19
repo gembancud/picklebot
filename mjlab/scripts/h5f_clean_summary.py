@@ -10,7 +10,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("tag")
 ap.add_argument("--json", default=None)
 a = ap.parse_args()
-R, C = f"results/stage5f-{a.tag}", f"results/stage5c-{a.tag}-5c"
+R, C = f"results/stage5f-{a.tag}", f"results/stage5c-s5f-{a.tag}-5c"
 load = lambda p: json.load(open(p)) if os.path.exists(p) else None  # noqa: E731
 
 

@@ -15,21 +15,24 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 RUN=$1; CK=$2; TAG=$3; S=$4; MODE=${5:-run}; R=results/stage5f-$TAG; FAIL=0; MARK=$(mktemp)
 check() { if [ $1 -ne 0 ] || [ ! "$2" -nt "$MARK" ]; then echo "EVAL JOB FAILED: $2 (exit $1)"; FAIL=1; fi; }
+# PICKLEBOT_RESUME=1: keep a job's existing output (an interrupted evaluation of the same endpoint and seeds).
+skip() { [ "${PICKLEBOT_RESUME:-0}" = 1 ] && [ -s "$1" ] && { echo "kept $1"; return 0; }; return 1; }
 TV2=Picklebot-Latent-Court-V2-Res-G1; TC=Picklebot-Latent-Court-Res-G1; T5B=Picklebot-Latent-Drill3-Prior5-Res-G1
 E="bash scripts/stage2_eval.sh $RUN $CK"
 V="--task $TV2 --envs 1024 --seconds 90 --move-prob 0.0 --swing-prob 0.0 --target A --no-hint --rally"
-$E $V --planner noisy --grid 0 0 --seed $S --json $R-v2.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-v2.json
+skip $R-v2.json || { $E $V --planner noisy --grid 0 0 --seed $S --json $R-v2.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-v2.json; }
 if [ "$MODE" = full ]; then
-  $E $V --planner clean --grid 0 0 --seed $((S+1)) --json $R-v2-cleanspot.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-v2-cleanspot.json
-  $E $V --planner off --grid 0 0 --seed $((S+2)) --json $R-v2-nospot.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-v2-nospot.json
+  skip $R-v2-cleanspot.json || { $E $V --planner clean --grid 0 0 --seed $((S+1)) --json $R-v2-cleanspot.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-v2-cleanspot.json; }
+  skip $R-v2-nospot.json || { $E $V --planner off --grid 0 0 --seed $((S+2)) --json $R-v2-nospot.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-v2-nospot.json; }
 fi
-$E $V --planner noisy --seed $((S+3)) --json $R-d101.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-d101.json
+skip $R-d101.json || { $E $V --planner noisy --seed $((S+3)) --json $R-d101.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-d101.json; }
 W="--task $TV2 --envs 512 --seconds 40 --move-prob 0.0 --swing-prob 0.0 --target A --no-hint --rally --planner noisy"
-$E $W --grid 0 10 --seed $((S+4)) --json $R-v2-c10.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-v2-c10.json
-$E $W --grid 40 20 --seed $((S+4)) --json $R-v2-b40c20.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-v2-b40c20.json
+skip $R-v2-c10.json || { $E $W --grid 0 10 --seed $((S+4)) --json $R-v2-c10.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-v2-c10.json; }
+skip $R-v2-b40c20.json || { $E $W --grid 40 20 --seed $((S+4)) --json $R-v2-b40c20.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-v2-b40c20.json; }
 M="--task $TC --envs 2048 --seconds 24 --move-prob 1.0 --swing-prob 0.0 --families every --target A --no-hint"
-$E $M --grid 0 10 --seed $((S+5)) --json $R-move-c10.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-move-c10.json
-bash scripts/h5c_eval.sh $RUN $CK $TAG-5c $((S+10)) $TC $T5B || FAIL=1
+skip $R-move-c10.json || { $E $M --grid 0 10 --seed $((S+5)) --json $R-move-c10.json > /tmp/h5fc_$TAG.log 2>&1; check $? $R-move-c10.json; }
+# The "s5f-" prefix keeps earlier stages' results/stage5c-TAG-* files (e.g. Stage 5E run 0's run0-s5d01) from being overwritten.
+bash scripts/h5c_eval.sh $RUN $CK s5f-$TAG-5c $((S+10)) $TC $T5B || FAIL=1
 [ $FAIL -eq 0 ] || echo "WARNING: at least one evaluation job failed; the summary below may be incomplete"
 ~/envs/picklebot-mj/bin/python scripts/h5f_clean_summary.py $TAG --json $R-summary.json
 exit $FAIL
