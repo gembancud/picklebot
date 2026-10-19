@@ -181,3 +181,18 @@ Tracking success, per source:
 
 - **The training feed set trades off against the court drill.** PPO on drill v2 alone lifted drill v2 by 7.7 points and P(rally >= 10) from 7 % to 16 %. It cost 10.9 points of court main, because the court-wide feeds and start spots are no longer trained, and court falls rose by 1.1 points.
 - **2 kills in a row** (run 2 early, run 3 at the stage rules). The loop stops and asks the user.
+
+## Run 4 (D-116; review rounds 7 and 8), launched 2026-10-20 05:1x
+
+| # | Run | Change (written before launch) | From | Endpoint | Result |
+|---|---|---|---|---|---|
+| 4 | s5f-04-mix-court40 | Run 3's task with 40 % court-task feeds on drill v2 terms (`...-Clean-Mix-G1`, `court_feed_prob` 0.4) | s5d-01-rally/model_1800 | iteration 2600 (800 iterations), or the last checkpoint before the 7,000 s cap | |
+
+- **Early check at model_2100** (kill only): drill v2 more than 5 points below the parent; move arrival below 90 %; court main more than 5 points below the parent (added by D-116).
+- **Seeds:** 4211200-202 for the early check, 4211210-225 for the endpoint battery.
+- **Volley check** (round 8 correction b): the volley families' 0.0 legal is **not a rules artifact**. The start point contacts 0 % of forehand volleys and 2.7 % of backhand volleys (court battery, seeds 4210310+). It does not reach volley balls at all, so it is a skill gap.
+- **R2 tooling** (off the GPU while run 4 trains):
+  - return recording (post-contact pos, vel and spin of every legal return);
+  - mirrored replay feeds (rally phase);
+  - `scripts/h5f_ownball.sh` (sha256 a69334af...), committed before its first use;
+  - a mirror test.

@@ -263,3 +263,34 @@ def test_mirror_ball_states_is_a_half_turn():
     m = mirror_ball_states(st)
     assert torch.allclose(m, torch.tensor([[5.0, -1.2, 0.9, -7.0, 1.0, 3.0, -10.0, 20.0, 5.0]]))
     assert torch.allclose(mirror_ball_states(m), st)
+
+
+def test_pair_courts_one_ball_per_court_and_rally_counts():
+    """D-116 R4: a return crossing the net hands the ball to the partner; a miss ends the rally; the restart comes from
+    the feeder on alternating sides once both envs are idle; the initial reset is not counted as a rally."""
+    from picklebot_mj.pairs import PairCourts
+    pc = PairCourts(4, "cpu")  # courts (0, 2) and (1, 3)
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    pc.on_reset(torch.arange(4))
+    fires = []
+    for _ in range(30):  # restart delay 0.1 s at dt 0.01
+        fire, recv = pc.step(Z, Z, Z, Z, 0.01, 0.1)
+        if fire.any():
+            fires.append(fire.clone())
+    assert len(fires) == 1 and fires[0].sum() == 2  # one feeder ball per court
+    a, b = (2, 0) if fires[0][2] else (0, 2)  # court 0: the env that got the feeder ball, and its partner
+    assert pc.summary()["rallies"] == 0
+    # env a returns: the ball crosses -> partner b receives; a's return then lands legally
+    fire, recv = pc.step(Z, Z, Z, F(a), 0.01, 0.1)
+    assert bool(recv[b]) and not recv[a] and not fire.any()
+    pc.step(F(a), F(a), Z, Z, 0.01, 0.1)
+    # b returns too; then a misses b's ball -> rally of 2 legal shots ends
+    fire, recv = pc.step(Z, Z, Z, F(b), 0.01, 0.1)
+    assert bool(recv[a])
+    pc.step(F(b), F(b), Z, Z, 0.01, 0.1)
+    pc.step(F(a), Z, Z, Z, 0.01, 0.1)
+    s = pc.summary()
+    assert s["len_hist"][2] == 1 and s["sides"]["A"]["feeds"] + s["sides"]["B"]["feeds"] == 3
+    fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1)[0] for _ in range(30)) if f.any()]
+    assert len(fires) == 1 and bool(fires[0][b]) and not fires[0][a]  # the other side gets the next feeder ball

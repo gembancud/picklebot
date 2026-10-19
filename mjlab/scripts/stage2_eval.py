@@ -77,6 +77,8 @@ def main():
     ap.add_argument("--rally-n", type=int, default=10)
     ap.add_argument("--record-returns", default=None,
                     help="self-play readiness R2 (D-116): save the post-contact (pos, vel, spin) of every legal return")
+    ap.add_argument("--pairs", action="store_true",
+                    help="self-play readiness R4 (D-116): two-robot courts from mirrored env pairs")
     ap.add_argument("--replay-file", default=None,
                     help="self-play readiness R2 (D-116): every feed replays a recorded legal return, mirrored")
     ap.add_argument("--planner", choices=["task", "off", "clean", "noisy"], default="task",
@@ -163,6 +165,8 @@ def main():
         cfg.actions["ball"].record_returns = True
     if args.replay_file:
         cfg.actions["ball"].replay_file = args.replay_file
+    if args.pairs:
+        cfg.actions["ball"].pair_mode = True
     cfg.observations["actor"].enable_corruption = False
     groups = {"all": list(STAGE4_FAMILIES), "reach": list(REACH_FAMILIES), "every": list(FAMILY_NAMES),
               "drill5b": list(STAGE4_FAMILIES) + list(REACH_FAMILIES)}  # the Stage 5B drill (14 families)
@@ -356,6 +360,8 @@ def main():
         out["recorded_returns"] = {"file": args.record_returns, "n": int(rec.shape[0])}
     if args.replay_file:
         out["replay"] = {"file": args.replay_file, "states": int(term.replay.shape[0])}
+    if args.pairs:
+        out["pairs"] = term.pairs.summary()
     if args.json:
         json.dump(out, open(args.json, "w"), indent=1)
     if args.video:

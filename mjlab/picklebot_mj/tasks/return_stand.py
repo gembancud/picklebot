@@ -181,6 +181,9 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # feed. Replayed balls start in the rally phase (a return may be volleyed or taken after its bounce).
     record_returns: bool = False
     replay_file: str = ""
+    # Self-play readiness R4 (D-116): two-robot courts from mirrored env pairs (picklebot_mj/pairs.py). The feeder timer
+    # is replaced by the pair logic: a return crossing the net becomes the partner env's feed, mirrored.
+    pair_mode: bool = False
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -336,6 +339,11 @@ class BallPhysicsAction(ActionTerm):
         self.hit_out_spin = torch.zeros(n, 3, device=dev)
         self._recorded = [] if getattr(cfg, "record_returns", False) else None
         self.replay = None
+        self.pairs = None
+        self._handoff = torch.zeros(n, dtype=torch.bool, device=dev)
+        if getattr(cfg, "pair_mode", False):
+            from picklebot_mj.pairs import PairCourts
+            self.pairs = PairCourts(n, dev)
         if getattr(cfg, "replay_file", ""):
             self.replay = mirror_ball_states(torch.load(cfg.replay_file, map_location=dev).float())
             self.gen_replay = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 314159)
@@ -405,6 +413,15 @@ class BallPhysicsAction(ActionTerm):
             self.v2_rec[env_ids] = _const("rec_fixed", lambda: list(RECOVERY_FIXED), self.device)
             self.v2.last_ext[env_ids] = False
         self._feed(env_ids)
+        if self.pairs is not None:  # R4: a reset ends the court's rally; the env waits with no ball in play
+            fo = None
+            if self._env.common_step_counter > 0:
+                fo = fell_all & open_
+            self.pairs.on_reset(env_ids, fo)
+            mk = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+            mk[env_ids] = True
+            self.rules.lost(mk)
+            self.tallied |= mk
         if getattr(self, "lat_on", None) is not None:  # D-105: this episode's latency; the history starts at its ball
             c, k = self.cfg, len(env_ids)
             on = torch.rand(k, generator=self.gen_lat, device=self.device) < c.episode_latency_prob
@@ -537,7 +554,7 @@ class BallPhysicsAction(ActionTerm):
         self.hit_rec_true = torch.where(fire.unsqueeze(-1), self.hit_rec_true, true_old)
         self.stance_xy = torch.where(fire.unsqueeze(-1), self.stance_xy, stance_old)
         if getattr(self.cfg, "court_wide", False):
-            volley = self._is_volley[self.family] | (self.replay is not None)  # replayed returns: rally phase
+            volley = self._is_volley[self.family] | (self.replay is not None) | self._handoff  # rally phase
             self.rules.begin_from_feed_masked(fire & ~volley, FEEDER_PLAYER, must_bounce=True)
             self.rules.begin_from_feed_masked(fire & volley, FEEDER_PLAYER, must_bounce=False)
         else:
@@ -862,15 +879,32 @@ class BallPhysicsAction(ActionTerm):
                                         torch.where(over, torch.zeros_like(self.rally_streak), self.rally_streak))
         self._tally(over, torch.zeros_like(over))
         self.tallied = self.tallied | over
-        self.refeed_timer = torch.where(over, torch.full_like(self.refeed_timer, self.cfg.refeed_delay_s),
-                                        self.refeed_timer)
-        waiting = self.refeed_timer >= 0.0
-        self.refeed_timer = torch.where(waiting, self.refeed_timer - dt, self.refeed_timer)
-        fire = waiting & (self.refeed_timer <= 0.0)
+        recv = None
+        if self.pairs is not None:  # R4 (D-116): the pair logic replaces the feeder timer
+            fire, recv = self.pairs.step(over, self.return_done, torch.zeros_like(over), crossing, dt,
+                                         self.cfg.refeed_delay_s)
+            handed = mirror_ball_states(torch.cat([self.ball.pos, self.ball.vel, self.ball.spin], -1))[self.pairs.partner]
+            early = recv & ~self.tallied  # a return the partner volleyed before it landed: in play, so legal
+            self.return_done |= early
+            self._tally(early, torch.zeros_like(recv))
+            self.tallied |= early
+            self._handoff = recv
+            fire = fire | recv
+        else:
+            self.refeed_timer = torch.where(over, torch.full_like(self.refeed_timer, self.cfg.refeed_delay_s),
+                                            self.refeed_timer)
+            waiting = self.refeed_timer >= 0.0
+            self.refeed_timer = torch.where(waiting, self.refeed_timer - dt, self.refeed_timer)
+            fire = waiting & (self.refeed_timer <= 0.0)
         if self.ready is not None:  # D-115: pelvis history, then the launch of this step's refeeds
             self.ready.step(data.root_link_pos_w[:, 2])
             self.ready.launch(fire, data.body_link_pos_w[:, self.ready.foot_ids] - origins.unsqueeze(1))
         self._refeed(fire)
+        if recv is not None:  # the received envs' feed is the partner's ball, mirrored
+            m = recv.unsqueeze(-1)
+            self.ball = BallState(torch.where(m, handed[:, :3], self.ball.pos), torch.where(m, handed[:, 3:6], self.ball.vel),
+                                  torch.where(m, handed[:, 6:9], self.ball.spin))
+            self._handoff = torch.zeros_like(recv)
         if self.shadow is not None:
             self.shadow.after_refeed(fire)
         if self.drill is not None:
