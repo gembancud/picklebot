@@ -1468,3 +1468,26 @@ def _tracking_tennis_lafan2_delay(play=False):
 register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN2_HUGE_DELAY, env_cfg=_tracking_tennis_lafan2_delay(),
                     play_env_cfg=_tracking_tennis_lafan2_delay(True), rl_cfg=_tracking_huge_rl_cfg(),
                     runner_cls=MotionTrackingOnPolicyRunner)
+
+
+# Stage 5F executor history (D-108 build; D-109 items 4-5). The actor gets the last EXEC_HISTORY control steps of what
+# it issued and saw: its own actions, joint positions and velocities, and its ball estimates (mjlab term history; after a
+# reset the history is back-filled with the first frame). The critic gets the same, plus the applied-minus-issued joint
+# commands and the episode's lags. All new terms come last, so a parent checkpoint expands with zero-weight inputs
+# (scripts/expand_checkpoint.py). Only for own-history latency tasks: mjlab's per-term delay buffers would draw a separate
+# lag for each copied term.
+from picklebot_mj.tasks.latent_reach import applied_cmd_obs, latency_obs  # noqa: E402
+
+EXEC_HISTORY = 4
+HISTORY_TERMS = ("actions", "joint_pos", "joint_vel", "ball_pos", "ball_vel")
+
+
+def _exec_history(cfg, k: int = EXEC_HISTORY):
+    for group in ("actor", "critic"):
+        terms = cfg.observations[group].terms
+        for name in HISTORY_TERMS:
+            assert terms[name].delay_max_lag == 0, "history copies need own-history latency, not per-term delay buffers"
+            terms[f"h_{name}"] = _dc.replace(terms[name], history_length=k)
+    cfg.observations["critic"].terms["applied_cmd"] = _ObsTerm(func=applied_cmd_obs)
+    cfg.observations["critic"].terms["latency"] = _ObsTerm(func=latency_obs)
+    return cfg

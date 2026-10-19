@@ -17,6 +17,7 @@ episode.
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import dataclass, field
 
 import torch
@@ -68,7 +69,10 @@ class LatentJointPositionAction(JointPositionAction):
         self.dec = torch.zeros(self.num_envs, self.n_joint, device=self.device)  # decoder's last raw output
         self.wrist = torch.tensor([self._target_names.index(j) for j in RIGHT_WRIST], device=self.device)
         self.model = LatentController(latent=cfg.latent).to(self.device)
-        self.model.load_state_dict(torch.load(cfg.checkpoint, map_location=self.device, weights_only=False)["model"])
+        # Stage 5F (D-109 item 7): PICKLEBOT_CONTROLLER swaps the frozen H1 controller for evaluation only (the zero-shot
+        # compatibility check of a re-distilled decoder); training tasks never set it.
+        self.controller_path = os.environ.get("PICKLEBOT_CONTROLLER") or cfg.checkpoint
+        self.model.load_state_dict(torch.load(self.controller_path, map_location=self.device, weights_only=False)["model"])
         self.model.eval()
         for p in self.model.parameters():
             p.requires_grad_(False)
@@ -109,6 +113,7 @@ class LatentJointPositionAction(JointPositionAction):
             self._ball_term = ball
         lag = getattr(ball, "cmd_lag", None) if ball else None
         if lag is None:
+            self.applied_delta = None
             return super().apply_actions()
         cur = self._processed_actions
         if getattr(self, "_cmd_hist", None) is None:
@@ -121,10 +126,29 @@ class LatentJointPositionAction(JointPositionAction):
         self._cmd_fresh = torch.zeros_like(self._cmd_fresh)
         self._cmd_hist = torch.cat([cur.unsqueeze(0), hist[:-1]], 0)
         self._processed_actions = self._cmd_hist[lag, self._cmd_ar]
+        self.applied_delta = self._processed_actions - cur  # Stage 5F: what the delay changed (critic only)
         try:
             super().apply_actions()
         finally:
             self._processed_actions = cur
+
+
+def applied_cmd_obs(env, action_name: str = "latent") -> torch.Tensor:
+    """Stage 5F (D-109 item 4), critic only: the joint targets applied this physics step minus the ones issued now
+    (zero without a command delay). The actor sees only what it issued (its last actions and their history)."""
+    t = env.action_manager.get_term(action_name)
+    d = getattr(t, "applied_delta", None)
+    return torch.zeros(env.num_envs, t.n_joint, device=env.device) if d is None else d
+
+
+def latency_obs(env) -> torch.Tensor:
+    """Stage 5F, critic only: this episode's ball-observation lag and command lag, each as a fraction of its maximum."""
+    b = env.action_manager.get_term("ball")
+    if getattr(b, "lat_on", None) is None:
+        return torch.zeros(env.num_envs, 2, device=env.device)
+    c = b.cfg
+    return torch.stack([b.obs_lag.float() / max(1, int(c.episode_obs_lag[1])),
+                        b.cmd_lag.float() / max(1, int(c.episode_cmd_lag[1]))], -1)
 
 
 def _yaw_frame(quat):

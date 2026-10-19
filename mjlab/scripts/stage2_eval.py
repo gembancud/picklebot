@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 from dataclasses import asdict
 
 import torch
@@ -238,7 +239,7 @@ def main():
     hits, rets, falls = int(term.ep["contact"]), int(term.ep["legal_return"]), int(term.ep["fall"])
     endings = {Fault(i).name: int(c) for i, c in enumerate(term.fault_counts.tolist()) if c}
     out = {
-        "checkpoint": args.checkpoint, "seed": args.seed, "envs": args.envs, "sim_seconds": args.seconds,
+        "checkpoint": args.checkpoint, "controller": os.environ.get("PICKLEBOT_CONTROLLER") or "task default", "seed": args.seed, "envs": args.envs, "sim_seconds": args.seconds,
         "episodes": episodes,
         "contact_rate": round(hits / max(episodes, 1), 4), "contact_ci95": wilson(hits, episodes),
         "legal_return_rate": round(rets / max(episodes, 1), 4), "legal_return_ci95": wilson(rets, episodes),

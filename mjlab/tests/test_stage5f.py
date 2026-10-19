@@ -133,3 +133,24 @@ def test_delayed_joint_action_per_episode_lag():
         obs = env.observation_manager.compute()
     assert obs["critic"].shape[1] == obs["critic"].shape[1]  # the critic group builds with the trailing cmd_lag term
     env.close()
+
+
+def test_executor_history_config():
+    """D-108/D-109: history terms come last in both groups (zero-weight expansion); the applied commands and the lags
+    go to the critic only; tasks with mjlab per-term delays are refused."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+    from picklebot_mj.tasks import EXEC_HISTORY, HISTORY_TERMS, _exec_history
+    cfg = load_env_cfg("Picklebot-Latent-Court-V2-Res-PPO-Comp-G1")
+    before = {g: list(cfg.observations[g].terms) for g in ("actor", "critic")}
+    _exec_history(cfg)
+    for g in ("actor", "critic"):
+        names = list(cfg.observations[g].terms)
+        assert names[:len(before[g])] == before[g]  # old inputs keep their columns
+        for n in HISTORY_TERMS:
+            assert cfg.observations[g].terms[f"h_{n}"].history_length == EXEC_HISTORY
+            assert cfg.observations[g].terms[n].history_length == 0
+    assert "applied_cmd" in cfg.observations["critic"].terms and "latency" in cfg.observations["critic"].terms
+    assert "applied_cmd" not in cfg.observations["actor"].terms and "latency" not in cfg.observations["actor"].terms
+    with pytest.raises(AssertionError):
+        _exec_history(load_env_cfg("Picklebot-Latent-Court-V2-Res-G1"))  # mjlab per-term ball delay

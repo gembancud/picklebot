@@ -38,6 +38,39 @@ Tracking success by source (paired, same seed):
 - **Reading:** H0 and latent-07 lose almost exactly the same amount. H1's delay fragility is inherited from its teacher, so the H0 fine-tune has to come first. A decoder trained to imitate a delay-fragile H0 could not become robust.
 - **100STYLE windows stay at 100 % under delay.** The slow walking clips are not the problem.
 
+### Executor-driven move drill, walking teacher and drill v2 under delay (`scripts/h5f_step0.sh` D-F; seeds 4210002-4210004)
+
+Move drill (Stage 5D run 1, model_1800; executor drives latent-07). Arrival per direction (9 sectors) and robot falls per episode:
+
+| Policy | Command delay | Arrival, lowest sector | Arrival, highest sector | Falls / episode |
+|---|---|---|---|---|
+| s5d-01 executor | 0 ms | 99.6 % | 99.95 % | 0.07 % |
+| s5d-01 executor | 10 ms | 99.0 % | 99.95 % | 0.78 % |
+| s5d-01 executor | 20 ms | **0.0 %** | 10.3 % | **58.6 %** |
+| walking teacher (teacher-move-01/model_15900) | 0 ms | 99.2 % | 100 % | 0 % |
+| walking teacher | 20 ms | 99.3 % | 100 % | 3.7 % |
+
+- **H1 trigger (b): fired.** At 20 ms the executor-driven move drill is far below 90 % arrival in every direction and falls far above 1 %. Trigger (a) had already fired.
+- **Walking-teacher trigger: not fired.** Its trigger is arrival below 90 % at 20 ms, and arrival stays at 99 % or more. Its falls rise to 3.7 % per episode. This is recorded, not acted on: the trigger was frozen on arrival only (D-111), and the walking teacher is not in the Stage 5F stack unless a later step uses it.
+- **There is a cliff between 10 and 20 ms.** At 10 ms the executor stack keeps arrival at 99 % or more; at 20 ms it almost always falls. The tracking loss at 20 ms is only about 8 points per source, so the collapse comes from the executor plus controller loop, not from tracking alone.
+
+Drill v2 (Stage 5D run 1), ball delay / command delay:
+
+| Ball / command delay | Per-shot p | Neutral | Moderate | Extreme | P(rally >= 10) |
+|---|---|---|---|---|---|
+| 0 / 0 ms | 0.741 [0.736, 0.746] | 0.806 | 0.649 | 0.613 | 6.1 % |
+| 0 / 20 ms | 0.149 | 0.184 | 0.110 | 0.066 | 0.0 % |
+| 40 / 0 ms | 0.414 [0.408, 0.420] | 0.445 | 0.355 | 0.384 | 0.03 % |
+| 40 / 20 ms | 0.067 [0.064, 0.070] | 0.077 | 0.055 | 0.045 | 0.0 % |
+
+- **Both delays hurt, and command delay hurts more.** A 20 ms command delay alone costs 59 points of per-shot p; a 40 ms ball delay alone (no prediction) costs 33 points; together they leave 0.067. Ball prediction already removes the ball error in offline tests (above), so command delay is the main open problem.
+- The drill v2 "falls per episode" field reads about 1.0 in both cells, because a drill v2 episode runs until the robot falls or the episode times out. Falls are gated on the court battery, not on this field.
+
+### Design checks (step 0)
+
+- **Compensator speed** (`scripts/diag/bench_compensator.py`, seed 4210011): 3.45 ms per control step at 12,288 envs (8 substeps, half the envs clean), measured while run C1 trained on the same GPU. That is small next to an environment step, so the compensator stays per-step.
+- **4 vs 8 history steps** (`scripts/diag/history_probe.py`, seed 4210012; rule written before the run): Stage 5D run 1 on the training-latency task, one lag pair per episode. A ridge probe reads the episode's command lag and ball lag from a K-step window of what the actor would see (issued actions, joint positions and velocities, ball estimate), trained on 70 % of the envs and scored on the rest. **Rule:** take the smallest K in {1, 2, 4, 8} within 1 point of K = 8 for both lags; adopt 4 (the D-108 default) unless 4 misses that bar, then 8. Result: pending (runs after C1, to keep C1's GPU time clean).
+
 ## Runs
 
 | # | Run | Change (written before launch) | From | Endpoint | Result |

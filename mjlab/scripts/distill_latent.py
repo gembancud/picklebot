@@ -59,6 +59,9 @@ def main():
                          "teacher (H2 follow-up 1; makes prior-only control a usable default)")
     ap.add_argument("--max-seconds", type=float, default=6900.0)
     ap.add_argument("--save-every", type=int, default=100)
+    ap.add_argument("--decoder-only", action="store_true",
+                    help="Stage 5F H1 re-distillation (D-109 item 6): train the decoder alone; the input normaliser, "
+                         "encoder and prior stay frozen (no running-norm updates, no KL term, a fresh optimiser)")
     args = ap.parse_args()
     assert args.seed in seeds.TRAIN_SEEDS, "training must use training seeds"
     os.makedirs(args.out, exist_ok=True)
@@ -73,11 +76,15 @@ def main():
     teacher = runner.get_inference_policy(device="cuda")
 
     model = LatentController().cuda()
-    opt = torch.optim.Adam(model.parameters(), lr=args.lr)
+    if args.decoder_only:
+        assert args.init, "--decoder-only fine-tunes an existing latent controller (--init)"
+        for p in (*model.norm.parameters(), *model.encoder.parameters(), *model.prior.parameters()):
+            p.requires_grad_(False)
+    opt = torch.optim.Adam(model.decoder.parameters() if args.decoder_only else model.parameters(), lr=args.lr)
     if args.init:
         ck = torch.load(args.init, map_location="cuda", weights_only=False)
         model.load_state_dict(ck["model"])
-        if "opt" in ck:
+        if "opt" in ck and not args.decoder_only:
             opt.load_state_dict(ck["opt"])
     obs = venv.get_observations()
     prior_envs = torch.rand(args.envs, device="cuda") < args.prior_rollout_frac
@@ -92,7 +99,8 @@ def main():
         with torch.no_grad():
             for _ in range(STEPS):
                 x = obs["actor"]
-                model.norm.update(x)
+                if not args.decoder_only:
+                    model.norm.update(x)
                 a_t = teacher(obs)
                 a_s = model(x, sample=True)
                 if args.prior_rollout_frac > 0:
@@ -130,7 +138,7 @@ def main():
                         smooth = ((a_now - a_prev) ** 2).mean()
                     else:
                         smooth = torch.zeros((), device="cuda")
-                    loss = mse + args.smooth * smooth + kl_w * kl
+                    loss = mse + args.smooth * smooth + (0.0 if args.decoder_only else kl_w) * kl
                     if args.prior_bc > 0:
                         prior_mse = ((model.decode(o, mu_p) - y) ** 2).mean()
                         loss = loss + args.prior_bc * prior_mse
