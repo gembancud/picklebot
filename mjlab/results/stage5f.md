@@ -141,9 +141,17 @@ Tracking success, per source:
 
 | # | Run | Change (written before launch) | From | Endpoint | Result |
 |---|---|---|---|---|---|
-| 2 | s5f-02-v2-clean | Plain PPO on drill v2 in the clean simulator (ball noise on, no delay; `Picklebot-Latent-Court-V2-Res-PPO-Clean-G1`), Stage 5E PPO settings (gamma 0.995, 50-update critic warm-up), 12,288 envs, training seed 73 | s5d-01-rally/model_1800 | iteration 2800, or the last checkpoint before the 7,000 s cap | |
+| 2 | s5f-02-v2-clean | Plain PPO on drill v2 in the clean simulator (ball noise on, no delay; `Picklebot-Latent-Court-V2-Res-PPO-Clean-G1`), Stage 5E PPO settings (gamma 0.995, 50-update critic warm-up), 12,288 envs, training seed 73 | s5d-01-rally/model_1800 | iteration 2800, or the last checkpoint before the 7,000 s cap | **Killed at the early check (D-114)**: drill v2 p 0.723 -> 0.529 at model_2100 (-19.4 points; margin -5); move arrival 95.9 %. Cause: the critic warm-up raised the learning rate to 1e-2. |
 
 - **Early kill at model_2100:**
   - drill v2 at 0/0, 256 envs, 30 s, seed 4211000: killed if more than 5 points below the parent on the same protocol;
   - move drill clean, seed 4211001: killed if arrival is below 90 %.
 - **Endpoint:** `h5f_clean_eval.sh`, seeds 4211010-4211025.
+| 3 | s5f-03-v2-clean-hold | Run 2 with the critic warm-up fixed (D-114): the learning rate is held during the 50 frozen-actor updates (`CriticWarmupHoldLrRunner`); nothing else changes (training seed 73) | s5d-01-rally/model_1800 | iteration 2800, or the last checkpoint before the 7,000 s cap | |
+
+- **Run 2 diagnosis (D-114):**
+  - The adaptive schedule raised the learning rate 1.5x per warm-up update while the actor was frozen, from about 1e-4 to the 1e-2 cap.
+  - The first actor update at 1e-2 collapsed legal-return reward per episode from 0.67 to 0.13 within 100 iterations. The schedule then fell to 1e-5, and the policy was recovering when the early check fired.
+  - Stage 5E runs 2-4 used the same warm-up.
+- **Smoke test of the fix** (`smoke-s5f03-holdlr`): the rate is held at 1.14e-4 through the warm-up, then adapts as usual.
+- **Run 3 seeds:** early kill 4211100-101; endpoint 4211110-125.

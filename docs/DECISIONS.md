@@ -3187,3 +3187,24 @@ The early kill moves from cell 40 / 20 to cell 0 / 0: drill v2, 256 envs, 30 s, 
 - the old instrument keeps being reported.
 
 D-110 (the style-relaxation rule) is unchanged.
+
+## D-114 - Stage 5F run 2 killed; the critic warm-up raised the learning rate; run 3 fixes only that (2026-10-20)
+
+**Run 2** (`s5f-02-v2-clean`, plain clean drill v2 PPO from Stage 5D run 1) was killed by its pre-registered early check at `model_2100`: drill v2 p 0.723 -> 0.529 on the early protocol (-19.4 points; margin -5). Move arrival was 95.9 % (pass). It counts as a kill: run 2 of 15, kill 1 of the "2 in a row" rule.
+
+**Cause, found in its logs** (TensorBoard `Loss/learning_rate`, episode rewards):
+- `CriticWarmupRunner` (D-102) freezes the actor for 50 updates. Its comment said the adaptive schedule "ignores" the zero KL, so the learning rate would not drift. **That was wrong.** The frozen actor's KL is tiny but above zero (`kl_mean > 0`). rsl_rl therefore multiplied the learning rate by 1.5 on every warm-up update, up to its 1e-2 cap.
+- The first actor update then ran at 1e-2:
+  - legal-return reward per episode fell from 0.67 (iteration 1851) to 0.13 (1951);
+  - the schedule then dropped to 1e-5;
+  - the policy was recovering (0.53 at 2148) when the early check stopped it.
+- **Stage 5E runs 2-4 used the same runner**, so they probably had the same first-update shock. Their records are not relabelled; this note is the correction of D-102's comment.
+
+**Fix.** `CriticWarmupHoldLrRunner` holds the learning rate during the warm-up, restoring it after each frozen update. A smoke test (`smoke-s5f03-holdlr`, 1,024 envs, 20 warm-up updates, training seed 74) showed the rate fixed at the checkpoint's 1.14e-4 through the warm-up, then adapted as usual. The old runner is unchanged, so earlier tasks stay reproducible.
+
+**Run 3** (`s5f-03-v2-clean-hold`, task `Picklebot-Latent-Court-V2-Res-PPO-Clean-Hold-G1`) is run 2 with only the warm-up fixed:
+- same environment, settings, start checkpoint and training seed (73);
+- endpoint iteration 2800, or the last checkpoint before the 7,000 s cap;
+- early kill and endpoint battery as run 2, on run 3's seeds (4211100-4211125).
+
+If run 3 is also killed, that is 2 kills in a row: the loop stops and asks the user.

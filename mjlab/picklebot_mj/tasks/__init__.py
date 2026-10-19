@@ -1317,6 +1317,10 @@ def _s5e_rl_cfg():
 
 
 class CriticWarmupRunner(_MjlabRunner):
+    # D-114: Stage 5F run 3 onward hold the learning rate during the warm-up (CriticWarmupHoldLrRunner). Off here, so
+    # the Stage 5E and Stage 5F run 2 tasks keep the behaviour they were trained with (their records stay reproducible).
+    hold_lr = False
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.critic_warmup = int(os.environ.get("PICKLEBOT_CRITIC_WARMUP", CRITIC_WARMUP_ITERS))
@@ -1325,6 +1329,7 @@ class CriticWarmupRunner(_MjlabRunner):
 
         def warm_update(*a, **k):
             frozen = self._warm_updates < self.critic_warmup
+            lr0 = self.alg.learning_rate
             if frozen:
                 for p in self.alg.actor.parameters():
                     p.requires_grad_(False)
@@ -1334,6 +1339,12 @@ class CriticWarmupRunner(_MjlabRunner):
                 if frozen:
                     for p in self.alg.actor.parameters():
                         p.requires_grad_(True)
+                    if self.hold_lr:  # D-114: the frozen actor's tiny KL (> 0) made the adaptive schedule grow the
+                        # learning rate x1.5 per warm-up update (1e-3 -> the 1e-2 cap); the first real update then
+                        # ran at 1e-2. Hold the learning rate fixed until the warm-up ends.
+                        self.alg.learning_rate = lr0
+                        for g in self.alg.optimizer.param_groups:
+                            g["lr"] = lr0
                 self._warm_updates += 1
 
         self.alg.update = warm_update
@@ -1505,3 +1516,16 @@ def _latent_court_v2_res_clean(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN, env_cfg=_latent_court_v2_res_clean(),
                     runner_cls=CriticWarmupRunner, play_env_cfg=_latent_court_v2_res_clean(True), rl_cfg=_s5e_rl_cfg())
+
+
+# Stage 5F run 3 (D-114): run 2 with the critic warm-up fixed. Run 2's warm-up let the adaptive schedule raise the
+# learning rate 1e-3 -> 1e-2 while the actor was frozen; the first actor update at 1e-2 collapsed legal returns
+# (0.67 -> 0.13 per episode in 100 iterations) and the early check killed the run. Only the warm-up changes.
+class CriticWarmupHoldLrRunner(CriticWarmupRunner):
+    hold_lr = True
+
+
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_HOLD = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Hold-G1"
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_HOLD, env_cfg=_latent_court_v2_res_clean(),
+                    runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean(True),
+                    rl_cfg=_s5e_rl_cfg())
