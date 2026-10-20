@@ -52,6 +52,7 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
 | E1 | s5g-e1-timed | Timed command and rewards (`Picklebot-Latent-TimedReach-G1`): swing guide, plus a one-shot contact reward at t* (weight 5 per goal); 4,096 envs; training seed 74 | reach-06/model_34700, widened | iteration 39,700 (5,000 more), or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200):** median paddle error 0.53 m (> 0.25), falls 1.0 % (pass). Cause: the reward design (see below). |
 | E2 | s5g-e2-timed-v2 | One paddle-reward redesign (D-119): reach-06 paddle_track to p* while the goal is open, no swing guide, linear contact velocity factor; plus the two timed_reach fixes (reset, timing grid) | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200): falls 5.12 % (40 / 781 episodes; line 5 %).** Median paddle error **0.01 m**, p90 0.08 m (pass); speed error 96 %; timing within 50 ms 21.7 %; root within 0.25 m 59 %. |
 | E3 | s5g-e3-timed-v3 | The contact reward's speed floor removed: fv = clamp(1 - |dv|/|v*|, 0, 1) (D-121); nothing else | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | **Gate: 3 of 6 met** (endpoint model_39699, seed 4216110). Paddle error median 0.03 m (<= 0.08) and p90 0.10 m (<= 0.20); speed error median **4 %** (<= 20 %); timing within 50 ms 44.5 % (needs 80 %); falls 2.48 % (needs 2 %); root within 0.25 m 64.9 % (needs 90 %). Not a kill (early check passed). |
+| E4 | s5g-e4-root16 | D-118's one extension (D-122): root_progress max_speed 1.0 -> 1.6 m/s; nothing else | E3 endpoint (model_39699) | iteration 44,699, or the last checkpoint before the 7,000 s cap | |
 
 - **E1 early kill (D-118)** at model_36200 (seed 4216101, 256 envs): falls above 5 %, or a median paddle error above 0.25 m.
   - **The parent fails both today** (15.2 %, 0.32 m), so E1 must improve on both by 30 % of the run.
@@ -170,3 +171,25 @@ The timed controller with no ball training. Goals come from the noisy spin-blind
 
 - **Weakest families:** reach_deep 3 % legal, topspin 7 %, cross_forehand 8 %, fast 9 %.
 - **Speed tooling:** the eager contact rollout made in-environment planning CPU-bound (more than 47 min for 30 s of 256 envs). `planner.predict_contact_fast` is a padded, compiled version, equal to the eager one (`test_predict_contact_fast_matches_eager`). The adapter now uses it, and this smoke test took about 10 minutes.
+
+### D-122 timing correction and E3 re-evaluation (seed 4216111; 1,024 envs; 30 s; metric frozen at timed_reach.py sha256 ce144dd2...)
+
+| Policy | Timing within 50 ms, corrected (window [t* - 0.25, t* + 0.10]) | Timing, old whole-window metric | Paddle median / p90 | Speed error | Root within 0.25 m | Falls |
+|---|---|---|---|---|---|---|
+| E3 (model_39699) | **0.757** (gate 0.80) | 0.438 | 0.03 / 0.10 m | 0.06 | 0.652 | 2.60 % |
+| E2 (model_36200, a parker): falsification | **0.309, fails** as it must | 0.226 | 0.01 / 0.08 m | 0.96 | 0.600 | 5.41 % |
+
+**Root within 0.25 m at t*, by the speed the goal requires** (|root_rel| / t*):
+
+| Required speed (m/s) | E3 goals | E3 hit rate | E2 hit rate |
+|---|---|---|---|
+| 0.0-0.5 | 3,224 | 0.995 | 0.987 |
+| 0.5-1.0 | 3,407 | 0.832 | 0.834 |
+| 1.0-1.5 | 5,686 | 0.631 | 0.539 |
+| 1.5-2.0 | 2,693 | 0.199 | 0.103 |
+| 2.0-3.0 | 574 | 0.000 | 0.000 |
+
+- **The old metric under-read E3's timing by 32 points.** On the corrected metric E3 is at 75.7 %, close to the bar. The falsification passes: a parker still fails.
+- **Root misses cluster where the goal needs more than 1 m/s,** which is root_progress's cap. By D-122's rule, E4 raises the cap to 1.6 m/s.
+- **E4 pre-launch check** (`test_e4_root_speed_cap_ranks_arriving_on_time_first`, passing): over a median goal, walking at the required speed then swinging > a slow walk and a lunge > walking with no swing. The A - B margin grows from cap 1.0 to 1.6.
+- **E4 early kill** at model_41200 (seed 4216301): falls > 3 %, paddle p90 > 0.20 m, or speed error > 20 %. Endpoint seed 4216310.

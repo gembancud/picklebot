@@ -1652,3 +1652,20 @@ def _latent_timed_ball(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_TIMED_BALL, env_cfg=_latent_timed_ball(), play_env_cfg=_latent_timed_ball(True),
                     rl_cfg=_latent_reach_rl_cfg())
+
+
+# Stage 5G E4 (D-122, panel round 12): D-118's one extension. E3's task with root_progress capped at 1.6 m/s instead
+# of 1.0: E3's root misses cluster on goals that need more than 1 m/s (re-evaluation, seed 4216111).
+TASK_LATENT_TIMED_REACH_V4 = "Picklebot-Latent-TimedReach-V4-G1"
+ROOT_PROGRESS_MAX_SPEED = 1.6
+
+
+def _latent_timed_reach_v4(play=False):
+    cfg = _latent_timed_reach_v3(play)
+    cfg.rewards["root_progress"].params = {**(cfg.rewards["root_progress"].params or {}),
+                                           "max_speed": ROOT_PROGRESS_MAX_SPEED}
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_TIMED_REACH_V4, env_cfg=_latent_timed_reach_v4(),
+                    play_env_cfg=_latent_timed_reach_v4(True), rl_cfg=_latent_reach_rl_cfg())

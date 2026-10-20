@@ -421,3 +421,37 @@ def test_d122_timing_window_scores_the_strike_not_the_follow_through():
     old = (cmd.t_min - cmd.t_contact).abs()
     assert dtw[0] <= 0.05 and dtw[1] > 0.05 and dtw[2] <= 0.05
     assert old[2] > 0.05  # the old metric scored env 2's follow-through
+
+
+def test_e4_root_speed_cap_ranks_arriving_on_time_first():
+    """D-122 pre-launch (E4): over one median goal (1.6 m walk, t* = 1.3 s), with root_progress capped at max_speed
+    and the contact reward of E3 (linear0), score three scripted behaviours:
+      A: walk at the required 1.23 m/s, arrive at t*, swing (paddle on p*, at speed);
+      B: walk at 1.0 m/s, 0.3 m short at t*, lunge (paddle 0.10 m off p*, at speed);
+      C: walk at the required speed, no swing (parked at p*).
+    Pass: A > B > C under the new cap (1.6), and the A - B margin grows from cap 1.0 to 1.6."""
+    import math
+    from picklebot_mj.tasks.timed_reach import contact_factors
+    T, walk, v_req = 1.3, 1.6, 1.6 / 1.3
+    v = torch.tensor([7.1])
+    one = torch.ones(1)
+
+    def contact(dp, speed):
+        kp, fv, fa = contact_factors(torch.tensor([dp]), v - speed, v, one, "linear0")
+        return 5.0 * float((kp * fv * fa)[0])
+
+    def progress(speed, cap):  # root_progress weight 1, per second while walking (dist > 0.05 m)
+        return min(speed, cap) * T
+
+    def root_track(short):  # root_track std 1.0, weight 1, crudely: the distance falls linearly to `short`
+        return sum(math.exp(-((walk - (walk - short) * k / 50)) ** 2) for k in range(51)) / 51 * T
+
+    def score(cap):
+        a = progress(v_req, cap) + root_track(0.0) + contact(0.0, 7.1)
+        b = progress(1.0, cap) + root_track(0.3) + contact(0.10, 7.1)
+        c = progress(v_req, cap) + root_track(0.0) + contact(0.0, 0.0)
+        return a, b, c
+    a1, b1, _ = score(1.0)
+    a6, b6, c6 = score(1.6)
+    assert a6 > b6 > c6, (a6, b6, c6)
+    assert (a6 - b6) > (a1 - b1)
