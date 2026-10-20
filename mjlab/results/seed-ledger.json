@@ -148,6 +148,22 @@
    ],
    "purpose": "readiness R4 pairs (s5d01 I=0, run 4 I=2)",
    "date": "2026-10-20"
+  },
+  {
+   "seeds": [
+    4216000,
+    4216002
+   ],
+   "purpose": "stage 5G planner unit tests (impulse inversion, keep-alive aim, contact vs simulation)",
+   "date": "2026-10-20"
+  },
+  {
+   "seeds": [
+    4216003,
+    4216003
+   ],
+   "purpose": "stage 5G goal bank: own-ball returns recorded from run 4 endpoint (court rally protocol, 1024 envs, 60 s)",
+   "date": "2026-10-20"
   }
  ],
  "retired": {
@@ -175,5 +191,20 @@
    4215999
   ],
   "rule": "D-116: fixed endpoints only, read once per run, never for checkpoint selection"
+ },
+ "allocation_stage5g": {
+  "step0_tests_and_bank": [
+   4216000,
+   4216099
+  ],
+  "e_runs_100_per_run": [
+   4216100,
+   4216699
+  ],
+  "spare": [
+   4216700,
+   4216999
+  ],
+  "rule": "D-118: goal bank and stage 5G runs; readiness seeds 4215000+ never shape training goals"
  }
 }

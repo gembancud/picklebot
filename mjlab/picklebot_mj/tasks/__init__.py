@@ -1572,3 +1572,27 @@ def _latent_court_v2_res_clean_mix(play=False):
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX, env_cfg=_latent_court_v2_res_clean_mix(),
                     runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean_mix(True),
                     rl_cfg=_s5e_rl_cfg())
+
+
+# Stage 5G E1 (D-118): the timed reach controller. reach-06's task (Picklebot-Latent-Reach-E2-G1: latent-07, lambda
+# 1.0, wide root reward, root progress, latent L2) with the timed command (picklebot_mj/tasks/timed_reach.py, goals from
+# the Stage 5G goal bank) and the dense paddle reward replaced by the swing guide plus the one-shot contact reward.
+from picklebot_mj.tasks.timed_reach import TimedReachCommandCfg, swing_guide, timed_contact  # noqa: E402
+
+TASK_LATENT_TIMED_REACH = "Picklebot-Latent-TimedReach-G1"
+GOAL_BANK = str(Path(__file__).resolve().parents[2] / "artifacts" / "goal_bank" / "bank-s5g-01.pt")
+CONTACT_WEIGHT = 5.0  # per goal at a perfect contact (one-shot, / step_dt)
+
+
+def _latent_timed_reach(play=False):
+    cfg = _latent_reach_e2(play)
+    cfg.commands = {"reach": TimedReachCommandCfg(bank=os.environ.get("PICKLEBOT_GOAL_BANK", GOAL_BANK))}
+    step_dt = cfg.sim.mujoco.timestep * cfg.decimation
+    cfg.rewards.pop("paddle")
+    cfg.rewards["swing_guide"] = RewardTermCfg(func=swing_guide, weight=2.0)
+    cfg.rewards["timed_contact"] = RewardTermCfg(func=timed_contact, weight=CONTACT_WEIGHT / step_dt)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_TIMED_REACH, env_cfg=_latent_timed_reach(),
+                    play_env_cfg=_latent_timed_reach(True), rl_cfg=_latent_reach_rl_cfg())
