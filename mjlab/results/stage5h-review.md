@@ -44,3 +44,45 @@ Brief: Stage 5G has used 6 of 6 runs.
    - a qualifying video exists;
    - the route needs runs over 2 h, a bigger controller or a new prior;
    - Stage 5H ends without a credible route: own-ball legal not doubled by run 2 (experiment design), or P(4+) under 1 % at the end (RL, motion, architecture).
+
+# Round 18: run 1 at its endpoint; run 2 (2026-10-21)
+
+Brief: run 1 is not a kill.
+- R1 is met: drill v2 0.846, and every stage rule passes.
+- R2 (development seeds) is 10.0 % [9.5, 10.4], and R4 P(4+) is 0.0004.
+- The keep-alive box share went 7.3 % -> 10.7 %, with ball speed still 11.2 m/s.
+
+## Correction check (5 of 5: the implementation is right)
+
+- **The keep-alive term is too weak:** about 0.15 x 2.0 = 0.3 per legal landing, against 5.0 for a legal return (coach, motion, architecture). It is also sparse (RL, experiment design). A dense version adds nothing (architecture).
+- **Read errors:**
+  - the 7.3 -> 10.7 % box share mixes protocols (court early check against the R2 recording; RL), and the early pass sat within overlapping intervals (experiment design);
+  - run 4's R2 was read on readiness seeds and run 1's on development seeds, so they are not a clean comparison (experiment design);
+  - `stage5h-01-r2-returns.pt` came from an R2 evaluation seed and must never be used for training (RL, experiment design, architecture).
+- **The loss is mostly reception** (RL). On own balls, contact is 25.4 %; hits convert at about 39 %.
+
+## Decisions
+
+1. **Run 2 = (b)** (5 of 5). 40 % of feeds are run 1's own legal returns, mirrored; court feeds are 0.4 of the rest (architecture), so about 40 / 24 / 36 % replay / court / drill v2.
+   - **Parent:** run 1's endpoint, model_2599.
+   - **The weight change (a) is rejected:** it trains the hitter, while the gap is on the receiving side; above the legal weight it risks legal returns.
+   - **Falls (c)** wait until legal returns pass about 30 % (motion).
+2. **Code (D-130):** `replay_prob` with its own generator. Per env:
+   - a replay draw first;
+   - rally-phase flags (`return_stand.py` had made every feed rally-phase whenever a replay file was set);
+   - no planner spot;
+   - its own outcome tally, kept out of the per-family and drill v2 counters.
+
+   The replay set is recorded from model_2599 on development seed 4217040, never an R2 evaluation file.
+   **Tests:**
+   - `test_d130_replay_prob_zero_reproduces_the_task`: one environment, every generator and state restored, because separate environments differ by their reset poses;
+   - `test_d130_replay_mix_shares_and_flags`;
+   - `test_d130_task_changes_only_the_replay_mix`.
+3. **Kill at model_2900** (300 of 800 iterations), with the parent read on the same seeds:
+   - drill v2 or court main more than 5 points below the parent;
+   - arrival below 90 %;
+   - court falls above 7.4 % per episode;
+   - **progress:** own-ball legal on the R2 protocol (512 envs) not above 10.4 %, the upper bound of run 1's R2. Point estimate: 3 of 5 (coach, motion, architecture); RL and experiment design wanted its Wilson lower bound.
+4. **Credibility** (5 of 5): 4 runs are not credible on the trend. 10 % -> 56 % needs about 15 points per run; Stage 5 has given about 2.
+   - **Stop rule** (4 of 5): if R2 at run 2's endpoint is below 20 %, Stage 5H ends, and the user gets the interim video with the gap stated plainly. Experiment design proposed 16.4 %, and 20 % is stricter.
+   - Also stop if the stage ends with P(4+) under 1 %.

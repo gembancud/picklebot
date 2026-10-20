@@ -3524,3 +3524,15 @@ Panel round 17 (`mjlab/results/stage5h-review.md`).
 **Back to the user:** with a video, if runs over 2 h or a bigger controller are needed, or if Stage 5H ends with P(4+) under 1 %.
 
 **Also:** kill lines are now reported with intervals, and D-124's "no rehearsal" tie-break is recorded as an error.
+
+## D-130 - Stage 5H run 2: train on a 40 % mix of the robot's own returns; the stop rule (2026-10-21)
+
+Panel round 18 (`mjlab/results/stage5h-review.md`).
+
+**Run 1** (keep-alive) met R1 (drill v2 0.846, every stage rule). R2 (development seeds) was 10.0 %, and R4 P(4+) 0.0004. The loss is mostly on the receiving side: 25 % contact on own balls.
+
+**Run 2:** `replay_prob` 0.4 mixes run 1's own mirrored legal returns into the feeds (recorded on seed 4217040), from run 1's endpoint. Replayed feeds are per-env rally-phase, get no planner spot, and are tallied apart.
+
+**Kill at model_2900:** drill v2 or court main more than 5 points below the parent, arrival below 90 %, falls above 7.4 %, or own-ball legal not above 10.4 %.
+
+**Stop rule:** R2 below 20 % at run 2's endpoint ends Stage 5H. The user then gets the interim video, with the gap to about 56 % per shot stated.

@@ -181,6 +181,10 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # feed. Replayed balls start in the rally phase (a return may be volleyed or taken after its bounce).
     record_returns: bool = False
     replay_file: str = ""
+    # D-130: with replay_file, the share of feeds that are replayed own returns (1.0: every feed, the R2 protocol). Below
+    # 1 the draw comes first (own generator), then court_feed_prob of the rest; replayed feeds get no planner spot, and
+    # their outcomes go to their own tally instead of the per-family and drill v2 counters.
+    replay_prob: float = 1.0
     record_contacts: bool = False  # D-127: keep the incoming ball and the paddle state at each first contact (evaluation)
     # Self-play readiness R4 (D-116): two-robot courts from mirrored env pairs (picklebot_mj/pairs.py). The feeder timer
     # is replaced by the pair logic: a return crossing the net becomes the partner env's feed, mirrored.
@@ -299,6 +303,8 @@ class BallPhysicsAction(ActionTerm):
             self.v2_rec = torch.tensor(RECOVERY_FIXED, device=dev).repeat(n, 1)  # true recovery spot (hint aside)
         self.plan_on = getattr(cfg, "planner_mode", "off") != "off"
         self.court_feed = torch.zeros(n, dtype=torch.bool, device=dev)  # D-116: this feed is a court-task feed
+        self.replay_feed = torch.zeros(n, dtype=torch.bool, device=dev)  # D-130: this feed is a replayed own return
+        self.ep_replay = torch.zeros(2, dtype=torch.long, device=dev)  # D-130 mixed mode: replayed feeds, legal returns
         if getattr(cfg, "court_feed_prob", 0.0) > 0.0:
             assert self.v2 is not None and getattr(cfg, "court_wide", False), "court-feed rehearsal is a drill v2 option"
             self.gen_court = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 271829)
@@ -349,6 +355,7 @@ class BallPhysicsAction(ActionTerm):
             self.pairs = PairCourts(n, dev)
         if getattr(cfg, "replay_file", ""):
             self.replay = mirror_ball_states(torch.load(cfg.replay_file, map_location=dev).float())
+            self.gen_replay_mix = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 161803)
             self.gen_replay = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 314159)
         # The returned ball's real clearance over the net tape when it crosses x = 0 (net_clearance, D-071).
         self.cross_now = torch.zeros(n, dtype=torch.bool, device=dev)
@@ -444,7 +451,7 @@ class BallPhysicsAction(ActionTerm):
         if getattr(self.cfg, "court_wide", False):  # volley feeds: rally phase, may be taken before the bounce
             m = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
             m[env_ids] = True
-            rally = self._is_volley[self.family] | (self.replay is not None)  # replayed returns: rally phase
+            rally = self._is_volley[self.family] | self.replay_feed  # replayed returns: rally phase (per env, D-130)
             self.rules.begin_from_feed_masked(m & rally, FEEDER_PLAYER, must_bounce=False)
         for f in (self.hit_done, self.hit_now, self.return_done, self.return_now, self.lost_now, self._prev_dead,
                   self.tallied):
@@ -473,6 +480,10 @@ class BallPhysicsAction(ActionTerm):
 
     def _tally(self, mask: torch.Tensor, fell: torch.Tensor) -> None:
         """Count one finished feed for each env in mask (masked sums, no host sync)."""
+        if self.replay is not None and getattr(self.cfg, "replay_prob", 1.0) < 1.0:  # D-130: replayed feeds apart
+            rm = mask & self.replay_feed
+            self.ep_replay += torch.stack([rm.sum(), (self.return_done & rm).sum()])
+            mask = mask & ~self.replay_feed
         m = mask.long()
         outcome = torch.stack([m, (self.hit_done & mask).long(), (self.return_done & mask).long(),
                                (fell & mask).long()], -1)
@@ -538,6 +549,7 @@ class BallPhysicsAction(ActionTerm):
         zone_old = self.zone.clone()
         anch_old = self._court_anch.clone() if hasattr(self, "_court_anch") else None
         court_old = self.court_feed.clone()
+        replay_old = self.replay_feed.clone()
         v2_last_old = self.v2.last_ext.clone() if getattr(self, "v2", None) is not None else None
         plan_old = (self.plan_pending.clone(), self.plan_t.clone()) if getattr(self, "plan_on", False) else None
         self._feed(self.all_ids)
@@ -555,13 +567,14 @@ class BallPhysicsAction(ActionTerm):
         if anch_old is not None:  # D-092 fix: keep in-flight feeds' court-anchor draw (as their zone and unit)
             self._court_anch = torch.where(fire, self._court_anch, anch_old)
         self.court_feed = torch.where(fire, self.court_feed, court_old)  # D-116: and their court-feed draw
+        self.replay_feed = torch.where(fire, self.replay_feed, replay_old)  # D-130: and their replay draw
         self.target = torch.where(fire, self.target, tgt_old)
         self.recover_xy = torch.where(fire.unsqueeze(-1), self.recover_xy, rec_old)
         self.hit_hint_on = torch.where(fire, self.hit_hint_on, hint_old)
         self.hit_rec_true = torch.where(fire.unsqueeze(-1), self.hit_rec_true, true_old)
         self.stance_xy = torch.where(fire.unsqueeze(-1), self.stance_xy, stance_old)
         if getattr(self.cfg, "court_wide", False):
-            volley = self._is_volley[self.family] | (self.replay is not None) | self._handoff  # rally phase
+            volley = self._is_volley[self.family] | self.replay_feed | self._handoff  # rally phase (per env, D-130)
             self.rules.begin_from_feed_masked(fire & ~volley, FEEDER_PLAYER, must_bounce=True)
             self.rules.begin_from_feed_masked(fire & volley, FEEDER_PLAYER, must_bounce=False)
         else:
@@ -617,10 +630,17 @@ class BallPhysicsAction(ActionTerm):
     def _feed(self, env_ids):
         k = len(env_ids)
         cprob = getattr(self.cfg, "court_feed_prob", 0.0)
+        rprob = getattr(self.cfg, "replay_prob", 1.0) if self.replay is not None else 0.0
+        mixed = self.replay is not None and rprob < 1.0  # D-130
+        if self.replay is not None:
+            self.replay_feed[env_ids] = (torch.rand(k, generator=self.gen_replay_mix, device=self.device) < rprob
+                                         if mixed else torch.ones(k, dtype=torch.bool, device=self.device))
         if cprob > 0.0:  # D-116: court-feed draw and its anchor draw, before the zone and the family
             self.court_feed[env_ids] = torch.rand(k, generator=self.gen_court, device=self.device) < cprob
             self._court_anch[env_ids] = (torch.rand(k, generator=self.gen_court, device=self.device)
                                          < self.cfg.court_feed_anchor_prob)
+            if mixed:  # D-130: the replay draw comes first; court_feed_prob applies to the rest
+                self.court_feed[env_ids] = self.court_feed[env_ids] & ~self.replay_feed[env_ids]
         if getattr(self.cfg, "court_anchor_prob", 0.0) > 0.0:
             if not hasattr(self, "_court_anch"):
                 self._court_anch = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
@@ -703,7 +723,13 @@ class BallPhysicsAction(ActionTerm):
         if self.replay is not None:  # R2 (D-116): every feed is one of the robot's own recorded returns, mirrored
             j = torch.randint(0, self.replay.shape[0], (k,), generator=self.gen_replay, device=self.device)
             st = self.replay[j]
-            self.ball.pos[env_ids], self.ball.vel[env_ids], self.ball.spin[env_ids] = st[:, :3], st[:, 3:6], st[:, 6:9]
+            if mixed:  # D-130: only the replay draw's feeds
+                on = self.replay_feed[env_ids].unsqueeze(-1)
+                self.ball.pos[env_ids] = torch.where(on, st[:, :3], self.ball.pos[env_ids])
+                self.ball.vel[env_ids] = torch.where(on, st[:, 3:6], self.ball.vel[env_ids])
+                self.ball.spin[env_ids] = torch.where(on, st[:, 6:9], self.ball.spin[env_ids])
+            else:
+                self.ball.pos[env_ids], self.ball.vel[env_ids], self.ball.spin[env_ids] = st[:, :3], st[:, 3:6], st[:, 6:9]
         if getattr(self.cfg, "hit_hint", False):  # real-ball episodes: stance hint until the first contact
             from picklebot_mj.tasks.shadow_swing import stance_spot
             hit_ep = torch.ones(k, dtype=torch.bool, device=self.device)
@@ -724,6 +750,8 @@ class BallPhysicsAction(ActionTerm):
                 hit_ep &= torch.rand(k, generator=self.gen_hint, device=self.device) < self.cfg.planner_prob
             if cprob > 0.0:  # D-116: court feeds get no planner spot (the court evaluation shows none)
                 hit_ep &= ~self.court_feed[env_ids]
+            if mixed:  # D-130: neither do replayed own returns
+                hit_ep &= ~self.replay_feed[env_ids]
             self.hit_rec_true[env_ids] = rec
             self.hit_hint_on[env_ids] = False
             self.plan_pending[env_ids] = hit_ep

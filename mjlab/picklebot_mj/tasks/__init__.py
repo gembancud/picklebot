@@ -1784,3 +1784,24 @@ def _latent_court_v2_res_clean_mix_ka(play=False):
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA, env_cfg=_latent_court_v2_res_clean_mix_ka(),
                     runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean_mix_ka(True),
                     rl_cfg=_s5e_rl_cfg())
+
+
+# Stage 5H run 2 (D-130, panel round 18): run 1's task with 40 % of feeds one of run 1's own legal returns, mirrored
+# (replay_prob 0.4; recorded from run 1's endpoint on development seed 4217040, never an R2 evaluation file); court
+# feeds are 0.4 of the rest. Parent run 1's endpoint (s5h-01-keepalive/model_2599).
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_OWN = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Own-G1"
+OWN_REPLAY_5H = str(Path(__file__).resolve().parents[2] / "artifacts" / "replay" / "s5h01-returns-4217040.pt")
+OWN_REPLAY_PROB = 0.4
+
+
+def _latent_court_v2_res_clean_mix_ka_own(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka(play)
+    b = cfg.actions["ball"]
+    b.replay_file = os.environ.get("PICKLEBOT_OWN_REPLAY_5H", OWN_REPLAY_5H)
+    b.replay_prob = OWN_REPLAY_PROB
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_OWN, env_cfg=_latent_court_v2_res_clean_mix_ka_own(),
+                    runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean_mix_ka_own(True),
+                    rl_cfg=_s5e_rl_cfg())

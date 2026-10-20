@@ -738,3 +738,102 @@ def test_d129_task_changes_only_the_pace_term():
         if k != "return_shaping":
             assert a.rewards[k].func is b.rewards[k].func and a.rewards[k].weight == b.rewards[k].weight
     assert a.actions["ball"].court_feed_prob == b.actions["ball"].court_feed_prob == 0.4
+
+
+def _replay_file(tmp_path):
+    """A small replay set: post-contact states of returns on the robot's side heading over the net (court-local)."""
+    g = torch.Generator().manual_seed(4217041)
+    n = 64
+    pos = torch.stack([-5.0 + torch.rand(n, generator=g), torch.rand(n, generator=g) - 0.5, 0.8 + 0.2 * torch.rand(n, generator=g)], -1)
+    vel = torch.stack([9.0 + torch.rand(n, generator=g), torch.rand(n, generator=g) - 0.5, 3.0 + torch.rand(n, generator=g)], -1)
+    spin = torch.zeros(n, 3)
+    path = tmp_path / "returns.pt"
+    torch.save(torch.cat([pos, vel, spin], -1), path)
+    return str(path)
+
+
+def _feed_log(env, steps):
+    t = env.action_manager.get_term("ball")
+    act = torch.zeros(env.num_envs, env.action_manager.total_action_dim, device=env.device)
+    rows = []
+    with torch.inference_mode():
+        for _ in range(steps):
+            env.step(act)
+            rows.append(torch.cat([t.ball.pos, t.family.float().unsqueeze(-1), t.court_feed.float().unsqueeze(-1),
+                                   t.replay_feed.float().unsqueeze(-1), t.plan_pending.float().unsqueeze(-1)], -1).clone())
+    return torch.stack(rows)
+
+
+def test_d130_replay_prob_zero_reproduces_the_task(tmp_path):
+    """D-130: with replay_prob 0 the feed draws are run 1's exactly (balls, families, court draws, planner flags).
+    One environment, every generator restored between the two draws: separate environments are not reproducible
+    (reset poses; D-121), so the comparison isolates the feed code path."""
+    from test_drill_v2 import _env
+    env = _env("Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-G1", n=128, replay_file=_replay_file(tmp_path),
+               replay_prob=0.0)
+    t = env.action_manager.get_term("ball")
+    owners = [t] + [o for o in vars(t).values() if hasattr(o, "__dict__") and not isinstance(o, torch.Tensor)]
+    gens = [(o, k) for o in owners for k, v in list(vars(o).items()) if isinstance(v, torch.Generator)]
+    tensors = [(o, k, v.clone()) for o in owners for k, v in list(vars(o).items()) if isinstance(v, torch.Tensor)]
+    ball0 = (t.ball.pos.clone(), t.ball.vel.clone(), t.ball.spin.clone())
+
+    def draws():
+        rows = []
+        for _ in range(6):
+            t._feed(t.all_ids)
+            rows.append(torch.cat([t.ball.pos, t.ball.vel, t.family.float().unsqueeze(-1),
+                                   t.court_feed.float().unsqueeze(-1), t.plan_pending.float().unsqueeze(-1)], -1).clone())
+        return torch.stack(rows)
+
+    states = [getattr(o, k).get_state() for o, k in gens]
+    a = draws()
+    assert not t.replay_feed.any()
+    for (o, k), st in zip(gens, states):
+        getattr(o, k).set_state(st)
+    for o, k, v in tensors:
+        setattr(o, k, v.clone())
+    t.ball.pos.copy_(ball0[0]); t.ball.vel.copy_(ball0[1]); t.ball.spin.copy_(ball0[2])
+    replay, t.replay = t.replay, None  # the task without any replay file
+    b = draws()
+    t.replay = replay
+    env.close()
+    assert len(gens) >= 3
+    d = (a - b).abs()
+    assert torch.equal(a, b), ("columns", d.amax(dim=(0, 1)).tolist(), "draws", d.amax(dim=(1, 2)).tolist())
+
+
+def test_d130_replay_mix_shares_and_flags(tmp_path):
+    """D-130: about 40 % of feeds are replays (no planner spot, never a court feed, rally phase); court feeds about
+    0.4 of the rest; replayed outcomes are tallied apart."""
+    from test_drill_v2 import _env
+    env = _env("Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-G1", n=512, replay_file=_replay_file(tmp_path),
+               replay_prob=0.4)
+    t = env.action_manager.get_term("ball")
+    act = torch.zeros(env.num_envs, env.action_manager.total_action_dim, device=env.device)
+    n_feeds = n_rep = n_court = 0
+    prev = t.ball.vel.clone()
+    with torch.inference_mode():
+        for step in range(300):
+            env.step(act)
+            new = (t.ball.vel - prev).norm(dim=-1) > 2.0  # a launch (approximate)
+            if step > 0 and new.any():
+                rp, cf = t.replay_feed[new], t.court_feed[new]
+                n_feeds += int(new.sum()); n_rep += int(rp.sum()); n_court += int(cf.sum())
+                assert not (rp & cf).any()
+                assert not t.plan_pending[new][rp].any()
+            prev = t.ball.vel.clone()
+    assert n_feeds > 300
+    assert 0.32 < n_rep / n_feeds < 0.48, n_rep / n_feeds
+    assert 0.30 < n_court / max(n_feeds - n_rep, 1) < 0.50
+    assert int(t.ep_replay[0]) > 0
+    env.close()
+
+
+def test_d130_task_changes_only_the_replay_mix():
+    """D-130: run 2's task is run 1's with replay_file and replay_prob 0.4."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a, b = T._latent_court_v2_res_clean_mix_ka().actions["ball"], T._latent_court_v2_res_clean_mix_ka_own().actions["ball"]
+    diff = [f.name for f in dataclasses.fields(a) if getattr(a, f.name) != getattr(b, f.name)]
+    assert sorted(diff) == ["replay_file", "replay_prob"] and b.replay_prob == 0.4
+    assert b.replay_file.endswith("s5h01-returns-4217040.pt")
