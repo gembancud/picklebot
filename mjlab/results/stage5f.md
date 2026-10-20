@@ -225,3 +225,21 @@ Tracking success, per source:
   - Court rehearsal recovered most of run 3's court loss (67.7 % -> 75.9 %) and kept, even raised, the drill v2 gain (0.830 -> 0.843).
   - The court line (76.8 %) is still missed, by 0.9 points. The kill rule is not loosened.
   - **3 kills in a row: under D-116, the pre-registered exit (goal-conditioned controller) is taken, with no new vote.** D-117.
+
+### Self-play readiness measured (D-116; fixed endpoints; readiness seeds)
+
+| Policy | R2 own-ball legal [Wilson low] | Own balls touched | Falls per shot (R2) | R4 rallies | R4 P(4+ shots) | R4 mean length | R4 side legal A / B | R4 falls per shot A / B |
+|---|---|---|---|---|---|---|---|---|
+| Start point (s5d-01) | 0.069 [0.065] (1,316 / 19,087) | 18.1 % | 8.5 % | 41,829 | 0.000 | 0.53 | 0.351 / 0.334 | 5.8 / 6.3 % |
+| Run 3 (killed; diagnostic) | 0.062 [0.058] (1,150 / 18,686) | 17.2 % | 6.0 % | | | | | |
+| Run 4 (killed) | 0.082 [0.078] (1,507 / 18,493) | 22.4 % | 6.8 % | 40,392 | 0.0002 | 0.58 | 0.371 / 0.356 | 5.0 / 5.2 % |
+
+- **The robot cannot return its own shot.** All three hit the same ball:
+  - about 11.5 m/s off the paddle;
+  - vz +4.3 m/s;
+  - heavy backspin (wy about -50 rad/s);
+  - landing at x about 4.2 m.
+
+  That ball reaches the receiver at 5.6 m/s and a 0.50 m contact height, against 3.5 m/s and 0.70 m for feeder balls. Misses dominate the faults. Because "OUT" is scored after a bounce, the misses skid out.
+- **The R4 environment works:** the two sides are within 1.5-1.7 points. The robots rally only when the feeder ball starts it, and the rally dies at the first own-ball shot.
+- **Readiness: R2 and R4 fail by a wide margin for every policy.** This evidence goes to the round-9 panel, which plans the exit stage (D-117).
