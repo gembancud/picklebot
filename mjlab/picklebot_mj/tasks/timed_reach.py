@@ -228,3 +228,66 @@ def swing_guide(env, command_name="reach", std=0.15):
     lead = cmd.p_star - cmd.v_star * tau
     pos, _, _ = cmd.paddle_state()
     return torch.exp(-((pos - lead).norm(dim=-1) / std) ** 2) * (~cmd.scored).float()
+
+
+# --- Stage 5G zero-shot with the ball (D-118 order: E-run with the ball after the ball-free controller) --------------
+@dataclass(kw_only=True)
+class TimedBallCommandCfg(TimedReachCommandCfg):
+    """Goals from the live ball: when the ball term's planner window closes for a feed (plan_pending falls; the
+    D-097 delay after the launch), the noisy spin-blind planner gives the contact (point, time, ball velocity), a
+    keep-it-alive outgoing ball and the paddle state; the root target is the stance spot beside the contact."""
+    resampling_time_range: tuple[float, float] = (1e6, 1e6)  # goals come from the ball, not a timer
+
+    def build(self, env):
+        return TimedBallCommand(self, env)
+
+
+class TimedBallCommand(TimedReachCommand):
+    def __init__(self, cfg, env):
+        super().__init__(cfg, env)
+        self._prev_pending = None
+        self.goals_set = torch.zeros((), dtype=torch.long, device=self.device)
+
+    def reset(self, env_ids):
+        extras = CommandTerm.reset(self, env_ids)  # no bank resample: the next feed's plan sets the goal
+        self.scored[env_ids] = True
+        self.t_contact[env_ids] = 1e9
+        return extras
+
+    def _resample_command(self, env_ids):
+        pass
+
+    def _update_command(self, env_ids):
+        from picklebot_mj.planner import aim_outgoing, keep_alive_target, paddle_for, predict_contact
+        from picklebot_mj.tasks.shadow_swing import HINT_BEHIND, HINT_SIDE_BH, HINT_SIDE_FH
+        b = self._env.action_manager.get_term("ball")
+        pend = b.plan_pending.clone()
+        if self._prev_pending is None:
+            self._prev_pending = pend
+            return
+        now = self._prev_pending & ~pend & ~b.hit_done  # this step the planner window closed for these feeds
+        self._prev_pending = pend
+        idx = now.nonzero().flatten()  # evaluation only: a host sync per step is acceptable
+        if len(idx) == 0:
+            return
+        c = b._plan_cfg
+        g = b.gen_plan
+        pos = b.ball.pos[idx] + c.pos_noise * torch.randn(len(idx), 3, generator=g, device=self.device)
+        vel = b.ball.vel[idx] + c.vel_noise * torch.randn(len(idx), 3, generator=g, device=self.device)
+        cx, cv, ct, found = predict_contact(pos, vel, torch.zeros_like(pos))
+        tgt, T = keep_alive_target(len(idx), self.gen, self.device)
+        nrm, vp = paddle_for(cv, aim_outgoing(cx, tgt, T))
+        org = self._env.scene.env_origins[idx]
+        pel = b.pelvis_xy(idx)
+        fh = cx[:, 1] <= pel[:, 1]
+        stance = torch.stack([cx[:, 0] - HINT_BEHIND, torch.where(fh, cx[:, 1] + HINT_SIDE_FH, cx[:, 1] - HINT_SIDE_BH)], -1)
+        ok = found
+        sel = idx[ok]
+        self.p_star[sel] = cx[ok] + org[ok]
+        self.v_star[sel], self.n_star[sel] = vp[ok], nrm[ok]
+        self.root_target[sel] = stance[ok] + org[ok, :2]
+        t_star = (ct[ok] / self._env.step_dt).round() * self._env.step_dt
+        self.t_contact[sel] = self.clock()[sel] + t_star
+        self.scored[sel] = False
+        self.min_dp[sel] = 1e9
+        self.goals_set += ok.sum()

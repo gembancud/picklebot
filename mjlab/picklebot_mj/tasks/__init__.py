@@ -1630,3 +1630,25 @@ def _latent_timed_reach_v3(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_TIMED_REACH_V3, env_cfg=_latent_timed_reach_v3(),
                     play_env_cfg=_latent_timed_reach_v3(True), rl_cfg=_latent_reach_rl_cfg())
+
+
+# Stage 5G zero-shot ball evaluation (D-118): the timed controller in the court ball environment. The court task
+# (latent-07 at lambda 1, the ball term, court feeds) with the timed controller's own observations and a command
+# built from the live ball by the noisy spin-blind planner (TimedBallCommand). Evaluation task; rewards are the court
+# task's (unused by a frozen controller).
+from picklebot_mj.tasks.timed_reach import TimedBallCommandCfg  # noqa: E402
+
+TASK_LATENT_TIMED_BALL = "Picklebot-Latent-TimedBall-G1"
+
+
+def _latent_timed_ball(play=False):
+    cfg = _latent_court(play)
+    cfg.actions["ball"].planner_mode = "noisy"  # its plan window (delay, noise) times the goal; its spot is unused
+    cfg.commands = {**cfg.commands, "reach": TimedBallCommandCfg(bank=GOAL_BANK)}
+    ref = _latent_timed_reach_v3(play)
+    cfg.observations = ref.observations
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_TIMED_BALL, env_cfg=_latent_timed_ball(), play_env_cfg=_latent_timed_ball(True),
+                    rl_cfg=_latent_reach_rl_cfg())

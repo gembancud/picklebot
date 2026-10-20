@@ -121,3 +121,17 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
 
 - **The GPU rollout is not bit-reproducible:** two identical runs differ as much as E3 differs from E2. The rules were replaced, and the standing rule is now the identical-run spread (D-121).
 - **Park vs swing** (unit test, passes): per goal, a perfect swing beats parking by >= 2, and a 4.8 m/s swing with a 5 cm miss beats it by >= 1. Under E2's floor they tied.
+
+### E3 early check (model_36200, seed 4216101): **pass**
+
+| Measure | E3 | Kill line |
+|---|---|---|
+| Falls per episode | 4.0 % | > 5 % |
+| Paddle error at t*, median | 0.05 m | > 0.25 m |
+| Paddle error, p90 | 0.25 m | |
+| Speed error, median | **60 %** (E2: 96 %) | |
+| Timing within 50 ms | **38 %** (E2: 22 %) | |
+| Root within 0.25 m | 56 % | |
+
+- **The swing has started:** the floor removal moved the policy off parking.
+- **Off the GPU while E3 trains:** `TimedBallCommand` and `Picklebot-Latent-TimedBall-G1`. They run the timed controller in the court ball environment with goals from the live ball: the noisy spin-blind planner at the ball term's plan window, a keep-it-alive outgoing ball, and the stance spot. This is the zero-shot evaluation tool. It is not yet run.
