@@ -3425,3 +3425,25 @@ After E4 missed its gate, the loop stopped and asked the user, as D-118 / D-122 
 **What stays the same:** the readiness milestone (R1-R4), every threshold, and all the standing rules.
 
 E4's zero-shot ball smoke test (seed 4216015): legal returns 15.0 % (E3 15.9 %), falls per feed 2.4 % (E3 1.1 %). Panel round 13 decides the next step.
+
+## D-124 - Stage 5G: E1 gate missed; the ball run starts anyway; the rally-video criterion (2026-10-20)
+
+Panel round 13 (`mjlab/results/stage5g-e5-review.md`), under D-123.
+
+**The E1 gate is MISSED at E4** (3 of 6). It is not met, not re-scored and not relaxed, and its items are still reported at every endpoint.
+- **The premise that changed:** ball-free arrival is not the binding constraint. E4's 4-point root gain on the bank gave no gain with the ball (legal returns 15.0 % vs 15.9 %).
+- This retires D-122's line "ball fine-tuning waits until the E1 gate is met".
+
+**E5:**
+- PPO in the ball environment from E3's endpoint (model_39699).
+- E3's reward terms, plus legal_return at 5 per return. No pace term and no rehearsal.
+- Early kill: falls per feed > 2.5 %, legal returns <= 15.9 %, or bank paddle p90 > 0.20 m or speed error > 20 %. Falls are also checked at the endpoint.
+
+**Budget:** E5 and E6, then a panel round.
+
+**The video for the user:**
+- two robots;
+- the R4 protocol;
+- P(4 or more consecutive legal shots) >= 10 % over 1,000 or more rallies;
+- pre-registered clips;
+- labelled interim unless R1-R4 are met.
