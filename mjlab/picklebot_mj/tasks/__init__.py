@@ -1615,3 +1615,18 @@ def _latent_timed_reach_v2(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_TIMED_REACH_V2, env_cfg=_latent_timed_reach_v2(),
                     play_env_cfg=_latent_timed_reach_v2(True), rl_cfg=_latent_reach_rl_cfg())
+
+
+# Stage 5G E3 (D-121, panel round 11, 3+ of 5): E2's task with the contact reward's 0.5 speed floor removed
+# (speed "linear0"), so a parked paddle earns nothing at contact. Nothing else changes.
+TASK_LATENT_TIMED_REACH_V3 = "Picklebot-Latent-TimedReach-V3-G1"
+
+
+def _latent_timed_reach_v3(play=False):
+    cfg = _latent_timed_reach_v2(play)
+    cfg.rewards["timed_contact"].params = {"speed": "linear0"}
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_TIMED_REACH_V3, env_cfg=_latent_timed_reach_v3(),
+                    play_env_cfg=_latent_timed_reach_v3(True), rl_cfg=_latent_reach_rl_cfg())

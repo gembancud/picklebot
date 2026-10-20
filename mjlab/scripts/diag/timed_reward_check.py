@@ -26,6 +26,8 @@ ap.add_argument("--envs", type=int, default=256)
 ap.add_argument("--seconds", type=float, default=10.0)
 ap.add_argument("--seed", type=int, default=4216012)
 ap.add_argument("--json", default=None)
+ap.add_argument("--rules", choices=["e2", "e3"], default="e2", help="pass rules: round 10 (E2) or round 11 (E3, D-121)")
+ap.add_argument("--ref", default="results/stage5g-e2-prelaunch-check.json", help="E2's check, for the E3 rules")
 a = ap.parse_args()
 assert a.seed in seeds.DEV_EVAL_SEEDS
 cfg = load_env_cfg(a.task)
@@ -41,7 +43,7 @@ cmd = env.command_manager.get_term("reach")
 rm = env.reward_manager
 names = list(rm.active_terms)
 sums = {n: 0.0 for n in names}
-kp, fv, fa, rc = [], [], [], []
+kp, fv, fa, rc, sp = [], [], [], [], []
 first_d, later_d = [], []
 peak = torch.zeros(a.envs, device="cuda")
 prev_tc = cmd.t_contact.clone()
@@ -55,6 +57,8 @@ with torch.no_grad():
         if f is not None and f[3].any():
             m = f[3]
             kp.append(f[0][m]); fv.append(f[1][m]); fa.append(f[2][m]); rc.append((f[0] * f[1] * f[2])[m])
+            if len(f) > 4:
+                sp.append(f[4][m])
         _, vel, _ = cmd.paddle_state()
         peak = torch.maximum(peak, vel.norm(dim=-1))
         new = cmd.t_contact != prev_tc
@@ -64,7 +68,7 @@ with torch.no_grad():
             first_d.append(d[first]); later_d.append(d[new & ~first])
         prev_tc = cmd.t_contact.clone()
 cat = lambda xs: torch.cat(xs) if xs else torch.zeros(0, device="cuda")  # noqa: E731
-kp, fv, fa, rc, first_d, later_d = map(cat, (kp, fv, fa, rc, first_d, later_d))
+kp, fv, fa, rc, sp, first_d, later_d = map(cat, (kp, fv, fa, rc, sp, first_d, later_d))
 q = lambda x: [round(v, 3) for v in x.float().quantile(torch.tensor([0.1, 0.5, 0.9], device=x.device)).tolist()] if len(x) else None  # noqa: E731
 bank = cmd.bank
 vn = (bank[:, 3:6] * bank[:, 6:9]).sum(-1)
@@ -76,8 +80,27 @@ out = {"checkpoint": a.checkpoint, "task": a.task, "seed": a.seed,
        "first_goal_dist_q": q(first_d), "later_goal_dist_q": q(later_d), "n_first": int(len(first_d)),
        "bank_speed_along_n_q": q(vn.abs()), "bank_speed_tangential_q": q(vt), "bank_speed_total_q": q(bank[:, 3:6].norm(dim=-1)),
        "parent_peak_paddle_speed_q": q(peak)}
-rules = {"every term pays": all(abs(v) > 0 for v in sums.values()),
-         "contact > 0.01 on >= 20 % of goals": bool(out["share_contact_gt_0.01"] is not None and out["share_contact_gt_0.01"] >= 0.20),
+def spearman(x, y):
+    rx, ry = x.argsort().argsort().float(), y.argsort().argsort().float()
+    rx, ry = rx - rx.mean(), ry - ry.mean()
+    return float((rx * ry).sum() / (rx.norm() * ry.norm()).clamp(min=1e-9))
+
+
+near = kp > 0.5
+out["n_goals_kp_gt_0.5"] = int(near.sum())
+out["spearman_speed_vs_contact_kp_gt_0.5"] = round(spearman(sp[near], rc[near]), 4) if int(near.sum()) > 2 and len(sp) == len(rc) else None
+out["share_fv_gt_0_kp_gt_0.5"] = round(float((fv[near] > 0).float().mean()), 4) if int(near.sum()) else None
+if a.rules == "e3":  # D-121 (round 11; experiment design's rules by the tie rule)
+    ref = json.load(open(a.ref))["reward_sums_per_env"]
+    mine = out["reward_sums_per_env"]
+    within = lambda k: abs(mine[k] - ref[k]) <= 0.10 * abs(ref[k])  # noqa: E731
+    rules = {"every term pays": all(abs(v) > 0 for v in sums.values()),
+             "contact > 0.01 on >= 5 % of goals": bool(out["share_contact_gt_0.01"] is not None and out["share_contact_gt_0.01"] >= 0.05),
+             "Spearman(speed along v*, contact) >= 0.5 where kp > 0.5": bool(out["spearman_speed_vs_contact_kp_gt_0.5"] is not None and out["spearman_speed_vs_contact_kp_gt_0.5"] >= 0.5),
+             "fall and paddle sums within 10 % of E2's check": within("fall") and within("paddle")}
+else:
+  rules = {"every term pays": all(abs(v) > 0 for v in sums.values()),
+           "contact > 0.01 on >= 20 % of goals": bool(out["share_contact_gt_0.01"] is not None and out["share_contact_gt_0.01"] >= 0.20),
          "speed factor varies": bool(out["factor_speed_std"] is not None and out["factor_speed_std"] > 0.01),
          "first goal like later goals": bool(len(first_d) and abs(float(first_d.median()) - float(later_d.median())) < 0.25)}
 out["pass_rules"] = rules

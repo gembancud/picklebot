@@ -51,6 +51,7 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
 |---|---|---|---|---|---|
 | E1 | s5g-e1-timed | Timed command and rewards (`Picklebot-Latent-TimedReach-G1`): swing guide, plus a one-shot contact reward at t* (weight 5 per goal); 4,096 envs; training seed 74 | reach-06/model_34700, widened | iteration 39,700 (5,000 more), or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200):** median paddle error 0.53 m (> 0.25), falls 1.0 % (pass). Cause: the reward design (see below). |
 | E2 | s5g-e2-timed-v2 | One paddle-reward redesign (D-119): reach-06 paddle_track to p* while the goal is open, no swing guide, linear contact velocity factor; plus the two timed_reach fixes (reset, timing grid) | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200): falls 5.12 % (40 / 781 episodes; line 5 %).** Median paddle error **0.01 m**, p90 0.08 m (pass); speed error 96 %; timing within 50 ms 21.7 %; root within 0.25 m 59 %. |
+| E3 | s5g-e3-timed-v3 | The contact reward's speed floor removed: fv = clamp(1 - |dv|/|v*|, 0, 1) (D-121); nothing else | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | |
 
 - **E1 early kill (D-118)** at model_36200 (seed 4216101, 256 envs): falls above 5 %, or a median paddle error above 0.25 m.
   - **The parent fails both today** (15.2 %, 0.32 m), so E1 must improve on both by 30 % of the run.
@@ -108,3 +109,15 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
   - The motion reviewer's round-10 concern: at lambda 1, executors topped out at 4.4-4.7 m/s paddle speed, and the commanded speed along n* is 7.1 m/s.
   - The parent's peak paddle speed is 4.8 m/s (median).
   - Speed, not position, is the open problem.
+
+### E3 pre-launch check (D-121): three runs
+
+| Run | Seed | Contact > 0.01 | Spearman (kp > 0.5) | fv > 0 (kp > 0.5) | Fall sum | Paddle sum | Root sum |
+|---|---|---|---|---|---|---|---|
+| E2's check, for reference (E2 reward) | 4216012 | 47 % (floored factor) | | | -5.86 | 113.1 | 206.4 |
+| E3, spare seed | 4216013 | 14.8 % | 0.919 (534) | 57.7 % | **-7.62** (old 10 % rule failed) | 114.3 | |
+| E3, E2's seed | 4216012 | 15.5 % | 0.914 (531) | 54.8 % | -5.47 | 116.2 | 204.7 |
+| E3, E2's seed, repeated | 4216012 | | | | -5.86 | 110.7 | 205.3 |
+
+- **The GPU rollout is not bit-reproducible:** two identical runs differ as much as E3 differs from E2. The rules were replaced, and the standing rule is now the identical-run spread (D-121).
+- **Park vs swing** (unit test, passes): per goal, a perfect swing beats parking by >= 2, and a 4.8 m/s swing with a 5 cm miss beats it by >= 1. Under E2's floor they tied.

@@ -1,0 +1,79 @@
+{
+ "checkpoint": "artifacts/train/logs/picklebot_latent/2026-10-20_10-00-00_s5g-e1-init/model_34700.pt",
+ "task": "Picklebot-Latent-TimedReach-V3-G1",
+ "seed": 4216013,
+ "reward_sums_per_env": {
+  "root": 211.0329,
+  "alive": 249.9238,
+  "fall": -7.6172,
+  "action_rate": -27.1274,
+  "root_progress": 153.6178,
+  "latent_l2": -158.1828,
+  "timed_contact": 5.2797,
+  "paddle": 114.3112
+ },
+ "goals_scored": 1301,
+ "contact_reward_q": [
+  0.0,
+  0.0,
+  0.016
+ ],
+ "share_contact_gt_0.01": 0.1483,
+ "factor_pos_q": [
+  0.0,
+  0.001,
+  0.978
+ ],
+ "factor_speed_q": [
+  0.0,
+  0.0,
+  0.066
+ ],
+ "factor_speed_std": 0.0453,
+ "factor_align_q": [
+  0.615,
+  0.863,
+  0.973
+ ],
+ "first_goal_dist_q": [
+  0.673,
+  1.838,
+  2.712
+ ],
+ "later_goal_dist_q": [
+  0.628,
+  1.654,
+  2.733
+ ],
+ "n_first": 264,
+ "bank_speed_along_n_q": [
+  6.429,
+  7.103,
+  7.696
+ ],
+ "bank_speed_tangential_q": [
+  1.086,
+  1.767,
+  2.706
+ ],
+ "bank_speed_total_q": [
+  6.645,
+  7.337,
+  7.914
+ ],
+ "parent_peak_paddle_speed_q": [
+  3.823,
+  4.808,
+  6.591
+ ],
+ "n_goals_kp_gt_0.5": 534,
+ "spearman_speed_vs_contact_kp_gt_0.5": 0.9191,
+ "share_fv_gt_0_kp_gt_0.5": 0.5768,
+ "pass_rules": {
+  "every term pays": true,
+  "contact > 0.01 on >= 5 % of goals": true,
+  "Spearman(speed along v*, contact) >= 0.5 where kp > 0.5": true,
+  "fall and paddle sums within 10 % of E2's check": false
+ },
+ "pass": false
+}

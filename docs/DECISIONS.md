@@ -3370,3 +3370,27 @@ Parent: reach-06/model_34700, widened again. Bank, gate, early kill and seeds ar
 **That is 2 kills in a row** (E1, E2), so under D-118 / D-119 the decision went to the user. **The user chose: continue, and the panel plans E3.**
 - The kill counter is not reset. A third kill in a row stops the loop again.
 - 4 of 6 runs remain.
+
+## D-121 - Stage 5G E3: the contact reward's speed floor removed (panel round 11); GPU rollouts are not bit-reproducible (2026-10-20)
+
+Panel round 11 (`mjlab/results/stage5g-e3-review.md`, 4 of 5).
+
+**E3's one change:** the speed factor of `timed_contact` loses its 0.5 floor. fv = clamp(1 - |dv| / |v*|, 0, 1) (`speed="linear0"`, `Picklebot-Latent-TimedReach-V3-G1`).
+- E2's floor paid a parked paddle half the contact bonus, so parking tied a real swing.
+- **Code diff from E2:** a refactor into `contact_factors` (E2's formula unchanged), the `linear0` branch, one extra diagnostic value in `last_factors`, and the V3 task.
+- Parent reach-06/model_34700, widened (sha be115822...). Bank, gate, early kill and seeds are unchanged.
+- **Not lambda 3 now** (5 of 5). If E3 keeps position but its speed stalls, E4 is lambda 3 with the action noise divided by 3 (premise: lambda-1 capacity).
+
+**Pre-launch check: three runs, all reported.**
+1. **Seed 4216013:** contact > 0.01 on 14.8 % of goals (pass); Spearman 0.919 (pass); paddle sum within 10 % (pass); **fall sum -7.62 vs E2's -5.86 (failed the "within 10 % of E2's check" rule).**
+2. **Re-run on E2's own seed 4216012** (allowed by the rule's author, experiment design): non-contact sums close to E2's check but not equal (fall -5.47, paddle 116.2).
+3. **The identical E3 check run again on seed 4216012:** it differs from run 2 by the same order (fall -5.86, paddle 110.7).
+
+**Finding: MuJoCo-Warp GPU rollouts are not bit-reproducible run to run.**
+- The cross-seed 10 % rule measured seed noise in a rare count.
+- The exact-match rule rested on a false premise (determinism). Both were replaced after they failed, for those reasons.
+- E3's non-contact sums lie within the identical-run spread, and the contact and Spearman rules pass on both seeds.
+- **Standing rule: cross-run checks use the identical-run spread as their tolerance.**
+- **Standing rule (round 11): a reward pre-launch check compares the behaviours the reward should rank (park vs swing), not only that terms pay.**
+
+Stage 5G: 2 kills in a row so far. A third stops the loop. E3 is run 3 of 6.

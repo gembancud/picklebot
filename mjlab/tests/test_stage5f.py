@@ -354,3 +354,21 @@ def test_predict_contact_matches_the_ball_simulation():
     ok = found & done
     assert ok.float().mean() > 0.9
     assert (cx[ok] - tx[ok]).norm(dim=-1).max() < 0.05 and (ct[ok] - tt[ok]).abs().max() < 0.015
+
+
+def test_e3_contact_reward_prefers_a_swing_over_parking():
+    """D-121 (panel round 11): with the speed floor removed, parked < half speed < perfect at p*, and per goal (the
+    contact weight 5, plus paddle_track's ~0.3 s x 2 / s while parked) a perfect swing beats parking by >= 2 and a
+    4.8 m/s swing with a 5 cm miss beats parking by >= 1. E2's floored factor tied them (round-11 arithmetic)."""
+    from picklebot_mj.tasks.timed_reach import contact_factors
+    v = torch.tensor([7.1])
+    one = torch.ones(1)
+
+    def r(dp, speed_ms, mode):
+        kp, fv, fa = contact_factors(torch.tensor([dp]), v - speed_ms, v, one, mode)
+        return float((kp * fv * fa)[0])
+    assert r(0.0, 0.0, "linear0") < r(0.0, 3.55, "linear0") < r(0.0, 7.1, "linear0")
+    park = 5 * r(0.0, 0.0, "linear0") + 0.6
+    assert 5 * r(0.0, 7.1, "linear0") - park >= 2.0
+    assert 5 * r(0.05, 4.8, "linear0") + 0.2 - park >= 1.0
+    assert abs((5 * r(0.0, 0.0, "linear") + 0.6) - (5 * r(0.05, 4.8, "linear") + 0.2)) < 1.0  # E2's near-tie

@@ -181,21 +181,29 @@ def _cmd(env, command_name="reach") -> TimedReachCommand:
     return env.command_manager.get_term(command_name)
 
 
+def contact_factors(dp, dv, v_star_norm, align, speed: str = "kernel"):
+    """(position, speed, alignment) factors of the one-shot contact reward; the reward is their product.
+    speed "kernel" (E1): exp(-(|dv| / 1 m/s)^2); "linear" (E2, D-119): 0.5 + 0.5 clamp(1 - |dv| / |v*|, 0, 1), whose
+    0.5 floor paid a parked paddle; "linear0" (E3, D-121): clamp(1 - |dv| / |v*|, 0, 1), 0 for a parked paddle."""
+    kp = torch.exp(-(dp / 0.10) ** 2)
+    lin = (1.0 - dv / v_star_norm.clamp(min=0.1)).clamp(0.0, 1.0)
+    fv = {"linear": 0.5 + 0.5 * lin, "linear0": lin}.get(speed)
+    if fv is None:
+        fv = torch.exp(-(dv / 1.0) ** 2)
+    return kp, fv, 0.5 + 0.5 * align
+
+
 def timed_contact(env, command_name="reach", speed: str = "kernel"):
-    """One-shot at t*; also records the per-goal statistics. speed "kernel" (E1): exp(-(|dv| / 1 m/s)^2); "linear"
-    (E2, D-119): 0.5 + 0.5 clamp(1 - |dv| / |v*|, 0, 1), which pays from a parked paddle."""
+    """One-shot at t* (factors: contact_factors); also records the per-goal statistics."""
     cmd = _cmd(env, command_name)
     ev = cmd.contact_now()
     pos, vel, normal = cmd.paddle_state()
     dp = (pos - cmd.p_star).norm(dim=-1)
     dv = (vel - cmd.v_star).norm(dim=-1)
     align = (normal * cmd.n_star).sum(-1).abs()
-    if speed == "linear":
-        fv = 0.5 + 0.5 * (1.0 - dv / cmd.v_star.norm(dim=-1).clamp(min=0.1)).clamp(0.0, 1.0)
-    else:
-        fv = torch.exp(-(dv / 1.0) ** 2)
-    r = torch.exp(-(dp / 0.10) ** 2) * fv * (0.5 + 0.5 * align)
-    cmd.last_factors = (torch.exp(-(dp / 0.10) ** 2), fv, 0.5 + 0.5 * align, ev)  # for the pre-launch check
+    kp, fv, fa = contact_factors(dp, dv, cmd.v_star.norm(dim=-1), align, speed)
+    r = kp * fv * fa
+    cmd.last_factors = (kp, fv, fa, ev, (vel * cmd.v_star).sum(-1) / cmd.v_star.norm(dim=-1).clamp(min=0.1))
     e = ev.long()
     cmd.counts[0] += e.sum()
     rd = (env.scene["robot"].data.root_link_pos_w[:, :2] - cmd.root_target).norm(dim=-1)
