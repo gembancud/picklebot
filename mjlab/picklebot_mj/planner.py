@@ -357,3 +357,79 @@ def predict_contact_fast(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tenso
 
     cx, cv, ct, found = _graphed(("contact", key, chunks, cfg.horizon_s, m), roll, pad(pos), pad(vel), pad(spin))
     return cx[:n], cv[:n], ct[:n], found[:n]
+
+
+# --- Stage 5G E6 (D-125): let the ball come to you. ------------------------------------------------------------------
+# The contact above is the first interception after the bounce. 35 % of live goals then need more than 1.5 m/s of
+# walking (E3 and E5 reach almost none of them). The walkable contact takes the earliest point at or after that
+# interception, while the ball is still inside the goal bank's contact heights [WALK_Z_MIN, HINT_TOP_Z], whose stance
+# spot needs at most WALK_CAP m/s from the pelvis; if no point does, the point that needs the least.
+WALK_CAP = 1.5  # m/s
+WALK_Z_MIN = 0.50  # m: the goal bank's 10th-percentile contact height
+
+
+def _walk_step(p: BallParams, dt: float, cap: float, x, v, w, t, bounced, found, cx, cv, ct, pel, chosen, bx, bv, bt,
+               breq):
+    x, v, w, t, bounced, found2, cx, cv, ct = _contact_step(p, dt, x, v, w, t, bounced, found, cx, cv, ct)
+    hit = found2 & ~found  # the first interception, this step (its interpolated point)
+    later = found & (x[:, 2] >= WALK_Z_MIN) & (x[:, 2] <= HINT_TOP_Z)  # later points still in the bank's heights
+    h = hit.unsqueeze(-1)
+    qx, qv, qt = torch.where(h, cx, x), torch.where(h, cv, v), torch.where(hit, ct, t)
+    side = torch.where(qx[:, 1] <= pel[:, 1], qx[:, 1] + HINT_SIDE_FH, qx[:, 1] - HINT_SIDE_BH)
+    stance = torch.stack([qx[:, 0] - HINT_BEHIND, side], -1)
+    req = (stance - pel).norm(dim=-1) / qt.clamp(min=0.05)
+    ok = (hit | later) & ~chosen
+    take = ok & (req <= cap)
+    upd = take | (ok & (req < breq))
+    u = upd.unsqueeze(-1)
+    bx, bv, bt, breq = torch.where(u, qx, bx), torch.where(u, qv, bv), torch.where(upd, qt, bt), torch.where(upd, req, breq)
+    return x, v, w, t, bounced, found2, cx, cv, ct, pel, chosen | take, bx, bv, bt, breq
+
+
+def _walk_chunk(p: BallParams, dt: float, cap: float, k: int, *a):
+    for _ in range(k):
+        a = _walk_step(p, dt, cap, *a)
+    return a
+
+
+_COMPILED_WALK: dict = {}
+
+
+def predict_contact_walkable(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tensor, pelvis_xy: torch.Tensor,
+                             cap: float = WALK_CAP, cfg: PlannerCfg = PlannerCfg(), params: BallParams | None = None,
+                             dt: float = CONTACT_DT):
+    """The walkable contact (see WALK_CAP): (point (N, 3), ball velocity there (N, 3), time from now (N,), found (N,)),
+    found as predict_contact's. On CUDA the batch is padded to CONTACT_BUCKET and replayed from a CUDA graph."""
+    p = params or _DEFAULT_PARAMS
+    n = pos.shape[0]
+    cuda = pos.is_cuda
+    m = -(-n // CONTACT_BUCKET) * CONTACT_BUCKET if cuda else n
+    pad = lambda x: torch.cat([x, x[-1:].expand(m - n, *x.shape[1:])]) if m > n else x  # noqa: E731
+    k = CHUNK if cuda else 1
+    key = (id(p), dt, cap, k)
+    if cuda and key not in _COMPILED_WALK:
+        _COMPILED_WALK[key] = torch.compile(lambda *a: _walk_chunk(p, dt, cap, k, *a), mode="default", dynamic=False,
+                                            fullgraph=True)
+    f = _COMPILED_WALK[key] if cuda else (lambda *a: _walk_chunk(p, dt, cap, 1, *a))
+    chunks = -(-int(round(cfg.horizon_s / dt)) // k)
+
+    def roll(x, v, w, pel):
+        x, v, w = x.clone(), v.clone(), w.clone()
+        mm = x.shape[0]
+        t = torch.zeros(mm, device=x.device)
+        bounced = torch.zeros(mm, dtype=torch.bool, device=x.device)
+        found, chosen = torch.zeros_like(bounced), torch.zeros_like(bounced)
+        cx, cv, ct = x.clone(), v.clone(), torch.full((mm,), cfg.horizon_s, device=x.device)
+        bx, bv, bt = x.clone(), v.clone(), torch.full((mm,), cfg.horizon_s, device=x.device)
+        breq = torch.full((mm,), 1e9, device=x.device)
+        a = (x, v, w, t, bounced, found, cx, cv, ct, pel, chosen, bx, bv, bt, breq)
+        for _ in range(chunks):
+            a = f(*a)
+        return a[11], a[12], a[13], a[5]
+
+    if cuda:
+        bx, bv, bt, found = _graphed(("walk", key, chunks, cfg.horizon_s, m), roll, pad(pos), pad(vel), pad(spin),
+                                     pad(pelvis_xy))
+    else:
+        bx, bv, bt, found = roll(pos, vel, spin, pelvis_xy)
+    return bx[:n], bv[:n], bt[:n], found[:n]

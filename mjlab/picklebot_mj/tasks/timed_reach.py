@@ -279,6 +279,7 @@ class TimedBallCommandCfg(TimedReachCommandCfg):
     D-097 delay after the launch), the noisy spin-blind planner gives the contact (point, time, ball velocity), a
     keep-it-alive outgoing ball and the paddle state; the root target is the stance spot beside the contact."""
     resampling_time_range: tuple[float, float] = (1e6, 1e6)  # goals come from the ball, not a timer
+    walk_cap: float | None = None  # D-125: the walkable contact (planner.WALK_CAP m/s) instead of the first interception
 
     def build(self, env):
         return TimedBallCommand(self, env)
@@ -287,13 +288,18 @@ class TimedBallCommandCfg(TimedReachCommandCfg):
 GOAL_BATCH = 128  # envs planned per control step (a multiple of planner.CONTACT_BUCKET); about n * 0.02 / 1.6 fall due
 
 
-def plan_goals(pos, vel, pel, gen):
+def plan_goals(pos, vel, pel, gen, walk_cap=None):
     """Goals for balls at (pos, vel) (court-local, the planner's noisy view) and pelvis xy `pel`: the spin-blind
     contact (point, ball velocity, time, found), a keep-it-alive outgoing ball and the paddle state for it, and the
-    stance spot beside the contact. Returns (cx, ct, found, normal, paddle velocity, stance)."""
-    from picklebot_mj.planner import aim_outgoing_fast, keep_alive_target, paddle_for, predict_contact_fast
+    stance spot beside the contact. walk_cap (m/s, D-125): the walkable contact instead of the first interception.
+    Returns (cx, ct, found, normal, paddle velocity, stance)."""
+    from picklebot_mj.planner import (aim_outgoing_fast, keep_alive_target, paddle_for, predict_contact_fast,
+                                      predict_contact_walkable)
     from picklebot_mj.tasks.shadow_swing import HINT_BEHIND, HINT_SIDE_BH, HINT_SIDE_FH
-    cx, cv, ct, found = predict_contact_fast(pos, vel, torch.zeros_like(pos))
+    if walk_cap is None:
+        cx, cv, ct, found = predict_contact_fast(pos, vel, torch.zeros_like(pos))
+    else:
+        cx, cv, ct, found = predict_contact_walkable(pos, vel, torch.zeros_like(pos), pel, cap=walk_cap)
     tgt, T = keep_alive_target(len(pos), gen, pos.device)
     nrm, vp = paddle_for(cv, aim_outgoing_fast(cx, tgt, T))
     fh = cx[:, 1] <= pel[:, 1]
@@ -339,7 +345,7 @@ class TimedBallCommand(TimedReachCommand):
         pos = b.ball.pos[idx] + c.pos_noise * torch.randn(k, 3, generator=g, device=self.device)
         vel = b.ball.vel[idx] + c.vel_noise * torch.randn(k, 3, generator=g, device=self.device)
         pel = b.pelvis_xy(idx)
-        cx, ct, found, nrm, vp, stance = plan_goals(pos, vel, pel, self.gen)
+        cx, ct, found, nrm, vp, stance = plan_goals(pos, vel, pel, self.gen, self.cfg.walk_cap)
         ok = due & found
         m3, m1 = ok.unsqueeze(-1), ok
         org = self._env.scene.env_origins[idx]

@@ -1700,3 +1700,28 @@ def _latent_timed_ball_ppo(play=False):
 register_mjlab_task(task_id=TASK_LATENT_TIMED_BALL_PPO, env_cfg=_latent_timed_ball_ppo(),
                     play_env_cfg=_latent_timed_ball_ppo(True), runner_cls=CriticWarmupHoldLrRunner,
                     rl_cfg=_latent_reach_rl_cfg())
+
+
+# Stage 5G E6 (D-125, panel round 14): E5's task with one planner change, the walkable contact (planner.WALK_CAP): the
+# earliest point on the ball's path, in the goal bank's contact heights, whose stance spot needs at most 1.5 m/s of
+# walking. Correction (3 of 5, an implementation defect in E3 and E5): the PPO entropy coefficient is the lineage's
+# 0.001 (D-058; the tracking default 0.005 inflated the latent action std, 1.05 -> 1.19 in E5).
+TASK_LATENT_TIMED_BALL_WALK = "Picklebot-Latent-TimedBall-Walk-G1"
+
+
+def _latent_timed_ball_walk(play=False):
+    from picklebot_mj.planner import WALK_CAP
+    cfg = _latent_timed_ball_ppo(play)
+    cfg.commands["reach"].walk_cap = WALK_CAP
+    return cfg
+
+
+def _latent_timed_ball_walk_rl_cfg():
+    cfg = _latent_reach_rl_cfg()
+    cfg.algorithm.entropy_coef = 0.001
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_TIMED_BALL_WALK, env_cfg=_latent_timed_ball_walk(),
+                    play_env_cfg=_latent_timed_ball_walk(True), runner_cls=CriticWarmupHoldLrRunner,
+                    rl_cfg=_latent_timed_ball_walk_rl_cfg())

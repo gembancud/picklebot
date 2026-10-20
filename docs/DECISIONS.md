@@ -3447,3 +3447,19 @@ Panel round 13 (`mjlab/results/stage5g-e5-review.md`), under D-123.
 - P(4 or more consecutive legal shots) >= 10 % over 1,000 or more rallies;
 - pre-registered clips;
 - labelled interim unless R1-R4 are met.
+
+## D-125 - Stage 5G E5 killed; E6 = the walkable contact; the entropy coefficient corrected (2026-10-20)
+
+Panel round 14 (`mjlab/results/stage5g-e6-review.md`).
+
+**E5 was killed at its early check:** legal returns 14.6 % (no gain), bank paddle p90 0.28 m. The kill counts. Stage 5G now has 5 of 6 runs used and 1 kill in a row.
+
+**Correction (3 of 5):** E3 and E5 ran with the tracking PPO default entropy_coef of 0.005, not the 0.001 that ball-PPO has used since D-058. E6 uses 0.001 as a correction.
+
+**E6 (3 of 5):** the pre-registered planner change.
+- **The walkable contact:** the earliest point on the ball's path, at or after the first interception, inside contact heights [0.50, 1.1] m, whose stance spot needs at most 1.5 m/s of walking; otherwise the point that needs the least.
+- Parent: E3's endpoint.
+- **Pre-launch:** E3 zero-shot on the E6 task must have <= 21 % of goals above 1.5 m/s, legal returns >= 15.24 % and falls per feed <= 2.5 %. A fail means no launch.
+- **Kill lines:** E5's, with the legal line taken from that zero-shot rate.
+
+**After E6:** a panel round. A new stage budget needs a D-entry (at most 4 runs) that states the gap to the video bar (about 56 % legal per shot needed; about 15 % today).

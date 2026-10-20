@@ -484,7 +484,7 @@ def _fake_ball_cmd(n, batch):
                           scene=SimpleNamespace(env_origins=torch.zeros(n, 3)),
                           episode_length_buf=torch.zeros(n, dtype=torch.long), device=torch.device("cpu"), num_envs=n)
     cmd = TimedBallCommand.__new__(TimedBallCommand)
-    cmd._env = env
+    cmd._env, cmd.cfg = env, SimpleNamespace(walk_cap=None)
     z3 = lambda: torch.zeros(n, 3)  # noqa: E731
     cmd.p_star, cmd.v_star, cmd.n_star, cmd.root_target = z3(), z3(), z3(), torch.zeros(n, 2)
     cmd.t_contact, cmd.scored = torch.full((n,), 1e9), torch.ones(n, dtype=torch.bool)
@@ -566,3 +566,65 @@ def test_graphed_planner_rollouts_match_plain():
         a = predict_top(pos, vel, spin)
         b = predict_top(pos, vel, spin, graphed=True)
         assert torch.equal(a[1], b[1]) and (a[0] - b[0]).abs().max() < 1e-5
+
+
+def test_walkable_contact_without_cap_is_the_first_interception():
+    """D-125: with no effective cap the walkable contact is predict_contact's first interception."""
+    from picklebot_mj.planner import predict_contact_fast, predict_contact_walkable
+    pos, vel, _, _ = _feed_states(FAMS, 4, seed=4216501)
+    pos, vel = pos[:64].cuda(), vel[:64].cuda()
+    z = torch.zeros_like(pos)
+    pel = torch.tensor([-6.0, 0.0], device="cuda").expand(64, 2).contiguous()
+    a = predict_contact_fast(pos, vel, z)
+    b = predict_contact_walkable(pos, vel, z, pel, cap=1e6)
+    assert torch.equal(a[3], b[3])
+    assert (a[0] - b[0]).abs().max() < 1e-5 and (a[2] - b[2]).abs().max() < 1e-5
+
+
+def test_walkable_contact_is_later_and_walkable_when_possible():
+    """D-125: the walkable contact is never earlier than the first interception, stays in the bank's heights (or is
+    the interception itself), needs at most WALK_CAP where the first interception did not, and otherwise the least."""
+    from picklebot_mj.planner import WALK_CAP, WALK_Z_MIN, predict_contact_fast, predict_contact_walkable
+    from picklebot_mj.tasks.shadow_swing import HINT_BEHIND, HINT_SIDE_BH, HINT_SIDE_FH, HINT_TOP_Z
+    pos, vel, _, _ = _feed_states(FAMS, 8, seed=4216502)
+    pos, vel = pos[:128].cuda(), vel[:128].cuda()
+    z = torch.zeros_like(pos)
+    g = torch.Generator(device="cuda").manual_seed(4216502)
+    pel = torch.stack([-6.5 + 2 * torch.rand(128, generator=g, device="cuda"),
+                       -1.5 + 3 * torch.rand(128, generator=g, device="cuda")], -1)
+
+    def req(cx, ct):
+        side = torch.where(cx[:, 1] <= pel[:, 1], cx[:, 1] + HINT_SIDE_FH, cx[:, 1] - HINT_SIDE_BH)
+        st = torch.stack([cx[:, 0] - HINT_BEHIND, side], -1)
+        return (st - pel).norm(dim=-1) / ct.clamp(min=0.05)
+
+    a = predict_contact_fast(pos, vel, z)
+    b = predict_contact_walkable(pos, vel, z, pel)
+    f = a[3]
+    assert torch.equal(f, b[3]) and f.sum() > 64
+    assert (b[2][f] >= a[2][f] - 1e-6).all()
+    moved = f & ((b[0] - a[0]).norm(dim=-1) > 1e-6)
+    assert ((b[0][moved, 2] >= WALK_Z_MIN - 1e-4) & (b[0][moved, 2] <= HINT_TOP_Z + 1e-4)).all()
+    ra, rb = req(a[0], a[2]), req(b[0], b[2])
+    assert (rb[f] <= ra[f] + 1e-4).all()  # never needs more walking than the first interception
+    assert ((ra[f] <= WALK_CAP) <= (rb[f] <= WALK_CAP + 1e-4)).all()
+    assert (rb[f] > WALK_CAP + 1e-4).float().mean() < (ra[f] > WALK_CAP).float().mean()  # fewer goals above the cap
+    assert moved.any()
+
+
+def test_e6_changes_only_the_planner_and_the_entropy_correction():
+    """D-125: E6's task is E5's with the walkable contact, and its PPO config differs only in entropy_coef 0.001."""
+    import mjlab.tasks  # noqa: F401
+    from dataclasses import asdict
+    from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
+    from picklebot_mj.planner import WALK_CAP
+    e5, e6 = load_env_cfg("Picklebot-Latent-TimedBall-PPO-G1"), load_env_cfg("Picklebot-Latent-TimedBall-Walk-G1")
+    assert e5.commands["reach"].walk_cap is None and e6.commands["reach"].walk_cap == WALK_CAP
+    e6.commands["reach"].walk_cap = None
+    import re
+    strip = lambda c: re.sub(r" at 0x[0-9a-f]+", "", repr(c))  # noqa: E731
+    assert strip(e5) == strip(e6)
+    r5, r6 = asdict(load_rl_cfg("Picklebot-Latent-TimedBall-PPO-G1")), asdict(load_rl_cfg("Picklebot-Latent-TimedBall-Walk-G1"))
+    assert r6["algorithm"]["entropy_coef"] == 0.001 and r5["algorithm"]["entropy_coef"] != 0.001
+    r6["algorithm"]["entropy_coef"] = r5["algorithm"]["entropy_coef"]
+    assert r5 == r6

@@ -323,3 +323,27 @@ The timed controller with no ball training. Goals come from the noisy spin-blind
   - **The policy's action std grew from 1.05 to 1.19.**
 - **As pre-registered,** the bins above 1.5 m/s stayed near zero. The 0-1.0 m/s bins gained a little root, but legal returns did not rise.
 - **The kill counts** (the standing rule: whatever its cause, the measurement is sound). Stage 5G: 5 of 6 runs used, 1 kill in a row.
+
+### E6 pre-launch check (D-125): E3 zero-shot on the walkable-contact task (seed 4216503; `results/s5g-zs-e3-walk.json`): **FAIL, E6 not launched**
+
+| Item | E3 on the E5 task (seed 4216020) | E3 on the E6 task | Pass line |
+|---|---|---|---|
+| Live goals needing more than 1.5 m/s | 35 % | **29.0 %** | <= 21 % (**fail**) |
+| Legal returns | 15.24 % | 15.01 % [13.77, 16.33] | >= 15.24 % (**fail**) |
+| Falls per feed | 1.74 % | 2.28 % | <= 2.5 % (pass) |
+| Contact | 45.6 % | 47.3 % | |
+| Root within 0.25 m | 0.496 | 0.540 | |
+| Live timing within 50 ms | 0.651 | 0.716 | |
+
+**By required speed (m/s), on the E6 task:**
+
+| | 0-0.5 | 0.5-1.0 | 1.0-1.5 | 1.5-2.0 | 2.0-2.5 | 2.5+ |
+|---|---|---|---|---|---|---|
+| Goals | 670 | 693 | 753 | 516 | 212 | 137 |
+| Root within 0.25 m | 0.952 | 0.791 | 0.448 | 0.167 | 0 | 0 |
+| Legal returns per goal | 0.281 | 0.211 | 0.117 | 0.048 | 0 | 0 |
+| Falls per goal | 0.003 | 0.006 | 0.023 | 0.039 | 0.057 | 0.131 |
+
+- **The walkable contact moved only 6 points of goals below 1.5 m/s** (35 % -> 29 %). For most fast feeds, no point on the ball's path inside the bank's contact heights can be reached at a walk.
+- **Legal returns did not change.** The goals it made walkable (now in the 1.0-1.5 m/s bin) convert at 12 %.
+- **By D-125, no launch; the panel meets.** Stage 5G is still at 5 of 6 runs.
