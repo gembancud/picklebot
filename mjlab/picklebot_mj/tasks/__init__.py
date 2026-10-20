@@ -1725,3 +1725,21 @@ def _latent_timed_ball_walk_rl_cfg():
 register_mjlab_task(task_id=TASK_LATENT_TIMED_BALL_WALK, env_cfg=_latent_timed_ball_walk(),
                     play_env_cfg=_latent_timed_ball_walk(True), runner_cls=CriticWarmupHoldLrRunner,
                     rl_cfg=_latent_timed_ball_walk_rl_cfg())
+
+
+# Stage 5G E6 (D-126, panel round 15): E5's task with every feed one of E3's own legal returns, mirrored to the far side
+# (the ball distribution of a two-robot rally today; recorded by scripts/h5g_e6_own_prep.sh on seed 4216504). E5's
+# planner (the first interception). Correction (D-125): entropy_coef 0.001.
+TASK_LATENT_TIMED_BALL_OWN = "Picklebot-Latent-TimedBall-Own-G1"
+OWN_REPLAY = str(Path(__file__).resolve().parents[2] / "artifacts" / "replay" / "s5g-e3-returns-4216504.pt")
+
+
+def _latent_timed_ball_own(play=False):
+    cfg = _latent_timed_ball_ppo(play)
+    cfg.actions["ball"].replay_file = os.environ.get("PICKLEBOT_OWN_REPLAY", OWN_REPLAY)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_TIMED_BALL_OWN, env_cfg=_latent_timed_ball_own(),
+                    play_env_cfg=_latent_timed_ball_own(True), runner_cls=CriticWarmupHoldLrRunner,
+                    rl_cfg=_latent_timed_ball_walk_rl_cfg())

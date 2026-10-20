@@ -3463,3 +3463,18 @@ Panel round 14 (`mjlab/results/stage5g-e6-review.md`).
 - **Kill lines:** E5's, with the legal line taken from that zero-shot rate.
 
 **After E6:** a panel round. A new stage budget needs a D-entry (at most 4 runs) that states the gap to the video bar (about 56 % legal per shot needed; about 15 % today).
+
+## D-126 - Stage 5G E6: train on the robot's own returns (2026-10-20)
+
+Panel round 15 (`mjlab/results/stage5g-e6own-review.md`).
+
+**The walkable contact (D-125) failed its pre-launch check.** On E3 zero-shot, 29 % of goals were above 1.5 m/s against a 21 % line. The premise failed: the fast court families have no walkable contact point.
+
+**E6 re-plans onto a rally's ball distribution:**
+- every feed is one of E3's own legal returns, mirrored (the existing `replay_file`, recorded on development seed 4216504);
+- E5's planner, the entropy correction, parent E3's endpoint;
+- task `Picklebot-Latent-TimedBall-Own-G1`.
+
+**Pre-launch check:** >= 1,000 feeds, <= 21 % of goals above 1.5 m/s, and falls per feed <= 2.5 %. The zero-shot legal rate becomes the kill line.
+
+**After E6:** a panel round, then a new stage budget of at most 4 runs that states the gap (about 56 % legal per shot needed). Pair-mode P(4+) becomes the primary readout.

@@ -628,3 +628,20 @@ def test_e6_changes_only_the_planner_and_the_entropy_correction():
     assert r6["algorithm"]["entropy_coef"] == 0.001 and r5["algorithm"]["entropy_coef"] != 0.001
     r6["algorithm"]["entropy_coef"] = r5["algorithm"]["entropy_coef"]
     assert r5 == r6
+
+
+def test_e6_own_changes_only_the_feeds_and_the_entropy_correction():
+    """D-126: E6's task is E5's with every feed a replayed own return, and its PPO config differs only in entropy 0.001."""
+    import re
+    import mjlab.tasks  # noqa: F401
+    from dataclasses import asdict
+    from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
+    e5, e6 = load_env_cfg("Picklebot-Latent-TimedBall-PPO-G1"), load_env_cfg("Picklebot-Latent-TimedBall-Own-G1")
+    assert e5.actions["ball"].replay_file == "" and e6.actions["ball"].replay_file.endswith("s5g-e3-returns-4216504.pt")
+    e6.actions["ball"].replay_file = ""
+    strip = lambda c: re.sub(r" at 0x[0-9a-f]+", "", repr(c))  # noqa: E731
+    assert strip(e5) == strip(e6)
+    r5, r6 = asdict(load_rl_cfg("Picklebot-Latent-TimedBall-PPO-G1")), asdict(load_rl_cfg("Picklebot-Latent-TimedBall-Own-G1"))
+    assert r6["algorithm"]["entropy_coef"] == 0.001
+    r6["algorithm"]["entropy_coef"] = r5["algorithm"]["entropy_coef"]
+    assert r5 == r6

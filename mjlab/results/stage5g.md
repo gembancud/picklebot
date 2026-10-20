@@ -347,3 +347,22 @@ The timed controller with no ball training. Goals come from the noisy spin-blind
 - **The walkable contact moved only 6 points of goals below 1.5 m/s** (35 % -> 29 %). For most fast feeds, no point on the ball's path inside the bank's contact heights can be reached at a walk.
 - **Legal returns did not change.** The goals it made walkable (now in the 1.0-1.5 m/s bin) convert at 12 %.
 - **By D-125, no launch; the panel meets.** Stage 5G is still at 5 of 6 runs.
+
+### E6 pre-launch check (D-126): E3 zero-shot on its own mirrored returns (seed 4216505; feeds recorded on 4216504, 5,793 returns): **FAIL, E6 not launched**
+
+| Item | E3 on court feeds (E5 task) | E3 on its own returns | Pass line |
+|---|---|---|---|
+| Feeds | 2,986 | 2,822 | >= 1,000 (pass) |
+| Live goals needing more than 1.5 m/s | 35 % | **52.1 %** | <= 21 % (**fail**) |
+| Falls per feed | 1.74 % | **7.12 %** | <= 2.5 % (**fail**) |
+| Legal returns | 15.24 % | 5.60 % [4.81, 6.51] | (the kill line) |
+| Contact | 45.6 % | 19.0 % | |
+| Goals planned | 3,180 of 2,986 feeds | 2,418 of 2,822 | |
+| Root within 0.25 m | 0.496 | 0.370 | |
+
+- **The robot's own returns are harder to play than the court feeds.**
+  - They land short (3.5 m from the net) and wide (|y| 1.4 m).
+  - Mirrored, they reach a partner who starts near its baseline after only about 1.3 s, so most goals need a run forward of 2-3 m.
+  - This matches R2 (6-8 %, Stage 5F).
+- **Counter caveat:** falls and legal returns are binned by the env's current goal. Feeds with no planned goal (404 here) fall into the 0 m/s bin, which explains that bin's 25.7 % falls per goal.
+- **Two pre-launch fails in a row.** Stage 5G is still at 5 of 6 runs; the panel meets.
