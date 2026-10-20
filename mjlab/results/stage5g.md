@@ -153,3 +153,20 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
   - the feet (65 % of root targets within 25 cm at t*; the bank's median walk is 1.6 m);
   - falls, 0.5 points over the bar.
 - **Not a kill.** The gate is missed, so the panel decides the next run (D-118: one extension of the controller run before the user's call on a bigger controller).
+
+### E3 zero-shot in the ball environment (smoke, not a readiness read; seed 4216014; 256 envs; 30 s; `Picklebot-Latent-TimedBall-G1`)
+
+The timed controller with no ball training. Goals come from the noisy spin-blind planner (keep-it-alive box) on court rally feeds.
+
+| Measure | Value |
+|---|---|
+| Contact | **45.9 %** of 2,988 feeds |
+| Legal returns | **15.9 %** |
+| Falls per feed | 1.1 % |
+| Paddle speed at contact | 5.5 m/s (sd 1.6) |
+| Ball speed out | 7.9 m/s (the keep-it-alive target is about 8) |
+| Net clearance | 1.54 m (high) |
+| Landing x | 3.2 m (target box 4.7-5.7) |
+
+- **Weakest families:** reach_deep 3 % legal, topspin 7 %, cross_forehand 8 %, fast 9 %.
+- **Speed tooling:** the eager contact rollout made in-environment planning CPU-bound (more than 47 min for 30 s of 256 envs). `planner.predict_contact_fast` is a padded, compiled version, equal to the eager one (`test_predict_contact_fast_matches_eager`). The adapter now uses it, and this smoke test took about 10 minutes.

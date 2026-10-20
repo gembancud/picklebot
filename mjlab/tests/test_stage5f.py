@@ -372,3 +372,16 @@ def test_e3_contact_reward_prefers_a_swing_over_parking():
     assert 5 * r(0.0, 7.1, "linear0") - park >= 2.0
     assert 5 * r(0.05, 4.8, "linear0") + 0.2 - park >= 1.0
     assert abs((5 * r(0.0, 0.0, "linear") + 0.6) - (5 * r(0.05, 4.8, "linear") + 0.2)) < 1.0  # E2's near-tie
+
+
+@needs
+def test_predict_contact_fast_matches_eager():
+    """The compiled, padded contact rollout gives the eager rollout's contacts (in-environment planning)."""
+    from picklebot_mj.planner import predict_contact, predict_contact_fast
+    pos, vel, spin, _ = _feed_states(FAMS, 3, seed=4216015)
+    pos, vel = pos.cuda(), vel.cuda()
+    z = torch.zeros_like(pos)
+    a = predict_contact(pos, vel, z)
+    b = predict_contact_fast(pos, vel, z)
+    assert torch.equal(a[3], b[3])
+    assert (a[0] - b[0]).abs().max() < 1e-4 and (a[2] - b[2]).abs().max() < 1e-4

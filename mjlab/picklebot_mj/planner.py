@@ -245,3 +245,39 @@ def keep_alive_target(n: int, gen: torch.Generator | None = None, device="cpu") 
     f0, f1 = KEEP_ALIVE_FLIGHT_S
     xy = torch.stack([x0 + (x1 - x0) * u[:, 0], y0 + (y1 - y0) * u[:, 1]], -1)
     return xy, f0 + (f1 - f0) * u[:, 2]
+
+
+CONTACT_BUCKET = 64  # planning batches padded to a multiple of this, so the compiled rollout keeps a few fixed shapes
+_COMPILED_CONTACT: dict = {}
+
+
+def _contact_chunk(p: BallParams, dt: float, k: int, *a):
+    for _ in range(k):
+        a = _contact_step(p, dt, *a)
+    return a
+
+
+def predict_contact_fast(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tensor, cfg: PlannerCfg = PlannerCfg(),
+                         params: BallParams | None = None, dt: float = CONTACT_DT):
+    """predict_contact for in-environment planning: the batch is padded to a multiple of CONTACT_BUCKET and the
+    rollout runs as compiled chunks of CHUNK steps (eager costs ~720 small kernel launches per call on the CPU). Same
+    results as predict_contact (a rollout may run up to CHUNK - 1 steps past the horizon; the capture is unchanged)."""
+    if not pos.is_cuda:
+        return predict_contact(pos, vel, spin, cfg, params, dt)
+    p = params or _DEFAULT_PARAMS
+    n = pos.shape[0]
+    m = -(-n // CONTACT_BUCKET) * CONTACT_BUCKET
+    pad = lambda x: torch.cat([x, x[-1:].expand(m - n, *x.shape[1:])]) if m > n else x  # noqa: E731
+    x, v, w = pad(pos).clone(), pad(vel).clone(), pad(spin).clone()
+    t = torch.zeros(m, device=pos.device)
+    bounced = torch.zeros(m, dtype=torch.bool, device=pos.device)
+    found = torch.zeros_like(bounced)
+    cx, cv, ct = x.clone(), v.clone(), torch.full((m,), cfg.horizon_s, device=pos.device)
+    key = (id(p), dt, CHUNK)
+    if key not in _COMPILED_CONTACT:
+        _COMPILED_CONTACT[key] = torch.compile(lambda *a: _contact_chunk(p, dt, CHUNK, *a), mode="default",
+                                               dynamic=False, fullgraph=True)
+    f = _COMPILED_CONTACT[key]
+    for _ in range(-(-int(round(cfg.horizon_s / dt)) // CHUNK)):
+        x, v, w, t, bounced, found, cx, cv, ct = f(x, v, w, t, bounced, found, cx, cv, ct)
+    return cx[:n], cv[:n], ct[:n], found[:n]

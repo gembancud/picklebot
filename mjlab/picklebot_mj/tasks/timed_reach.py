@@ -258,7 +258,7 @@ class TimedBallCommand(TimedReachCommand):
         pass
 
     def _update_command(self, env_ids):
-        from picklebot_mj.planner import aim_outgoing, keep_alive_target, paddle_for, predict_contact
+        from picklebot_mj.planner import aim_outgoing, keep_alive_target, paddle_for, predict_contact_fast
         from picklebot_mj.tasks.shadow_swing import HINT_BEHIND, HINT_SIDE_BH, HINT_SIDE_FH
         b = self._env.action_manager.get_term("ball")
         pend = b.plan_pending.clone()
@@ -274,7 +274,7 @@ class TimedBallCommand(TimedReachCommand):
         g = b.gen_plan
         pos = b.ball.pos[idx] + c.pos_noise * torch.randn(len(idx), 3, generator=g, device=self.device)
         vel = b.ball.vel[idx] + c.vel_noise * torch.randn(len(idx), 3, generator=g, device=self.device)
-        cx, cv, ct, found = predict_contact(pos, vel, torch.zeros_like(pos))
+        cx, cv, ct, found = predict_contact_fast(pos, vel, torch.zeros_like(pos))
         tgt, T = keep_alive_target(len(idx), self.gen, self.device)
         nrm, vp = paddle_for(cv, aim_outgoing(cx, tgt, T))
         org = self._env.scene.env_origins[idx]
