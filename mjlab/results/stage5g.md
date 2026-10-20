@@ -52,7 +52,7 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
 | E1 | s5g-e1-timed | Timed command and rewards (`Picklebot-Latent-TimedReach-G1`): swing guide, plus a one-shot contact reward at t* (weight 5 per goal); 4,096 envs; training seed 74 | reach-06/model_34700, widened | iteration 39,700 (5,000 more), or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200):** median paddle error 0.53 m (> 0.25), falls 1.0 % (pass). Cause: the reward design (see below). |
 | E2 | s5g-e2-timed-v2 | One paddle-reward redesign (D-119): reach-06 paddle_track to p* while the goal is open, no swing guide, linear contact velocity factor; plus the two timed_reach fixes (reset, timing grid) | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200): falls 5.12 % (40 / 781 episodes; line 5 %).** Median paddle error **0.01 m**, p90 0.08 m (pass); speed error 96 %; timing within 50 ms 21.7 %; root within 0.25 m 59 %. |
 | E3 | s5g-e3-timed-v3 | The contact reward's speed floor removed: fv = clamp(1 - |dv|/|v*|, 0, 1) (D-121); nothing else | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | **Gate: 3 of 6 met** (endpoint model_39699, seed 4216110). Paddle error median 0.03 m (<= 0.08) and p90 0.10 m (<= 0.20); speed error median **4 %** (<= 20 %); timing within 50 ms 44.5 % (needs 80 %); falls 2.48 % (needs 2 %); root within 0.25 m 64.9 % (needs 90 %). Not a kill (early check passed). |
-| E4 | s5g-e4-root16 | D-118's one extension (D-122): root_progress max_speed 1.0 -> 1.6 m/s; nothing else | E3 endpoint (model_39699) | iteration 44,699, or the last checkpoint before the 7,000 s cap | |
+| E4 | s5g-e4-root16 | D-118's one extension (D-122): root_progress max_speed 1.0 -> 1.6 m/s; nothing else | E3 endpoint (model_39699) | iteration 44,699, or the last checkpoint before the 7,000 s cap | **Gate: 3 of 6 met** (endpoint model_44698, seed 4216310). Paddle 0.02 / 0.06 m; speed error 0.04; timing 71.5 % (needs 80 %); falls 3.07 % (needs 2 %); root within 0.25 m 69.3 % (needs 90 %). Not a kill. **D-118's one extension is used, so the decision goes to the user.** |
 
 - **E1 early kill (D-118)** at model_36200 (seed 4216101, 256 envs): falls above 5 %, or a median paddle error above 0.25 m.
   - **The parent fails both today** (15.2 %, 0.32 m), so E1 must improve on both by 30 % of the run.
@@ -219,3 +219,27 @@ The timed controller with no ball training. Goals come from the noisy spin-blind
 - **Readiness scripts for the new controller** (D-118: the task as an argument, scoring unchanged): `h5g_ownball.sh` (sha256 0eaf5dec...) and `h5g_pairs.sh` (sha256 3c8e1441...).
   - R4's side symmetry is now read on own-ball shots only, the feeder ball excluded (D-116 tightening; `pairs.py` `sides_own_ball`).
   - `stage2_eval.sh` finds `picklebot_latent` runs.
+
+### E4 at its endpoint (model_44698; seed 4216310; 15,558 goals): gate 3 of 6; one extension used, so back to the user
+
+| Item | E3 (D-122 re-evaluation) | E4 early | E4 endpoint | Bar |
+|---|---|---|---|---|
+| Paddle median / p90 | 0.03 / 0.10 m | 0.03 / 0.08 m | **0.02 / 0.06 m** | 0.08 / 0.20 |
+| Speed error | 0.06 | 0.04 | 0.04 | 0.20 |
+| Timing within 50 ms (corrected) | 0.757 | 0.768 | 0.715 | 0.80 |
+| Root within 0.25 m | 0.652 | 0.687 | 0.693 | 0.90 |
+| Falls per episode | 2.60 % | 1.56 % | **3.07 %** | 2 % |
+
+**Root within 0.25 m by required speed:**
+
+| Required speed (m/s) | E4 hit rate | E3 hit rate |
+|---|---|---|
+| 0.0-0.5 | 0.993 | 0.995 |
+| 0.5-1.0 | 0.874 | 0.832 |
+| 1.0-1.5 | 0.698 | 0.631 |
+| 1.5-2.0 | 0.278 | 0.199 |
+| 2.0-2.5 | 0.008 | 0.000 |
+
+- **The raised cap helped the 1-2 m/s goals by 7-8 points.** It cost about 4 points of timing, and falls rose from 1.6 % (early) to 3.1 % (endpoint).
+- **The root item cannot reach 90 %** while about 21 % of bank goals need more than 1.5 m/s and the controller reaches almost none above 2 m/s.
+- **Stage 5G after E4:** 4 of 6 runs used. The E1 gate is missed after D-118's one extension, so the decision goes to the user.
