@@ -385,3 +385,39 @@ def test_predict_contact_fast_matches_eager():
     b = predict_contact_fast(pos, vel, z)
     assert torch.equal(a[3], b[3])
     assert (a[0] - b[0]).abs().max() < 1e-4 and (a[2] - b[2]).abs().max() < 1e-4
+
+
+def test_d122_timing_window_scores_the_strike_not_the_follow_through():
+    """D-122: timing is the closest approach within [t* - 0.25, t* + 0.10]. An on-time swing passes; a swing 100 ms
+    early fails; a swing whose follow-through drifts back nearer p* after the window passes (the old whole-window
+    metric failed it)."""
+    from types import SimpleNamespace
+    from picklebot_mj.tasks.timed_reach import TimedReachCommand
+    cmd = TimedReachCommand.__new__(TimedReachCommand)
+    n, dt, t_star = 3, 0.02, 1.0
+    cmd.p_star = torch.zeros(n, 3)
+    cmd.t_contact = torch.full((n,), t_star)
+    cmd.scored = torch.ones(n, dtype=torch.bool)
+    cmd.min_dp, cmd.t_min = torch.full((n,), 1e9), torch.zeros(n)
+    cmd.min_dp_w, cmd.t_min_w = torch.full((n,), 1e9), torch.full((n,), -1e9)
+    cmd.counts, cmd.counts_w = torch.zeros(3, dtype=torch.long), torch.zeros(2, dtype=torch.long)
+    cmd.stats = {"dt": torch.zeros(101, dtype=torch.long)}
+    cmd.metrics = {}
+    clock = {"t": 0.0}
+    cmd.clock = lambda: torch.full((n,), clock["t"])
+
+    def dist(t):  # paddle distance to p*: env 0 passes at t*, env 1 at t* - 0.1, env 2 at t* then returns to 0.01 m
+        d0 = abs(t - t_star) * 6.0 + 0.03
+        d1 = abs(t - (t_star - 0.1)) * 6.0 + 0.03
+        d2 = d0 if t < t_star + 0.3 else 0.01
+        return torch.tensor([d0, d1, d2])
+    for k in range(int(1.6 / dt) + 1):
+        clock["t"] = k * dt
+        pos = torch.zeros(n, 3)
+        pos[:, 0] = dist(clock["t"])
+        cmd.paddle_state = lambda pos=pos: (pos, torch.zeros(n, 3), torch.zeros(n, 3))
+        cmd._update_metrics()
+    dtw = (cmd.t_min_w - cmd.t_contact).abs()
+    old = (cmd.t_min - cmd.t_contact).abs()
+    assert dtw[0] <= 0.05 and dtw[1] > 0.05 and dtw[2] <= 0.05
+    assert old[2] > 0.05  # the old metric scored env 2's follow-through

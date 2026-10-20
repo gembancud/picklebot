@@ -3394,3 +3394,21 @@ Panel round 11 (`mjlab/results/stage5g-e3-review.md`, 4 of 5).
 - **Standing rule (round 11): a reward pre-launch check compares the behaviours the reward should rank (park vs swing), not only that terms pay.**
 
 Stage 5G: 2 kills in a row so far. A third stops the loop. E3 is run 3 of 6.
+
+## D-122 - Stage 5G: the timing metric corrected; E3 re-evaluated; the one extension is a root fix (2026-10-20)
+
+Panel round 12 (`mjlab/results/stage5g-e4-review.md`).
+
+**Measurement correction, not a gate change** (5 of 5 call the old metric wrong; 3 of 5 choose this fix).
+- Timing is the time of the paddle's closest approach to p* **within [t* - 0.25, t* + 0.10]**. It was the closest approach over the whole goal window, which counted wind-ups, follow-throughs and the flat curve of a parked paddle.
+- The 80 % / 50 ms bar is unchanged.
+- **Falsification:** E2's model_36200 (a parker) must still fail.
+- The code is frozen and unit-tested before the re-read, and old and new are reported side by side.
+
+**E3 is re-evaluated** on seed 4216111, with the root hit rate binned by the required speed.
+
+**The next run is D-118's one extension:** a single root number, from E3's endpoint.
+- If root misses cluster on goals that need more than 1 m/s: `root_progress` max_speed 1.0 -> 1.6.
+- Otherwise: `root_track` std 1.0 -> 0.25.
+
+Early kill: falls > 3 %, paddle p90 > 0.20 m, or speed error > 20 %. After it, a gate miss goes to the user. Ball fine-tuning waits until the E1 gate is met.

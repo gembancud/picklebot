@@ -30,6 +30,8 @@ from mjlab.managers.command_manager import CommandTerm, CommandTermCfg
 from picklebot_mj.tasks.latent_reach import _to_heading, _yaw_frame
 
 GAP_S = (0.3, 0.8)  # recovery time after t* before the next goal
+TIMING_WINDOW = (0.25, 0.10)  # D-122: the closest approach counts only within [t* - 0.25 s, t* + 0.10 s]
+SPEED_BIN, SPEED_BINS = 0.5, 6  # required root speed |root_rel| / t*, 0.5 m/s bins (the last bin is open)
 SWING_LEAD_S = 0.3
 BINS = 100
 
@@ -77,6 +79,13 @@ class TimedReachCommand(CommandTerm):
         self.gen = torch.Generator(device=dev).manual_seed(int(getattr(env.cfg, "seed", 0) or 0) + 777)
         self.stats = {k: torch.zeros(BINS + 1, dtype=torch.long, device=dev) for k in ("dp", "dv_rel", "dt")}
         self.counts = torch.zeros(3, dtype=torch.long, device=dev)  # goals scored, root within 0.25 m, timing <= 50 ms
+        # D-122 timing: the closest approach only within [t* - 0.25, t* + 0.10] (the old whole-window metric kept
+        # alongside); counts_w = (goals closed, timing <= 50 ms). Root hits by the speed the goal requires.
+        self.min_dp_w = torch.full((n,), 1e9, device=dev)
+        self.t_min_w = torch.full((n,), -1e9, device=dev)
+        self.counts_w = torch.zeros(2, dtype=torch.long, device=dev)
+        self.req_speed = torch.zeros(n, device=dev)
+        self.root_by_speed = torch.zeros(SPEED_BINS, 2, dtype=torch.long, device=dev)  # goals, root within 0.25 m
         self.metrics["paddle_dist"] = torch.zeros(n, device=dev)
 
     def clock(self) -> torch.Tensor:
@@ -114,6 +123,11 @@ class TimedReachCommand(CommandTerm):
         closer = dp < self.min_dp
         self.min_dp = torch.where(closer, dp, self.min_dp)
         self.t_min = torch.where(closer, self.clock(), self.t_min)
+        now = self.clock()
+        in_w = (now >= self.t_contact - TIMING_WINDOW[0] - 1e-6) & (now <= self.t_contact + TIMING_WINDOW[1] + 1e-6)
+        closer_w = in_w & (dp < self.min_dp_w)
+        self.min_dp_w = torch.where(closer_w, dp, self.min_dp_w)
+        self.t_min_w = torch.where(closer_w, now, self.t_min_w)
         self.metrics["paddle_dist"] = dp
 
     def _resample_command(self, env_ids):
@@ -123,6 +137,8 @@ class TimedReachCommand(CommandTerm):
             dt = (self.t_min[done] - self.t_contact[done]).abs()
             self.stats["dt"].index_add_(0, (dt / 0.005).clamp(max=BINS).long(), torch.ones_like(done))
             self.counts[2] += (dt <= 0.05).sum()
+            dtw = (self.t_min_w[done] - self.t_contact[done]).abs()  # D-122; no window visit -> a huge error (fail)
+            self.counts_w += torch.stack([torch.ones_like(dtw).sum().long(), (dtw <= 0.05).sum()])
         d = self.robot.data
         k = len(env_ids)
         g = self.bank[torch.randint(0, self.bank.shape[0], (k,), generator=self.gen, device=self.device)]
@@ -140,6 +156,9 @@ class TimedReachCommand(CommandTerm):
         self.time_left[env_ids] = t_star + gap
         self.scored[env_ids] = False
         self.min_dp[env_ids] = 1e9
+        self.min_dp_w[env_ids] = 1e9
+        self.t_min_w[env_ids] = -1e9
+        self.req_speed[env_ids] = g[:, 10:12].norm(dim=-1) / t_star.clamp(min=0.05)
 
     def _update_command(self, env_ids):
         pass
@@ -173,7 +192,11 @@ class TimedReachCommand(CommandTerm):
         return {"goals_scored": n,
                 "paddle_err_median_m": q("dp", 0.01, 0.5), "paddle_err_p90_m": q("dp", 0.01, 0.9),
                 "speed_err_rel_median": q("dv_rel", 0.02, 0.5),
-                "timing_within_50ms": round(int(self.counts[2]) / max(int(self.stats["dt"].sum()), 1), 4),
+                "timing_within_50ms": round(int(self.counts_w[1]) / max(int(self.counts_w[0]), 1), 4),  # D-122
+                "timing_within_50ms_old_whole_window": round(int(self.counts[2]) / max(int(self.stats["dt"].sum()), 1), 4),
+                "root_within_25cm_by_required_speed": {
+                    f"{i * SPEED_BIN:.1f}-{(i + 1) * SPEED_BIN:.1f} m/s": [int(g), round(int(h) / max(int(g), 1), 4)]
+                    for i, (g, h) in enumerate(self.root_by_speed.tolist()) if g},
                 "root_within_25cm": round(int(self.counts[1]) / max(n, 1), 4)}
 
 
@@ -208,6 +231,9 @@ def timed_contact(env, command_name="reach", speed: str = "kernel"):
     cmd.counts[0] += e.sum()
     rd = (env.scene["robot"].data.root_link_pos_w[:, :2] - cmd.root_target).norm(dim=-1)
     cmd.counts[1] += (ev & (rd <= 0.25)).sum()
+    b = (cmd.req_speed / SPEED_BIN).clamp(max=SPEED_BINS - 1).long()
+    cmd.root_by_speed.index_put_((b, torch.zeros_like(b)), e, accumulate=True)
+    cmd.root_by_speed.index_put_((b, torch.ones_like(b)), (ev & (rd <= 0.25)).long(), accumulate=True)
     cmd.stats["dp"].index_add_(0, (dp / 0.01).clamp(max=BINS).long(), e)
     sp_rel = (vel.norm(dim=-1) - cmd.v_star.norm(dim=-1)).abs() / cmd.v_star.norm(dim=-1).clamp(min=0.1)
     cmd.stats["dv_rel"].index_add_(0, (sp_rel / 0.02).clamp(max=BINS).long(), e)

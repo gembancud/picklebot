@@ -45,6 +45,8 @@ env.reset()
 for v in cmd.stats.values():
     v.zero_()
 cmd.counts.zero_()
+for name in ("counts_w", "root_by_speed"):  # D-122 counters
+    getattr(cmd, name).zero_()
 obs = venv.get_observations()
 episodes = falls = 0
 with torch.no_grad():
