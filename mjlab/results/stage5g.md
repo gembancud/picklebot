@@ -51,7 +51,7 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
 |---|---|---|---|---|---|
 | E1 | s5g-e1-timed | Timed command and rewards (`Picklebot-Latent-TimedReach-G1`): swing guide, plus a one-shot contact reward at t* (weight 5 per goal); 4,096 envs; training seed 74 | reach-06/model_34700, widened | iteration 39,700 (5,000 more), or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200):** median paddle error 0.53 m (> 0.25), falls 1.0 % (pass). Cause: the reward design (see below). |
 | E2 | s5g-e2-timed-v2 | One paddle-reward redesign (D-119): reach-06 paddle_track to p* while the goal is open, no swing guide, linear contact velocity factor; plus the two timed_reach fixes (reset, timing grid) | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200): falls 5.12 % (40 / 781 episodes; line 5 %).** Median paddle error **0.01 m**, p90 0.08 m (pass); speed error 96 %; timing within 50 ms 21.7 %; root within 0.25 m 59 %. |
-| E3 | s5g-e3-timed-v3 | The contact reward's speed floor removed: fv = clamp(1 - |dv|/|v*|, 0, 1) (D-121); nothing else | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | |
+| E3 | s5g-e3-timed-v3 | The contact reward's speed floor removed: fv = clamp(1 - |dv|/|v*|, 0, 1) (D-121); nothing else | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | **Gate: 3 of 6 met** (endpoint model_39699, seed 4216110). Paddle error median 0.03 m (<= 0.08) and p90 0.10 m (<= 0.20); speed error median **4 %** (<= 20 %); timing within 50 ms 44.5 % (needs 80 %); falls 2.48 % (needs 2 %); root within 0.25 m 64.9 % (needs 90 %). Not a kill (early check passed). |
 
 - **E1 early kill (D-118)** at model_36200 (seed 4216101, 256 envs): falls above 5 %, or a median paddle error above 0.25 m.
   - **The parent fails both today** (15.2 %, 0.32 m), so E1 must improve on both by 30 % of the run.
@@ -135,3 +135,21 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
 
 - **The swing has started:** the floor removal moved the policy off parking.
 - **Off the GPU while E3 trains:** `TimedBallCommand` and `Picklebot-Latent-TimedBall-G1`. They run the timed controller in the court ball environment with goals from the live ball: the noisy spin-blind planner at the ball term's plan window, a keep-it-alive outgoing ball, and the stance spot. This is the zero-shot evaluation tool. It is not yet run.
+
+### E3 at its endpoint (model_39699; seed 4216110; 1,024 envs, 30 s; 15,581 goals)
+
+| Gate item | E3 | Bar | |
+|---|---|---|---|
+| Paddle error at t*, median | 0.03 m | <= 0.08 m | met |
+| Paddle error at t*, p90 | 0.10 m | <= 0.20 m | met |
+| Speed error, median | **0.04** | <= 0.20 | met |
+| Timing within 50 ms | 0.445 | >= 0.80 | missed |
+| Falls per episode | 0.0248 | <= 0.02 | missed |
+| Root within 0.25 m at t* | 0.649 | >= 0.90 | missed |
+
+- **The swing is learned.** Speed error fell 96 % -> 60 % -> 4 % (parent, early check, endpoint) while position held at 3 cm. The paddle now passes p* at the commanded speed.
+- **Still open:**
+  - timing of the closest approach;
+  - the feet (65 % of root targets within 25 cm at t*; the bank's median walk is 1.6 m);
+  - falls, 0.5 points over the bar.
+- **Not a kill.** The gate is missed, so the panel decides the next run (D-118: one extension of the controller run before the user's call on a bigger controller).
