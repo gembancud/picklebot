@@ -86,3 +86,29 @@ Brief: run 1 is not a kill.
 4. **Credibility** (5 of 5): 4 runs are not credible on the trend. 10 % -> 56 % needs about 15 points per run; Stage 5 has given about 2.
    - **Stop rule** (4 of 5): if R2 at run 2's endpoint is below 20 %, Stage 5H ends, and the user gets the interim video with the gap stated plainly. Experiment design proposed 16.4 %, and 20 % is stricter.
    - Also stop if the stage ends with P(4+) under 1 %.
+
+# Round 19: run 2 killed by court main while own-ball legal rose (2026-10-21)
+
+**Correction check** (5 of 5):
+- **The kill is sound and counts.** Court main fell -6.0 points against the 5-point line. Its interval is [71.0, 74.8] against the 73.9 line, so the kill is real but marginal (motion, RL, experiment design).
+- **Round 18's mix rule was a design error** (5 of 5). The code was right; the arithmetic went unchecked: 0.6 x 0.4 = 24 % court. Run 2 therefore changed two things, adding replays and cutting court rehearsal from 40 % to 24 %, so the court kill is confounded.
+- **From now on,** every plan lists the realised feed shares, and they are checked in a smoke test before launch (experiment design, architecture).
+- **The D-130 stop rule does not fire:** a killed run has no endpoint. It carries over unchanged to run 3's endpoint, as does round 17's "doubled by run 2" rule. The 37 % read (16.6 %) is not taken as an endpoint.
+
+**Decisions:**
+1. **Run 3 = (a)** (5 of 5). Run 2's task with `court_feed_prob` 2/3 of the non-replay feeds: **40 % replay / 40 % court / 20 % drill v2.**
+   - Task `...-KeepAlive-Own-Court40-G1`: config only; the run 2 task is kept unchanged.
+   - Parent: run 1's endpoint (model_2599); a killed run is never a parent. Same replay set (seed 4217040).
+   - **Smoke check:** `test_d131_realised_shares_are_40_40_20` passes (within 2 points).
+   - **The cost, pre-registered:** the drill v2 share falls from 60 % to 20 %, so drill v2 is the line most at risk.
+2. **Kill at model_2900** (parent read on the same new seeds 4217200-4217204), every line reported with its interval:
+   - drill v2 or court main more than 5 points below the parent;
+   - arrival below 90 %;
+   - court falls above 7.4 % per episode;
+   - own-ball legal not above 10.4 %.
+
+   Run 2's 16.6 % is a reference only.
+3. **At the endpoint** (iteration 3399; run 3 of 4):
+   - R2 below 20 % ends Stage 5H, and the user gets the interim video with the gap stated;
+   - P(4+) under 1 % at the stage's end also ends it.
+   - Experiment design's extra rule, "a second court-main kill ends Stage 5H", got 1 of 5 and is recorded.

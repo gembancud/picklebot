@@ -837,3 +837,30 @@ def test_d130_task_changes_only_the_replay_mix():
     diff = [f.name for f in dataclasses.fields(a) if getattr(a, f.name) != getattr(b, f.name)]
     assert sorted(diff) == ["replay_file", "replay_prob"] and b.replay_prob == 0.4
     assert b.replay_file.endswith("s5h01-returns-4217040.pt")
+
+
+def test_d131_run3_restores_the_court_share():
+    """D-131: run 3's task is run 2's with court_feed_prob 2/3 of the non-replay feeds: 40 / 40 / 20 % replay / court /
+    drill v2."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a, b = T._latent_court_v2_res_clean_mix_ka_own().actions["ball"], T._latent_court_v2_res_clean_mix_ka_own_c40().actions["ball"]
+    diff = [f.name for f in dataclasses.fields(a) if getattr(a, f.name) != getattr(b, f.name)]
+    assert diff == ["court_feed_prob"]
+    r, c = b.replay_prob, (1 - b.replay_prob) * b.court_feed_prob
+    assert abs(r - 0.4) < 1e-9 and abs(c - 0.4) < 1e-9 and abs(1 - r - c - 0.2) < 1e-9
+
+
+def test_d131_realised_shares_are_40_40_20(tmp_path):
+    """D-131 smoke (architecture): with replay_prob 0.4 and court_feed_prob 2/3 the realised feed mix is about
+    40 % replay / 40 % court / 20 % drill v2."""
+    from test_drill_v2 import _env
+    env = _env("Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-G1", n=1024, replay_file=_replay_file(tmp_path),
+               replay_prob=0.4, court_feed_prob=2.0 / 3.0)
+    t = env.action_manager.get_term("ball")
+    n = rep = court = 0
+    for _ in range(8):
+        t._feed(t.all_ids)
+        n += t.num_envs; rep += int(t.replay_feed.sum()); court += int(t.court_feed.sum())
+    env.close()
+    assert abs(rep / n - 0.4) < 0.02 and abs(court / n - 0.4) < 0.02 and abs(1 - (rep + court) / n - 0.2) < 0.02

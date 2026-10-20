@@ -3536,3 +3536,15 @@ Panel round 18 (`mjlab/results/stage5h-review.md`).
 **Kill at model_2900:** drill v2 or court main more than 5 points below the parent, arrival below 90 %, falls above 7.4 %, or own-ball legal not above 10.4 %.
 
 **Stop rule:** R2 below 20 % at run 2's endpoint ends Stage 5H. The user then gets the interim video, with the gap to about 56 % per shot stated.
+
+## D-131 - Stage 5H run 3: own-return practice with the court share kept at 40 % (2026-10-21)
+
+Panel round 19 (`mjlab/results/stage5h-review.md`).
+
+**Run 2 was killed by court main** (-6.0 points), while own-ball legal rose from 10.0 % to 16.6 % and falls dropped to 4.4 % per episode.
+
+**D-130's mix was a design error:** the replay draw came first, so court feeds fell from 40 % to 24 %. That was a second change.
+
+**Run 3:** court_feed_prob 2/3 of the non-replay feeds (40 / 40 / 20 % replay / court / drill v2), from run 1's endpoint. Same kill lines. At the endpoint, R2 below 20 % ends Stage 5H.
+
+**From now on,** every plan states its realised feed shares and checks them in a smoke test before launch.

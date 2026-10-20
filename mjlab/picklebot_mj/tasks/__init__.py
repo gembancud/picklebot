@@ -1805,3 +1805,21 @@ def _latent_court_v2_res_clean_mix_ka_own(play=False):
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_OWN, env_cfg=_latent_court_v2_res_clean_mix_ka_own(),
                     runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean_mix_ka_own(True),
                     rl_cfg=_s5e_rl_cfg())
+
+
+# Stage 5H run 3 (D-131, panel round 19): run 2's task with the court share restored. court_feed_prob 2/3 of the feeds
+# that are not replays gives 40 % replay / 40 % court / 20 % drill v2 (run 2's 0.4 of the rest had cut court feeds to
+# 24 %, a second change). Parent run 1's endpoint (s5h-01-keepalive/model_2599; run 2 was killed).
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_OWN_C40 = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Own-Court40-G1"
+OWN_COURT_FEED_PROB = 2.0 / 3.0
+
+
+def _latent_court_v2_res_clean_mix_ka_own_c40(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_own(play)
+    cfg.actions["ball"].court_feed_prob = OWN_COURT_FEED_PROB
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_OWN_C40,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_own_c40(), runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_own_c40(True), rl_cfg=_s5e_rl_cfg())
