@@ -66,3 +66,19 @@ The plan and its budget are in `stage5h-review.md` (round 17): at most 4 runs; p
 - **Training on its own returns worked on the target.** Own-ball legal went from 10.0 to 16.6 % in 300 iterations (intervals far apart), and falls dropped toward R3 (4.4 % per episode).
 - **The cost was court skill:** court main fell 6.0 points. The replay draw comes first, so court feeds dropped from 40 % to 24 % of the mix (round 18's choice).
 - **The kill counts.** Stage 5H: 2 of 4 runs used, 1 kill in a row. The D-130 stop rule (R2 < 20 % at run 2's endpoint) has no endpoint to read; the panel meets.
+
+| 3 | s5h-03-own-c40 | Run 2 with the court share restored: 40 % replay / 40 % court / 20 % drill v2 (`...-Own-Court40-G1`) | s5h-01-keepalive/model_2599 | iteration 3399 | running; early check passed |
+
+### Run 3 early check (model_2900; seeds 4217200-4217204, parent read on the same seeds): **pass**
+
+| Item | Parent | Run 3 at 37 % | Kill line |
+|---|---|---|---|
+| Drill v2 p (0/0) | 0.820 | 0.793 (-2.7) | more than 5 points below |
+| Court main | 0.775 | 0.752 [0.733, 0.770] (-2.3) | more than 5 points below |
+| Court falls per episode | | 6.6 % | > 7.4 % |
+| Move arrival, minimum | | 99.1 % | < 90 % |
+| Own-ball legal (R2 protocol, 512 envs, 6,247 balls) | 10.0 % [9.5, 10.4] | **17.9 % [16.9, 18.8]** | <= 10.4 % |
+
+- **Report only:** box share 11.6 -> 11.4 %; flight 1.03 -> 1.07 s; ball out 10.6 -> 10.3 m/s.
+- **Keeping the court share at 40 % removed run 2's court loss** (-6.0 -> -2.3), and own-ball legal is higher than run 2's (17.9 % against 16.6 %).
+- **Falls are back at run 1's level** (6.6 %, against run 2's 4.4 %).
