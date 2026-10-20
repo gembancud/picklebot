@@ -35,3 +35,41 @@ Brief: E6 on the robot's own mirrored returns failed its pre-launch check. On E3
        - median face error not below E3's (motion, coach).
    - **Both under 0.3 m:** a landing reward.
 3. **No new stage now** (5 of 5). Stage 5G's last run goes on the chosen fix. The D-entry for a new stage of at most 4 runs comes after that run's panel round.
+
+# Round 16b: the decomposition is in; E6's face-factor form (5 of 5)
+
+**Result:** the controller gap dominates (landing x -5.15 m, against the planner's +0.42 m). At contact (medians):
+- face-normal error 16.7 degrees;
+- paddle-velocity error 2.06 m/s and 11.2 degrees;
+- contact offset 0.106 m from the face centre (half-sizes 0.102 x 0.140 m);
+- ball out 8.0 m/s, against 11.4 m/s for the commanded state.
+
+By the pre-registered rule, E6 = (b).
+
+**Correction check:** D-127 fixed the target, the face factor, without checking that its form could tell apart the error sizes we would actually see (experiment design). The pre-registered |n.n*| pays 0.958 at 16.7 degrees, under 5 % signal. No result was misreported.
+
+## Decisions
+
+1. **E6's face factor is clamp(1 - theta/30 degrees, 0, 1)** (5 of 5; form iii). It pays 0.44 at the median and has a constant slope to 30 degrees, mirroring D-121's linear0.
+   - The kernel form (ii) would pay 0.06 at the median and, multiplied by kp and fv, wipe out the contact reward.
+   - **Changing the form is legitimate** (experiment design): the rule chose the target, E6 was not launched, and the reason is a premise check on development-seed diagnostics, not an outcome. It is recorded as D-128, with (i) kept on record.
+   - **The contact offset stays report-only** (5 of 5). Changing it too would be a second change, and it may follow from the face error. Rewarding position at the real contact needs new plumbing.
+2. **Pre-launch checks, all passing:**
+   - `test_d128_face_factor_ranks_aligned_first_and_ties_past_30_degrees_with_a_miss`: 0 > 15 > 25 degrees > a miss > a fall. Past 30 degrees ties with a miss, written down (motion). fa(0) - fa(16.7) >= 0.3 (experiment design).
+   - `test_e6_face_changes_only_the_face_factor_and_the_entropy_correction`.
+   - **On E3's 1,349 recorded contacts** (`results/s5g-face-factor-check.json`):
+
+     | Face factor | Better-half landings | Worse-half landings | Separation | Mean |
+     |---|---|---|---|---|
+     | New | 0.580 | 0.256 | **0.32** | 0.418 |
+     | Old | | | 0.06 | 0.955 |
+
+     - The new factor separates better-landing contacts far more than the old one (RL, architecture). Rank statistics cannot tell monotone forms of the same angle apart, so the separation of the means is the check.
+     - The mean keeps 43.8 % of the old (>= 35 %, motion).
+3. **Kill at about 30 %** (model_40200): E5's lines with the parent's figure on this task, plus D-127's face line.
+   - legal returns <= 15.24 %;
+   - falls per feed > 2.5 %;
+   - bank paddle p90 > 0.20 m or speed error > 20 %;
+   - **median face error >= 16.7 degrees**, read from the early ball evaluation's contacts.
+
+   **Report only:** the contact offset (motion's 0.12 m line and RL's 0.106 m line are 2 of 5 each), realized speed, the landing gaps, and action std.

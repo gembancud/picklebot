@@ -3493,3 +3493,14 @@ Panel round 16 (`mjlab/results/stage5g-contacts-review.md`).
 - **Both under 0.3 m:** a landing reward.
 
 Stage 5G's last run goes on that fix. A new stage budget comes after its panel round.
+
+## D-128 - Stage 5G E6: the face factor clamp(1 - theta/30 deg, 0, 1) (2026-10-20)
+
+Panel rounds 16 and 16b (`mjlab/results/stage5g-contacts-review.md`).
+
+**The D-127 decomposition** of E3 on court feeds (seed 4216507): the controller gap dominates (landing x -5.15 m, against +0.42 m for the planner). Median face error at contact is 16.7 degrees, contacts are 0.106 m off-centre, and the ball leaves at 8.0 m/s against 11.4 commanded. By the pre-registered rule, E6 is the face factor.
+
+**The premise that changed:** the pre-registered form |n.n*| is nearly flat at the measured error (0.958 at 16.7 degrees). So the form is clamp(1 - theta/30 deg, 0, 1), 0.44 at the median, mirroring D-121.
+- Task `Picklebot-Latent-TimedBall-Face-G1`, from E3's endpoint; entropy 0.001 as the D-125 correction.
+- Kill: legal <= 15.24 %, falls per feed > 2.5 %, bank p90 > 0.20 m or speed error > 20 %, median face error >= 16.7 degrees.
+- E6 is Stage 5G's last budgeted run. A panel round follows.

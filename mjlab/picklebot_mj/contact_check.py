@@ -111,3 +111,24 @@ def decompose(rows: torch.Tensor, p: BallParams | None = None) -> dict:
         "contact_offset_from_face_centre_median_m": med(off_plane),
         "sanity_exec_vs_sim_speed_rel_median": med((v_exec - v_real).norm(dim=-1) / v_real.norm(dim=-1).clamp(min=0.1)),
     }
+
+
+def face_factor_separation(rows: torch.Tensor, p: BallParams | None = None) -> dict:
+    """D-128 pre-launch check: how far each face factor separates the contacts whose realized shot lands nearer its
+    target (the better half, by landing distance) from the worse half. Rank statistics cannot tell monotone forms of
+    the same angle apart, so the check is the difference of the factor's means (reward units)."""
+    from picklebot_mj.tasks.timed_reach import face_factor
+    p = p or BallParams()
+    r = rows.float()
+    c, n_r, n_star, tgt, tau = r[:, 0:3], r[:, 12:15], r[:, 30:33], r[:, 36:38], r[:, 42]
+    L_real, _, ok = land(c, r[:, 21:24], r[:, 24:27], p)
+    use = ok & (tau.abs() <= 0.10)
+    err = (L_real - tgt).norm(dim=-1)[use]
+    align = (n_r * n_star).sum(-1).abs()[use]
+    good = err <= err.median()
+    out = {"contacts": int(use.sum())}
+    for name in ("half", "linear30"):
+        fa = face_factor(align, name)
+        out[name] = {"better_half_mean": round(float(fa[good].mean()), 4), "worse_half_mean": round(float(fa[~good].mean()), 4),
+                     "separation": round(float(fa[good].mean() - fa[~good].mean()), 4)}
+    return out

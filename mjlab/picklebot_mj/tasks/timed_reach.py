@@ -215,19 +215,32 @@ def _cmd(env, command_name="reach") -> TimedReachCommand:
     return env.command_manager.get_term(command_name)
 
 
-def contact_factors(dp, dv, v_star_norm, align, speed: str = "kernel"):
+FACE_LINEAR_DEG = 30.0  # D-128: the face factor reaches 0 at this angle between the face normal and n*
+
+
+def face_factor(align, face: str = "half"):
+    """align = |n . n*|. "half" (E1-E5): 0.5 + 0.5 align (0.96 at the measured 16.7 degree median error);
+    "linear30" (E6, D-128): clamp(1 - theta / 30 degrees, 0, 1), theta = acos(align) (0.44 at 16.7 degrees)."""
+    if face == "linear30":
+        theta = torch.rad2deg(torch.acos(align.clamp(0.0, 1.0)))
+        return (1.0 - theta / FACE_LINEAR_DEG).clamp(0.0, 1.0)
+    return 0.5 + 0.5 * align
+
+
+def contact_factors(dp, dv, v_star_norm, align, speed: str = "kernel", face: str = "half"):
     """(position, speed, alignment) factors of the one-shot contact reward; the reward is their product.
     speed "kernel" (E1): exp(-(|dv| / 1 m/s)^2); "linear" (E2, D-119): 0.5 + 0.5 clamp(1 - |dv| / |v*|, 0, 1), whose
-    0.5 floor paid a parked paddle; "linear0" (E3, D-121): clamp(1 - |dv| / |v*|, 0, 1), 0 for a parked paddle."""
+    0.5 floor paid a parked paddle; "linear0" (E3, D-121): clamp(1 - |dv| / |v*|, 0, 1), 0 for a parked paddle.
+    face: see face_factor."""
     kp = torch.exp(-(dp / 0.10) ** 2)
     lin = (1.0 - dv / v_star_norm.clamp(min=0.1)).clamp(0.0, 1.0)
     fv = {"linear": 0.5 + 0.5 * lin, "linear0": lin}.get(speed)
     if fv is None:
         fv = torch.exp(-(dv / 1.0) ** 2)
-    return kp, fv, 0.5 + 0.5 * align
+    return kp, fv, face_factor(align, face)
 
 
-def timed_contact(env, command_name="reach", speed: str = "kernel"):
+def timed_contact(env, command_name="reach", speed: str = "kernel", face: str = "half"):
     """One-shot at t* (factors: contact_factors); also records the per-goal statistics."""
     cmd = _cmd(env, command_name)
     ev = cmd.contact_now()
@@ -235,7 +248,7 @@ def timed_contact(env, command_name="reach", speed: str = "kernel"):
     dp = (pos - cmd.p_star).norm(dim=-1)
     dv = (vel - cmd.v_star).norm(dim=-1)
     align = (normal * cmd.n_star).sum(-1).abs()
-    kp, fv, fa = contact_factors(dp, dv, cmd.v_star.norm(dim=-1), align, speed)
+    kp, fv, fa = contact_factors(dp, dv, cmd.v_star.norm(dim=-1), align, speed, face)
     r = kp * fv * fa
     cmd.last_factors = (kp, fv, fa, ev, (vel * cmd.v_star).sum(-1) / cmd.v_star.norm(dim=-1).clamp(min=0.1))
     e = ev.long()

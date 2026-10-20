@@ -1743,3 +1743,20 @@ def _latent_timed_ball_own(play=False):
 register_mjlab_task(task_id=TASK_LATENT_TIMED_BALL_OWN, env_cfg=_latent_timed_ball_own(),
                     play_env_cfg=_latent_timed_ball_own(True), runner_cls=CriticWarmupHoldLrRunner,
                     rl_cfg=_latent_timed_ball_walk_rl_cfg())
+
+
+# Stage 5G E6 (D-128, rounds 16 and 16b): E5's task (court feeds) with one reward change, the contact reward's face
+# factor clamp(1 - theta / 30 degrees, 0, 1) instead of 0.5 + 0.5 |n . n*| (the D-127 decomposition: the controller gap
+# dominates; median face error 16.7 degrees, where the old factor pays 0.96). Correction (D-125): entropy_coef 0.001.
+TASK_LATENT_TIMED_BALL_FACE = "Picklebot-Latent-TimedBall-Face-G1"
+
+
+def _latent_timed_ball_face(play=False):
+    cfg = _latent_timed_ball_ppo(play)
+    cfg.rewards["timed_contact"].params = {**(cfg.rewards["timed_contact"].params or {}), "face": "linear30"}
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_TIMED_BALL_FACE, env_cfg=_latent_timed_ball_face(),
+                    play_env_cfg=_latent_timed_ball_face(True), runner_cls=CriticWarmupHoldLrRunner,
+                    rl_cfg=_latent_timed_ball_walk_rl_cfg())

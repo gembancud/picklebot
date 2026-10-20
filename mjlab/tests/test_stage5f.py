@@ -669,3 +669,39 @@ def test_contact_decomposition_reproduces_the_plan_from_exact_inputs():
     xy, t, ok = land(cx, vo, torch.zeros_like(cx), p)
     assert ok.all() and (xy - tgt).norm(dim=-1).max() < 0.02
     assert (t - T).abs().max() < 0.01
+
+
+def test_d128_face_factor_ranks_aligned_first_and_ties_past_30_degrees_with_a_miss():
+    """D-128 pre-launch: per goal (contact reward 5 x fa at a perfect position and speed, plus 5 for a legal return),
+    0 deg > 15 deg > 25 deg > a miss > a fall; past 30 degrees the face factor is 0, tied with a miss (written down so
+    a contact past 30 degrees is never counted as better than a miss); 16.7 degrees (E3's median) pays 0.44, at least
+    0.3 below aligned (the old factor paid 0.96)."""
+    import math
+    from picklebot_mj.tasks.timed_reach import face_factor
+    deg = lambda a: torch.tensor([math.cos(math.radians(a))])  # noqa: E731
+    fa = lambda a: float(face_factor(deg(a), "linear30"))  # noqa: E731
+    assert abs(fa(0) - 1.0) < 1e-4 and abs(fa(16.7) - 0.4433) < 1e-3 and fa(30.0) < 1e-4 and fa(45.0) == 0.0
+    assert fa(0) - fa(16.7) >= 0.3
+    assert float(face_factor(deg(16.7), "half")) > 0.95
+    contact, fall = 5.0, -50.0
+    r = [contact * fa(a) for a in (0, 15, 25)]
+    assert r[0] > r[1] > r[2] > 0.0 > fall
+    assert contact * fa(35) == 0.0  # tie with a miss
+
+
+def test_e6_face_changes_only_the_face_factor_and_the_entropy_correction():
+    """D-128: E6's task is E5's with timed_contact's face factor 'linear30', and its PPO config differs only in entropy."""
+    import re
+    import mjlab.tasks  # noqa: F401
+    from dataclasses import asdict
+    from mjlab.tasks.registry import load_env_cfg, load_rl_cfg
+    e5, e6 = load_env_cfg("Picklebot-Latent-TimedBall-PPO-G1"), load_env_cfg("Picklebot-Latent-TimedBall-Face-G1")
+    assert e6.rewards["timed_contact"].params == {"speed": "linear0", "face": "linear30"}
+    assert e5.rewards["timed_contact"].params == {"speed": "linear0"}
+    e6.rewards["timed_contact"].params = {"speed": "linear0"}
+    strip = lambda c: re.sub(r" at 0x[0-9a-f]+", "", repr(c))  # noqa: E731
+    assert strip(e5) == strip(e6)
+    r5, r6 = asdict(load_rl_cfg("Picklebot-Latent-TimedBall-PPO-G1")), asdict(load_rl_cfg("Picklebot-Latent-TimedBall-Face-G1"))
+    assert r6["algorithm"]["entropy_coef"] == 0.001
+    r6["algorithm"]["entropy_coef"] = r5["algorithm"]["entropy_coef"]
+    assert r5 == r6
