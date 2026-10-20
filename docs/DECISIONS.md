@@ -3283,3 +3283,61 @@ The Stage 5F shot runs end here: 4 of 15 runs used. The panel plans the exit sta
 - the self-play readiness milestone and its tools (R2 replay, R4 env pairs; D-116), still the goal.
 
 The readiness measurements already running on the start point, run 3 and run 4 are reported as evidence for the plan.
+
+## D-118 - The exit stage (Stage 5G): a timed goal-conditioned controller with a keep-it-alive planner; readiness re-registered (2026-10-20)
+
+Panel round 9 (`mjlab/results/exit-stage-review.md`, 5 of 5 on the design).
+
+**Correction to D-117.**
+- The exit was legitimate under D-116's three-kill rule. D-108 decision 3's premise, a plateau below p 0.80, did not happen: run 4 reached 0.843.
+- The binding failures are R2 (own-ball returns 6-8 %) and court retention. The stage is designed against those.
+- The pace-rewarding `return_quality` making "winner-only" shots was flagged in round 8 and not acted on. That was the error.
+
+**Stage 5G design.**
+- **Controller:** the H3 latent-reach controller (frozen latent-07), made timed. Its command is p*, v* and n* at a contact time t*, plus the root target.
+  - PPO, ball-free, on a goal bank, warm-started from reach-06/model_34700 with zero-initialised new inputs.
+  - One-shot reward at t*: exp(-(dp/0.10)^2) * exp(-(dv/1.0)^2) * (0.5 + 0.5 n.n*), plus the H3 root-progress, prior and falls terms.
+- **Planner:** `planner.py` extended:
+  - contact point, t* and the ball's velocity there;
+  - an outgoing ball aimed at the **keep-it-alive box**: landing x +4.7 to +5.7 m, |y| <= 1 m, flight time 1.3-1.5 s, spin not commanded;
+  - the paddle state in closed form from the impact model.
+- **Not built:** MaskedMimic or new teachers, re-distillation, residual layers, a learned planner, a spin estimator, a strategy layer, multi-agent wrappers, opponent pools.
+
+**Readiness re-registered.** R1-R4 bars are unchanged (`selfplay-readiness.md`).
+- They are read once per fixed endpoint that hits balls, with the noisy planner on, on the readiness seeds.
+- **Tightened before the next read:**
+  - R4 symmetry is each side's legal rate on own-ball shots, the feeder ball excluded;
+  - R2 also needs an env-clustered bootstrap lower bound >= 0.65.
+- The readiness recordings (4215000+) never shape training goals; the goal bank is recorded on block 4216000-4216999.
+- New versions of the readiness scripts take the task as an argument; their scoring is unchanged and their hashes are recorded before use.
+
+**Kill rules, premise named.** D-113's kill rules assumed fine-tuning the start point (a drop there is forgetting). A fresh controller has nothing to forget.
+- Per-run kills are measured against the stage's own parent.
+- Fixed check: by run E4 some endpoint has drill v2 >= 0.723 and court main >= 76.8 %.
+- R1 keeps every absolute number.
+
+**E1** (ball-free timed reach):
+- **Gate:**
+  - median paddle error at t* <= 0.08 m, 90th percentile <= 0.20 m;
+  - timing within 50 ms on >= 80 % of goals;
+  - paddle speed error <= 20 %;
+  - falls <= 2 % per episode;
+  - arrival >= 90 %.
+- **Early kill at about 30 %:** falls > 5 %, or a median paddle error > 0.25 m.
+
+**Order:**
+1. Step 0 (no training): tests, the goal bank, the reach-06 zero-shot baseline, the spin diagnostic, an evaluation adapter check.
+2. E1 (ball-free).
+3. E2 (zero-shot with the ball: clean battery, R2, R4).
+4. E3 onward, one change each:
+   - PPO with the ball (the goal reward plus legal return replaces the pace term), with 40 % court rehearsal;
+   - then own-ball replay as a training family, if needed.
+
+**Budget:** 6 runs, each at most 2 h.
+
+**Back to the user when any of these happens:**
+- readiness is met;
+- E1 misses its gate after one extension (a bigger controller is the user's compute decision);
+- R2 is below 0.20 after E2 plus one fine-tune;
+- 2 kills in a row;
+- 6 runs are used.
