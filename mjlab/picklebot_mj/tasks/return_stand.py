@@ -736,7 +736,7 @@ class BallPhysicsAction(ActionTerm):
         idx = torch.topk(due.float(), min(PLAN_BATCH, self.num_envs)).indices
         sel = due[idx]
         spot = plan_stance(self.ball.pos[idx], self.ball.vel[idx], self.ball.spin[idx], self.pelvis_xy()[idx],
-                           self._plan_cfg, self.gen_plan, clean=self._plan_clean)
+                           self._plan_cfg, self.gen_plan, clean=self._plan_clean, graphed=True)
         sm = sel.unsqueeze(-1)
         self.stance_xy = self.stance_xy.index_copy(0, idx, torch.where(sm, spot, self.stance_xy[idx]))
         self.recover_xy = self.recover_xy.index_copy(0, idx, torch.where(sm, spot, self.recover_xy[idx]))

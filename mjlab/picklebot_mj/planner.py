@@ -39,23 +39,30 @@ class PlannerCfg:
 
 
 def predict_top(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tensor, cfg: PlannerCfg = PlannerCfg(),
-                params: BallParams | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+                params: BallParams | None = None, graphed: bool = False) -> tuple[torch.Tensor, torch.Tensor]:
     """Roll the flight model forward from (pos, vel, spin), all (N, 3) court-local.
 
     Returns the (N, 2) xy of the interception point (after the first bounce: rising through HINT_TOP_Z, or the apex if
     lower) and an (N,) bool that is False where none was found within the horizon (then the last rolled-out xy).
+    graphed: replay the rollout from a CUDA graph per batch shape (fixed-shape in-environment planning, D-124).
     """
     p = params or _DEFAULT_PARAMS
-    x, v, w = pos.clone(), vel.clone(), spin.clone()
-    bounced = torch.zeros(x.shape[0], dtype=torch.bool, device=x.device)
-    found = torch.zeros_like(bounced)
-    out = x[:, :2].clone()
-    k = CHUNK if x.is_cuda else 1
-    step = _compiled_chunk(p, cfg.dt, k) if x.is_cuda else (lambda *a: _rollout_step(p, cfg.dt, *a))
-    for _ in range(-(-int(round(cfg.horizon_s / cfg.dt)) // k)):
-        x, v, w, bounced, found, out = step(x, v, w, bounced, found, out)
-    out = torch.where(found.unsqueeze(-1), out, x[:, :2])
-    return out, found
+    k = CHUNK if pos.is_cuda else 1
+    step = _compiled_chunk(p, cfg.dt, k) if pos.is_cuda else (lambda *a: _rollout_step(p, cfg.dt, *a))
+    chunks = -(-int(round(cfg.horizon_s / cfg.dt)) // k)
+
+    def roll(x, v, w):
+        x, v, w = x.clone(), v.clone(), w.clone()
+        bounced = torch.zeros(x.shape[0], dtype=torch.bool, device=x.device)
+        found = torch.zeros_like(bounced)
+        out = x[:, :2].clone()
+        for _ in range(chunks):
+            x, v, w, bounced, found, out = step(x, v, w, bounced, found, out)
+        return torch.where(found.unsqueeze(-1), out, x[:, :2]), found
+
+    if graphed and pos.is_cuda:
+        return _graphed(("top", id(p), cfg.dt, chunks, pos.shape[0]), roll, pos, vel, spin)
+    return roll(pos, vel, spin)
 
 
 def _rollout_step(p: BallParams, dt: float, x, v, w, bounced, found, out):
@@ -142,7 +149,7 @@ def stance_from_intercept(xy: torch.Tensor, pelvis_xy: torch.Tensor) -> torch.Te
 
 def plan_stance(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tensor, pelvis_xy: torch.Tensor,
                 cfg: PlannerCfg = PlannerCfg(), gen: torch.Generator | None = None, clean: bool = False,
-                params: BallParams | None = None) -> torch.Tensor:
+                params: BallParams | None = None, graphed: bool = False) -> torch.Tensor:
     """Stance spot (N, 2) from the ball state at the planning time.
 
     clean: true state and spin. Otherwise the state is perturbed by the estimator noise and spin is unknown (zero)
@@ -153,7 +160,7 @@ def plan_stance(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tensor, pelvis
         vel = vel + cfg.vel_noise * torch.randn(vel.shape, generator=gen, device=vel.device)
         if not cfg.know_spin:
             spin = torch.zeros_like(spin)
-    xy, _ = predict_top(pos, vel, spin, cfg, params)
+    xy, _ = predict_top(pos, vel, spin, cfg, params, graphed)
     return stance_from_intercept(xy, pelvis_xy)
 
 
@@ -221,17 +228,67 @@ def aim_outgoing(contact: torch.Tensor, target_xy: torch.Tensor, flight_s: torch
     return v
 
 
+_GRAPHS: dict = {}
+
+
+def _graphed(key, fn, *inputs):
+    """fn(*inputs) replayed from a CUDA graph captured once per key (the key fixes the shapes): the inputs are copied
+    into the graph's static buffers and clones of its outputs are returned. fn must have no host syncs and no random
+    draws. In-environment planning is bound by kernel launches (D-124 profile: 144 ms per contact rollout of 128
+    balls in 90 compiled calls); a replay launches once."""
+    if key not in _GRAPHS:
+        static = [x.clone() for x in inputs]
+        side = torch.cuda.Stream()
+        side.wait_stream(torch.cuda.current_stream())
+        with torch.cuda.stream(side):
+            for _ in range(2):  # warm-up: compilation and the allocator
+                fn(*static)
+        torch.cuda.current_stream().wait_stream(side)
+        graph = torch.cuda.CUDAGraph()
+        with torch.cuda.graph(graph):
+            out = fn(*static)
+        _GRAPHS[key] = (graph, static, out)
+    graph, static, out = _GRAPHS[key]
+    for buf, x in zip(static, inputs):
+        buf.copy_(x)
+    graph.replay()
+    return tuple(o.clone() for o in out)
+
+
 _COMPILED_AIM: dict = {}
 
 
-def aim_outgoing_fast(contact: torch.Tensor, target_xy: torch.Tensor, flight_s: torch.Tensor) -> torch.Tensor:
-    """aim_outgoing for in-environment planning: one compiled graph per batch shape (eager costs about 160 RK4 steps
-    of small kernels per call). Same results as aim_outgoing."""
+def _flight(p: BallParams, steps: int, x, vv, h):
+    w = torch.zeros_like(x)
+    for _ in range(steps):
+        x, vv, w = flight_rk4(x, vv, w, h, p)
+    return x
+
+
+def aim_outgoing_fast(contact: torch.Tensor, target_xy: torch.Tensor, flight_s: torch.Tensor, iters: int = 4,
+                      steps: int = 40) -> torch.Tensor:
+    """aim_outgoing for in-environment planning: each correction's flight is one compiled graph, and the whole aim is
+    replayed from a CUDA graph per batch shape. Same results as aim_outgoing."""
     if not contact.is_cuda:
-        return aim_outgoing(contact, target_xy, flight_s)
-    if "f" not in _COMPILED_AIM:
-        _COMPILED_AIM["f"] = torch.compile(aim_outgoing, mode="default", dynamic=False)
-    return _COMPILED_AIM["f"](contact, target_xy, flight_s)
+        return aim_outgoing(contact, target_xy, flight_s, iters, steps)
+    p = _DEFAULT_PARAMS
+    key = (id(p), steps)
+    if key not in _COMPILED_AIM:
+        _COMPILED_AIM[key] = torch.compile(lambda *a: _flight(p, steps, *a), mode="default", dynamic=False,
+                                           fullgraph=True)
+    fly = _COMPILED_AIM[key]
+
+    def aim(contact, target_xy, flight_s):
+        g = 9.81
+        T = flight_s.unsqueeze(-1)
+        v = torch.cat([(target_xy - contact[:, :2]) / T, ((p.radius - contact[:, 2:3]) + 0.5 * g * T * T) / T], -1)
+        h = T / steps
+        for _ in range(iters):
+            x = fly(contact.clone(), v.clone(), h)
+            v = v + torch.cat([target_xy - x[:, :2], p.radius - x[:, 2:3]], -1) / T
+        return (v,)
+
+    return _graphed(("aim", key, iters, contact.shape[0]), aim, contact, target_xy, flight_s)[0]
 
 
 def paddle_for(v_in: torch.Tensor, v_out: torch.Tensor, cor: float | None = None) -> tuple[torch.Tensor, torch.Tensor]:
@@ -273,7 +330,8 @@ def _contact_chunk(p: BallParams, dt: float, k: int, *a):
 def predict_contact_fast(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tensor, cfg: PlannerCfg = PlannerCfg(),
                          params: BallParams | None = None, dt: float = CONTACT_DT):
     """predict_contact for in-environment planning: the batch is padded to a multiple of CONTACT_BUCKET and the
-    rollout runs as compiled chunks of CHUNK steps (eager costs ~720 small kernel launches per call on the CPU). Same
+    rollout runs as compiled chunks of CHUNK steps replayed from one CUDA graph per batch shape (eager costs ~720 small
+    kernel launches per call on the CPU). Same
     results as predict_contact (a rollout may run up to CHUNK - 1 steps past the horizon; the capture is unchanged)."""
     if not pos.is_cuda:
         return predict_contact(pos, vel, spin, cfg, params, dt)
@@ -281,16 +339,21 @@ def predict_contact_fast(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tenso
     n = pos.shape[0]
     m = -(-n // CONTACT_BUCKET) * CONTACT_BUCKET
     pad = lambda x: torch.cat([x, x[-1:].expand(m - n, *x.shape[1:])]) if m > n else x  # noqa: E731
-    x, v, w = pad(pos).clone(), pad(vel).clone(), pad(spin).clone()
-    t = torch.zeros(m, device=pos.device)
-    bounced = torch.zeros(m, dtype=torch.bool, device=pos.device)
-    found = torch.zeros_like(bounced)
-    cx, cv, ct = x.clone(), v.clone(), torch.full((m,), cfg.horizon_s, device=pos.device)
     key = (id(p), dt, CHUNK)
     if key not in _COMPILED_CONTACT:
         _COMPILED_CONTACT[key] = torch.compile(lambda *a: _contact_chunk(p, dt, CHUNK, *a), mode="default",
                                                dynamic=False, fullgraph=True)
     f = _COMPILED_CONTACT[key]
-    for _ in range(-(-int(round(cfg.horizon_s / dt)) // CHUNK)):
-        x, v, w, t, bounced, found, cx, cv, ct = f(x, v, w, t, bounced, found, cx, cv, ct)
+    chunks = -(-int(round(cfg.horizon_s / dt)) // CHUNK)
+
+    def roll(x, v, w):
+        t = torch.zeros(m, device=x.device)
+        bounced = torch.zeros(m, dtype=torch.bool, device=x.device)
+        found = torch.zeros_like(bounced)
+        cx, cv, ct = x.clone(), v.clone(), torch.full((m,), cfg.horizon_s, device=x.device)
+        for _ in range(chunks):
+            x, v, w, t, bounced, found, cx, cv, ct = f(x, v, w, t, bounced, found, cx, cv, ct)
+        return cx, cv, ct, found
+
+    cx, cv, ct, found = _graphed(("contact", key, chunks, cfg.horizon_s, m), roll, pad(pos), pad(vel), pad(spin))
     return cx[:n], cv[:n], ct[:n], found[:n]

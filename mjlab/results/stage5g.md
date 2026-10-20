@@ -259,3 +259,38 @@ The timed controller with no ball training. Goals come from the noisy spin-blind
 - **E4's better feet do not show up with a real ball.** Legal returns are flat (15.0 % vs 15.9 %), and falls per feed doubled.
 - **The shots still land short** (3.4 m vs the 4.7-5.7 box) and wide (mean |y| 1.42 m vs |y| <= 1).
 - **One rally in 2,525** reached 5 legal returns in a row against the feeder.
+
+### E5 tooling (D-124 round 13 items i-v)
+
+- **(i) Sync-free goals and a compiled aim:**
+  - fixed batches of 128 envs through `topk`, with a persistent due flag;
+  - no false window-closed edge across a reset;
+  - tests `test_ball_goals_planned_in_fixed_batches_without_loss`, `test_ball_goal_no_false_edge_across_reset`, `test_aim_outgoing_fast_matches_eager`.
+- **(ii) The command summary is in the smoke JSON:**
+  - `req_speed` for live goals;
+  - the D-122 timing for live goals;
+  - round 13b's report-only items.
+- **(iii) Equivalence: pass.** E3's zero-shot on the E5 task (seed 4216020): legal returns 15.24 % [13.99, 16.57] against 15.9 %. Live goals need more than 1.5 m/s 35 % of the time; see round 13b.
+- **(iv) Throughput.**
+  - **The first probe** (50 iterations at 4,096 envs) ran at **8.1-8.6 s per iteration**, over the 3.5 s bar. So it was profiled before launch, as the rule says (`scripts/diag/ball_env_profile.py`):
+
+    | Configuration | Time per env step |
+    |---|---|
+    | As built | 354 ms |
+    | Without the timed-goal planner | 150 ms |
+    | Without both planners | 114 ms |
+
+  - **The cause was kernel launches, not GPU work.** The contact rollout cost 144 ms per call (90 compiled calls), and the aim cost 29 ms.
+  - **The fix:** each planner rollout (contact, aim, the ball term's stance rollout) is replayed from one CUDA graph per batch shape. That brought the contact rollout to 18 ms and the aim to 13 ms. The results are identical (`test_graphed_planner_rollouts_match_plain`, plus the eager-equality tests).
+  - **After the fix:** **138.5 ms per env step, 3.32 s per 24-step rollout at 4,096 envs.** At 8,192 envs it is 4.0 s.
+- **(v) The pre-launch check passes** (`test_e5_rewards_rank_legal_return_first`): a swing with a legal return > a swing without one > a miss > a fall.
+- **The E5 ball environment as the battery defines it:** no stance hint, no move or shadow-swing episodes, every family uniform, feeds anchored at the start spot, no curricula.
+
+### E5 launch (D-124): PPO in the ball environment from E3's endpoint
+
+- 4,096 envs, training seed 76, 1,750 iterations (`scripts/h5g_e5.sh`, ITERS=1750). The endpoint is model_41448, or the last checkpoint before the 7,000 s cap.
+- **Early kill** at model_40200 (29 %), on seeds 4216401 / 4216402:
+  - falls per feed > 2.5 %;
+  - legal returns <= 15.9 %;
+  - on the bank: paddle p90 > 0.20 m or speed error > 20 %.
+- **Endpoint:** the ball battery on seed 4216410 and the bank re-read on seed 4216411.

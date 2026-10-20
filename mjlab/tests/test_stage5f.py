@@ -554,3 +554,15 @@ def test_e5_rewards_rank_legal_return_first():
     good, legal, fall = r["timed_contact"] * 1.0, r["legal_return"], cfg.rewards["fall"].weight
     swing_legal, swing, miss = good + legal, good, 0.0
     assert swing_legal > swing > miss > fall + good + legal
+
+
+def test_graphed_planner_rollouts_match_plain():
+    """D-124: the CUDA-graph replays give the plain rollouts' results, and a second replay with new inputs too (the
+    static buffers are refilled)."""
+    from picklebot_mj.planner import predict_top
+    for seed in (4216018, 4216019):
+        pos, vel, spin, _ = _feed_states(FAMS, 4, seed=seed)
+        pos, vel, spin = pos[:64].cuda(), vel[:64].cuda(), spin[:64].cuda()
+        a = predict_top(pos, vel, spin)
+        b = predict_top(pos, vel, spin, graphed=True)
+        assert torch.equal(a[1], b[1]) and (a[0] - b[0]).abs().max() < 1e-5

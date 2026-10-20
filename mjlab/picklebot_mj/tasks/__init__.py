@@ -1682,8 +1682,16 @@ LEGAL_RETURN_WEIGHT = 5.0
 
 
 def _latent_timed_ball_ppo(play=False):
+    from picklebot_mj.feeds import FAMILY_NAMES
     cfg = _latent_timed_ball(play)
     cfg.rewards = dict(_latent_timed_reach_v3(play).rewards)
+    # The ball environment as the Stage 5G ball battery defines it (stage2_eval --no-hint --move-prob 0 --swing-prob 0
+    # --families every --target A --rally): real-ball feeds only, every family uniform, feeds anchored at the start
+    # spot, no curricula. The planner's goals replace the stance hint.
+    b = cfg.actions["ball"]
+    b.hit_hint, b.move_prob, b.swing_prob, b.target_mode, b.feed_anchor = False, 0.0, 0.0, "A", "start"
+    b.feed_mix = FeedMix({f: 1.0 for f in FAMILY_NAMES})
+    b.move_sector_weights, b.adaptive_curriculum, b.reach_curriculum, b.lp_curriculum = None, False, False, False
     step_dt = cfg.sim.mujoco.timestep * cfg.decimation
     cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=LEGAL_RETURN_WEIGHT / step_dt)  # reads last
     return cfg

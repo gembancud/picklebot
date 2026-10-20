@@ -32,6 +32,7 @@ from picklebot_mj.tasks.latent_reach import _to_heading, _yaw_frame
 GAP_S = (0.3, 0.8)  # recovery time after t* before the next goal
 TIMING_WINDOW = (0.25, 0.10)  # D-122: the closest approach counts only within [t* - 0.25 s, t* + 0.10 s]
 SPEED_BIN, SPEED_BINS = 0.5, 6  # required root speed |root_rel| / t*, 0.5 m/s bins (the last bin is open)
+REACHABLE = 1.5  # m/s: goals at or below it count as reachable in the paddle-error report (round 13b)
 SWING_LEAD_S = 0.3
 BINS = 100
 
@@ -86,6 +87,10 @@ class TimedReachCommand(CommandTerm):
         self.counts_w = torch.zeros(2, dtype=torch.long, device=dev)
         self.req_speed = torch.zeros(n, device=dev)
         self.root_by_speed = torch.zeros(SPEED_BINS, 2, dtype=torch.long, device=dev)  # goals, root within 0.25 m
+        # D-124 round 13b (report only): legal returns and falls by the required speed of the env's current goal, and
+        # the paddle error at t* of reachable goals (required speed <= REACHABLE m/s)
+        self.ball_by_speed = torch.zeros(SPEED_BINS, 2, dtype=torch.long, device=dev)  # legal returns, falls
+        self.stats["dp_reach"] = torch.zeros(BINS + 1, dtype=torch.long, device=dev)
         self.metrics["paddle_dist"] = torch.zeros(n, device=dev)
 
     def clock(self) -> torch.Tensor:
@@ -197,6 +202,12 @@ class TimedReachCommand(CommandTerm):
                 "root_within_25cm_by_required_speed": {
                     f"{i * SPEED_BIN:.1f}-{(i + 1) * SPEED_BIN:.1f} m/s": [int(g), round(int(h) / max(int(g), 1), 4)]
                     for i, (g, h) in enumerate(self.root_by_speed.tolist()) if g},
+                "legal_returns_and_falls_per_goal_by_required_speed": {
+                    f"{i * SPEED_BIN:.1f}-{(i + 1) * SPEED_BIN:.1f} m/s": [round(lr / max(g, 1), 4), round(fl / max(g, 1), 4)]
+                    for i, ((g, _), (lr, fl)) in enumerate(zip(self.root_by_speed.tolist(), self.ball_by_speed.tolist()))
+                    if g},
+                "paddle_err_p90_reachable_m": q("dp_reach", 0.01, 0.9),
+                "paddle_err_over_50cm": round(int(self.stats["dp"][50:].sum()) / max(int(self.stats["dp"].sum()), 1), 4),
                 "root_within_25cm": round(int(self.counts[1]) / max(n, 1), 4)}
 
 
@@ -235,6 +246,11 @@ def timed_contact(env, command_name="reach", speed: str = "kernel"):
     cmd.root_by_speed.index_put_((b, torch.zeros_like(b)), e, accumulate=True)
     cmd.root_by_speed.index_put_((b, torch.ones_like(b)), (ev & (rd <= 0.25)).long(), accumulate=True)
     cmd.stats["dp"].index_add_(0, (dp / 0.01).clamp(max=BINS).long(), e)
+    cmd.stats["dp_reach"].index_add_(0, (dp / 0.01).clamp(max=BINS).long(), e * (cmd.req_speed <= REACHABLE).long())
+    ball = env.action_manager._terms.get("ball")
+    if ball is not None and hasattr(ball, "return_now"):  # read before legal_return clears the step flags
+        cmd.ball_by_speed.index_put_((b, torch.zeros_like(b)), ball.return_now.long(), accumulate=True)
+        cmd.ball_by_speed.index_put_((b, torch.ones_like(b)), env.termination_manager.terminated.long(), accumulate=True)
     sp_rel = (vel.norm(dim=-1) - cmd.v_star.norm(dim=-1)).abs() / cmd.v_star.norm(dim=-1).clamp(min=0.1)
     cmd.stats["dv_rel"].index_add_(0, (sp_rel / 0.02).clamp(max=BINS).long(), e)
     return r * ev.float()

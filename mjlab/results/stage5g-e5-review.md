@@ -61,3 +61,41 @@ Brief: the E4 endpoint (3 of 6), E4's zero-shot ball smoke test (legal returns 1
    - (iii) **E3's zero-shot smoke test rerun** on a new development seed with the new adapter. This is the equivalence check: legal returns within E3's interval. It also measures live-ball required speeds.
    - (iv) **A throughput probe:** 50 iterations at 4,096 envs. The bar is at most 3.5 s per iteration, about 2,000 iterations in 2 h. If it is slower, profile it before launching, and never go below 2,048 envs.
    - (v) **The pre-launch check:** per goal, the rewards rank a legal return with a good swing above a good swing that is not legal, above a miss, above a fall.
+
+# Round 13b: live-ball goals need faster walking than the bank; E5 unchanged (5 of 5)
+
+**Tooling (iii): E3's zero-shot on the E5 ball task with the sync-free goals** (seed 4216020; `results/s5g-zs-e3-sync-free.json`).
+- **The equivalence check passes.**
+
+  | | Old adapter | New adapter |
+  |---|---|---|
+  | Legal returns | 15.9 % | 15.24 % [13.99, 16.57] |
+  | Falls per feed | 1.1 % | 1.74 % [1.33, 2.28] |
+  | Contact | 45.9 % | 45.6 % |
+
+- **New fact:** 35 % of live goals need more than 1.5 m/s of walking (the bank: 21 %), and 18 % need more than 2 m/s.
+  - Root within 0.25 m is 49.6 % with the ball, against 65 % on the bank.
+  - With the ball, paddle error at t* has a median of 0.04 m but a p90 of 1.0 m.
+
+| Required speed (m/s) | Live goals | E3 root within 0.25 m |
+|---|---|---|
+| 0-0.5 | 687 | 0.956 |
+| 0.5-1.0 | 690 | 0.796 |
+| 1.0-1.5 | 571 | 0.385 |
+| 1.5-2.0 | 524 | 0.122 |
+| 2.0-2.5 | 327 | 0.009 |
+| 2.5+ | 213 | 0.000 |
+
+**Correction check:** no errors (5 of 5). Motion notes that more than 2 m/s is at or beyond safe G1 walking, so root near 90 % on live goals is probably out of reach under this planner. This is recorded; no gate changes.
+
+**Decisions:**
+1. **E5 runs unchanged** (5 of 5).
+   - A root_progress cap of 1.6 repeats E4, which doubled falls with the ball. It would also be a second change.
+   - The likely lever is a planner that asks for less walking: contact later on the ball's path. It is the pre-registered E6 candidate (5 of 5) if E5's 1.0-2.0 m/s bins do not improve.
+2. **No new kill lines** (4 of 5; architecture alone proposed one).
+3. **Report only, at the early check and the endpoint,** against the table above:
+   - root, legal returns and falls by required speed (5 of 5 for root and legal; falls 2 of 5, added because the counter is shared);
+   - paddle p90 of reachable goals (<= 1.5 m/s; 3 of 5);
+   - the share of goals swung at from more than 0.5 m (coach);
+   - goals per feed (architecture).
+4. **Pre-registered expectation** (experiment design): with the cap at 1.0, the bins above 1.5 m/s stay near zero, and any gain comes from the 0.5-1.5 m/s bins.
