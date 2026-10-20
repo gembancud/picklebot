@@ -1710,7 +1710,7 @@ TASK_LATENT_TIMED_BALL_WALK = "Picklebot-Latent-TimedBall-Walk-G1"
 
 
 def _latent_timed_ball_walk(play=False):
-    from picklebot_mj.planner import WALK_CAP
+    WALK_CAP = 1.5  # planner.WALK_CAP (a literal: planner imports this package; test_e6_changes_only_the_planner_... checks it)
     cfg = _latent_timed_ball_ppo(play)
     cfg.commands["reach"].walk_cap = WALK_CAP
     return cfg
@@ -1760,3 +1760,27 @@ def _latent_timed_ball_face(play=False):
 register_mjlab_task(task_id=TASK_LATENT_TIMED_BALL_FACE, env_cfg=_latent_timed_ball_face(),
                     play_env_cfg=_latent_timed_ball_face(True), runner_cls=CriticWarmupHoldLrRunner,
                     rl_cfg=_latent_timed_ball_walk_rl_cfg())
+
+
+# Stage 5H run 1 (D-129, panel round 17): back to the Stage 5F executor. Run 4's task (court-feed mix 0.4) with one
+# reward change: the pace term return_shaping (return_quality: speed toward the net up to 6 m/s plus a drag-free
+# clearance check, at the first legal contact) is replaced, at the same weight and place, by keep_alive_landing (the
+# keep-alive box and flight-time score of the real legal landing). Net clearance, placement, the rally bonus and
+# legal_return are unchanged. Parent s5d-01-rally/model_1800 (run 4's parent), so run 4 is the A/B comparator.
+from picklebot_mj.tasks.return_stand import keep_alive_landing  # noqa: E402
+
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka(play=False):
+    cfg = _latent_court_v2_res_clean_mix(play)
+    w = cfg.rewards["return_shaping"].weight
+    cfg.rewards = {(k if k != "return_shaping" else "keep_alive"):
+                   (v if k != "return_shaping" else RewardTermCfg(func=keep_alive_landing, weight=w))
+                   for k, v in cfg.rewards.items()}
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA, env_cfg=_latent_court_v2_res_clean_mix_ka(),
+                    runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean_mix_ka(True),
+                    rl_cfg=_s5e_rl_cfg())

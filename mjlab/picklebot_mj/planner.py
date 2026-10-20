@@ -169,6 +169,21 @@ def plan_stance(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tensor, pelvis
 
 KEEP_ALIVE_BOX = ((4.7, 5.7), (-1.0, 1.0))  # landing x, y (far court, court-local; the robot is at x < 0)
 KEEP_ALIVE_FLIGHT_S = (1.3, 1.5)  # contact-to-landing flight time: a feeder-like, returnable rally ball
+KEEP_ALIVE_BOX_TAIL_M = 1.0  # D-129: the keep-alive score falls linearly to 0 this far outside the box
+KEEP_ALIVE_FLIGHT_TAIL_S = 0.5  # and this far outside the flight-time window
+
+
+def keep_alive_score(landing_xy: torch.Tensor, flight_s: torch.Tensor) -> torch.Tensor:
+    """D-129: score in [0, 1] of a landed return (court-local landing xy, contact-to-landing time): 1 inside
+    KEEP_ALIVE_BOX with a flight time inside KEEP_ALIVE_FLIGHT_S; the product of two linear tails outside."""
+    (x0, x1), (y0, y1) = KEEP_ALIVE_BOX
+    f0, f1 = KEEP_ALIVE_FLIGHT_S
+    x, y = landing_xy[:, 0], landing_xy[:, 1]
+    dx = (x0 - x).clamp(min=0.0) + (x - x1).clamp(min=0.0)
+    dy = (y0 - y).clamp(min=0.0) + (y - y1).clamp(min=0.0)
+    box = (1.0 - torch.sqrt(dx * dx + dy * dy) / KEEP_ALIVE_BOX_TAIL_M).clamp(0.0, 1.0)
+    dt = (f0 - flight_s).clamp(min=0.0) + (flight_s - f1).clamp(min=0.0)
+    return box * (1.0 - dt / KEEP_ALIVE_FLIGHT_TAIL_S).clamp(0.0, 1.0)
 
 
 def _contact_step(p: BallParams, dt: float, x, v, w, t, bounced, found, cx, cv, ct):

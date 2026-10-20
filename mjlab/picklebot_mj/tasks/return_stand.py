@@ -374,7 +374,11 @@ class BallPhysicsAction(ActionTerm):
         self.diag = {k: torch.zeros((), device=dev) for k in
                      ("n_contact", "paddle_speed", "paddle_speed_sq", "ball_in_speed", "ball_out_speed",
                       "contact_height", "n_cross", "n_land", "land_x", "land_x_sq", "land_y_abs", "net_clear",
-                      "land_in_A", "land_in_B", "target_hit", "placement")}
+                      "land_in_A", "land_in_B", "target_hit", "placement", "land_keep_alive_box", "keep_alive",
+                      "flight_s")}
+        # D-129: time since the first legal contact (physics steps), and the keep-alive score of a legal landing
+        self.flight_t = torch.zeros(n, device=dev)
+        self.keep_alive_now = torch.zeros(n, device=dev)
 
     # ActionTerm API ---------------------------------------------------------------
     @property
@@ -796,6 +800,7 @@ class BallPhysicsAction(ActionTerm):
         self.hit_out_pos = torch.where(first.unsqueeze(-1), self.ball.pos, self.hit_out_pos)
         self.hit_out_vel = torch.where(first.unsqueeze(-1), self.ball.vel, self.hit_out_vel)
         self.hit_out_spin = torch.where(first.unsqueeze(-1), self.ball.spin, self.hit_out_spin)
+        self.flight_t = torch.where(first, torch.zeros_like(self.flight_t), self.flight_t + dt)
         if self.hit_in is not None:
             st = torch.cat([before.pos, before.vel, before.spin, paddle.pos, paddle.rot[:, :, 2], paddle.lin_vel,
                             paddle.ang_vel], -1)
@@ -844,6 +849,14 @@ class BallPhysicsAction(ActionTerm):
             lands = torch.stack([dA <= TARGET_RADIUS, dB <= TARGET_RADIUS, dT <= TARGET_RADIUS], -1) & ret.unsqueeze(-1)
             self.land_family.index_add_(0, self.family, lands.long())
             bonus = PLACEMENT_MAX * (1.0 - dT / PLACEMENT_RANGE).clamp(min=0.0) * r  # legal landings only
+            from picklebot_mj.planner import KEEP_ALIVE_BOX, keep_alive_score
+            ka = keep_alive_score(lp[:, :2], self.flight_t) * r  # D-129
+            (bx0, bx1), (by0, by1) = KEEP_ALIVE_BOX
+            in_box = (lp[:, 0] >= bx0) & (lp[:, 0] <= bx1) & (lp[:, 1] >= by0) & (lp[:, 1] <= by1)
+            self.diag["land_keep_alive_box"] += (in_box.float() * r).sum()
+            self.diag["keep_alive"] += ka.sum()
+            self.diag["flight_s"] += (self.flight_t * r).sum()
+            self.keep_alive_now = self.keep_alive_now + ka
             self.diag["placement"] += bonus.sum()
             if self.cfg.targets:
                 self.placement_now = self.placement_now + bonus
@@ -941,6 +954,7 @@ class BallPhysicsAction(ActionTerm):
         self.return_now[:] = False
         self.lost_now[:] = False
         self.placement_now.zero_()
+        self.keep_alive_now.zero_()
         self.cross_now[:] = False
         if self.ready is not None:
             self.ready.consume()
@@ -1168,6 +1182,12 @@ def ready_reward(env, dip_weight: float = 1.0) -> torch.Tensor:
     if t.ready is None:
         return torch.zeros(env.num_envs, device=env.device)
     return t.ready.launch_now + dip_weight * t.ready.split_now
+
+
+def keep_alive_landing(env) -> torch.Tensor:
+    """D-129: one-shot at a legal landing: planner.keep_alive_score of the landing point and the contact-to-landing
+    flight time (the real simulated flight: drag, spin, net). Must be read before legal_return."""
+    return _term(env).keep_alive_now
 
 
 def legal_return(env) -> torch.Tensor:

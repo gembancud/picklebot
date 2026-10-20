@@ -330,6 +330,10 @@ def main():
         "landing_abs_y_mean": round(d["land_y_abs"] / nl, 3),
         "landings_in_A": int(d["land_in_A"]), "landings_in_B": int(d["land_in_B"]),
         "target_hits": int(d["target_hit"]),
+        "landings_in_keep_alive_box": int(d["land_keep_alive_box"]),  # D-129
+        "keep_alive_box_share_of_legal_landings": round(d["land_keep_alive_box"] / nl, 4),
+        "keep_alive_score_mean": round(d["keep_alive"] / nl, 4),
+        "flight_time_mean_s": round(d["flight_s"] / nl, 3),
     }
     if "reach" in env.command_manager._terms:  # Stage 5G timed goals from the live ball (D-124)
         cmd = env.command_manager.get_term("reach")

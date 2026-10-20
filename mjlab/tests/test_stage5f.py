@@ -705,3 +705,36 @@ def test_e6_face_changes_only_the_face_factor_and_the_entropy_correction():
     assert r6["algorithm"]["entropy_coef"] == 0.001
     r6["algorithm"]["entropy_coef"] = r5["algorithm"]["entropy_coef"]
     assert r5 == r6
+
+
+def test_d129_keep_alive_score_and_ranking():
+    """D-129: the keep-alive score is 1 for a box landing in the flight window, falls linearly to 0 at 1 m outside the
+    box and 0.5 s outside the window; per shot (weights x step_dt), a box legal return > the parent's typical fast
+    legal return > a return that is not legal > a fall."""
+    from picklebot_mj.planner import keep_alive_score
+    s = lambda x, y, t: float(keep_alive_score(torch.tensor([[x, y]]), torch.tensor([t])))  # noqa: E731
+    assert s(5.2, 0.0, 1.4) == 1.0 and abs(s(4.2, 0.0, 1.4) - 0.5) < 1e-6 and abs(s(5.2, 1.5, 1.4) - 0.5) < 1e-6
+    assert abs(s(5.2, 0.0, 1.05) - 0.5) < 1e-6 and s(5.2, 0.0, 0.7) == 0.0 and s(3.6, 0.0, 1.4) == 0.0
+    import picklebot_mj.tasks as T
+    cfg = T._latent_court_v2_res_clean_mix_ka()
+    dt = cfg.sim.mujoco.timestep * cfg.decimation
+    ka, legal = cfg.rewards["keep_alive"].weight * dt, cfg.rewards["legal_return"].weight * dt
+    box, fast, not_legal = ka * 1.0 + legal, ka * s(4.2, 0.6, 0.7) + legal, 0.0
+    assert box > fast > not_legal > -1.0  # a fall ends the episode (termination), below a missed ball
+    assert list(cfg.rewards)[-1] == "legal_return"
+
+
+def test_d129_task_changes_only_the_pace_term():
+    """D-129: the Stage 5H task is run 4's with return_shaping replaced in place by keep_alive at the same weight."""
+    import picklebot_mj.tasks as T
+    from picklebot_mj.tasks.return_stand import keep_alive_landing, return_shaping
+    a, b = T._latent_court_v2_res_clean_mix(), T._latent_court_v2_res_clean_mix_ka()
+    ka, kb = list(a.rewards), list(b.rewards)
+    i = ka.index("return_shaping")
+    assert kb[i] == "keep_alive" and ka[:i] == kb[:i] and ka[i + 1:] == kb[i + 1:]
+    assert a.rewards["return_shaping"].func is return_shaping and b.rewards["keep_alive"].func is keep_alive_landing
+    assert a.rewards["return_shaping"].weight == b.rewards["keep_alive"].weight
+    for k in ka:
+        if k != "return_shaping":
+            assert a.rewards[k].func is b.rewards[k].func and a.rewards[k].weight == b.rewards[k].weight
+    assert a.actions["ball"].court_feed_prob == b.actions["ball"].court_feed_prob == 0.4

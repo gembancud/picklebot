@@ -3504,3 +3504,23 @@ Panel rounds 16 and 16b (`mjlab/results/stage5g-contacts-review.md`).
 - Task `Picklebot-Latent-TimedBall-Face-G1`, from E3's endpoint; entropy 0.001 as the D-125 correction.
 - Kill: legal <= 15.24 %, falls per feed > 2.5 %, bank p90 > 0.20 m or speed error > 20 %, median face error >= 16.7 degrees.
 - E6 is Stage 5G's last budgeted run. A panel round follows.
+
+## D-129 - Stage 5H: back to the Stage 5F executor with a keep-alive landing reward (2026-10-21)
+
+Panel round 17 (`mjlab/results/stage5h-review.md`).
+
+**Stage 5G is closed:** 6 of 6 runs, E5 and E6 killed in a row. Every timed controller sits at about 15 % legal on court feeds.
+
+**Premises:**
+- that ceiling is structural for the latent-07 timed controller (D-127: the controller gap; the ball leaves at 8.0 m/s against 11.4 commanded);
+- the Stage 5F executor hits well but is paid to hit unreturnable balls (pace).
+
+**Stage 5H, at most 4 runs. Run 1:** run 4's recipe from s5d-01-rally/model_1800, with return_shaping (pace) replaced at the same weight by keep_alive_landing (box x 4.7-5.7, |y| <= 1, flight 1.3-1.5 s, linear tails 1 m and 0.5 s, read at the real legal landing).
+
+**Kill at model_2100:** drill v2 or court main more than 5 points below the parent, arrival below 90 %, court falls above 7.4 % per episode, or the keep-alive box share not above the parent's.
+
+**The gap:** about 56 % legal per shot is needed for the video. Today it is about 8 % on own balls.
+
+**Back to the user:** with a video, if runs over 2 h or a bigger controller are needed, or if Stage 5H ends with P(4+) under 1 %.
+
+**Also:** kill lines are now reported with intervals, and D-124's "no rehearsal" tie-break is recorded as an error.
