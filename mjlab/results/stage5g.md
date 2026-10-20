@@ -366,3 +366,22 @@ The timed controller with no ball training. Goals come from the noisy spin-blind
   - This matches R2 (6-8 %, Stage 5F).
 - **Counter caveat:** falls and legal returns are binned by the env's current goal. Feeds with no planned goal (404 here) fall into the 0 m/s bin, which explains that bin's 25.7 % falls per goal.
 - **Two pre-launch fails in a row.** Stage 5G is still at 5 of 6 runs; the panel meets.
+
+### D-127 contact decomposition: E3 on court feeds (seed 4216507; 1,366 first contacts; `results/s5g-contacts-e3-decomposition.json`)
+
+| Landing (court-local, free flight, no net) | Mean x | Mean \|y\| |
+|---|---|---|
+| Target (keep-alive box) | 5.20 m | 0.50 m |
+| The planner's outgoing ball | 5.19 m | 0.50 m |
+| The commanded paddle state through the simulator's impact model | 5.62 m | 0.56 m |
+| Realized shot | 0.47 m | 1.91 m |
+
+- **The controller gap dominates.** Landing x: the planner gap is +0.42 m (incoming spin accounts for +0.35 m of it); the controller gap is **-5.15 m**. By the pre-registered rule, E6 = (b).
+- **Speed:** planned 11.1 m/s, commanded state 11.4 m/s, realized 8.0 m/s.
+- **Direction error (median):** commanded vs planned 5.7 degrees; realized vs commanded 19.3 degrees.
+- **At contact (medians):**
+  - face-normal error 16.7 degrees;
+  - paddle-velocity error 2.06 m/s and 11.2 degrees;
+  - contact offset from the face centre 0.106 m (the face half-sizes are 0.102 x 0.140 m).
+- **Sanity:** the impact replayed with the realized paddle state matches the simulator (median relative error 1.8 %). The zero-point test passes.
+- **Before building E6,** round 16b checks its face-factor form. The pre-registered |n.n*| gives under 5 % signal at the measured 16.7 degrees.

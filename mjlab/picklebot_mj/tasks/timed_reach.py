@@ -251,6 +251,13 @@ def timed_contact(env, command_name="reach", speed: str = "kernel"):
     if ball is not None and hasattr(ball, "return_now"):  # read before legal_return clears the step flags
         cmd.ball_by_speed.index_put_((b, torch.zeros_like(b)), ball.return_now.long(), accumulate=True)
         cmd.ball_by_speed.index_put_((b, torch.ones_like(b)), env.termination_manager.terminated.long(), accumulate=True)
+        log = getattr(cmd, "contact_log", None)
+        if log is not None and getattr(ball, "hit_in", None) is not None:  # D-127 (evaluation only: a host sync)
+            org = env.scene.env_origins
+            row = torch.cat([ball.hit_in, ball.hit_out_vel, ball.hit_out_spin, cmd.v_star, cmd.n_star, cmd.plan_out,
+                             cmd.plan_tgt, cmd.p_star - org, (cmd.t_contact - cmd.clock()).unsqueeze(-1),
+                             ball.return_now.float().unsqueeze(-1)], -1)
+            log.append(row[ball.hit_now])
     sp_rel = (vel.norm(dim=-1) - cmd.v_star.norm(dim=-1)).abs() / cmd.v_star.norm(dim=-1).clamp(min=0.1)
     cmd.stats["dv_rel"].index_add_(0, (sp_rel / 0.02).clamp(max=BINS).long(), e)
     return r * ev.float()
@@ -292,7 +299,8 @@ def plan_goals(pos, vel, pel, gen, walk_cap=None):
     """Goals for balls at (pos, vel) (court-local, the planner's noisy view) and pelvis xy `pel`: the spin-blind
     contact (point, ball velocity, time, found), a keep-it-alive outgoing ball and the paddle state for it, and the
     stance spot beside the contact. walk_cap (m/s, D-125): the walkable contact instead of the first interception.
-    Returns (cx, ct, found, normal, paddle velocity, stance)."""
+    Returns (cx, ct, found, normal, paddle velocity, stance, planned outgoing ball velocity, landing target xy, flight
+    time)."""
     from picklebot_mj.planner import (aim_outgoing_fast, keep_alive_target, paddle_for, predict_contact_fast,
                                       predict_contact_walkable)
     from picklebot_mj.tasks.shadow_swing import HINT_BEHIND, HINT_SIDE_BH, HINT_SIDE_FH
@@ -301,10 +309,11 @@ def plan_goals(pos, vel, pel, gen, walk_cap=None):
     else:
         cx, cv, ct, found = predict_contact_walkable(pos, vel, torch.zeros_like(pos), pel, cap=walk_cap)
     tgt, T = keep_alive_target(len(pos), gen, pos.device)
-    nrm, vp = paddle_for(cv, aim_outgoing_fast(cx, tgt, T))
+    vo = aim_outgoing_fast(cx, tgt, T)
+    nrm, vp = paddle_for(cv, vo)
     fh = cx[:, 1] <= pel[:, 1]
     stance = torch.stack([cx[:, 0] - HINT_BEHIND, torch.where(fh, cx[:, 1] + HINT_SIDE_FH, cx[:, 1] - HINT_SIDE_BH)], -1)
-    return cx, ct, found, nrm, vp, stance
+    return cx, ct, found, nrm, vp, stance, vo, tgt, T
 
 
 class TimedBallCommand(TimedReachCommand):
@@ -312,6 +321,9 @@ class TimedBallCommand(TimedReachCommand):
         super().__init__(cfg, env)
         self._prev_pending = None
         self.goal_due = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        self.plan_out = torch.zeros(self.num_envs, 3, device=self.device)  # D-127: planned outgoing ball velocity
+        self.plan_tgt = torch.zeros(self.num_envs, 3, device=self.device)  # landing target xy, flight time
+        self.contact_log = None  # evaluation: a list, appended at each first contact (timed_contact)
         self.goals_set = torch.zeros((), dtype=torch.long, device=self.device)
 
     def reset(self, env_ids):
@@ -345,7 +357,7 @@ class TimedBallCommand(TimedReachCommand):
         pos = b.ball.pos[idx] + c.pos_noise * torch.randn(k, 3, generator=g, device=self.device)
         vel = b.ball.vel[idx] + c.vel_noise * torch.randn(k, 3, generator=g, device=self.device)
         pel = b.pelvis_xy(idx)
-        cx, ct, found, nrm, vp, stance = plan_goals(pos, vel, pel, self.gen, self.cfg.walk_cap)
+        cx, ct, found, nrm, vp, stance, vo, tgt, T = plan_goals(pos, vel, pel, self.gen, self.cfg.walk_cap)
         ok = due & found
         m3, m1 = ok.unsqueeze(-1), ok
         org = self._env.scene.env_origins[idx]
@@ -356,6 +368,8 @@ class TimedBallCommand(TimedReachCommand):
         self.p_star[idx] = torch.where(m3, cx + org, self.p_star[idx])
         self.v_star[idx] = torch.where(m3, vp, self.v_star[idx])
         self.n_star[idx] = torch.where(m3, nrm, self.n_star[idx])
+        self.plan_out[idx] = torch.where(m3, vo, self.plan_out[idx])
+        self.plan_tgt[idx] = torch.where(m3, torch.cat([tgt, T.unsqueeze(-1)], -1), self.plan_tgt[idx])
         self.root_target[idx] = torch.where(m3[:, :2], stance + org[:, :2], self.root_target[idx])
         self.t_contact[idx] = torch.where(m1, self.clock()[idx] + t_star, self.t_contact[idx])
         self.req_speed[idx] = torch.where(m1, (stance - pel).norm(dim=-1) / t_star.clamp(min=0.05), self.req_speed[idx])

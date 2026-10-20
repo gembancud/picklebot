@@ -77,6 +77,9 @@ def main():
     ap.add_argument("--rally-n", type=int, default=10)
     ap.add_argument("--record-returns", default=None,
                     help="self-play readiness R2 (D-116): save the post-contact (pos, vel, spin) of every legal return")
+    ap.add_argument("--record-contacts", default=None,
+                    help="D-127: save, at every first contact, the incoming ball, the paddle state, the commanded paddle "
+                         "state and the planned outgoing ball (timed-goal tasks; scripts/diag/contact_decomposition.py)")
     ap.add_argument("--pairs", action="store_true",
                     help="self-play readiness R4 (D-116): two-robot courts from mirrored env pairs")
     ap.add_argument("--replay-file", default=None,
@@ -167,6 +170,8 @@ def main():
         cfg.actions["ball"].replay_file = args.replay_file
     if args.pairs:
         cfg.actions["ball"].pair_mode = True
+    if args.record_contacts:
+        cfg.actions["ball"].record_contacts = True
     cfg.observations["actor"].enable_corruption = False
     groups = {"all": list(STAGE4_FAMILIES), "reach": list(REACH_FAMILIES), "every": list(FAMILY_NAMES),
               "drill5b": list(STAGE4_FAMILIES) + list(REACH_FAMILIES)}  # the Stage 5B drill (14 families)
@@ -205,6 +210,8 @@ def main():
 
     env.reset()  # apply the reset events before the first step (H4 latent action term; reach_eval.py, 2026-10-11)
     term = env.action_manager.get_term("ball")
+    if args.record_contacts:
+        env.command_manager.get_term("reach").contact_log = []
     term.fault_counts.zero_()
     term.ep_family.zero_()
     if hasattr(term, "ep_zone_family"):
@@ -362,6 +369,11 @@ def main():
         rec = torch.cat(term._recorded) if term._recorded else torch.zeros(0, 9, device=env.device)
         torch.save(rec.cpu(), args.record_returns)
         out["recorded_returns"] = {"file": args.record_returns, "n": int(rec.shape[0])}
+    if args.record_contacts:  # D-127: court-local rows, columns as in timed_reach.timed_contact
+        log = env.command_manager.get_term("reach").contact_log
+        rec = torch.cat(log) if log else torch.zeros(0, 1, device=env.device)
+        torch.save(rec.cpu(), args.record_contacts)
+        out["recorded_contacts"] = {"file": args.record_contacts, "n": int(rec.shape[0])}
     if args.replay_file:
         out["replay"] = {"file": args.replay_file, "states": int(term.replay.shape[0])}
     if args.pairs:

@@ -3478,3 +3478,18 @@ Panel round 15 (`mjlab/results/stage5g-e6own-review.md`).
 **Pre-launch check:** >= 1,000 feeds, <= 21 % of goals above 1.5 m/s, and falls per feed <= 2.5 %. The zero-shot legal rate becomes the kill line.
 
 **After E6:** a panel round, then a new stage budget of at most 4 runs that states the gap (about 56 % legal per shot needed). Pair-mode P(4+) becomes the primary readout.
+
+## D-127 - Stage 5G: the robot's shots are the bottleneck; measure before fixing (2026-10-20)
+
+Panel round 16 (`mjlab/results/stage5g-contacts-review.md`).
+
+**E6 on the robot's own returns (D-126) failed its pre-launch check:** 52 % of goals above 1.5 m/s, falls 7.1 % per feed, legal returns 5.6 %. Not launched.
+
+**D-126's order was wrong:** the own balls are short and wide because of the hitter's aim. So shot quality comes first.
+
+**Next, an evaluation-only contact decomposition** of E3 on court feeds (seed 4216507). It splits the landing error into the planner gap and the controller gap. The pre-registered rule: the larger gap picks the fix.
+- **Planner larger:** an impact-model fix, read zero-shot.
+- **Controller larger:** E6 with the face factor's 0.5 floor removed.
+- **Both under 0.3 m:** a landing reward.
+
+Stage 5G's last run goes on that fix. A new stage budget comes after its panel round.

@@ -181,6 +181,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # feed. Replayed balls start in the rally phase (a return may be volleyed or taken after its bounce).
     record_returns: bool = False
     replay_file: str = ""
+    record_contacts: bool = False  # D-127: keep the incoming ball and the paddle state at each first contact (evaluation)
     # Self-play readiness R4 (D-116): two-robot courts from mirrored env pairs (picklebot_mj/pairs.py). The feeder timer
     # is replaced by the pair logic: a return crossing the net becomes the partner env's feed, mirrored.
     pair_mode: bool = False
@@ -338,6 +339,8 @@ class BallPhysicsAction(ActionTerm):
         self.hit_out_vel = torch.zeros(n, 3, device=dev)
         self.hit_out_spin = torch.zeros(n, 3, device=dev)
         self._recorded = [] if getattr(cfg, "record_returns", False) else None
+        # D-127: (ball pos, vel, spin before the contact step, paddle pos, face normal, velocity, angular velocity), [n, 21]
+        self.hit_in = torch.zeros(n, 21, device=dev) if getattr(cfg, "record_contacts", False) else None
         self.replay = None
         self.pairs = None
         self._handoff = torch.zeros(n, dtype=torch.bool, device=dev)
@@ -793,6 +796,10 @@ class BallPhysicsAction(ActionTerm):
         self.hit_out_pos = torch.where(first.unsqueeze(-1), self.ball.pos, self.hit_out_pos)
         self.hit_out_vel = torch.where(first.unsqueeze(-1), self.ball.vel, self.hit_out_vel)
         self.hit_out_spin = torch.where(first.unsqueeze(-1), self.ball.spin, self.hit_out_spin)
+        if self.hit_in is not None:
+            st = torch.cat([before.pos, before.vel, before.spin, paddle.pos, paddle.rot[:, :, 2], paddle.lin_vel,
+                            paddle.ang_vel], -1)
+            self.hit_in = torch.where(first.unsqueeze(-1), st, self.hit_in)
         if getattr(self.cfg, "hit_hint", False) or getattr(self, "plan_on", False):  # after the contact the spot input is the recovery spot
             back = first & self.hit_hint_on
             self.recover_xy = torch.where(back.unsqueeze(-1), self.hit_rec_true, self.recover_xy)

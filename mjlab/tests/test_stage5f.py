@@ -493,6 +493,7 @@ def _fake_ball_cmd(n, batch):
     cmd.gen = torch.Generator().manual_seed(2)
     cmd._prev_pending, cmd.goal_due = None, torch.zeros(n, dtype=torch.bool)
     cmd.goals_set = torch.zeros((), dtype=torch.long)
+    cmd.plan_out, cmd.plan_tgt = torch.zeros(n, 3), torch.zeros(n, 3)
     old = tr.GOAL_BATCH
     tr.GOAL_BATCH = batch
     return cmd, ball, (lambda: setattr(tr, "GOAL_BATCH", old))
@@ -512,7 +513,8 @@ def test_ball_goals_planned_in_fixed_batches_without_loss():
             cmd._update_command(None)
         got = ~cmd.scored
         assert not got[3] and int(got.sum()) == int(cmd.goals_set)
-        cx, ct, found, nrm, vp, stance = plan_goals(ball.ball.pos, ball.ball.vel, torch.zeros(n, 2), torch.Generator())
+        cx, ct, found, nrm, vp, stance, _, _, _ = plan_goals(ball.ball.pos, ball.ball.vel, torch.zeros(n, 2),
+                                                             torch.Generator())
         want = found.clone()
         want[3] = False
         assert torch.equal(got, want), (got, want)
@@ -645,3 +647,25 @@ def test_e6_own_changes_only_the_feeds_and_the_entropy_correction():
     assert r6["algorithm"]["entropy_coef"] == 0.001
     r6["algorithm"]["entropy_coef"] = r5["algorithm"]["entropy_coef"]
     assert r5 == r6
+
+
+def test_contact_decomposition_reproduces_the_plan_from_exact_inputs():
+    """D-127: the simulator's impact model, given the planned incoming ball (no spin) and the commanded paddle state,
+    returns the planner's outgoing ball, and its flight lands on the target within 2 cm (the check's zero point)."""
+    from picklebot_mj.ball_sim import BallParams
+    from picklebot_mj.contact_check import impact, land
+    from picklebot_mj.planner import aim_outgoing, keep_alive_target, paddle_for, predict_contact
+    pos, vel, _, _ = _feed_states(FAMS, 2, seed=4216506)
+    pos, vel = pos[:24], vel[:24]
+    z = torch.zeros_like(pos)
+    cx, cv, ct, found = predict_contact(pos, vel, z)
+    cx, cv = cx[found], cv[found]
+    tgt, T = keep_alive_target(len(cx), torch.Generator().manual_seed(4216506))
+    vo = aim_outgoing(cx, tgt, T)
+    n, vp = paddle_for(cv, vo)
+    p = BallParams()
+    vb, _ = impact(cv, torch.zeros_like(cv), n, vp, p)
+    assert (vb - vo).norm(dim=-1).max() < 1e-3
+    xy, t, ok = land(cx, vo, torch.zeros_like(cx), p)
+    assert ok.all() and (xy - tgt).norm(dim=-1).max() < 0.02
+    assert (t - T).abs().max() < 0.01
