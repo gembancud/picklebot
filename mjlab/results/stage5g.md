@@ -294,3 +294,32 @@ The timed controller with no ball training. Goals come from the noisy spin-blind
   - legal returns <= 15.9 %;
   - on the bank: paddle p90 > 0.20 m or speed error > 20 %.
 - **Endpoint:** the ball battery on seed 4216410 and the bank re-read on seed 4216411.
+
+### E5 early check (model_40200; seeds 4216401 ball / 4216402 bank): **KILL** (2 of 4 lines)
+
+| Item | E5 at 29 % | Reference | Kill line |
+|---|---|---|---|
+| Ball: falls per feed | **0.58 %** | E3 zero-shot 1.74 % | > 2.5 % (pass) |
+| Ball: legal returns | 14.6 % [13.4, 15.9] | E3 zero-shot 15.24 % [14.0, 16.6] | <= 15.9 % (**kill**) |
+| Bank: paddle p90 | 0.28 m | E3 0.10 m | > 0.20 m (**kill**) |
+| Bank: speed error | 0.10 | E3 0.06 | > 0.20 (pass) |
+| Bank: timing within 50 ms | **0.869** | E3 0.757 | report |
+| Bank: root within 0.25 m | 0.526 | E3 0.652 | report |
+| Bank: falls per episode | 4.7 % | E3 2.6 % | report |
+
+**Report only (round 13b), the ball, by required speed (m/s):**
+
+| | 0-0.5 | 0.5-1.0 | 1.0-1.5 | 1.5-2.0 | 2.0-2.5 | 2.5+ |
+|---|---|---|---|---|---|---|
+| Root within 0.25 m | 0.987 | 0.830 | 0.384 | 0.064 | 0 | 0 |
+| E3 zero-shot root | 0.956 | 0.796 | 0.385 | 0.122 | 0.009 | 0 |
+| Legal returns per goal | 0.282 | 0.211 | 0.135 | 0.033 | 0 | 0 |
+| Falls per goal | 0.002 | 0.002 | 0.011 | 0.004 | 0.010 | 0.021 |
+
+- **Other report-only items:** paddle p90 of reachable goals 0.07 m; goals swung at from more than 0.5 m: 21.5 %; live timing 0.737; goals set 3,144.
+- **The training curve (`artifacts/train/s5g-e5-ball.log`):**
+  - The legal_return term rose during the first 160 iterations and was then flat, at 0.13-0.17 per episode.
+  - timed_contact rose from 0 to about 0.55 after the critic warm-up (50 iterations).
+  - **The policy's action std grew from 1.05 to 1.19.**
+- **As pre-registered,** the bins above 1.5 m/s stayed near zero. The 0-1.0 m/s bins gained a little root, but legal returns did not rise.
+- **The kill counts** (the standing rule: whatever its cause, the measurement is sound). Stage 5G: 5 of 6 runs used, 1 kill in a row.
