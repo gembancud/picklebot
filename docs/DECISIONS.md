@@ -3261,3 +3261,25 @@ This is a separate milestone. The Stage 5 gate is unchanged. Readiness seed bloc
 - **Kill rules:** the stage rules are unchanged. The early check at model_2100 adds a court-main item, tightening only: 256 envs, 24 s, kill if more than 5 points below the parent on the same protocol.
 - **Seeds:** 4211200-4211299.
 - **Tests:** `test_court_feed_mix_shares_families_recovery_and_planner` and `test_court_feed_share_zero_is_the_drill_v2_task` both pass.
+
+## D-117 - Run 4 killed (court main 75.9 %); 3 kills in a row: the pre-registered exit is taken (2026-10-20)
+
+**Run 4** (`s5f-04-mix-court40`, 40 % court-feed rehearsal from Stage 5D run 1, endpoint model_2599) was killed by the stage kill rule: court main 75.9 %, below 76.8 %.
+
+Its other results:
+- drill v2 p 0.843 [0.840, 0.847], the best of Stage 5F;
+- groups 0.894 / 0.781 / 0.729;
+- court falls 6.4 % per episode;
+- style 4.157.
+
+The rule is not loosened.
+
+**This is the third kill in a row** (runs 2, 3 and 4). Under D-116, the next kill "takes the exit with no new vote". So the pre-registered exit (D-108 decision 3, D-109 item 8, D-113): **a goal-conditioned controller with an interception planner** replaces the residual-executor shot runs.
+
+The Stage 5F shot runs end here: 4 of 15 runs used. The panel plans the exit stage (round 9). It carries over:
+- the delay tooling (dormant);
+- the clean instrument and its battery (D-113);
+- the court-feed rehearsal;
+- the self-play readiness milestone and its tools (R2 replay, R4 env pairs; D-116), still the goal.
+
+The readiness measurements already running on the start point, run 3 and run 4 are reported as evidence for the plan.

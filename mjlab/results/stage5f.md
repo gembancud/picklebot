@@ -186,7 +186,7 @@ Tracking success, per source:
 
 | # | Run | Change (written before launch) | From | Endpoint | Result |
 |---|---|---|---|---|---|
-| 4 | s5f-04-mix-court40 | Run 3's task with 40 % court-task feeds on drill v2 terms (`...-Clean-Mix-G1`, `court_feed_prob` 0.4) | s5d-01-rally/model_1800 | iteration 2600 (800 iterations), or the last checkpoint before the 7,000 s cap | |
+| 4 | s5f-04-mix-court40 | Run 3's task with 40 % court-task feeds on drill v2 terms (`...-Clean-Mix-G1`, `court_feed_prob` 0.4) | s5d-01-rally/model_1800 | iteration 2600 (800 iterations), or the last checkpoint before the 7,000 s cap | **Killed by the stage kill rules: court main 75.9 % (< 76.8 %).** Endpoint model_2599. Drill v2 p **0.843** [0.840, 0.847]; neutral / moderate / extreme 0.894 / 0.781 / 0.729 (Wilson low 0.890 / 0.772 / 0.716); P(rally >= 10) vs feeder 18.0 %. Court falls 6.4 % per episode (1.8 % per feed); arrival min 99.2 %; style 4.157 / 4.120. Early check had passed (court +0.4 at model_2100, 256 envs). |
 
 - **Early check at model_2100** (kill only): drill v2 more than 5 points below the parent; move arrival below 90 %; court main more than 5 points below the parent (added by D-116).
 - **Seeds:** 4211200-202 for the early check, 4211210-225 for the endpoint battery.
@@ -214,3 +214,14 @@ Tracking success, per source:
   - The tools work end to end.
   - **The robot cannot return its own shots.** Its returns are fast, low and heavily sliced, far outside the feed families it trains on. This is the round-8 coach's "winner-only" warning (`return_quality` rewards pace, 6 m/s reference).
   - R2 and R4 are the binding readiness items. This goes to the panel after run 4's battery and the formal R2 measurements.
+- **Run 4, reported:**
+  - D-101 figure 0.383;
+  - 0/10 cell 0.681;
+  - 40/20 cell 0.074;
+  - move drill at 10 ms: 98.0 % / 0.55 %;
+  - Stage 5D rally P(rally >= 10) 16.8 %;
+  - ready / dip / both 18.8 % / 22.1 % / 7.2 %.
+- **Reading:**
+  - Court rehearsal recovered most of run 3's court loss (67.7 % -> 75.9 %) and kept, even raised, the drill v2 gain (0.830 -> 0.843).
+  - The court line (76.8 %) is still missed, by 0.9 points. The kill rule is not loosened.
+  - **3 kills in a row: under D-116, the pre-registered exit (goal-conditioned controller) is taken, with no new vote.** D-117.
