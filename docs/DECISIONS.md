@@ -3360,3 +3360,13 @@ Parent: reach-06/model_34700, widened again. Bank, gate, early kill and seeds ar
 - t* is snapped to the 20 ms control grid, and the one-shot fires at clock >= t_contact - step_dt / 2.
 
 **Pre-launch check:** 256 envs, 10 s, seed 4216012, pass rules in the review. If the commanded paddle speed is infeasible at lambda 1, that goes to the panel as a premise question; it is never tuned away.
+
+## D-120 - Stage 5G E2 killed (2 kills in a row); the user chose to continue, and the panel plans E3 (2026-10-20)
+
+**E2** (`s5g-e2-timed-v2`) was killed at its early check: falls 5.12 % per episode (40 of 781; line 5 %).
+- Its paddle placement was learned: median error at t* 0.01 m, p90 0.08 m.
+- It does not swing: speed error 96 %, timing within 50 ms 21.7 %.
+
+**That is 2 kills in a row** (E1, E2), so under D-118 / D-119 the decision went to the user. **The user chose: continue, and the panel plans E3.**
+- The kill counter is not reset. A third kill in a row stops the loop again.
+- 4 of 6 runs remain.
