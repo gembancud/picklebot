@@ -7,7 +7,7 @@ REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 source "$HOME/envs/picklebot-mj/bin/activate"
 export PYTHONWARNINGS=ignore
 cd "$REPO/mjlab"
-DIR="$(ls -d artifacts/stage2/logs/picklebot_return_stand/*_"$RUN" artifacts/train/logs/picklebot_return_stand/*_"$RUN" 2>/dev/null | tail -1)"  # exact run name (D-086)
+DIR="$(ls -d artifacts/stage2/logs/picklebot_return_stand/*_"$RUN" artifacts/train/logs/picklebot_return_stand/*_"$RUN" artifacts/train/logs/picklebot_latent/*_"$RUN" 2>/dev/null | tail -1)"  # exact run name (D-086)
 if [ "$CK" = "latest" ]; then CK="$(ls "$DIR"/model_*.pt | sort -V | tail -1)"; else CK="$DIR/$CK"; fi
 echo "checkpoint: $CK"
 python scripts/stage2_eval.py --checkpoint "$CK" "$@" 2>&1 | grep -v -E "^\[INFO\]|^Module |^\||^\+|^$" | tail -40

@@ -193,3 +193,29 @@ The timed controller with no ball training. Goals come from the noisy spin-blind
 - **Root misses cluster where the goal needs more than 1 m/s,** which is root_progress's cap. By D-122's rule, E4 raises the cap to 1.6 m/s.
 - **E4 pre-launch check** (`test_e4_root_speed_cap_ranks_arriving_on_time_first`, passing): over a median goal, walking at the required speed then swinging > a slow walk and a lunge > walking with no swing. The A - B margin grows from cap 1.0 to 1.6.
 - **E4 early kill** at model_41200 (seed 4216301): falls > 3 %, paddle p90 > 0.20 m, or speed error > 20 %. Endpoint seed 4216310.
+
+### E4 early check (model_41200, seed 4216301): **pass**
+
+| Measure | E4 | Kill line |
+|---|---|---|
+| Falls | **1.56 %** | > 3 % |
+| Paddle p90 | 0.08 m | > 0.20 m |
+| Speed error | 0.04 | > 0.20 |
+
+- **Also:**
+  - timing (corrected) 76.8 % (old metric 41.2 %);
+  - root within 0.25 m 68.7 % (E3: 65 %).
+- **Root by required speed:**
+
+  | Required speed (m/s) | Root within 0.25 m |
+  |---|---|
+  | 0.0-0.5 | 0.994 |
+  | 0.5-1.0 | 0.880 |
+  | 1.0-1.5 | 0.680 |
+  | 1.5-2.0 | 0.239 |
+  | 2.0+ | 0.000 |
+
+- **Possible premise issue, for the panel at E4's end:** about 21 % of bank goals need more than 1.5 m/s of root speed. If those stay near 0-24 %, root >= 90 % may be unreachable with this bank at the walking speeds the motion prior supports.
+- **Readiness scripts for the new controller** (D-118: the task as an argument, scoring unchanged): `h5g_ownball.sh` (sha256 0eaf5dec...) and `h5g_pairs.sh` (sha256 3c8e1441...).
+  - R4's side symmetry is now read on own-ball shots only, the feeder ball excluded (D-116 tightening; `pairs.py` `sides_own_ball`).
+  - `stage2_eval.sh` finds `picklebot_latent` runs.

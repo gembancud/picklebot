@@ -35,6 +35,9 @@ class PairCourts:
         self.parked = b()  # no ball in play in this env (waiting for the partner, or a parked reset)
         self.len_hist = torch.zeros(MAX_LEN + 1, dtype=torch.long, device=device)
         self.side_stats = torch.zeros(2, 3, dtype=torch.long, device=device)  # feeds, legal returns, falls
+        # D-116 tightening: the same on own-ball shots only (feeds handed over by the partner; the feeder ball excluded)
+        self.handed = torch.zeros(n, dtype=torch.bool, device=device)
+        self.side_stats_own = torch.zeros(2, 3, dtype=torch.long, device=device)
 
     def court(self, mask: torch.Tensor) -> torch.Tensor:
         """Per-env mask -> per-court mask (either env)."""
@@ -68,12 +71,15 @@ class PairCourts:
         live = ~self.court_dead.repeat(2)  # feeds of a court whose rally has ended are not counted
         cnt = lambda m: torch.stack([(m & live & (s == k)).sum() for k in (0, 1)])  # noqa: E731
         self.side_stats += torch.stack([cnt(over), cnt(over & legal), cnt(over & fell)], -1)
+        own = over & self.handed
+        self.side_stats_own += torch.stack([cnt(own), cnt(own & legal), cnt(own & fell)], -1)
         ok = (over & legal).long()
         self.rally_len += torch.where(self.court_dead, torch.zeros_like(self.rally_len), ok[: self.h] + ok[self.h:])
         self._end(over & ~legal)
         self.parked |= over  # a finished feed leaves no ball in play in this env
         receive = crossing[self.partner] & ~self.court_dead.repeat(2)
         self.parked &= ~receive
+        self.handed = self.handed | receive  # the feed now in play is a partner's ball
         both_idle = self.parked[: self.h] & self.parked[self.h:]
         start = self.court_dead & both_idle & (self.timer < 0)
         self.timer = torch.where(start, torch.full_like(self.timer, delay), self.timer)
@@ -86,6 +92,7 @@ class PairCourts:
         pick_b = (self.rally_idx % 2).bool()  # alternate the side that receives the feeder ball
         fire = torch.cat([go & ~pick_b, go & pick_b])
         self.parked &= ~fire
+        self.handed &= ~fire  # a feeder ball
         return fire, receive
 
     def summary(self) -> dict:
@@ -96,5 +103,7 @@ class PairCourts:
         side = {name: {"feeds": f, "legal": round(l / f, 4) if f else None, "falls_per_shot": round(x / f, 4) if f else None}
                 for name, (f, l, x) in zip(("A", "B"), st)}
         mean = round(sum(i * c for i, c in enumerate(h)) / n, 3) if n else None
+        so = self.side_stats_own.tolist()
+        side_own = {name: {"feeds": f, "legal": round(l / f, 4) if f else None} for name, (f, l, x) in zip(("A", "B"), so)}
         return {"rallies": n, "p_len_ge_4": ge(4), "p_len_ge_10": ge(10), "mean_len": mean, "sides": side,
-                "len_hist": h}
+                "sides_own_ball": side_own, "len_hist": h}
