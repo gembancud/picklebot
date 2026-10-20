@@ -49,3 +49,20 @@ The plan and its budget are in `stage5h-review.md` (round 17): at most 4 runs; p
 - **The keep-alive reward moved the shots only a little.** Flight +0.1 s, box share +3 points; ball speed unchanged (11 m/s).
 - **R2 rose 8.2 -> 10.0 %, but the gap is unchanged:** about 56 % per shot is needed for the video, and P(4+) is 0.04 %.
 - **Stage 5H:** 1 of 4 runs used, no kill. The panel picks run 2.
+
+| 2 | s5h-02-own | Run 1's task with 40 % of feeds one of run 1's own mirrored legal returns (court feeds 0.4 of the rest, so 24 %; `...-KeepAlive-Own-G1`) | s5h-01-keepalive/model_2599 | iteration 3399 | **Killed at the early check: court main -6.0 points.** Own-ball legal rose 10.0 -> 16.6 %. See below. |
+
+### Run 2 early check (model_2900; seeds 4217100-4217104, parent model_2599 read on the same seeds): **KILL** (1 of 5 lines)
+
+| Item | Parent (run 1's endpoint) | Run 2 at 37 % | Kill line |
+|---|---|---|---|
+| Drill v2 p (0/0) | 0.815 | 0.786 (-3.0) | more than 5 points below (pass) |
+| Court main | 0.789 | **0.729** [0.710, 0.748] (-6.0) | more than 5 points below (**kill**) |
+| Court falls per episode | | **4.4 %** | > 7.4 % (pass) |
+| Move arrival, minimum | | 98.6 % | < 90 % (pass) |
+| Own-ball legal (R2 protocol, 512 envs, 6,206 balls) | 10.0 % [9.5, 10.4] (run 1's endpoint R2, 1,024 envs) | **16.6 % [15.6, 17.5]** | <= 10.4 % (pass) |
+
+- **Report only:** keep-alive box share 10.5 -> 11.0 %; flight 1.03 -> 1.08 s; ball out 10.6 -> 10.3 m/s.
+- **Training on its own returns worked on the target.** Own-ball legal went from 10.0 to 16.6 % in 300 iterations (intervals far apart), and falls dropped toward R3 (4.4 % per episode).
+- **The cost was court skill:** court main fell 6.0 points. The replay draw comes first, so court feeds dropped from 40 % to 24 % of the mix (round 18's choice).
+- **The kill counts.** Stage 5H: 2 of 4 runs used, 1 kill in a row. The D-130 stop rule (R2 < 20 % at run 2's endpoint) has no endpoint to read; the panel meets.
