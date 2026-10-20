@@ -385,3 +385,27 @@ The timed controller with no ball training. Goals come from the noisy spin-blind
   - contact offset from the face centre 0.106 m (the face half-sizes are 0.102 x 0.140 m).
 - **Sanity:** the impact replayed with the realized paddle state matches the simulator (median relative error 1.8 %). The zero-point test passes.
 - **Before building E6,** round 16b checks its face-factor form. The pre-registered |n.n*| gives under 5 % signal at the measured 16.7 degrees.
+
+### E6 early check (D-128; model_40200; seeds 4216601 ball and contacts / 4216602 bank): **KILL** (1 of 5 lines)
+
+| Item | E6 at 29 % | E3 (reference) | Kill line |
+|---|---|---|---|
+| Ball: falls per feed | **0.63 %** | 1.74 % | > 2.5 % (pass) |
+| Ball: legal returns | 15.26 % [14.02, 16.59] | 15.24 % | <= 15.24 % (pass, by 0.02 points) |
+| Ball: median face error at contact | **13.0 deg** | 16.7 deg | >= 16.7 deg (pass) |
+| Bank: paddle p90 | **0.38 m** | 0.10 m | > 0.20 m (**kill**) |
+| Bank: speed error | 0.16 | 0.06 | > 0.20 (pass) |
+| Bank: timing / root / falls per episode | 0.818 / 0.515 / 1.9 % | 0.757 / 0.652 / 2.6 % | report |
+
+**Report only:**
+- contact offset 0.100 m (E3 0.106);
+- **realized ball speed 7.15 m/s** (E3 8.0);
+- landing gap x: planner +0.44 m, controller **-5.91 m** (E3 -5.15);
+- legal returns per goal by required speed: 0.31, 0.23, 0.12, 0.01, 0, 0;
+- action std 1.05 -> 0.87 (the entropy correction worked as intended).
+
+**Findings:**
+- **The face factor worked on the face** (16.7 -> 13.0 degrees), and falls dropped again.
+- **The shot did not improve:** the ball leaves slower, and the controller's landing gap grew.
+- **For the second run in a row, ball PPO broke the ball-free goal skill** (bank paddle p90 0.28 m in E5, 0.38 m in E6). The guard caught it.
+- **The kill counts:** 2 kills in a row (E5, E6). **Stage 5G's 6-run budget is used up.** Per D-125, the panel re-plans the route to the video rather than tuning.
