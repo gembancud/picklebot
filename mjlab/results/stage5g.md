@@ -50,7 +50,7 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
 | # | Run | Change (written before launch) | From | Endpoint | Result |
 |---|---|---|---|---|---|
 | E1 | s5g-e1-timed | Timed command and rewards (`Picklebot-Latent-TimedReach-G1`): swing guide, plus a one-shot contact reward at t* (weight 5 per goal); 4,096 envs; training seed 74 | reach-06/model_34700, widened | iteration 39,700 (5,000 more), or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200):** median paddle error 0.53 m (> 0.25), falls 1.0 % (pass). Cause: the reward design (see below). |
-| E2 | s5g-e2-timed-v2 | One paddle-reward redesign (D-119): reach-06 paddle_track to p* while the goal is open, no swing guide, linear contact velocity factor; plus the two timed_reach fixes (reset, timing grid) | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | |
+| E2 | s5g-e2-timed-v2 | One paddle-reward redesign (D-119): reach-06 paddle_track to p* while the goal is open, no swing guide, linear contact velocity factor; plus the two timed_reach fixes (reset, timing grid) | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200): falls 5.12 % (40 / 781 episodes; line 5 %).** Median paddle error **0.01 m**, p90 0.08 m (pass); speed error 96 %; timing within 50 ms 21.7 %; root within 0.25 m 59 %. |
 
 - **E1 early kill (D-118)** at model_36200 (seed 4216101, 256 envs): falls above 5 %, or a median paddle error above 0.25 m.
   - **The parent fails both today** (15.2 %, 0.32 m), so E1 must improve on both by 30 % of the run.
@@ -97,3 +97,14 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
 - **The reset fix holds:** the first goal after a reset sits 1.80 m from the pelvis (median, 259 goals), later goals 1.68 m.
 - **Commanded paddle speed** (bank): along n* 7.10 m/s median (6.43-7.70), tangential 1.77 m/s. The swing really is fast; the tangential copy is small.
 - **The parent's peak paddle speed** in 10 s: 3.9 / 4.8 / 6.1 m/s (q10 / 50 / 90). Not shown infeasible, so there is no premise stop. Watch whether the speed error falls in E2.
+
+### E2 at its early check: killed on falls by one episode; 2 kills in a row
+
+- **Paddle position is learned:** median error at t* 0.01 m, p90 0.08 m. The position part of the E1 gate is already met at 30 % of the run.
+- **No swing:** speed error 96 %. The policy parks the paddle on p* and waits. Timing within 50 ms is 21.7 %: it arrives early and holds.
+- **Falls:** 5.12 % per episode (40 of 781 at the early check's 256 envs and 20 s), against the 5 % line. The rule is not loosened; it is a kill.
+- **Stage 5G: 2 kills in a row (E1, E2), 2 of 6 runs. Under D-118 / D-119 the decision returns to the user.** The loop stops.
+- **Evidence for the next decision:**
+  - The motion reviewer's round-10 concern: at lambda 1, executors topped out at 4.4-4.7 m/s paddle speed, and the commanded speed along n* is 7.1 m/s.
+  - The parent's peak paddle speed is 4.8 m/s (median).
+  - Speed, not position, is the open problem.
