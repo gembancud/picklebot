@@ -243,3 +243,19 @@ The timed controller with no ball training. Goals come from the noisy spin-blind
 - **The raised cap helped the 1-2 m/s goals by 7-8 points.** It cost about 4 points of timing, and falls rose from 1.6 % (early) to 3.1 % (endpoint).
 - **The root item cannot reach 90 %** while about 21 % of bank goals need more than 1.5 m/s and the controller reaches almost none above 2 m/s.
 - **Stage 5G after E4:** 4 of 6 runs used. The E1 gate is missed after D-118's one extension, so the decision goes to the user.
+
+### E4 zero-shot in the ball environment (smoke; seed 4216015; 256 envs; 30 s; `results/s5g-zs-e4.json`)
+
+| Measure | E3 (seed 4216014) | E4 |
+|---|---|---|
+| Contact | 45.9 % | 44.6 % of 2,967 feeds |
+| Legal returns | 15.9 % | 15.0 % [13.8, 16.3] |
+| Falls per feed | 1.1 % | 2.4 % |
+| Paddle speed at contact | 5.5 m/s | 5.8 m/s |
+| Ball speed out | 7.9 m/s | 8.3 m/s |
+| Net clearance | 1.54 m | 1.78 m |
+| Landing x (box 4.7-5.7) | 3.2 m | 3.4 m (sd 1.5) |
+
+- **E4's better feet do not show up with a real ball.** Legal returns are flat (15.0 % vs 15.9 %), and falls per feed doubled.
+- **The shots still land short** (3.4 m vs the 4.7-5.7 box) and wide (mean |y| 1.42 m vs |y| <= 1).
+- **One rally in 2,525** reached 5 legal returns in a row against the feeder.

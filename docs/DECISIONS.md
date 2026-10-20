@@ -3412,3 +3412,16 @@ Panel round 12 (`mjlab/results/stage5g-e4-review.md`).
 - Otherwise: `root_track` std 1.0 -> 0.25.
 
 Early kill: falls > 3 %, paddle p90 > 0.20 m, or speed error > 20 %. After it, a gate miss goes to the user. Ball fine-tuning waits until the E1 gate is met.
+
+## D-123 - The user hands D-118's "back to the user" triggers to the panel (2026-10-20)
+
+After E4 missed its gate, the loop stopped and asked the user, as D-118 / D-122 said. The user asked why, because a gate miss is not one of the loop's stop conditions.
+
+**What changes:**
+- The only stops that go to the user are their hard stops (`docs/PANEL.md`): sudo, Unity, deletions, downloads, runs over 2 h, and final seeds.
+- Every other "back to the user" trigger in D-118 and D-122 now goes to the panel. That covers a gate miss after the extension, 2 kills in a row, the 6-run budget, and R2 below 0.20.
+- The user: "let the panel decide, get back to me when you have a video of a rally the panel is approving to show me".
+
+**What stays the same:** the readiness milestone (R1-R4), every threshold, and all the standing rules.
+
+E4's zero-shot ball smoke test (seed 4216015): legal returns 15.0 % (E3 15.9 %), falls per feed 2.4 % (E3 1.1 %). Panel round 13 decides the next step.
