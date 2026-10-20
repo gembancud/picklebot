@@ -50,6 +50,7 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
 | # | Run | Change (written before launch) | From | Endpoint | Result |
 |---|---|---|---|---|---|
 | E1 | s5g-e1-timed | Timed command and rewards (`Picklebot-Latent-TimedReach-G1`): swing guide, plus a one-shot contact reward at t* (weight 5 per goal); 4,096 envs; training seed 74 | reach-06/model_34700, widened | iteration 39,700 (5,000 more), or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200):** median paddle error 0.53 m (> 0.25), falls 1.0 % (pass). Cause: the reward design (see below). |
+| E2 | s5g-e2-timed-v2 | One paddle-reward redesign (D-119): reach-06 paddle_track to p* while the goal is open, no swing guide, linear contact velocity factor; plus the two timed_reach fixes (reset, timing grid) | reach-06/model_34700, widened | iteration 39,700, or the last checkpoint before the 7,000 s cap | |
 
 - **E1 early kill (D-118)** at model_36200 (seed 4216101, 256 envs): falls above 5 %, or a median paddle error above 0.25 m.
   - **The parent fails both today** (15.2 %, 0.32 m), so E1 must improve on both by 30 % of the run.
@@ -72,3 +73,27 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
   - Falls fell from 15.2 % to 1.0 %; mean paddle distance drifted from about 1.0 m to 1.13 m.
   - Early check: median paddle error 0.53 m, speed error 84 %, timing within 50 ms 4.8 %, root within 0.25 m 52 %.
 - **Counters:** Stage 5G kills 1, runs 1 of 6. The panel (round 10) specifies the fix.
+
+### E2 pre-launch check (D-119; parent zero-shot on the E2 task, 256 envs, 10 s, seed 4216012): **pass**
+
+- **Reward sums per env:**
+
+  | Term | Sum |
+  |---|---|
+  | paddle | 113 |
+  | timed_contact | 211 |
+  | root | 206 |
+  | root progress | 161 |
+  | alive | 250 |
+  | fall | -5.9 |
+  | latent L2 | -158 |
+  | action rate | -27 |
+
+- **Contact reward:** > 0.01 on 47 % of 1,293 scored goals (q10 / 50 / 90 = 0.000 / 0.001 / 0.454).
+- **Factors:**
+  - speed: 0.50 / 0.50 / 0.54, std 0.021 (varies);
+  - position: 0.00 / 0.002 / 0.98;
+  - align: 0.61 / 0.84 / 0.97.
+- **The reset fix holds:** the first goal after a reset sits 1.80 m from the pelvis (median, 259 goals), later goals 1.68 m.
+- **Commanded paddle speed** (bank): along n* 7.10 m/s median (6.43-7.70), tangential 1.77 m/s. The swing really is fast; the tangential copy is small.
+- **The parent's peak paddle speed** in 10 s: 3.9 / 4.8 / 6.1 m/s (q10 / 50 / 90). Not shown infeasible, so there is no premise stop. Watch whether the speed error falls in E2.

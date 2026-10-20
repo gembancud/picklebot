@@ -134,18 +134,28 @@ class TimedReachCommand(CommandTerm):
         self.n_star[env_ids] = _rot(g[:, 6:9], c, s)
         self.root_target[env_ids] = pel[:, :2] + _rot(g[:, 10:12], c, s)
         now = self.clock()[env_ids]
-        self.t_contact[env_ids] = now + g[:, 9]
+        t_star = (g[:, 9] / self._env.step_dt).round() * self._env.step_dt  # D-119 fix (b): on the control grid
+        self.t_contact[env_ids] = now + t_star
         gap = GAP_S[0] + (GAP_S[1] - GAP_S[0]) * torch.rand(k, generator=self.gen, device=self.device)
-        self.time_left[env_ids] = g[:, 9] + gap
+        self.time_left[env_ids] = t_star + gap
         self.scored[env_ids] = False
         self.min_dp[env_ids] = 1e9
 
     def _update_command(self, env_ids):
         pass
 
+    def reset(self, env_ids):
+        """D-119 fix (a): mjlab resamples at reset before the episode clock and the robot pose are reset, so that goal
+        would use the old clock and pose. Zero its timer: the post-reset compute (dt = 0) resamples it on the new
+        clock and pose. The stale goal is never scored."""
+        extras = super().reset(env_ids)
+        self.time_left[env_ids] = 0.0
+        return extras
+
     def contact_now(self):
-        """One-shot: goals whose contact time has come and that are not yet scored (marks them scored)."""
-        ev = ~self.scored & (self.clock() >= self.t_contact)
+        """One-shot: goals whose contact time has come and that are not yet scored (marks them scored). t* sits on the
+        control-step grid (D-119 fix b), so the step at clock >= t_contact - step_dt / 2 is the contact step."""
+        ev = ~self.scored & (self.clock() >= self.t_contact - 0.5 * self._env.step_dt)
         self.scored |= ev
         return ev
 
@@ -171,15 +181,21 @@ def _cmd(env, command_name="reach") -> TimedReachCommand:
     return env.command_manager.get_term(command_name)
 
 
-def timed_contact(env, command_name="reach"):
-    """One-shot at t*; also records the per-goal statistics."""
+def timed_contact(env, command_name="reach", speed: str = "kernel"):
+    """One-shot at t*; also records the per-goal statistics. speed "kernel" (E1): exp(-(|dv| / 1 m/s)^2); "linear"
+    (E2, D-119): 0.5 + 0.5 clamp(1 - |dv| / |v*|, 0, 1), which pays from a parked paddle."""
     cmd = _cmd(env, command_name)
     ev = cmd.contact_now()
     pos, vel, normal = cmd.paddle_state()
     dp = (pos - cmd.p_star).norm(dim=-1)
     dv = (vel - cmd.v_star).norm(dim=-1)
     align = (normal * cmd.n_star).sum(-1).abs()
-    r = torch.exp(-(dp / 0.10) ** 2) * torch.exp(-(dv / 1.0) ** 2) * (0.5 + 0.5 * align)
+    if speed == "linear":
+        fv = 0.5 + 0.5 * (1.0 - dv / cmd.v_star.norm(dim=-1).clamp(min=0.1)).clamp(0.0, 1.0)
+    else:
+        fv = torch.exp(-(dv / 1.0) ** 2)
+    r = torch.exp(-(dp / 0.10) ** 2) * fv * (0.5 + 0.5 * align)
+    cmd.last_factors = (torch.exp(-(dp / 0.10) ** 2), fv, 0.5 + 0.5 * align, ev)  # for the pre-launch check
     e = ev.long()
     cmd.counts[0] += e.sum()
     rd = (env.scene["robot"].data.root_link_pos_w[:, :2] - cmd.root_target).norm(dim=-1)
@@ -188,6 +204,13 @@ def timed_contact(env, command_name="reach"):
     sp_rel = (vel.norm(dim=-1) - cmd.v_star.norm(dim=-1)).abs() / cmd.v_star.norm(dim=-1).clamp(min=0.1)
     cmd.stats["dv_rel"].index_add_(0, (sp_rel / 0.02).clamp(max=BINS).long(), e)
     return r * ev.float()
+
+
+def paddle_track_open(env, command_name="reach", std=0.15):
+    """E2 (D-119): reach-06's paddle_track to p* while the goal is open (not yet scored)."""
+    cmd = _cmd(env, command_name)
+    dp, _ = cmd.distances()
+    return torch.exp(-(dp / std) ** 2) * (~cmd.scored).float()
 
 
 def swing_guide(env, command_name="reach", std=0.15):

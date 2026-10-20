@@ -1,0 +1,76 @@
+{
+ "checkpoint": "artifacts/train/logs/picklebot_latent/2026-10-20_10-00-00_s5g-e1-init/model_34700.pt",
+ "task": "Picklebot-Latent-TimedReach-V2-G1",
+ "seed": 4216012,
+ "reward_sums_per_env": {
+  "root": 206.3948,
+  "alive": 249.9414,
+  "fall": -5.8594,
+  "action_rate": -26.8047,
+  "root_progress": 160.8212,
+  "latent_l2": -157.6034,
+  "timed_contact": 211.2886,
+  "paddle": 113.105
+ },
+ "goals_scored": 1293,
+ "contact_reward_q": [
+  0.0,
+  0.001,
+  0.454
+ ],
+ "share_contact_gt_0.01": 0.4733,
+ "factor_pos_q": [
+  0.0,
+  0.002,
+  0.977
+ ],
+ "factor_speed_q": [
+  0.5,
+  0.5,
+  0.536
+ ],
+ "factor_speed_std": 0.0206,
+ "factor_align_q": [
+  0.614,
+  0.842,
+  0.972
+ ],
+ "first_goal_dist_q": [
+  0.653,
+  1.797,
+  2.73
+ ],
+ "later_goal_dist_q": [
+  0.613,
+  1.68,
+  2.733
+ ],
+ "n_first": 259,
+ "bank_speed_along_n_q": [
+  6.429,
+  7.103,
+  7.696
+ ],
+ "bank_speed_tangential_q": [
+  1.086,
+  1.767,
+  2.706
+ ],
+ "bank_speed_total_q": [
+  6.645,
+  7.337,
+  7.914
+ ],
+ "parent_peak_paddle_speed_q": [
+  3.855,
+  4.847,
+  6.146
+ ],
+ "pass_rules": {
+  "every term pays": true,
+  "contact > 0.01 on >= 20 % of goals": true,
+  "speed factor varies": true,
+  "first goal like later goals": true
+ },
+ "pass": true
+}

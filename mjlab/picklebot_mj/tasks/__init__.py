@@ -1596,3 +1596,22 @@ def _latent_timed_reach(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_TIMED_REACH, env_cfg=_latent_timed_reach(),
                     play_env_cfg=_latent_timed_reach(True), rl_cfg=_latent_reach_rl_cfg())
+
+
+# Stage 5G E2 (D-119, panel round 10): E1's task with one paddle-reward redesign: reach-06's paddle_track to p* restored
+# while the goal is open, the swing guide removed, and the contact reward's velocity factor linear in |dv| / |v*|.
+from picklebot_mj.tasks.timed_reach import paddle_track_open  # noqa: E402
+
+TASK_LATENT_TIMED_REACH_V2 = "Picklebot-Latent-TimedReach-V2-G1"
+
+
+def _latent_timed_reach_v2(play=False):
+    cfg = _latent_timed_reach(play)
+    cfg.rewards.pop("swing_guide")
+    cfg.rewards["paddle"] = RewardTermCfg(func=paddle_track_open, weight=2.0)
+    cfg.rewards["timed_contact"].params = {"speed": "linear"}
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_TIMED_REACH_V2, env_cfg=_latent_timed_reach_v2(),
+                    play_env_cfg=_latent_timed_reach_v2(True), rl_cfg=_latent_reach_rl_cfg())

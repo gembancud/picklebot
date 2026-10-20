@@ -3341,3 +3341,22 @@ Panel round 9 (`mjlab/results/exit-stage-review.md`, 5 of 5 on the design).
 - R2 is below 0.20 after E2 plus one fine-tune;
 - 2 kills in a row;
 - 6 runs are used.
+
+## D-119 - Stage 5G E1 killed; E2 is one paddle-reward redesign; two implementation bugs fixed (2026-10-20)
+
+Panel round 10 (`mjlab/results/stage5g-e2-review.md`).
+
+**E1 is a kill** (5 of 5): median paddle error 0.53 m at the early check; falls 1.0 % (pass). The cause was the reward design, approved in round 9 and implemented as specified: no usable paddle signal. Stage 5G: 1 kill, 1 of 6 runs. An E2 kill goes back to the user.
+
+**E2's one change** (`Picklebot-Latent-TimedReach-V2-G1`):
+- reach-06's `paddle_track` to p* restored (std 0.15, weight 2) while the goal is open;
+- `swing_guide` removed;
+- `timed_contact`'s velocity factor linear: 0.5 + 0.5 * clamp(1 - |dv| / |v*|, 0, 1).
+
+Parent: reach-06/model_34700, widened again. Bank, gate, early kill and seeds are unchanged.
+
+**Bugs fixed in `timed_reach.py`** (measurement and implementation, not experimental changes):
+- the first goal of an episode is resampled after the reset (it used the stale clock and pose);
+- t* is snapped to the 20 ms control grid, and the one-shot fires at clock >= t_contact - step_dt / 2.
+
+**Pre-launch check:** 256 envs, 10 s, seed 4216012, pass rules in the review. If the commanded paddle speed is infeasible at lambda 1, that goes to the panel as a premise question; it is never tuned away.
