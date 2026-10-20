@@ -155,3 +155,93 @@ def plan_stance(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tensor, pelvis
             spin = torch.zeros_like(spin)
     xy, _ = predict_top(pos, vel, spin, cfg, params)
     return stance_from_intercept(xy, pelvis_xy)
+
+
+# --- Stage 5G (D-118): timed contact, a keep-it-alive outgoing ball and the paddle state that makes it. ---------------
+# The planner owns the outgoing ball; the timed goal-conditioned controller is commanded the paddle state at contact.
+
+KEEP_ALIVE_BOX = ((4.7, 5.7), (-1.0, 1.0))  # landing x, y (far court, court-local; the robot is at x < 0)
+KEEP_ALIVE_FLIGHT_S = (1.3, 1.5)  # contact-to-landing flight time: a feeder-like, returnable rally ball
+
+
+def _contact_step(p: BallParams, dt: float, x, v, w, t, bounced, found, cx, cv, ct):
+    """As _rollout_step, also carrying the elapsed time and capturing the 3-D state and time at the interception."""
+    x0, v0, t0 = x, v, t
+    x, v, w, bounced, found2, _ = _rollout_step(p, dt, x, v, w, bounced, found, x[:, :2])
+    hit = found2 & ~found
+    rise = (x[:, 2] >= HINT_TOP_Z) & (x0[:, 2] < HINT_TOP_Z)
+    fr = ((HINT_TOP_Z - x0[:, 2]) / (x[:, 2] - x0[:, 2]).abs().clamp(min=1e-9)).clamp(0.0, 1.0)
+    fa = (v0[:, 2] / (v0[:, 2] - v[:, 2]).clamp(min=1e-9)).clamp(0.0, 1.0)
+    fh = torch.where(rise, fr, fa).unsqueeze(-1)
+    m = hit.unsqueeze(-1)
+    cx = torch.where(m, x0 + fh * (x - x0), cx)
+    cv = torch.where(m, v0 + fh * (v - v0), cv)
+    ct = torch.where(hit, t0 + fh.squeeze(-1) * dt, ct)
+    return x, v, w, t + dt, bounced, found2, cx, cv, ct
+
+
+CONTACT_DT = 0.0025  # contact rollout step: <= 2.7 cm and 10 ms against the full simulation (0.0125: 14 cm, 63 ms)
+
+
+def predict_contact(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tensor, cfg: PlannerCfg = PlannerCfg(),
+                    params: BallParams | None = None, dt: float = CONTACT_DT):
+    """The interception of predict_top as a full contact: (point (N, 3), ball velocity there (N, 3), time from now
+    (N,), found (N,) bool). Spin is used as given (pass zeros for the spin-blind planner). The rollout uses its own
+    finer step `dt` (the stance planner's cfg.dt is too coarse for a paddle target); cfg gives the horizon."""
+    p = params or _DEFAULT_PARAMS
+    n = pos.shape[0]
+    x, v, w = pos.clone(), vel.clone(), spin.clone()
+    t = torch.zeros(n, device=pos.device)
+    bounced = torch.zeros(n, dtype=torch.bool, device=pos.device)
+    found = torch.zeros_like(bounced)
+    cx, cv, ct = x.clone(), v.clone(), torch.full((n,), cfg.horizon_s, device=pos.device)
+    for _ in range(int(round(cfg.horizon_s / dt))):
+        x, v, w, t, bounced, found, cx, cv, ct = _contact_step(p, dt, x, v, w, t, bounced, found, cx, cv, ct)
+    return cx, cv, ct, found
+
+
+def aim_outgoing(contact: torch.Tensor, target_xy: torch.Tensor, flight_s: torch.Tensor, iters: int = 4,
+                 steps: int = 40, params: BallParams | None = None) -> torch.Tensor:
+    """Outgoing ball velocity (N, 3), spin-blind with drag, that leaves `contact` and reaches the court (z = radius)
+    at `target_xy` after `flight_s` seconds: a drag-free ballistic start, then fixed-point corrections on the landing
+    error of an RK4 rollout of exactly flight_s (steps sub-steps of flight_s / steps)."""
+    p = params or _DEFAULT_PARAMS
+    g = 9.81
+    T = flight_s.unsqueeze(-1)
+    v = torch.cat([(target_xy - contact[:, :2]) / T,
+                   ((p.radius - contact[:, 2:3]) + 0.5 * g * T * T) / T], -1)
+    h = T / steps
+    w0 = torch.zeros_like(contact)
+    for _ in range(iters):
+        x, vv, w = contact.clone(), v.clone(), w0
+        for _ in range(steps):
+            x, vv, w = flight_rk4(x, vv, w, h, p)
+        err = torch.cat([target_xy - x[:, :2], p.radius - x[:, 2:3]], -1)
+        v = v + err / T
+    return v
+
+
+def paddle_for(v_in: torch.Tensor, v_out: torch.Tensor, cor: float | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+    """Paddle face normal n (N, 3) and paddle velocity (N, 3) at contact that turn v_in into v_out (spin-blind).
+
+    n is along v_out - v_in, so the ball's tangential velocity is unchanged; the paddle moves with the ball
+    tangentially (no slip, so friction does nothing) and along n at u = (v_out.n + e v_in.n) / (1 + e), the normal
+    restitution of `sphere_impulse` solved for the surface speed."""
+    e = PADDLE_COR_DEFAULT if cor is None else cor
+    d = v_out - v_in
+    n = d / d.norm(dim=-1, keepdim=True).clamp(min=1e-6)
+    vin_n = (v_in * n).sum(-1, keepdim=True)
+    u = ((v_out * n).sum(-1, keepdim=True) + e * vin_n) / (1.0 + e)
+    return n, u * n + (v_in - vin_n * n)
+
+
+PADDLE_COR_DEFAULT = _DEFAULT_PARAMS.paddle_cor
+
+
+def keep_alive_target(n: int, gen: torch.Generator | None = None, device="cpu") -> tuple[torch.Tensor, torch.Tensor]:
+    """(landing xy (n, 2), flight time (n,)) drawn uniformly in KEEP_ALIVE_BOX and KEEP_ALIVE_FLIGHT_S."""
+    u = torch.rand(n, 3, generator=gen, device=device)
+    (x0, x1), (y0, y1) = KEEP_ALIVE_BOX
+    f0, f1 = KEEP_ALIVE_FLIGHT_S
+    xy = torch.stack([x0 + (x1 - x0) * u[:, 0], y0 + (y1 - y0) * u[:, 1]], -1)
+    return xy, f0 + (f1 - f0) * u[:, 2]

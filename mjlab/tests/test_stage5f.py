@@ -294,3 +294,63 @@ def test_pair_courts_one_ball_per_court_and_rally_counts():
     assert s["len_hist"][2] == 1 and s["sides"]["A"]["feeds"] + s["sides"]["B"]["feeds"] == 3
     fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1)[0] for _ in range(30)) if f.any()]
     assert len(fires) == 1 and bool(fires[0][b]) and not fires[0][a]  # the other side gets the next feeder ball
+
+
+def test_paddle_for_inverts_the_impact_model():
+    """D-118: the paddle state from paddle_for, put through sphere_impulse (spin zero), gives the commanded v_out."""
+    from picklebot_mj.ball_sim import BallParams, sphere_impulse
+    from picklebot_mj.planner import paddle_for
+    p = BallParams()
+    g = torch.Generator().manual_seed(4216000)
+    v_in = torch.randn(256, 3, generator=g) * torch.tensor([2.0, 1.0, 1.5]) + torch.tensor([-5.0, 0.0, -1.0])
+    v_out = torch.randn(256, 3, generator=g) * torch.tensor([1.0, 1.0, 0.8]) + torch.tensor([6.0, 0.0, 3.5])
+    n, vp = paddle_for(v_in, v_out, p.paddle_cor)
+    v2, _, _ = sphere_impulse(v_in, torch.zeros_like(v_in), n, vp, p.paddle_cor, p.paddle_friction, p)
+    rel = (v2 - v_out).norm(dim=-1) / v_out.norm(dim=-1)
+    assert rel.max() < 0.05, rel.max()
+
+
+def test_aim_outgoing_lands_in_the_keep_alive_box():
+    """D-118: the aimed outgoing ball (spin-blind, drag) lands within 10 cm of its target after the flight time."""
+    from picklebot_mj.ball_sim import BallParams, flight_rk4
+    from picklebot_mj.planner import aim_outgoing, keep_alive_target
+    p = BallParams()
+    g = torch.Generator().manual_seed(4216001)
+    c = torch.stack([-5.0 + torch.rand(128, generator=g) * 2, torch.rand(128, generator=g) * 4 - 2,
+                     0.6 + torch.rand(128, generator=g) * 0.5], -1)
+    xy, T = keep_alive_target(128, g)
+    v = aim_outgoing(c, xy, T, params=p)
+    x, vv, w = c.clone(), v.clone(), torch.zeros_like(c)
+    h = (T / 200).unsqueeze(-1)
+    for _ in range(200):
+        x, vv, w = flight_rk4(x, vv, w, h, p)
+    assert ((x[:, :2] - xy).norm(dim=-1)).max() < 0.10 and (x[:, 2] - p.radius).abs().max() < 0.10
+    assert (v.norm(dim=-1) < 14).all() and (v[:, 2] > 0).all()  # a lob-to-drive range, always rising off the paddle
+
+
+def test_predict_contact_matches_the_ball_simulation():
+    """D-118: with spin known, the planner's contact (after the bounce: rising through HINT_TOP_Z, or the apex) agrees
+    with the full ball simulation (net and posts included, 1 ms steps) within 5 cm and 15 ms on drill-like feeds."""
+    from picklebot_mj.ball_sim import BallSim, BallState
+    from picklebot_mj.planner import PlannerCfg, predict_contact
+    from picklebot_mj.tasks.shadow_swing import HINT_TOP_Z
+    from test_drill_v2 import _feed_states  # FAMS: this module's drill v2 families
+    pos, vel, spin, _ = _feed_states(FAMS, 8, seed=4216002)
+    cx, cv, ct, found = predict_contact(pos, vel, spin, PlannerCfg(know_spin=True))
+    sim, dt = BallSim(), 0.001
+    s = BallState(pos.clone(), vel.clone(), spin.clone())
+    bounced = torch.zeros(len(pos), dtype=torch.bool)
+    done = torch.zeros_like(bounced)
+    tx, tt = torch.zeros_like(pos), torch.zeros(len(pos))
+    for i in range(int(1.8 / dt)):
+        z0, vz0 = s.pos[:, 2].clone(), s.vel[:, 2].clone()
+        p0 = s.pos.clone()
+        s, ev = sim.step(s, dt, 4)
+        bounced |= ev.court_contact
+        top = bounced & ~ev.court_contact & ~done & (((s.pos[:, 2] >= HINT_TOP_Z) & (z0 < HINT_TOP_Z)) | ((s.vel[:, 2] <= 0) & (vz0 > 0)))
+        tx = torch.where(top.unsqueeze(-1), 0.5 * (p0 + s.pos), tx)
+        tt = torch.where(top, torch.full_like(tt, (i + 0.5) * dt), tt)
+        done |= top
+    ok = found & done
+    assert ok.float().mean() > 0.9
+    assert (cx[ok] - tx[ok]).norm(dim=-1).max() < 0.05 and (ct[ok] - tt[ok]).abs().max() < 0.015
