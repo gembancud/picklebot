@@ -49,7 +49,7 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
 
 | # | Run | Change (written before launch) | From | Endpoint | Result |
 |---|---|---|---|---|---|
-| E1 | s5g-e1-timed | Timed command and rewards (`Picklebot-Latent-TimedReach-G1`): swing guide, plus a one-shot contact reward at t* (weight 5 per goal); 4,096 envs; training seed 74 | reach-06/model_34700, widened | iteration 39,700 (5,000 more), or the last checkpoint before the 7,000 s cap | |
+| E1 | s5g-e1-timed | Timed command and rewards (`Picklebot-Latent-TimedReach-G1`): swing guide, plus a one-shot contact reward at t* (weight 5 per goal); 4,096 envs; training seed 74 | reach-06/model_34700, widened | iteration 39,700 (5,000 more), or the last checkpoint before the 7,000 s cap | **Killed at the early check (model_36200):** median paddle error 0.53 m (> 0.25), falls 1.0 % (pass). Cause: the reward design (see below). |
 
 - **E1 early kill (D-118)** at model_36200 (seed 4216101, 256 envs): falls above 5 %, or a median paddle error above 0.25 m.
   - **The parent fails both today** (15.2 %, 0.32 m), so E1 must improve on both by 30 % of the run.
@@ -61,3 +61,14 @@ Design: `exit-stage-review.md` (panel round 9). The readiness milestone (`selfpl
   - root within 0.25 m >= 90 %.
 
   Endpoint seed 4216110.
+
+### E1 kill diagnosis (training log; agent's implementation error)
+
+- **The rewards gave no paddle signal.** `timed_contact` paid 0.000 per episode throughout, and `swing_guide` 0.003-0.010.
+  - **The swing guide's lead target, p* - v* min(tau, 0.3 s), lay about 2.1 m behind the contact point** at the bank's median commanded paddle speed of 7.3 m/s. That is out of reach.
+  - The contact reward's velocity kernel (std 1 m/s) is about exp(-49), roughly 0, for a parent that parks the paddle (|dv| about 7 m/s).
+  - The dense paddle reward of reach-06 had been removed.
+- **What the policy learned instead:** it kept root and falls and abandoned the paddle.
+  - Falls fell from 15.2 % to 1.0 %; mean paddle distance drifted from about 1.0 m to 1.13 m.
+  - Early check: median paddle error 0.53 m, speed error 84 %, timing within 50 ms 4.8 %, root within 0.25 m 52 %.
+- **Counters:** Stage 5G kills 1, runs 1 of 6. The panel (round 10) specifies the fix.
