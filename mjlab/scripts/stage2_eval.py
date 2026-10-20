@@ -324,6 +324,10 @@ def main():
         "landings_in_A": int(d["land_in_A"]), "landings_in_B": int(d["land_in_B"]),
         "target_hits": int(d["target_hit"]),
     }
+    if "reach" in env.command_manager._terms:  # Stage 5G timed goals from the live ball (D-124)
+        cmd = env.command_manager.get_term("reach")
+        if hasattr(cmd, "goals_set"):
+            out["timed_goals"] = {"goals_set": int(cmd.goals_set), **cmd.summary()}
     if getattr(term, "ready", None) is not None:
         out["ready"] = term.ready.summary()
     if term.drill is not None:

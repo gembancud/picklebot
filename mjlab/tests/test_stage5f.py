@@ -455,3 +455,102 @@ def test_e4_root_speed_cap_ranks_arriving_on_time_first():
     a6, b6, c6 = score(1.6)
     assert a6 > b6 > c6, (a6, b6, c6)
     assert (a6 - b6) > (a1 - b1)
+
+
+def test_aim_outgoing_fast_matches_eager():
+    """D-124: the compiled keep-it-alive aim gives the eager aim's outgoing velocity."""
+    from picklebot_mj.planner import aim_outgoing, aim_outgoing_fast, keep_alive_target
+    g = torch.Generator(device="cuda").manual_seed(4216016)
+    n = 128
+    contact = torch.stack([-5.0 + torch.rand(n, generator=g, device="cuda"), torch.rand(n, generator=g, device="cuda") - 0.5,
+                           0.4 + 0.6 * torch.rand(n, generator=g, device="cuda")], -1)
+    tgt, T = keep_alive_target(n, g, "cuda")
+    a = aim_outgoing(contact, tgt, T)
+    b = aim_outgoing_fast(contact, tgt, T)
+    assert (a - b).abs().max() < 1e-3
+
+
+def _fake_ball_cmd(n, batch):
+    """A TimedBallCommand on a stand-in environment (CPU, noise-free planner) for the sync-free goal setter."""
+    from types import SimpleNamespace
+    import picklebot_mj.tasks.timed_reach as tr
+    from picklebot_mj.tasks.timed_reach import TimedBallCommand
+    pos, vel, _, _ = _feed_states(FAMS, -(-n // len(FAMS)), seed=4216017)
+    pos, vel = pos[:n].clone(), vel[:n].clone()
+    ball = SimpleNamespace(plan_pending=torch.ones(n, dtype=torch.bool), hit_done=torch.zeros(n, dtype=torch.bool),
+                           ball=SimpleNamespace(pos=pos, vel=vel), _plan_cfg=SimpleNamespace(pos_noise=0.0, vel_noise=0.0),
+                           gen_plan=torch.Generator().manual_seed(1), pelvis_xy=lambda idx: torch.zeros(len(idx), 2))
+    env = SimpleNamespace(action_manager=SimpleNamespace(get_term=lambda name: ball), step_dt=0.02,
+                          scene=SimpleNamespace(env_origins=torch.zeros(n, 3)),
+                          episode_length_buf=torch.zeros(n, dtype=torch.long), device=torch.device("cpu"), num_envs=n)
+    cmd = TimedBallCommand.__new__(TimedBallCommand)
+    cmd._env = env
+    z3 = lambda: torch.zeros(n, 3)  # noqa: E731
+    cmd.p_star, cmd.v_star, cmd.n_star, cmd.root_target = z3(), z3(), z3(), torch.zeros(n, 2)
+    cmd.t_contact, cmd.scored = torch.full((n,), 1e9), torch.ones(n, dtype=torch.bool)
+    cmd.min_dp, cmd.min_dp_w, cmd.t_min_w = torch.full((n,), 1e9), torch.full((n,), 1e9), torch.full((n,), -1e9)
+    cmd.counts_w, cmd.req_speed = torch.zeros(2, dtype=torch.long), torch.zeros(n)
+    cmd.gen = torch.Generator().manual_seed(2)
+    cmd._prev_pending, cmd.goal_due = None, torch.zeros(n, dtype=torch.bool)
+    cmd.goals_set = torch.zeros((), dtype=torch.long)
+    old = tr.GOAL_BATCH
+    tr.GOAL_BATCH = batch
+    return cmd, ball, (lambda: setattr(tr, "GOAL_BATCH", old))
+
+
+def test_ball_goals_planned_in_fixed_batches_without_loss():
+    """D-124: more feeds fall due than one batch holds; the leftover ones are planned on the next steps (persistent due
+    flag), each gets exactly the goal the planner gives for its ball, and a touched feed gets none."""
+    from picklebot_mj.tasks.timed_reach import plan_goals
+    n, batch = 40, 16
+    cmd, ball, restore = _fake_ball_cmd(n, batch)
+    try:
+        cmd._update_command(None)  # first step: records plan_pending
+        ball.plan_pending[:] = False  # every window closes at once
+        ball.hit_done[3] = True  # touched before its goal was planned
+        for _ in range(4):
+            cmd._update_command(None)
+        got = ~cmd.scored
+        assert not got[3] and int(got.sum()) == int(cmd.goals_set)
+        cx, ct, found, nrm, vp, stance = plan_goals(ball.ball.pos, ball.ball.vel, torch.zeros(n, 2), torch.Generator())
+        want = found.clone()
+        want[3] = False
+        assert torch.equal(got, want), (got, want)
+        assert (cmd.p_star[got] - cx[got]).abs().max() < 1e-5
+        assert (cmd.t_contact[got] - (ct[got] / 0.02).round() * 0.02).abs().max() < 1e-5
+        assert not cmd.goal_due.any()
+    finally:
+        restore()
+
+
+def test_ball_goal_no_false_edge_across_reset():
+    """D-124: a feed still pending when its env resets is not planned from the reset ball (no window-closed edge)."""
+    n = 4
+    cmd, ball, restore = _fake_ball_cmd(n, 4)
+    try:
+        cmd._update_command(None)
+        from mjlab.managers.command_manager import CommandTerm
+        orig = CommandTerm.reset
+        CommandTerm.reset = lambda self, env_ids: {}
+        try:
+            cmd.reset(torch.arange(n))
+        finally:
+            CommandTerm.reset = orig
+        ball.plan_pending[:] = False  # the reset's new feeds are not planner feeds
+        cmd._update_command(None)
+        assert cmd.scored.all() and int(cmd.goals_set) == 0
+    finally:
+        restore()
+
+
+def test_e5_rewards_rank_legal_return_first():
+    """D-124 pre-launch check: per goal, a good swing with a legal return > a good swing without one > a miss > a fall."""
+    import picklebot_mj.tasks as T
+    cfg = T._latent_timed_ball_ppo()
+    step_dt = cfg.sim.mujoco.timestep * cfg.decimation
+    r = {k: v.weight * step_dt for k, v in cfg.rewards.items()}
+    assert set(cfg.rewards) >= {"timed_contact", "paddle", "root", "root_progress", "fall", "legal_return"}
+    assert "return_shaping" not in cfg.rewards and list(cfg.rewards)[-1] == "legal_return"
+    good, legal, fall = r["timed_contact"] * 1.0, r["legal_return"], cfg.rewards["fall"].weight
+    swing_legal, swing, miss = good + legal, good, 0.0
+    assert swing_legal > swing > miss > fall + good + legal

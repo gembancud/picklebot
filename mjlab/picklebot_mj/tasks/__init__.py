@@ -1669,3 +1669,26 @@ def _latent_timed_reach_v4(play=False):
 
 register_mjlab_task(task_id=TASK_LATENT_TIMED_REACH_V4, env_cfg=_latent_timed_reach_v4(),
                     play_env_cfg=_latent_timed_reach_v4(True), rl_cfg=_latent_reach_rl_cfg())
+
+
+# Stage 5G E5 (D-124, panel round 13): PPO in the ball environment. The timed controller's own task terms (E3's V3 set,
+# root_progress capped at 1.0) with goals from the live ball (TimedBallCommand, sync-free), plus a one-shot legal-return
+# reward of LEGAL_RETURN_WEIGHT per return (the court task's 250 / step_dt). The court task's pace term and its other
+# court terms are not used; no ball-free rehearsal. The critic warms up with the learning rate held (D-114).
+from picklebot_mj.tasks.return_stand import legal_return  # noqa: E402
+
+TASK_LATENT_TIMED_BALL_PPO = "Picklebot-Latent-TimedBall-PPO-G1"
+LEGAL_RETURN_WEIGHT = 5.0
+
+
+def _latent_timed_ball_ppo(play=False):
+    cfg = _latent_timed_ball(play)
+    cfg.rewards = dict(_latent_timed_reach_v3(play).rewards)
+    step_dt = cfg.sim.mujoco.timestep * cfg.decimation
+    cfg.rewards["legal_return"] = RewardTermCfg(func=legal_return, weight=LEGAL_RETURN_WEIGHT / step_dt)  # reads last
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_TIMED_BALL_PPO, env_cfg=_latent_timed_ball_ppo(),
+                    play_env_cfg=_latent_timed_ball_ppo(True), runner_cls=CriticWarmupHoldLrRunner,
+                    rl_cfg=_latent_reach_rl_cfg())

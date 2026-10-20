@@ -268,52 +268,78 @@ class TimedBallCommandCfg(TimedReachCommandCfg):
         return TimedBallCommand(self, env)
 
 
+GOAL_BATCH = 128  # envs planned per control step (a multiple of planner.CONTACT_BUCKET); about n * 0.02 / 1.6 fall due
+
+
+def plan_goals(pos, vel, pel, gen):
+    """Goals for balls at (pos, vel) (court-local, the planner's noisy view) and pelvis xy `pel`: the spin-blind
+    contact (point, ball velocity, time, found), a keep-it-alive outgoing ball and the paddle state for it, and the
+    stance spot beside the contact. Returns (cx, ct, found, normal, paddle velocity, stance)."""
+    from picklebot_mj.planner import aim_outgoing_fast, keep_alive_target, paddle_for, predict_contact_fast
+    from picklebot_mj.tasks.shadow_swing import HINT_BEHIND, HINT_SIDE_BH, HINT_SIDE_FH
+    cx, cv, ct, found = predict_contact_fast(pos, vel, torch.zeros_like(pos))
+    tgt, T = keep_alive_target(len(pos), gen, pos.device)
+    nrm, vp = paddle_for(cv, aim_outgoing_fast(cx, tgt, T))
+    fh = cx[:, 1] <= pel[:, 1]
+    stance = torch.stack([cx[:, 0] - HINT_BEHIND, torch.where(fh, cx[:, 1] + HINT_SIDE_FH, cx[:, 1] - HINT_SIDE_BH)], -1)
+    return cx, ct, found, nrm, vp, stance
+
+
 class TimedBallCommand(TimedReachCommand):
     def __init__(self, cfg, env):
         super().__init__(cfg, env)
         self._prev_pending = None
+        self.goal_due = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
         self.goals_set = torch.zeros((), dtype=torch.long, device=self.device)
 
     def reset(self, env_ids):
         extras = CommandTerm.reset(self, env_ids)  # no bank resample: the next feed's plan sets the goal
         self.scored[env_ids] = True
         self.t_contact[env_ids] = 1e9
+        self.goal_due[env_ids] = False
+        if self._prev_pending is not None:  # no false window-closed edge across the reset
+            self._prev_pending[env_ids] = False
         return extras
 
     def _resample_command(self, env_ids):
         pass
 
     def _update_command(self, env_ids):
-        from picklebot_mj.planner import aim_outgoing, keep_alive_target, paddle_for, predict_contact_fast
-        from picklebot_mj.tasks.shadow_swing import HINT_BEHIND, HINT_SIDE_BH, HINT_SIDE_FH
+        """When the ball term's planner window closes for a feed (plan_pending falls), the feed is due a goal. A fixed
+        batch of envs, due ones first, is planned each step (no host sync, one compiled shape); an env left over waits
+        for the next step. A feed touched before its goal is planned gets none."""
         b = self._env.action_manager.get_term("ball")
         pend = b.plan_pending.clone()
         if self._prev_pending is None:
             self._prev_pending = pend
             return
-        now = self._prev_pending & ~pend & ~b.hit_done  # this step the planner window closed for these feeds
+        self.goal_due = (self.goal_due | (self._prev_pending & ~pend)) & ~b.hit_done
         self._prev_pending = pend
-        idx = now.nonzero().flatten()  # evaluation only: a host sync per step is acceptable
-        if len(idx) == 0:
-            return
+        idx = torch.topk(self.goal_due.float(), min(GOAL_BATCH, self.num_envs)).indices
+        due = self.goal_due[idx]
         c = b._plan_cfg
         g = b.gen_plan
-        pos = b.ball.pos[idx] + c.pos_noise * torch.randn(len(idx), 3, generator=g, device=self.device)
-        vel = b.ball.vel[idx] + c.vel_noise * torch.randn(len(idx), 3, generator=g, device=self.device)
-        cx, cv, ct, found = predict_contact_fast(pos, vel, torch.zeros_like(pos))
-        tgt, T = keep_alive_target(len(idx), self.gen, self.device)
-        nrm, vp = paddle_for(cv, aim_outgoing(cx, tgt, T))
-        org = self._env.scene.env_origins[idx]
+        k = len(idx)
+        pos = b.ball.pos[idx] + c.pos_noise * torch.randn(k, 3, generator=g, device=self.device)
+        vel = b.ball.vel[idx] + c.vel_noise * torch.randn(k, 3, generator=g, device=self.device)
         pel = b.pelvis_xy(idx)
-        fh = cx[:, 1] <= pel[:, 1]
-        stance = torch.stack([cx[:, 0] - HINT_BEHIND, torch.where(fh, cx[:, 1] + HINT_SIDE_FH, cx[:, 1] - HINT_SIDE_BH)], -1)
-        ok = found
-        sel = idx[ok]
-        self.p_star[sel] = cx[ok] + org[ok]
-        self.v_star[sel], self.n_star[sel] = vp[ok], nrm[ok]
-        self.root_target[sel] = stance[ok] + org[ok, :2]
-        t_star = (ct[ok] / self._env.step_dt).round() * self._env.step_dt
-        self.t_contact[sel] = self.clock()[sel] + t_star
-        self.scored[sel] = False
-        self.min_dp[sel] = 1e9
+        cx, ct, found, nrm, vp, stance = plan_goals(pos, vel, pel, self.gen)
+        ok = due & found
+        m3, m1 = ok.unsqueeze(-1), ok
+        org = self._env.scene.env_origins[idx]
+        closing = m1 & self.scored[idx] & (self.t_contact[idx] < 1e8)  # D-122 timing of the goal this one replaces
+        dtw = (self.t_min_w[idx] - self.t_contact[idx]).abs()
+        self.counts_w += torch.stack([closing.sum(), (closing & (dtw <= 0.05)).sum()])
+        t_star = (ct / self._env.step_dt).round() * self._env.step_dt
+        self.p_star[idx] = torch.where(m3, cx + org, self.p_star[idx])
+        self.v_star[idx] = torch.where(m3, vp, self.v_star[idx])
+        self.n_star[idx] = torch.where(m3, nrm, self.n_star[idx])
+        self.root_target[idx] = torch.where(m3[:, :2], stance + org[:, :2], self.root_target[idx])
+        self.t_contact[idx] = torch.where(m1, self.clock()[idx] + t_star, self.t_contact[idx])
+        self.req_speed[idx] = torch.where(m1, (stance - pel).norm(dim=-1) / t_star.clamp(min=0.05), self.req_speed[idx])
+        self.scored[idx] = self.scored[idx] & ~m1
+        self.min_dp[idx] = torch.where(m1, torch.full_like(ct, 1e9), self.min_dp[idx])
+        self.min_dp_w[idx] = torch.where(m1, torch.full_like(ct, 1e9), self.min_dp_w[idx])
+        self.t_min_w[idx] = torch.where(m1, torch.full_like(ct, -1e9), self.t_min_w[idx])
+        self.goal_due[idx] = self.goal_due[idx] & ~due  # planned (found or not)
         self.goals_set += ok.sum()

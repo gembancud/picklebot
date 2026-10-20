@@ -221,6 +221,19 @@ def aim_outgoing(contact: torch.Tensor, target_xy: torch.Tensor, flight_s: torch
     return v
 
 
+_COMPILED_AIM: dict = {}
+
+
+def aim_outgoing_fast(contact: torch.Tensor, target_xy: torch.Tensor, flight_s: torch.Tensor) -> torch.Tensor:
+    """aim_outgoing for in-environment planning: one compiled graph per batch shape (eager costs about 160 RK4 steps
+    of small kernels per call). Same results as aim_outgoing."""
+    if not contact.is_cuda:
+        return aim_outgoing(contact, target_xy, flight_s)
+    if "f" not in _COMPILED_AIM:
+        _COMPILED_AIM["f"] = torch.compile(aim_outgoing, mode="default", dynamic=False)
+    return _COMPILED_AIM["f"](contact, target_xy, flight_s)
+
+
 def paddle_for(v_in: torch.Tensor, v_out: torch.Tensor, cor: float | None = None) -> tuple[torch.Tensor, torch.Tensor]:
     """Paddle face normal n (N, 3) and paddle velocity (N, 3) at contact that turn v_in into v_out (spin-blind).
 
