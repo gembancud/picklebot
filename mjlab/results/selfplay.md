@@ -115,3 +115,19 @@ R4 protocol, 2,048 envs (1,024 courts), 120 s. `scripts/rally_baseline.sh`. Resu
 - The own-ball and per-court counts left out feeds that ended in a robot fall (only the side counts had them). So the bootstrap's feeder-ball number (77.0 %) is a little high: counting those feeds, it is 75.8 %.
 - The partner-ball number changes by at most the fall rate (about 0.6 % of shots).
 - Neither changes the verdict. From now on every count treats a fall as a miss (test).
+
+## Run 3: run 2 continued unchanged (D-139)
+
+`scripts/rally_run03.sh`. Parent rally-02-coop/model_6400 with its optimizer, the same task, training seed 81, no critic warm-up, 6 h cap. Early kill at model_7300 (`rally_check.py early-continuation`). Endpoint: M1 on 4218332, read once.
+
+(pending)
+
+## Interim video: rally run 2's endpoint (panel round 25, 4/5; M1 not met)
+
+`scripts/rally_videos02.sh`, development seed 4218240, contact hand-off, 4 courts, 90 s. Clips chosen before rendering:
+- `docs/media/g1-rally-run2-interim-first.mp4`: court 0, every rally in order, not picked;
+- `docs/media/g1-rally-run2-interim-longest.mp4`: the longest rally of the 4 courts, **13 good shots**, picked and labelled so; GIF preview `docs/media/g1-rally-run2-interim.gif`.
+
+No gate statistic is taken from this read (64 rallies).
+
+**A cost to note:** the render took 2 h 33 min of wall time (CPU-bound). Run 3 waited for it, so nothing else used the GPU while it trained. Future videos should be shorter (30-45 s).

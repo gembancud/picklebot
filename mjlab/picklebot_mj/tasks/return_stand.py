@@ -493,7 +493,10 @@ class BallPhysicsAction(ActionTerm):
         self.ep["contact"] += outcome[:, 1].sum()
         self.ep["legal_return"] += outcome[:, 2].sum()
         self.ep["fall"] += outcome[:, 3].sum()
-        self.ep_family.index_add_(0, self.family, outcome)
+        pairs = getattr(self, "pairs", None)
+        # D-139: in pair mode a handed-over ball carries a random family label (its feed draw is overwritten by the
+        # partner's ball), so the per-family table counts feeder balls only.
+        self.ep_family.index_add_(0, self.family, outcome if pairs is None else outcome * (~pairs.handed).long().unsqueeze(-1))
         if getattr(self, "v2", None) is not None:  # drill v2 failure weighting (a no-op unless enabled)
             self.v2.update(self.family, self.return_done & mask, mask)
         if getattr(self.cfg, "court_wide", False):

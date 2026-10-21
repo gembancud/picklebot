@@ -107,3 +107,28 @@ None of these would lift 19 % per shot to 96 %.
 **The RL member's timing point,** answered: under the contact hand-off, the hitter already holds the partner's return in view when the credit lands, so it is not a parked, ball-free state.
 
 **Experiment design's caution:** run 2 = run 1 corrected + cooperative credit. Its gain is not credited to the credit alone.
+
+## Round 25 - run 2's endpoint; run 3 (2026-10-22)
+
+**Brief:** run 2 passed M1's partner-ball item (54.3 %) but not feeder-ball (75.8-77.0 %, bar 85 %). P(5+) is 7.9 %. The curve was still rising at the 6 h cap. Forward move arrival fell to 65-72 %.
+
+**Correction check:**
+- The read is right (5/5).
+- **Experiment design:** the M1 table must state the D-138 number (75.8 %).
+- **Experiment design:** the forgetting guard was broken at the endpoint (fwd-left 65 % against 84.8 %); the guard only ran at the early check.
+- **Experiment design:** about 4 points of the feeder gap are pair state (crossing read 80.2 % against contact 75.8 % on the same model).
+- **Architecture:** the per-family table mixed in partner balls with random labels. Fixed: feeder balls only.
+- **Everyone:** the rest of the gap is reach. Legal given contact is about 92 %, so the misses are mostly no contact, at the court ceiling of about 77 %.
+
+**Votes:**
+
+| Question | Result |
+|---|---|
+| Run 3 | (a) continue unchanged: RL, architecture; (c) footwork rehearsal: experiment design, motion; (b) higher court share: coach. The tie goes to least new code: **(a)** |
+| Interim video | 4/5 yes (experiment design: no; videos only at milestones, and the longest rally is cherry-picked). Both clips are chosen before rendering, one of them unpicked |
+
+**Forecasts:**
+- RL and architecture: feeder-ball ends around 77-81 %, so M1 is unlikely from continuation alone.
+- **The next lever if it stalls:** footwork rehearsal (`move_prob` / `move_sector_weights`, weighted toward the forward directions), or the court-family mix (`COURT_MIX`) toward the weak families.
+
+**Motion:** a training-free reach check against the controller's speed envelope would tell whether 85 % is physically reachable. If it is not, the next decision is a controller change, which is the user's call.

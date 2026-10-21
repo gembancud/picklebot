@@ -63,6 +63,32 @@ def early(prefix: str) -> bool:
     return ok
 
 
+def early_continuation(prefix: str) -> bool:
+    """Rally run 3 (D-139, a continuation): the early-kill read against the parent's reads on the same seeds."""
+    ld = lambda k: json.load(open(f"{prefix}-{k}.json"))  # noqa: E731
+    v0, v1 = ld("parent-early-v2")["drill_v2"]["per_shot_p"], ld("early-v2")["drill_v2"]["per_shot_p"]
+    pc, ec = ld("parent-early-court"), ld("early-court")
+    c0, c1 = pc["legal_return_rate"], ec["legal_return_rate"]
+    fk, fn = ec["robot_falls"], ec["robot_episodes"]
+    f1, flo = fk / max(fn, 1), wilson(fk, fn)[0]
+    arr = lambda d: min(s["arrival_rate"] for s in d["move_drill"]["sectors"]  # noqa: E731
+                        if s["sector"] < 8 and s.get("arrival_rate") is not None)
+    a0, a1 = arr(ld("parent-early-move")), arr(ld("early-move"))
+    p0, p1 = ld("parent-early-pairs")["pairs"], ld("early-pairs")["pairs"]
+    own0, own0_lo = boot_low(p0["court_counts"], 1, 0)
+    own1, own1_lo = boot_low(p1["court_counts"], 1, 0)
+    fed0, _ = boot_low(p0["court_counts"], 3, 2)
+    fed1, fed1_lo = boot_low(p1["court_counts"], 3, 2)
+    print(f"early: partner-ball legal {own0:.4f} (low {own0_lo:.4f}) -> {own1:.4f} (low {own1_lo:.4f}) (kill below "
+          f"{own0_lo - 0.02:.4f}); feeder-ball legal {fed0:.4f} -> {fed1:.4f} (low {fed1_lo:.4f}) (kill below {fed0 - 0.03:.4f}); "
+          f"P(5+) {p0['p_len_ge_5']} -> {p1['p_len_ge_5']}")
+    print(f"early: court main {c0} -> {c1} ({100 * (c1 - c0):+.1f}; kill below -5); drill v2 {v0} -> {v1} "
+          f"({100 * (v1 - v0):+.1f}; kill below -5); move arrival min {a0} -> {a1} ({100 * (a1 - a0):+.1f}; kill below -5); "
+          f"court falls/episode {f1:.4f} (low {flo}; kill if low > 0.04 or point > 0.074)")
+    return (own1 >= own0_lo - 0.02 and fed1 >= fed0 - 0.03 and c1 >= c0 - 0.05 and v1 >= v0 - 0.05 and a1 >= a0 - 0.05
+            and flo <= 0.04 and f1 <= 0.074)
+
+
 def target(prefix: str, tag: str) -> bool:
     P = pair_stats(json.load(open(f"{prefix}-target.json"))["pairs"])
     try:
@@ -117,6 +143,8 @@ if __name__ == "__main__":
     mode, prefix = sys.argv[1], sys.argv[2]
     if mode == "early":
         sys.exit(0 if early(prefix) else 1)
+    if mode == "early-continuation":
+        sys.exit(0 if early_continuation(prefix) else 1)
     if mode == "m1":
         sys.exit(0 if milestone(prefix, sys.argv[3]) else 1)
     target(prefix, sys.argv[3])

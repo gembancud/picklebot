@@ -3711,3 +3711,42 @@ The user gets a panel-approved rally video at M1, and the loop continues.
 - Every count now treats a fall as a miss (test `test_d138_a_fall_is_a_miss_in_every_count`).
 
 The panel plans run 3 in round 25.
+
+## D-139 - Rally run 3 = run 2 continued unchanged; an interim video; per-family table counts feeder balls only (panel round 25, 2026-10-22)
+
+**Run 3 votes:**
+
+| Option | Votes |
+|---|---|
+| Continue unchanged | 2 (RL, architecture) |
+| More move-drill or footwork rehearsal | 2 (experiment design, motion) |
+| Higher court share | 1 (coach) |
+
+**The tie goes to "least new code"** (charter), so run 3 continues run 2 unchanged:
+- the same task, from rally-02-coop/model_6400 with its optimizer, training seed 81, 6 h cap;
+- no critic warm-up (`PICKLEBOT_CRITIC_WARMUP=0`, an existing switch), because the critic is already trained for this reward.
+
+**The footwork-forgetting concern** (experiment design and motion) is answered by the early kill:
+- the lowest move arrival more than 5 points below the parent kills;
+- it was already 20 points below Stage 5H run 4 at run 2's endpoint (fwd-left 65 % against 84.8 %), a guard that only ran at run 2's early check;
+- footwork rehearsal is the first candidate for the next change.
+
+**Shared diagnosis (5/5):**
+- the feeder-ball gap is mostly a reach limit: legal given contact is about 92 %, and the misses are mostly no contact;
+- it sits at the single-ball court ceiling that Stage 5F-5H never broke (about 77 %);
+- about 4 points are pair state, the robot's position when the feeder ball fires (experiment design: feeder-ball legal 80.2 % with the crossing hand-off against 75.8 % with contact). A 2 s refeed read is reported before launch.
+
+**Early kill at model_7300** (the parent re-read on 4218301-4218304). Kill if:
+- partner-ball legal is below the parent's bootstrap low minus 2 points;
+- feeder-ball legal is more than 3 points below the parent;
+- court main, drill v2 or the lowest move arrival is more than 5 points below the parent;
+- falls have a Wilson low over 4 % or a point over 7.4 %.
+
+**Endpoint:** the M1 read on 4218332, read once. Panel trigger: a feeder-ball gain under +3 points.
+
+**Interim video (4/5 yes; experiment design no):**
+- rally run 2's endpoint, labelled "interim, M1 not met", seed 4218240;
+- two clips chosen before rendering: court 0 in order (not picked) and the longest rally of 4 courts (picked, labelled so);
+- no gate statistic is taken from it.
+
+**A reporting fix (architecture):** in pair mode a handed-over ball carried a random family label, so the per-family table mixed feeder and partner balls. It now counts feeder balls only. Training is unchanged.
