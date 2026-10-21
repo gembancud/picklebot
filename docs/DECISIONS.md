@@ -3598,3 +3598,32 @@ It is frozen in `mjlab/results/rally-target.md` (Wilson lower bound >= 0.78, >= 
 **Unchanged:** runs stay at most 2 h unless the user approves longer, and all standing rules hold.
 
 **The loop restarts toward this target.**
+
+## D-135 - Rally target: the hand-off moves to the partner's contact; run 1 plan and stop rules (panel round 21, 2026-10-21)
+
+**The panel (5/5)** agreed the plan in `mjlab/results/selfplay-review.md` (round 21).
+
+**The hand-off (a measurement correction, made before the first read, as `rally-target.md` allows):**
+- `pairs.py` gets `handoff="contact"`: a return is handed to the partner on the hitter's first legal contact, so the receiver sees the ball leave the partner's paddle. The old R4 protocol handed it over at the net crossing.
+- A return that faults (net or out) is charged to the hitter. The receiver's copy, which ends on the same step, is not counted as the receiver's feed or miss.
+- The default stays "crossing", so every old read is unchanged (test). Every read of the rally target uses "contact"; the old crossing read is reported alongside. Training uses "contact" too.
+
+**Stage rules:**
+- Court main >= 76.8 % belonged to the Stage 5F/5H readiness plan. It is retired as an absolute kill line for this loop. It is replaced by a relative forgetting guard: feeder-ball legal or court main more than 5 points below the parent kills. This changes a kill line, not a bar of the frozen target.
+- Stage 5H run 4 (killed by that stage rule) may be the parent: an exception, recorded here.
+- The feeder-ball distribution of R4 is frozen as the target's protocol.
+
+**Run 1:** continued pair self-play with the contact hand-off (one change), parent `s5h-04-pairs/model_3398`, 900 iterations (about 1.7 h), training seed 79.
+- **Early kill at model_3700 (about 33 %),** with the parent re-read on the same seeds:
+  - own-ball legal in pairs not above the parent's Wilson upper bound;
+  - court falls per episode with Wilson lower bound over 4 % or a point over 7.4 %;
+  - the forgetting guard (above): feeder-ball legal, court main, drill v2 or the lowest move arrival more than 5 points below the parent (the parent's own arrival is already under 90 % in two directions).
+- **Then:** run 2 softer shots (a higher keep-alive weight); run 3 a rally-length or shared reward; a curriculum only if needed.
+
+**Back to the user** (with the evidence and the options: runs over 2 h, or a bigger controller) if any of these happens:
+- two runs in a row with no interval-separated gain;
+- after run 1 or 2, the slope projects more than about 5-6 runs to the target;
+- run 1 ends under about 25 % per shot on the partner's balls;
+- the curve is still rising at the 2 h cap.
+
+The panel's plain note: about 96 % per shot is very hard within 2 h runs.

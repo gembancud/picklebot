@@ -84,6 +84,8 @@ def main():
                     help="D-132: with --pairs, write one-court videos of both robots: PREFIX-first.mp4 (court 0, every "
                          "rally, unpicked) and PREFIX-longest.mp4 (the longest rally of --pair-video-courts courts)")
     ap.add_argument("--pair-video-courts", type=int, default=4)
+    ap.add_argument("--pair-handoff", default=None, choices=["crossing", "contact"],
+                    help="D-135: the pair hand-off (default: the task's; the rally target reads 'contact')")
     ap.add_argument("--pair-video-caption", default="")
     ap.add_argument("--pairs", action="store_true",
                     help="self-play readiness R4 (D-116): two-robot courts from mirrored env pairs")
@@ -175,6 +177,8 @@ def main():
         cfg.actions["ball"].replay_file = args.replay_file
     if args.pairs:
         cfg.actions["ball"].pair_mode = True
+        if args.pair_handoff:
+            cfg.actions["ball"].pair_handoff = args.pair_handoff
     if args.record_contacts:
         cfg.actions["ball"].record_contacts = True
     cfg.observations["actor"].enable_corruption = False

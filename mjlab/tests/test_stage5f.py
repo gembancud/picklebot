@@ -874,3 +874,57 @@ def test_d132_pairs_task_changes_only_pair_mode_and_the_court_share():
     diff = sorted(f.name for f in dataclasses.fields(a) if getattr(a, f.name) != getattr(b, f.name))
     assert diff == ["court_feed_prob", "pair_mode"] and b.pair_mode and abs(b.court_feed_prob - 0.678) < 1e-9
     assert b.replay_file == ""
+
+
+def test_d135_contact_handoff_receives_at_contact_and_charges_faults_to_the_hitter():
+    """D-135: with the "contact" hand-off the partner receives the ball on the hitter's contact step (not at the net);
+    a return that faults (net or out) ends the rally charged to the hitter: the receiver's copy, which faults on the
+    same step, is not counted as the receiver's feed or miss; a legal rally counts as before; P(5+) is reported."""
+    from picklebot_mj.pairs import PairCourts
+    pc = PairCourts(4, "cpu", handoff="contact")  # courts (0, 2) and (1, 3)
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    pc.on_reset(torch.arange(4))
+    fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=Z)[0] for _ in range(30)) if f.any()]
+    a, b = (2, 0) if fires[0][2] else (0, 2)
+    # a hits the feeder ball: b receives on the contact step; the crossing alone does nothing
+    fire, recv = pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(a))
+    assert bool(recv[b]) and not recv[a]
+    fire, recv = pc.step(Z, Z, Z, F(a), 0.01, 0.1, contact=Z)
+    assert not recv.any()
+    pc.step(F(a), F(a), Z, Z, 0.01, 0.1, contact=Z)  # a's return lands legally
+    # b hits; a receives; b's return goes into the net: both copies end on the same step
+    fire, recv = pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(b))
+    assert bool(recv[a])
+    pc.step(F(a, b), Z, Z, Z, 0.01, 0.1, contact=Z)
+    s = pc.summary()
+    side_a, side_b = ("A", "B") if a < 2 else ("B", "A")
+    assert s["len_hist"][1] == 1 and s["rallies"] == 1  # one good shot (a's), then b's fault
+    assert s["sides"][side_a]["feeds"] == 1 and s["sides"][side_a]["legal"] == 1.0  # a's received copy not counted
+    assert s["sides"][side_b]["feeds"] == 1 and s["sides"][side_b]["legal"] == 0.0  # the fault is b's
+    assert s["handoff"] == "contact" and "p_len_ge_5" in s
+
+
+def test_d135_crossing_handoff_is_unchanged():
+    """D-135: the default hand-off is still the net crossing (the D-116 R4 protocol), contact is ignored."""
+    from picklebot_mj.pairs import PairCourts
+    pc = PairCourts(4, "cpu")
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    pc.on_reset(torch.arange(4))
+    fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1)[0] for _ in range(30)) if f.any()]
+    a, b = (2, 0) if fires[0][2] else (0, 2)
+    fire, recv = pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(a))
+    assert not recv.any()
+    fire, recv = pc.step(Z, Z, Z, F(a), 0.01, 0.1, contact=Z)
+    assert bool(recv[b])
+
+
+def test_d135_contact_pairs_task_changes_only_the_handoff():
+    """D-135: rally run 1's task is Stage 5H run 4's with the contact hand-off and nothing else."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a = T._latent_court_v2_res_clean_mix_ka_pairs().actions["ball"]
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_contact().actions["ball"]
+    diff = sorted(f.name for f in dataclasses.fields(a) if getattr(a, f.name) != getattr(b, f.name))
+    assert diff == ["pair_handoff"] and b.pair_handoff == "contact" and a.pair_handoff == "crossing"

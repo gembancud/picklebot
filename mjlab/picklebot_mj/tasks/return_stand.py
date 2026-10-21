@@ -189,6 +189,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # Self-play readiness R4 (D-116): two-robot courts from mirrored env pairs (picklebot_mj/pairs.py). The feeder timer
     # is replaced by the pair logic: a return crossing the net becomes the partner env's feed, mirrored.
     pair_mode: bool = False
+    pair_handoff: str = "crossing"  # D-135: "contact" hands a return to the partner at the hitter's legal contact
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -352,7 +353,7 @@ class BallPhysicsAction(ActionTerm):
         self._handoff = torch.zeros(n, dtype=torch.bool, device=dev)
         if getattr(cfg, "pair_mode", False):
             from picklebot_mj.pairs import PairCourts
-            self.pairs = PairCourts(n, dev)
+            self.pairs = PairCourts(n, dev, getattr(cfg, "pair_handoff", "crossing"))
         if getattr(cfg, "replay_file", ""):
             self.replay = mirror_ball_states(torch.load(cfg.replay_file, map_location=dev).float())
             self.gen_replay_mix = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 161803)
@@ -930,7 +931,7 @@ class BallPhysicsAction(ActionTerm):
         recv = None
         if self.pairs is not None:  # R4 (D-116): the pair logic replaces the feeder timer
             fire, recv = self.pairs.step(over, self.return_done, torch.zeros_like(over), crossing, dt,
-                                         self.cfg.refeed_delay_s)
+                                         self.cfg.refeed_delay_s, contact=first)
             handed = mirror_ball_states(torch.cat([self.ball.pos, self.ball.vel, self.ball.spin], -1))[self.pairs.partner]
             early = recv & ~self.tallied  # a return the partner volleyed before it landed: in play, so legal
             self.return_done |= early

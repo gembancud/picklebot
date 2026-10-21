@@ -1845,3 +1845,20 @@ def _latent_court_v2_res_clean_mix_ka_pairs(play=False):
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS, env_cfg=_latent_court_v2_res_clean_mix_ka_pairs(),
                     runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs(True),
                     rl_cfg=_s5e_rl_cfg())
+
+
+# Rally target run 1 (D-135, panel round 21): Stage 5H run 4's pair task with the corrected hand-off. A return is handed
+# to the partner at the hitter's legal contact, so the receiver sees the ball leave the partner's paddle (it used to see
+# it first at the net crossing). Everything else as run 4 (court share 0.678). Parent s5h-04-pairs/model_3398.
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_CONTACT = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Contact-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_contact(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs(play)
+    cfg.actions["ball"].pair_handoff = "contact"
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_CONTACT,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_contact(), runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_contact(True), rl_cfg=_s5e_rl_cfg())
