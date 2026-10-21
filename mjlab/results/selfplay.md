@@ -55,4 +55,20 @@ R4 protocol, 2,048 envs (1,024 courts), 120 s. `scripts/rally_baseline.sh`. Resu
 - hand-offs were 49.97 % of feeds started (9,568 of 19,148), so run 1 trained on about 34 % court feeds;
 - partner-ball legal 15.0 % (bootstrap low 14.1 %), feeder-ball legal 78.2 % (low 77.2 %).
 
-(pending)
+**The early check passed** (model_4400, 1,002 of 3,200 iterations). Same seeds, 4218201-4218204, `rally-02-{parent-early,early}-*.json`:
+
+| Measure | Parent | Run 2 | Kill line |
+|---|---|---|---|
+| **Partner-ball legal in pairs** (contact) | 18.5 % [17.5, 19.4] | **32.3 %** [31.3, 33.4] | above 19.4 % (met) |
+| P(5+) | 0.37 % | **1.11 %** [0.90, 1.37] | reported |
+| P(4+) | 0.93 % | 2.69 % | reported |
+| Feeder-ball legal | 64.1 % | **71.1 %** | not below -5 (met, +7.0) |
+| Court main | 75.0 % | 74.4 % | not below -5 (met) |
+| Drill v2 | 78.4 % | 79.8 % | not below -5 (met) |
+| Move arrival, lowest direction | 84.8 % | 80.2 % | not below -5 (met, -4.6: close) |
+| Court falls per episode | | 2.5 % (Wilson low 1.6 %) | met |
+
+- **Plainly:** with cooperative credit, the robot returns its partner's shots 14 points more often after a third of the run. Run 1 lost 4 points at the same stage. It also returns more feeder balls.
+- **The weak spot:** the side-steps slipped 4.6 points, near the 5-point line.
+
+(endpoint pending)
