@@ -931,3 +931,22 @@ def test_d135_contact_pairs_task_changes_only_the_handoff():
     b = T._latent_court_v2_res_clean_mix_ka_pairs_contact().actions["ball"]
     diff = sorted(f.name for f in dataclasses.fields(a) if getattr(a, f.name) != getattr(b, f.name))
     assert diff == ["pair_handoff"] and b.pair_handoff == "contact" and a.pair_handoff == "crossing"
+
+
+def test_d136_a_volleyed_return_is_rewarded_like_a_landed_one():
+    """D-136: in pair mode a return the partner volleys before it lands is legal (counted) and now also sets the
+    one-shot return flag that legal_return and rally_bonus pay, and extends the rally streak."""
+    from test_drill_v2 import _env
+    env = _env("Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Contact-G1", n=4)
+    t = env.action_manager.get_term("ball")
+    t.tallied[:] = True
+    t.tallied[0] = False  # env 0's own return is still in flight
+    t.return_done[:] = False
+    t.return_now[:] = False
+    t.rally_streak = torch.tensor([2, 0, 0, 0], device=t.device)
+    recv = torch.tensor([True, True, False, False], device=t.device)  # env 1 holds no ball in play
+    early = t._credit_early(recv)
+    env.close()
+    assert early.tolist() == [True, False, False, False]
+    assert t.return_now.tolist() == [True, False, False, False] and bool(t.return_done[0])
+    assert t.rally_streak.tolist() == [3, 0, 0, 0]

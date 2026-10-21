@@ -46,3 +46,34 @@
 | Kill lines stay relative to the parent's early reads on the same seeds | 5/5 |
 
 **Coach:** feeder-ball legal (64.7 %) now caps P(5+) harder. Even at 96 % on the partner's shots, P(5+) would be at most 0.647 x 0.96^4, about 55 %. Report it every read.
+
+## Round 23 - run 1 killed; reachability (2026-10-21)
+
+**Brief:** run 1 (training with the contact hand-off) was killed at 33 %. Own-ball legal fell from 18.3 % to 14.2 % (the intervals do not overlap), and move arrival from 86.1 % to 74.3 %. The question: is the target reachable within 2 h runs?
+
+**Correction check:**
+- The kill is right (5/5).
+- **Architecture** found a training-side bug: a return the partner volleyed before it landed was counted legal but never rewarded. It hit every volleyed return under the contact hand-off. Fixed and tested (D-136).
+- **RL:** a hidden second change. The court share was set from crossing hand-offs, so court feeds fell below 40 % with contact.
+- **Experiment design:**
+  - The Wilson intervals ignore clustering by court, so later gates should use court-level bootstrap intervals.
+  - Faults excluded on the same step should be counted against hitter faults.
+- **Motion:** the contact refeed also moves when the receiver's stance and recovery targets are set.
+
+None of these would lift 19 % per shot to 96 %.
+
+**Votes: back to the user, 5/5.**
+- Slope: about 2 points per run, so more than 20-40 runs.
+- Feeder-ball cap: P(5+) at most about 55 %.
+- Falls per shot cap P(5+) too.
+- Run 1 went backwards.
+- D-135's stop rules fired. The remedies are the user's hard stops (runs over 2 h, a bigger controller).
+
+**Options, by member:**
+
+| Option | Who favours it |
+|---|---|
+| Cooperative reward (pay the hitter when the partner returns its ball, drop the pace term, recalibrate the court share) with longer runs (4-8 h) | RL (first), coach, architecture |
+| An added intermediate milestone (partner-ball legal >= 50 %, feeder-ball >= 85 %, then P(3+) >= 50 %); the 80 % bar stays | coach, experiment design, architecture |
+| Footwork first (arrival >= 95 % in every direction, falls < 1 % per shot) | motion (first) |
+| A bigger controller (teacher, then distilled student) | all: last, no evidence that capacity is the limit |

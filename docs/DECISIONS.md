@@ -3627,3 +3627,25 @@ It is frozen in `mjlab/results/rally-target.md` (Wilson lower bound >= 0.78, >= 
 - the curve is still rising at the 2 h cap.
 
 The panel's plain note: about 96 % per shot is very hard within 2 h runs.
+
+## D-136 - Rally run 1 killed; volley reward bug fixed; the target is out of reach within 2 h runs: back to the user (panel round 23, 2026-10-21)
+
+**Run 1** (contact hand-off in training) was killed at model_3700, against parent reads on the same seeds:
+- own-ball legal fell from 18.3 % to 14.2 %;
+- the lowest move arrival fell from 86.1 % to 74.3 %.
+
+**Bugs and confounds the panel found:**
+- **A training-side reward bug (architecture; fixed, tested):** in pair mode, a return the partner volleyed before it landed was counted legal but never rewarded. `return_done` was set, `return_now` was not, so the hitter got no legal_return or rally_bonus and the rally streak was skipped. With the contact hand-off this hits every volleyed return. It is now `_credit_early` in `return_stand.py`, which pays legal_return and rally_bonus and extends the streak. There is no landing, so keep-alive and placement pay nothing.
+- **A hidden second change (RL):** the court share 0.678 was set from crossing hand-offs. Contact hands over more balls, so court feeds fell below the 40 % aim.
+- **No cooperative credit (RL, coach):** every reward pays the hitter, and return_shaping pays pace up to 6 m/s. One shared policy is rewarded for making its partner's ball harder.
+
+**Reachability (5/5: back to the user).**
+- Stage 5H gained about 2 points per 2 h run (6 % to 13 %, 2 of 4 runs killed), and run 1 went backwards. About 96 % per shot projects to more than 20-40 runs.
+- At 64 % feeder-ball legal, P(5+) is at most about 55 %, and falls per shot (about 3 %) cap it further.
+- D-135's stop rules fired (run 1 ended under 25 % per shot; the slope projects far more than 5-6 runs). The remedies (runs over 2 h, a bigger controller) are the user's hard stops, so this is a real reason under D-123.
+
+**Options for the user** (`mjlab/results/selfplay-review.md`, round 23). The frozen 80 % bar stays in every option.
+1. A cooperative reward (the hitter is paid when its partner returns its ball; no pace term; court share recalibrated), with the volley fix and longer runs (4-8 h).
+2. An added intermediate milestone first, for example partner-ball legal >= 50 % and feeder-ball legal >= 85 %, then P(3+) >= 50 %.
+3. Footwork first: move arrival >= 95 % in every direction and falls under 1 % per shot.
+4. A bigger controller (teacher, then distilled student). It comes last: no evidence yet that capacity is the limit.

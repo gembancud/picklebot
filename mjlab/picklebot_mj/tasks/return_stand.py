@@ -933,10 +933,7 @@ class BallPhysicsAction(ActionTerm):
             fire, recv = self.pairs.step(over, self.return_done, torch.zeros_like(over), crossing, dt,
                                          self.cfg.refeed_delay_s, contact=first)
             handed = mirror_ball_states(torch.cat([self.ball.pos, self.ball.vel, self.ball.spin], -1))[self.pairs.partner]
-            early = recv & ~self.tallied  # a return the partner volleyed before it landed: in play, so legal
-            self.return_done |= early
-            self._tally(early, torch.zeros_like(recv))
-            self.tallied |= early
+            self._credit_early(recv)
             self._handoff = recv
             fire = fire | recv
         else:
@@ -973,6 +970,19 @@ class BallPhysicsAction(ActionTerm):
         origins = scene.env_origins[env_ids]
         scene["ball"].write_mocap_pose_to_sim(torch.cat([self.ball.pos[env_ids] + origins, ident], -1), env_ids=env_ids)
         scene["court"].write_mocap_pose_to_sim(torch.cat([origins, ident], -1), env_ids=env_ids)
+
+    def _credit_early(self, recv: torch.Tensor) -> torch.Tensor:
+        """Pair mode: an env receives its partner's return while its own copy of the ball is still in flight (the
+        partner volleyed it before it landed). The ball was in play, so the return is legal. D-136: it is also rewarded
+        like a landed legal return (legal_return, rally_bonus and the rally streak); before, only the counts saw it.
+        There is no landing, so keep-alive and placement pay nothing."""
+        early = recv & ~self.tallied
+        self.return_now |= early & ~self.return_done
+        self.return_done |= early
+        self.rally_streak = torch.where(early, self.rally_streak + 1, self.rally_streak)
+        self._tally(early, torch.zeros_like(recv))
+        self.tallied |= early
+        return early
 
     def consume_step_events(self):
         """Clear one-shot flags after rewards are computed (called by the reward terms' owner)."""

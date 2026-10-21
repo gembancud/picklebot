@@ -27,4 +27,19 @@ R4 protocol, 2,048 envs (1,024 courts), 120 s. `scripts/rally_baseline.sh`. Resu
 
 `scripts/rally_run01.sh`. Parent s5h-04-pairs/model_3398, 900 iterations, training seed 79, 12,288 envs. Early kill at model_3700 (`scripts/rally_check.py early`).
 
-(pending)
+**Killed at the early check (model_3700, 302 of 900 iterations).** Reads on the same seeds (4218100-4218103), `rally-01-{parent-early,early}-*.json`:
+
+| Measure | Parent | Run 1 | Kill line |
+|---|---|---|---|
+| Own-ball legal in pairs (contact) | 18.3 % [17.4, 19.2] | **14.2 %** [13.4, 15.1] | above 19.2 % (failed) |
+| P(5+) | 0.34 % | 0.11 % [0.06, 0.21] | reported |
+| P(4+) | 0.88 % | 0.50 % | reported |
+| Feeder-ball legal | 64.4 % | 63.7 % | not below -5 (met) |
+| Court main | 75.4 % | 73.3 % | not below -5 (met) |
+| Drill v2 | 76.6 % | 73.7 % | not below -5 (met) |
+| Move arrival, lowest direction | 86.1 % | **74.3 %** | not below -5 (failed) |
+| Court falls per episode | | 2.0 % (Wilson low 1.2 %) | low <= 4 %, point <= 7.4 % (met) |
+
+- **Plainly:** training with the ball handed over at the partner's contact made the robot worse at returning the partner's shots, and it forgot part of its side-stepping. The endpoint battery was skipped.
+- **A check for a training-side bug:** the rewards have no miss penalty, so a partner's faulted shot gives the receiver nothing (no wrong punishment).
+- Panel round 23 decides what comes next.
