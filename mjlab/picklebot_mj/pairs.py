@@ -61,6 +61,12 @@ class PairCourts:
             f = fell_open & m & ~self.court_dead.repeat(2)
             self.side_stats[:, 0] += torch.stack([(f & (self.side == k)).sum() for k in (0, 1)])
             self.side_stats[:, 2] += torch.stack([(f & (self.side == k)).sum() for k in (0, 1)])
+            # D-138: a feed ended by a fall is a miss in the own-ball and per-court counts too (they used to leave it out)
+            fo = f & self.handed
+            self.side_stats_own[:, 0] += torch.stack([(fo & (self.side == k)).sum() for k in (0, 1)])
+            self.side_stats_own[:, 2] += torch.stack([(fo & (self.side == k)).sum() for k in (0, 1)])
+            per = torch.stack([fo, torch.zeros_like(fo), f & ~self.handed, torch.zeros_like(fo)], -1)
+            self.court_counts.index_add_(0, torch.arange(self.n, device=f.device) % self.h, per.long())
         self._end(m)
         self.parked |= m
 

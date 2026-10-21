@@ -3689,3 +3689,25 @@ The user gets a panel-approved rally video at M1, and the loop continues.
 - **Endpoint:** h5f_clean_eval on 4218210-4218225; the M1 and target read on 4218232 (contact) and 4218233 (crossing, reported).
 - **Panel trigger, not a stop:** a partner-ball gain under +8 points at the endpoint.
 - **Pre-launch:** 9 tests pass. In a 20-iteration smoke run, partner_return pays and placement pays 0.
+
+## D-138 - Rally run 2 at its endpoint: M1 half met; a fall-counting fix (2026-10-22)
+
+**Run 2** (cooperative credit, endpoint model_6400 at the 6 h cap; the M1 read on 4218232, read once):
+
+| Item | Value |
+|---|---|
+| Partner-ball legal | **54.3 %** (bootstrap low 53.7 %; bar met) |
+| Feeder-ball legal | **75.8-77.0 %** (bar 85 %; **not met**) |
+| Sides gap | 0.4 points |
+| Falls | 2.2 % per episode |
+| P(5+) | 7.9 % (baseline 0.38 %) |
+| P(3+) | 18.8 % |
+
+**M1 is not met.** The training curve was still rising at the cap. Forward move arrival fell (fwd 72 %, fwd-left 65 %).
+
+**A counting fix (a measurement correction, not a bar change):**
+- `PairCourts.on_reset` counted a feed that ended in a robot fall only in the side counts.
+- The own-ball and per-court counts (the M1 bootstrap) left it out, which made feeder-ball legal read about 1 point high (77.0 % against 75.8 %).
+- Every count now treats a fall as a miss (test `test_d138_a_fall_is_a_miss_in_every_count`).
+
+The panel plans run 3 in round 25.

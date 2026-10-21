@@ -1015,3 +1015,22 @@ def test_d137_pair_counts_per_court_and_feeds_started():
     own = sum(v["feeds"] for v in s["sides_own_ball"].values())
     assert cc[0] == own == 2 and cc[1] == 1 and cc[2] == 1 and cc[3] == 1
     assert s["started"] == {"feeder": 2, "handoffs": 2}  # both courts started a rally
+
+
+def test_d138_a_fall_is_a_miss_in_every_count():
+    """D-138: a feed ended by a robot fall counts as a missed feed in the side, own-ball and per-court counts alike."""
+    from picklebot_mj.pairs import PairCourts
+    pc = PairCourts(4, "cpu", handoff="contact")
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    pc.on_reset(torch.arange(4))
+    fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=Z)[0] for _ in range(30)) if f.any()]
+    a, b = (2, 0) if fires[0][2] else (0, 2)
+    pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(a))  # a hits the feeder ball, b receives
+    pc.step(F(a), F(a), Z, Z, 0.01, 0.1, contact=Z)  # a's return lands
+    pc.on_reset(torch.tensor([b]), fell_open=F(b))  # b falls while its partner's ball is in play
+    s = pc.summary()
+    own = sum(v["feeds"] for v in s["sides_own_ball"].values())
+    cc = torch.tensor(s["court_counts"]).sum(0).tolist()
+    assert own == 1 and cc[0] == 1 and cc[1] == 0  # b's fall is a missed partner ball
+    assert sum(v["feeds"] for v in s["sides"].values()) == cc[0] + cc[2]  # every count sees the same feeds

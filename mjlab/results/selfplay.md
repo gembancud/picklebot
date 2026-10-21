@@ -71,4 +71,47 @@ R4 protocol, 2,048 envs (1,024 courts), 120 s. `scripts/rally_baseline.sh`. Resu
 - **Plainly:** with cooperative credit, the robot returns its partner's shots 14 points more often after a third of the run. Run 1 lost 4 points at the same stage. It also returns more feeder balls.
 - **The weak spot:** the side-steps slipped 4.6 points, near the 5-point line.
 
-(endpoint pending)
+**Endpoint: model_6400.** The 6 h cap stopped training at iteration 6,400 of 6,598. The pre-registered endpoint is the last checkpoint before the cap.
+
+**M1 read** (contact hand-off, 4218232, read once; `rally-02-target.json`; 25,149 rallies):
+
+| M1 item | Value | Bar | |
+|---|---|---|---|
+| Partner-ball legal | **54.3 %** (bootstrap low 53.7 %) | >= 50 %, low >= 0.49 | met |
+| Feeder-ball legal | **77.0 %** (low 76.4 %); 75.8 % counting the feeds ended by falls | >= 85 %, low >= 0.84 | **not met** |
+| Sides A / B (all shots) | 62.7 / 62.3 % (gap 0.4) | within 3 points | met |
+| Court falls per episode | 2.2 % | <= 4 % | met |
+
+**M1 is not met** (feeder-ball legal).
+
+| Reported | Value |
+|---|---|
+| **P(5+)** (the target) | **7.87 %** [7.54, 8.21] (baseline 0.38 %) |
+| P(3+) | 18.8 % |
+| P(4+) | 12.1 % |
+| Mean rally length | 1.61 |
+| Longest rallies (by length 9, 10, 11) | 102, 58, 50 |
+| Falls per shot | 0.5 / 0.7 % |
+| Crossing read (4218233) | P(5+) 4.1 %, own-ball 41.6 % |
+
+**Shots:**
+- legal landings at x 4.1 m (sd 1.0), mean |y| 0.73 m;
+- keep-alive-box share 17.3 %;
+- flight 1.23 s, ball out 10.3 m/s.
+
+**The rest of the endpoint battery** (`stage5f-r02-summary.json`):
+- drill v2 86.0 % (rally5 41 %), court main 75.3 %, falls 2.2 %;
+- **move arrival fell in the forward directions:** fwd 72 %, fwd-left 65 %, fwd-right 82 % (the others 92-98 %).
+
+**Training curve:** the partner_return reward was still rising at the cap.
+
+| Iteration | partner_return reward |
+|---|---|
+| 4,400 | 0.054 |
+| 5,400 | 0.088 |
+| 6,400 | 0.112 |
+
+**A counting slip, found and fixed (D-138):**
+- The own-ball and per-court counts left out feeds that ended in a robot fall (only the side counts had them). So the bootstrap's feeder-ball number (77.0 %) is a little high: counting those feeds, it is 75.8 %.
+- The partner-ball number changes by at most the fall rate (about 0.6 % of shots).
+- Neither changes the verdict. From now on every count treats a fall as a miss (test).
