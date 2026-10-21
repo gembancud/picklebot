@@ -10,31 +10,40 @@
 
 Each GIF is a short part of one test. In the rally GIF, the robot plays with real-world delays and gets only the planner's spot where it must stand. In the other GIFs, it gets no help signals.
 
-## Newest: the robot plays against itself (October 2026, interim)
+## Newest: two robots keep a rally going (October 2026, interim)
 
-| Two copies of the robot rally on one court |
+| Longest rally of 4 courts: 13 good shots in a row |
 |:---:|
-| ![Two copies of the same robot hit the ball to each other across the net](docs/media/g1-selfplay.gif) |
+| ![Two copies of the same robot hit the ball back and forth 13 times across the net](docs/media/g1-rally-run2-interim.gif) |
 
-[Full minute (MP4)](docs/media/g1-selfplay-run4.mp4) · [Longest rally of 4 courts (MP4)](docs/media/g1-selfplay-run4-longest.mp4) · [The same test before self-play training (MP4)](docs/media/g1-selfplay-run1.mp4)
+[Longest rally (MP4)](docs/media/g1-rally-run2-interim-longest.mp4) · [One court, every rally in order, not picked (MP4)](docs/media/g1-rally-run2-interim-first.mp4)
 
-**What you see.** Two copies of the same robot share one court. A ball machine starts each rally. When one robot hits the ball over the net, the other must return it. The GIF is the first 12 seconds of one court, not picked. The full video shows one minute of that court, in order. In that minute, on 4 courts, the longest rally had 2 good shots: rallies of 4 or more shots are still rare.
+**What you see.** Two copies of the same robot share one court. A ball machine starts each rally, and then the robots hit the ball to each other.
+- The GIF is the longest rally among 4 courts in 90 seconds, so it is **picked**: it shows the robots at their best.
+- The second video shows one court in order, misses included.
 
-**How it learned.** Both copies use the same "brain". They practise against each other, and both learn from the same games. This is called **self-play**. A ball machine still sends 4 of 10 practice balls, so the robot does not forget normal shots.
+**The goal** (set by the owner): in 80 % of rallies, the robots make 5 good shots in a row. On the way there is a first step: return at least 50 % of the other robot's shots and 85 % of the ball machine's balls.
 
-**What we measured** (tens of thousands of test rallies, new random situations):
+**What changed to get here.**
+- **A fairer test:** the other robot now sees the ball leave its partner's paddle. Before, it first saw the ball at the net.
+- **Teamwork reward:** a robot gets points when its partner returns its shot. Before, it got points for aiming near the sidelines, which made the partner's job harder.
+- **Longer practice:** 6 hours instead of 2.
 
-| | Before self-play | After self-play | Our target |
-|---|---|---|---|
-| Balls from the other robot that it returns | about 6 % | about 13 % | about 56 % (needed for the video target) |
-| Rallies with 4 or more good shots in a row | 1 in 2,500 | **1 in 150** | 1 in 10 |
-| Falls (in practice) | 6.7 % | **3.9 %** | 4 % or less (met) |
-| Balls from the ball machine that it returns | 77.6 % | 76.3 % | 76.8 % or more (just missed) |
+**What we measured** (25,000 test rallies, new random situations):
 
-**Why rallies are still short.**
-- The robot hits hard (about 11 m/s), low and with spin, so the other robot gets a difficult ball.
-- In our test, the other robot sees the ball only when it crosses the net. A real player sees it leave the opponent's paddle. We will fix this test next, with your approval, because it changes a fixed test.
-- Stage 5H used its 4 training runs. The video target (1 rally in 10 with 4 or more shots) was not reached, so this video is **interim**.
+| | Before | Now | First step | Goal |
+|---|---|---|---|---|
+| Shots from the other robot that it returns | 19 % | **54 %** | 50 % (met) | about 96 % |
+| Balls from the ball machine that it returns | 65 % | **77 %** | 85 % (not yet) | about 90 % |
+| Rallies with 5 or more good shots in a row | 0.4 % | **7.9 %** | | 80 % |
+| Falls (in practice) | | 2.2 % | 4 % or less (met) | 4 % or less |
+
+**What is still missing.**
+- The ball machine's balls come from every kind of shot, including hard ones. The robot often does not reach them in time. When it reaches the ball, about 92 % of its shots are good.
+- Its steps forward got worse during this training.
+- Training continues; each run is at most 6 hours.
+
+Earlier self-play videos (Stage 5H, before these changes): [full minute](docs/media/g1-selfplay-run4.mp4) · [GIF](docs/media/g1-selfplay.gif).
 
 ## What is this project?
 
@@ -116,15 +125,13 @@ The stage stopped by its own rule: three of its training runs failed a safety li
 
 ## Next steps
 
-1. **More self-play.** Longer self-play training (runs of more than 2 hours) is the most direct way to longer rallies. This needs your approval.
-2. **A fairer two-robot test.** The receiving robot should see the ball from the moment it leaves the other paddle.
-3. **Softer, deeper shots** that the other robot can return.
-4. **Volleys and play at the net.**
-3. **Later:**
-   - a more robust robot;
-   - two robots that play against each other;
+1. **Reach the first step:** return 85 % of the ball machine's balls. The robot needs to get to hard balls in time, so better footwork is the likely next change.
+2. **Then the goal:** 5 good shots in a row in 80 % of rallies.
+3. **Then competition:** the robot plays against older copies of itself and must beat them.
+4. **Later:**
+   - doubles (2 against 2);
    - a robot that decides its own strategy;
-   - doubles.
+   - a more robust robot.
 
 This is a research prototype in simulation. Nothing here has run on a real robot.
 
