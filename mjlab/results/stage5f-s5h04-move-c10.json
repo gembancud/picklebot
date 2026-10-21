@@ -1,0 +1,181 @@
+{
+ "checkpoint": "artifacts/train/logs/picklebot_return_stand/2026-10-21_09-25-54_s5h-04-pairs/model_3398.pt",
+ "controller": "task default",
+ "seed": 4217315,
+ "envs": 2048,
+ "sim_seconds": 24.0,
+ "episodes": 0,
+ "contact_rate": 0.0,
+ "contact_ci95": [
+  null,
+  null
+ ],
+ "legal_return_rate": 0.0,
+ "legal_return_ci95": [
+  null,
+  null
+ ],
+ "fall_rate": 0.0,
+ "fall_ci95": [
+  null,
+  null
+ ],
+ "hits": 0,
+ "legal_returns": 0,
+ "falls": 0,
+ "rally_endings": {},
+ "grip": "default",
+ "families": [
+  "easy_forehand",
+  "wide_forehand",
+  "backhand",
+  "deep",
+  "short",
+  "high",
+  "low",
+  "fast",
+  "topspin",
+  "backspin",
+  "reach_forehand",
+  "reach_backhand",
+  "reach_short",
+  "reach_deep",
+  "drop",
+  "lob",
+  "cross_forehand",
+  "cross_backhand",
+  "volley_forehand",
+  "volley_backhand"
+ ],
+ "task": "Picklebot-Latent-Court-Res-G1",
+ "target": "A",
+ "robot_episodes": 6144,
+ "robot_falls": 21,
+ "censored_feeds": 0,
+ "robot_fall_rate_per_episode": 0.0034,
+ "per_family": {},
+ "per_zone_family": {},
+ "contact_diagnostics": {
+  "first_contacts": 0,
+  "paddle_speed_mean": 0.0,
+  "paddle_speed_std": 0.0,
+  "ball_speed_in_mean": 0.0,
+  "ball_speed_out_mean": 0.0,
+  "contact_height_mean": 0.0,
+  "net_crossings": 0,
+  "net_clearance_mean_m": 0.0,
+  "legal_landings": 0,
+  "landing_x_mean": 0.0,
+  "landing_x_std": 0.0,
+  "landing_abs_y_mean": 0.0,
+  "landings_in_A": 0,
+  "landings_in_B": 0,
+  "target_hits": 0,
+  "landings_in_keep_alive_box": 0,
+  "keep_alive_box_share_of_legal_landings": 0.0,
+  "keep_alive_score_mean": 0.0,
+  "flight_time_mean_s": 0.0
+ },
+ "ready": {
+  "feeds_scored": 0,
+  "ready": null,
+  "dip": null,
+  "ready_and_dip": null,
+  "definition": "width >= 0.35 m and both ankles < 0.12 m at the launch; pelvis dip >= 0.03 m within +-0.25 s"
+ },
+ "move_drill": {
+  "sectors": [
+   {
+    "sector": 0,
+    "issued": 3242,
+    "finished": 1928,
+    "arrival_rate": 0.972,
+    "mean_time_s": 2.729,
+    "median_final_error_m": 0.125,
+    "ready_rate_of_arrivals": 0.2572
+   },
+   {
+    "sector": 1,
+    "issued": 3235,
+    "finished": 1965,
+    "arrival_rate": 0.9354,
+    "mean_time_s": 2.577,
+    "median_final_error_m": 0.175,
+    "ready_rate_of_arrivals": 0.2122
+   },
+   {
+    "sector": 2,
+    "issued": 3280,
+    "finished": 1915,
+    "arrival_rate": 0.8997,
+    "mean_time_s": 2.532,
+    "median_final_error_m": 0.175,
+    "ready_rate_of_arrivals": 0.4823
+   },
+   {
+    "sector": 3,
+    "issued": 3152,
+    "finished": 1955,
+    "arrival_rate": 0.9361,
+    "mean_time_s": 2.587,
+    "median_final_error_m": 0.075,
+    "ready_rate_of_arrivals": 0.8246
+   },
+   {
+    "sector": 4,
+    "issued": 3181,
+    "finished": 1895,
+    "arrival_rate": 0.8311,
+    "mean_time_s": 2.799,
+    "median_final_error_m": 0.075,
+    "ready_rate_of_arrivals": 0.7644
+   },
+   {
+    "sector": 5,
+    "issued": 3049,
+    "finished": 1784,
+    "arrival_rate": 0.9322,
+    "mean_time_s": 2.587,
+    "median_final_error_m": 0.075,
+    "ready_rate_of_arrivals": 0.7066
+   },
+   {
+    "sector": 6,
+    "issued": 3199,
+    "finished": 1962,
+    "arrival_rate": 0.9725,
+    "mean_time_s": 2.496,
+    "median_final_error_m": 0.125,
+    "ready_rate_of_arrivals": 0.6431
+   },
+   {
+    "sector": 7,
+    "issued": 3205,
+    "finished": 1899,
+    "arrival_rate": 0.9726,
+    "mean_time_s": 2.555,
+    "median_final_error_m": 0.125,
+    "ready_rate_of_arrivals": 0.5506
+   }
+  ],
+  "all": {
+   "finished": 15303,
+   "arrival_rate": 0.9317,
+   "median_final_error_m": 0.125,
+   "ready_rate_of_arrivals": 0.5495
+  }
+ },
+ "recovery": {
+  "feeds_scored": 0,
+  "error_median_m": null,
+  "error_p90_m": null,
+  "spot": "fixed",
+  "bin_m": 0.05,
+  "time_model_error_median_m": null,
+  "time_model_error_p90_m": null,
+  "time_model_scored": 0,
+  "stand_still_gap_median_m": null,
+  "time_model_unscored_next_feed_first": 0,
+  "refeed_delay_s": 0.5
+ }
+}

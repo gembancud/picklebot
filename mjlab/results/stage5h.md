@@ -104,7 +104,7 @@ The plan and its budget are in `stage5h-review.md` (round 17): at most 4 runs; p
 - **In two-robot pairs, own-ball legal is only about 12 %, against 30 % on replays.** In a rally the receiver has just hit its own shot and is out of position. The replays start it from the rally protocol's start spot, so **positioning and recovery in a live rally** are now the gap. P(4+) rose 8x to 0.33 %, still far from 10 %.
 - **Counters:** Stage 5H has used 3 of 4 runs, with 2 kills in a row (runs 2 and 3). The D-130 stop rule does not fire (R2 >= 20 %). The end-of-stage rule (P(4+) < 1 % ends the stage) applies after run 4.
 
-| 4 | s5h-04-pairs | Run 1's task in pair mode: shared-policy self-play on mirrored env pairs, a feeder ball starts each rally, feeder court share 0.678 (`...-KeepAlive-Pairs-G1`) | s5h-01-keepalive/model_2599 | iteration 3399 | running; early check passed |
+| 4 | s5h-04-pairs | Run 1's task in pair mode: shared-policy self-play on mirrored env pairs, a feeder ball starts each rally, feeder court share 0.678 (`...-KeepAlive-Pairs-G1`) | s5h-01-keepalive/model_2599 | iteration 3399 | **Killed by the stage rules at the endpoint: court main 76.3 % (< 76.8 %).** R4 P(4+) **0.0065**, own-ball legal in pairs 12.7 %, falls **3.85 %** per episode (R3 met). See below. |
 
 ### Run 4 early check (model_2900; seeds 4217300-4217303, parent read on the same seeds): **pass**
 
@@ -119,3 +119,24 @@ The plan and its budget are in `stage5h-review.md` (round 17): at most 4 runs; p
 
 - **Report only:** box share 9.8 -> 13.8 %; flight 1.04 -> 1.09 s; ball out 10.6 -> 10.2 m/s.
 - **Self-play is the first change that raises own-ball legal in pairs while holding court main** (+0.4), and falls fell to 2.6 % per episode. Run 3's endpoint had 11.7 % own-ball in pairs, but with court main at 75.1 %.
+
+### Run 4 at its endpoint (model_3398; battery seeds 4217310-4217325; R2 on 4217330 / 4217331, R4 on 4217332)
+
+| Item | Run 4 (pair-mode self-play) | Run 3 (own-return replays) | Run 1 (keep-alive) | Bar |
+|---|---|---|---|---|
+| Drill v2 p (0/0) | 0.820 | 0.836 | 0.846 | R1 >= 0.80 |
+| Court main | 76.3 % | 75.1 % | 77.6 % | stage rule >= 76.8 % (**fail by 0.5 points**) |
+| Court falls per episode | **3.85 %** | 6.1 % | 6.7 % | R3 <= 4.0 % (**met, for the first time**) |
+| R2 own-ball legal (replays) | 19.7 % [19.1, 20.3] | 29.8 % | 10.0 % | >= 70 % |
+| **R4 P(4+) in pairs** | **0.0065** (34,422 rallies) | 0.0033 | 0.0004 | >= 25 % (video bar 10 %) |
+| R4 own-ball legal per side, A / B | **12.8 % / 12.6 %** | 11.8 % / 11.5 % | 6.1 % / 6.5 % | sides within 3 points (pass) |
+| R4 mean rally length | 0.88 | 0.82 | 0.69 | report |
+
+**Shots** (R2 recording): ball out 10.8 m/s; landing x 4.57 m; flight 1.17 s; keep-alive box share 13.6 %.
+
+**Stage 5H at its end:** 4 of 4 runs used; runs 2, 3 and 4 were killed (stage rules or the early check), 3 in a row.
+
+**Findings:**
+- **Self-play (run 4) is the best two-robot result in the project.** P(4+) is 16x run 1's and 2x run 3's. Falls met R3 for the first time, and court main held within 1.3 points of run 1.
+- **The gap to the video bar is still about 15x** (0.65 % against 10 %). Per shot in pairs, legal is about 13 %; about 56 % is needed.
+- **D-129's stop fires:** the stage ended with P(4+) under 1 %. Back to the user with the interim video (D-132).

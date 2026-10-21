@@ -80,6 +80,11 @@ def main():
     ap.add_argument("--record-contacts", default=None,
                     help="D-127: save, at every first contact, the incoming ball, the paddle state, the commanded paddle "
                          "state and the planned outgoing ball (timed-goal tasks; scripts/diag/contact_decomposition.py)")
+    ap.add_argument("--pair-video", default=None,
+                    help="D-132: with --pairs, write one-court videos of both robots: PREFIX-first.mp4 (court 0, every "
+                         "rally, unpicked) and PREFIX-longest.mp4 (the longest rally of --pair-video-courts courts)")
+    ap.add_argument("--pair-video-courts", type=int, default=4)
+    ap.add_argument("--pair-video-caption", default="")
     ap.add_argument("--pairs", action="store_true",
                     help="self-play readiness R4 (D-116): two-robot courts from mirrored env pairs")
     ap.add_argument("--replay-file", default=None,
@@ -194,7 +199,11 @@ def main():
             cfg.viewer.distance, cfg.viewer.elevation, cfg.viewer.azimuth = 4.5, -14.0, 0.0
         cfg.viewer.geom_group = (1, 1, 1, 1, 0, 0)  # group 3 = court markings
         cfg.viewer.max_extra_envs = 0
-    env = ManagerBasedRlEnv(cfg=cfg, device="cuda", render_mode="rgb_array" if args.video else None)
+    if args.pair_video:
+        cfg.viewer.width, cfg.viewer.height = 960, 540
+        cfg.viewer.geom_group = (1, 1, 1, 1, 0, 0)
+        cfg.viewer.max_extra_envs = 0
+    env = ManagerBasedRlEnv(cfg=cfg, device="cuda", render_mode="rgb_array" if (args.video or args.pair_video) else None)
     agent_cfg = load_rl_cfg(task)
     venv = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
     rl = asdict(agent_cfg)
@@ -235,11 +244,39 @@ def main():
     reached5 = torch.zeros((), dtype=torch.long, device=env.device)  # the same for 5 returns (Stage 5E report)
     failed5 = torch.zeros((), dtype=torch.long, device=env.device)
     ended_len = torch.zeros(64, dtype=torch.long, device=env.device)  # lengths of streaks ended by a miss or a fall
+    if args.pair_video:  # D-132
+        from picklebot_mj.pair_video import PairFrames, caption
+        pfr = PairFrames(env, term)
+        pc_ = term.pairs
+        K = min(args.pair_video_courts, pc_.h)
+        cur = [[] for _ in range(K)]
+        prev_idx = pc_.rally_idx[:K].clone()
+        prev_len = pc_.rally_len[:K].clone()
+        first, best, best_len = [], [], -1
     with torch.inference_mode():
-        for _ in range(steps):
+        for step_i in range(steps):
             obs, _, dones, _ = venv.step(policy(obs))
             if args.video:
                 frames.append(env.render())
+            if args.pair_video and step_i % 2 == 0:  # 25 frames per second
+                idx, ln = pc_.rally_idx[:K], pc_.rally_len[:K]
+                for c in range(K):
+                    if int(idx[c]) != int(prev_idx[c]):  # court c's rally ended (prev_len shots)
+                        if int(prev_len[c]) > best_len and cur[c]:
+                            best, best_len = cur[c], int(prev_len[c])
+                        cur[c] = []
+                    f = pfr.frame(c, c + pc_.h)
+                    lines = [f"Picklebot: two copies of one policy rallying (self-play)   INTERIM   seed {args.seed}",
+                             f"court {c}: legal robot shots in this rally so far: {int(ln[c])}"]
+                    if args.pair_video_caption:
+                        lines.append(args.pair_video_caption)
+                    f = caption(f, lines)
+                    if c == 0:
+                        first.append(f)
+                    cur[c].append(f[::2, ::2].copy() if c else f)
+                    if len(cur[c]) > 1500:
+                        cur[c] = cur[c][-1500:]
+                prev_idx, prev_len = idx.clone(), ln.clone()
             if args.rally:  # a finished feed extends or ends each robot's rally; an episode end (fall, time-out) ends it
                 newly = term.tallied & ~prev_tallied
                 ok = newly & term.return_done
@@ -382,6 +419,17 @@ def main():
         out["replay"] = {"file": args.replay_file, "states": int(term.replay.shape[0])}
     if args.pairs:
         out["pairs"] = term.pairs.summary()
+    if args.pair_video:
+        import imageio_ffmpeg
+        import mediapy
+        mediapy.set_ffmpeg(imageio_ffmpeg.get_ffmpeg_exe())
+        mediapy.write_video(args.pair_video + "-first.mp4", first, fps=25)
+        if best:
+            mediapy.write_video(args.pair_video + "-longest.mp4", best, fps=25)
+        out["pair_video"] = {"first": args.pair_video + "-first.mp4", "first_frames": len(first),
+                             "longest": args.pair_video + "-longest.mp4" if best else None, "longest_shots": best_len,
+                             "courts_watched": K}
+        print("pair video:", out["pair_video"])
     if args.json:
         json.dump(out, open(args.json, "w"), indent=1)
     if args.video:
