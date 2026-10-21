@@ -10,6 +10,32 @@
 
 Each GIF is a short part of one test. In the rally GIF, the robot plays with real-world delays and gets only the planner's spot where it must stand. In the other GIFs, it gets no help signals.
 
+## Newest: the robot plays against itself (October 2026, interim)
+
+| Two copies of the robot rally on one court |
+|:---:|
+| ![Two copies of the same robot hit the ball to each other across the net](docs/media/g1-selfplay.gif) |
+
+[Full minute (MP4)](docs/media/g1-selfplay-run4.mp4) · [Longest rally of 4 courts (MP4)](docs/media/g1-selfplay-run4-longest.mp4) · [The same test before self-play training (MP4)](docs/media/g1-selfplay-run1.mp4)
+
+**What you see.** Two copies of the same robot share one court. A ball machine starts each rally. When one robot hits the ball over the net, the other must return it. The GIF is the first 12 seconds of one court, not picked. The full video shows one minute of that court, in order. In that minute, on 4 courts, the longest rally had 2 good shots: rallies of 4 or more shots are still rare.
+
+**How it learned.** Both copies use the same "brain". They practise against each other, and both learn from the same games. This is called **self-play**. A ball machine still sends 4 of 10 practice balls, so the robot does not forget normal shots.
+
+**What we measured** (tens of thousands of test rallies, new random situations):
+
+| | Before self-play | After self-play | Our target |
+|---|---|---|---|
+| Balls from the other robot that it returns | about 6 % | about 13 % | about 56 % (needed for the video target) |
+| Rallies with 4 or more good shots in a row | 1 in 2,500 | **1 in 150** | 1 in 10 |
+| Falls (in practice) | 6.7 % | **3.9 %** | 4 % or less (met) |
+| Balls from the ball machine that it returns | 77.6 % | 76.3 % | 76.8 % or more (just missed) |
+
+**Why rallies are still short.**
+- The robot hits hard (about 11 m/s), low and with spin, so the other robot gets a difficult ball.
+- In our test, the other robot sees the ball only when it crosses the net. A real player sees it leave the opponent's paddle. We will fix this test next, with your approval, because it changes a fixed test.
+- Stage 5H used its 4 training runs. The video target (1 rally in 10 with 4 or more shots) was not reached, so this video is **interim**.
+
 ## What is this project?
 
 Pickleball is a paddle sport. It is similar to tennis on a small court.
@@ -67,6 +93,9 @@ The last stage (5D) did not reach its gate: 2 of 5 items passed. [Stage 5D repor
 | 5C | Play on the whole court. Walk to any spot. | Not passed: walking passed, volleys and falls failed |
 | 5D | Rallies against balls that land at fixed places. | Not passed: rallies to 10 shots rose from 1.75 % to 9.6 % |
 | 5E | Reliable shots in a more realistic game, with real-world delays. | Not passed: with delays, returns rose from 30 % to 59 % (target 80 %) |
+| 5F | Reliable shots without delays (no real robot is planned soon, so we removed the delays). | Not passed: drills 84 %, but other court play dropped below its limit |
+| 5G | A new controller that puts the paddle at a target point at a set time. | Not passed: the arm is accurate (2 cm), but only 15 % of real balls go back legally |
+| 5H | Easier shots, practice against its own shots, then self-play. | Not passed: returns of its own shots rose from 10 % to 30 %; rallies of 4+ shots from 1 in 2,500 to 1 in 150 (target 1 in 10) |
 
 ## The last stage: 5E
 
@@ -87,8 +116,10 @@ The stage stopped by its own rule: three of its training runs failed a safety li
 
 ## Next steps
 
-1. **Train the movement controller again, with delays.** Then the lower layer keeps its balance when its motors react late. After that, the shot training of Stage 5E runs again on top of it.
-2. **Volleys and play at the net.**
+1. **More self-play.** Longer self-play training (runs of more than 2 hours) is the most direct way to longer rallies. This needs your approval.
+2. **A fairer two-robot test.** The receiving robot should see the ball from the moment it leaves the other paddle.
+3. **Softer, deeper shots** that the other robot can return.
+4. **Volleys and play at the net.**
 3. **Later:**
    - a more robust robot;
    - two robots that play against each other;

@@ -21,8 +21,8 @@ def _quat_turn_z(q: np.ndarray) -> np.ndarray:
 
 
 class PairFrames:
-    def __init__(self, env, ball_term, width: int = 960, height: int = 540, distance: float = 11.0,
-                 elevation: float = -24.0, azimuth: float = 270.0):
+    def __init__(self, env, ball_term, width: int = 960, height: int = 540, distance: float = 8.5,
+                 elevation: float = -20.0, azimuth: float = 270.0):
         r = env._offline_renderer
         if r is None:
             raise ValueError("the environment needs render_mode='rgb_array'")

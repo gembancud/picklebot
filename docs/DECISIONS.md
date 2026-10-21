@@ -3562,3 +3562,27 @@ Panel round 20 (`mjlab/results/stage5h-review.md`).
 **Kill lines:** run 3's, with the progress line on own-ball legal in pairs above 6.5 %.
 
 **After run 4:** back to the user with an interim video and the gap stated (P(4+) far under the 10 % bar).
+
+## D-133 - Stage 5H ends; first self-play results; back to the user (2026-10-21)
+
+**Stage 5H used 4 of 4 runs:**
+1. keep-alive reward, R1 met;
+2. own returns 40 % (killed, court);
+3. court share kept (killed by the stage rule, R2 29.8 %);
+4. pair-mode self-play (killed by the stage rule: court main 76.3 % against 76.8 %).
+
+**The best self-play result** is run 4. In R4: P(4+) 0.65 % (run 1: 0.04 %), own-ball legal per shot about 12.7 % (run 1: about 6 %), falls 3.85 % per episode (R3 met for the first time).
+
+**D-129 fires:** the stage ended with P(4+) under 1 %, far below the video bar (10 %). D-132 says back to the user whatever the result.
+
+**The interim video** (pre-registered clips, development seeds 4217401 / 4217402; `scripts/h5h_videos.sh`):
+- one court with both robots, a minute in order;
+- the longest rally of 4 courts, which was 2 shots;
+- labelled interim.
+
+**For the user:**
+- longer self-play runs (over 2 h);
+- the R4 hand-off at the net crossing (the receiver first sees the ball mid-flight), a change to a frozen test;
+- shot softness and depth.
+
+**The loop's "third kill in a row" rule** would take the pre-registered exit. The exit (the goal-conditioned controller) is Stage 5G, which is already closed, so the next direction is the user's call.
