@@ -67,7 +67,7 @@ The plan and its budget are in `stage5h-review.md` (round 17): at most 4 runs; p
 - **The cost was court skill:** court main fell 6.0 points. The replay draw comes first, so court feeds dropped from 40 % to 24 % of the mix (round 18's choice).
 - **The kill counts.** Stage 5H: 2 of 4 runs used, 1 kill in a row. The D-130 stop rule (R2 < 20 % at run 2's endpoint) has no endpoint to read; the panel meets.
 
-| 3 | s5h-03-own-c40 | Run 2 with the court share restored: 40 % replay / 40 % court / 20 % drill v2 (`...-Own-Court40-G1`) | s5h-01-keepalive/model_2599 | iteration 3399 | running; early check passed |
+| 3 | s5h-03-own-c40 | Run 2 with the court share restored: 40 % replay / 40 % court / 20 % drill v2 (`...-Own-Court40-G1`) | s5h-01-keepalive/model_2599 | iteration 3399 | **Killed by the stage rules at the endpoint: court main 75.1 % (< 76.8 %).** R2 (development seeds) **29.8 % [29.1, 30.6]**; R4 P(4+) 0.0033. See below. |
 
 ### Run 3 early check (model_2900; seeds 4217200-4217204, parent read on the same seeds): **pass**
 
@@ -82,3 +82,24 @@ The plan and its budget are in `stage5h-review.md` (round 17): at most 4 runs; p
 - **Report only:** box share 11.6 -> 11.4 %; flight 1.03 -> 1.07 s; ball out 10.6 -> 10.3 m/s.
 - **Keeping the court share at 40 % removed run 2's court loss** (-6.0 -> -2.3), and own-ball legal is higher than run 2's (17.9 % against 16.6 %).
 - **Falls are back at run 1's level** (6.6 %, against run 2's 4.4 %).
+
+### Run 3 at its endpoint (model_3398; battery seeds 4217210-4217225; R2 on 4217230 / 4217231, R4 on 4217232)
+
+| Item | Run 3 | Run 1 | Bar |
+|---|---|---|---|
+| Drill v2 p (0/0) | 0.836 | 0.846 | R1 >= 0.80 |
+| Court main | **75.1 %** | 77.6 % | stage rule >= 76.8 % (**fail: killed by the stage rules**, as Stage 5F run 4 was) |
+| Court falls per episode | 6.1 % | 6.7 % | stage <= 7.4 %; R3 <= 4.0 % (fail) |
+| **R2 own-ball legal** | **29.8 % [29.1, 30.6]** (15,757 balls) | 10.0 % [9.5, 10.4] | >= 70 %; D-130 stop rule >= 20 % (**pass**) |
+| R2 contact / falls per shot | 43.7 % / **0.8 %** | 25.4 % / 5.5 % | report |
+| R4 pairs: P(4+) | **0.0033** (35,325 rallies) | 0.0004 | >= 25 % (video bar 10 %) |
+| R4 own-ball legal per side, A / B | 11.8 % / 11.5 % | 6.1 % / 6.5 % | sides within 3 points (pass) |
+| R4 mean rally length | 0.82 | 0.69 | report |
+
+**Shots** (R2 recording): legal 82 %, ball out 10.9 m/s, landing x 4.61 m, flight 1.17 s, keep-alive box share 16.1 % (run 1: 10.7 %).
+
+**Findings:**
+- **Training on its own returns tripled R2** (10.0 -> 29.8 %), and falls on own balls almost vanished (5.5 -> 0.8 % per shot). It also made the shots easier: box share 10.7 -> 16.1 %, flight +0.09 s.
+- **The cost is court main: 75.1 %,** 1.7 points under the stage line, so the stage rules kill the run.
+- **In two-robot pairs, own-ball legal is only about 12 %, against 30 % on replays.** In a rally the receiver has just hit its own shot and is out of position. The replays start it from the rally protocol's start spot, so **positioning and recovery in a live rally** are now the gap. P(4+) rose 8x to 0.33 %, still far from 10 %.
+- **Counters:** Stage 5H has used 3 of 4 runs, with 2 kills in a row (runs 2 and 3). The D-130 stop rule does not fire (R2 >= 20 %). The end-of-stage rule (P(4+) < 1 % ends the stage) applies after run 4.
