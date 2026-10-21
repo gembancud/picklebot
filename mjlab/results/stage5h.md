@@ -103,3 +103,19 @@ The plan and its budget are in `stage5h-review.md` (round 17): at most 4 runs; p
 - **The cost is court main: 75.1 %,** 1.7 points under the stage line, so the stage rules kill the run.
 - **In two-robot pairs, own-ball legal is only about 12 %, against 30 % on replays.** In a rally the receiver has just hit its own shot and is out of position. The replays start it from the rally protocol's start spot, so **positioning and recovery in a live rally** are now the gap. P(4+) rose 8x to 0.33 %, still far from 10 %.
 - **Counters:** Stage 5H has used 3 of 4 runs, with 2 kills in a row (runs 2 and 3). The D-130 stop rule does not fire (R2 >= 20 %). The end-of-stage rule (P(4+) < 1 % ends the stage) applies after run 4.
+
+| 4 | s5h-04-pairs | Run 1's task in pair mode: shared-policy self-play on mirrored env pairs, a feeder ball starts each rally, feeder court share 0.678 (`...-KeepAlive-Pairs-G1`) | s5h-01-keepalive/model_2599 | iteration 3399 | running; early check passed |
+
+### Run 4 early check (model_2900; seeds 4217300-4217303, parent read on the same seeds): **pass**
+
+| Item | Parent | Run 4 at 37 % | Kill line |
+|---|---|---|---|
+| Drill v2 p (0/0) | 0.822 | 0.792 (-3.0) | more than 5 points below |
+| Court main | 0.765 | **0.768** [0.749, 0.786] (+0.4) | more than 5 points below |
+| Court falls per episode | | **2.6 %** | > 7.4 % (R3 bar 4.0 %) |
+| Move arrival, minimum | | 93.3 % | < 90 % |
+| Own-ball legal per shot in pairs (1,024 envs, 60 s) | 5.9 % | **10.7 % [10.0, 11.4]** (7,285 shots) | <= 6.5 % |
+| P(4+) in pairs | 0.000 | 0.0038 (8,899 rallies) | report |
+
+- **Report only:** box share 9.8 -> 13.8 %; flight 1.04 -> 1.09 s; ball out 10.6 -> 10.2 m/s.
+- **Self-play is the first change that raises own-ball legal in pairs while holding court main** (+0.4), and falls fell to 2.6 % per episode. Run 3's endpoint had 11.7 % own-ball in pairs, but with court main at 75.1 %.
