@@ -387,6 +387,7 @@ class BallPhysicsAction(ActionTerm):
         # D-129: time since the first legal contact (physics steps), and the keep-alive score of a legal landing
         self.flight_t = torch.zeros(n, device=dev)
         self.keep_alive_now = torch.zeros(n, device=dev)
+        self.partner_return_now = torch.zeros(n, dtype=torch.bool, device=dev)  # D-137 (pair mode)
 
     # ActionTerm API ---------------------------------------------------------------
     @property
@@ -930,10 +931,12 @@ class BallPhysicsAction(ActionTerm):
         self.tallied = self.tallied | over
         recv = None
         if self.pairs is not None:  # R4 (D-116): the pair logic replaces the feeder timer
+            h0, live0 = self.pairs.handed.clone(), ~self.pairs.court_dead.repeat(2)
             fire, recv = self.pairs.step(over, self.return_done, torch.zeros_like(over), crossing, dt,
                                          self.cfg.refeed_delay_s, contact=first)
             handed = mirror_ball_states(torch.cat([self.ball.pos, self.ball.vel, self.ball.spin], -1))[self.pairs.partner]
-            self._credit_early(recv)
+            early = self._credit_early(recv)
+            self._credit_partner(over, early, h0, live0)
             self._handoff = recv
             fire = fire | recv
         else:
@@ -984,6 +987,12 @@ class BallPhysicsAction(ActionTerm):
         self.tallied |= early
         return early
 
+    def _credit_partner(self, over: torch.Tensor, early: torch.Tensor, h0: torch.Tensor, live0: torch.Tensor) -> None:
+        """D-137 (pair mode): an env's legal return (landed, or volleyed back by the partner: early) of a ball its
+        partner handed over (h0, before this step's pair update) credits the partner, the hitter of that ball, on this
+        step. Feeder balls and courts already finished (live0) credit no one; faults are not legal returns."""
+        self.partner_return_now |= (((over & self.return_done) | early) & h0 & live0)[self.pairs.partner]
+
     def consume_step_events(self):
         """Clear one-shot flags after rewards are computed (called by the reward terms' owner)."""
         if self._recorded is not None:  # R2 recording (evaluation only; a host sync per step is acceptable here)
@@ -994,6 +1003,7 @@ class BallPhysicsAction(ActionTerm):
         self.lost_now[:] = False
         self.placement_now.zero_()
         self.keep_alive_now.zero_()
+        self.partner_return_now[:] = False
         self.cross_now[:] = False
         if self.ready is not None:
             self.ready.consume()
@@ -1227,6 +1237,12 @@ def keep_alive_landing(env) -> torch.Tensor:
     """D-129: one-shot at a legal landing: planner.keep_alive_score of the landing point and the contact-to-landing
     flight time (the real simulated flight: drag, spin, net). Must be read before legal_return."""
     return _term(env).keep_alive_now
+
+
+def partner_return(env) -> torch.Tensor:
+    """D-137 (pair mode): one-shot to the hitter when its partner legally returns the ball it hit (cooperative credit).
+    Must be read before legal_return."""
+    return _term(env).partner_return_now.float()
 
 
 def legal_return(env) -> torch.Tensor:

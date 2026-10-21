@@ -950,3 +950,68 @@ def test_d136_a_volleyed_return_is_rewarded_like_a_landed_one():
     assert early.tolist() == [True, False, False, False]
     assert t.return_now.tolist() == [True, False, False, False] and bool(t.return_done[0])
     assert t.rally_streak.tolist() == [3, 0, 0, 0]
+
+
+def test_d137_partner_return_credits_only_the_hitter_of_a_handed_ball():
+    """D-137: a legal return (landed or volleyed back) of a handed ball credits the partner env (its hitter) once;
+    a feeder-ball return, a fault and a finished court credit no one."""
+    from test_drill_v2 import _env
+    env = _env("Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-G1", n=4)  # courts (0, 2), (1, 3)
+    t = env.action_manager.get_term("ball")
+    d = t.device
+    B = lambda *i: torch.tensor([k in i for k in range(4)], device=d)  # noqa: E731
+    Z = B()
+    cases = [  # (over, return_done, early, h0, live0) -> credited envs
+        ((B(2), B(2), Z, B(2), B(0, 1, 2, 3)), [0]),  # env 2 lands its partner's ball legally: env 0 is paid
+        ((Z, Z, B(2), B(2), B(0, 1, 2, 3)), [0]),  # env 2's return volleyed back by env 0: paid
+        ((B(2), B(2), Z, Z, B(0, 1, 2, 3)), []),  # a feeder ball
+        ((B(2), Z, Z, B(2), B(0, 1, 2, 3)), []),  # a fault
+        ((B(2), B(2), Z, B(2), B(1, 3)), []),  # the court had already ended
+        ((B(1, 2), B(1, 2), Z, B(1, 2), B(0, 1, 2, 3)), [0, 3]),  # two courts at once
+    ]
+    for (over, done, early, h0, live0), want in cases:
+        t.partner_return_now[:] = False
+        t.return_done[:] = done
+        t._credit_partner(over, early, h0, live0)
+        assert [k for k in range(4) if t.partner_return_now[k]] == want, (want, t.partner_return_now)
+    t.consume_step_events()
+    assert not t.partner_return_now.any()
+    env.close()
+
+
+def test_d137_coop_task_changes_only_the_credit_and_the_court_share():
+    """D-137: run 2's task is rally run 1's with placement weight 0 (the target observation kept), partner_return
+    (150) read before legal_return, and the corrected court share."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a, b = T._latent_court_v2_res_clean_mix_ka_pairs_contact(), T._latent_court_v2_res_clean_mix_ka_pairs_coop()
+    ba, bb = a.actions["ball"], b.actions["ball"]
+    diff = sorted(f.name for f in dataclasses.fields(ba) if getattr(ba, f.name) != getattr(bb, f.name))
+    assert diff == ["court_feed_prob"] and bb.targets
+    ka, kb = list(a.rewards), list(b.rewards)
+    assert [k for k in kb if k != "partner_return"] == ka
+    assert kb.index("partner_return") == kb.index("legal_return") - 1 and b.rewards["partner_return"].weight == 150.0
+    changed = sorted(k for k in ka if a.rewards[k].weight != b.rewards[k].weight)
+    assert changed == ["placement"] and b.rewards["placement"].weight == 0.0 and a.rewards["placement"].weight == 50.0
+
+
+def test_d137_pair_counts_per_court_and_feeds_started():
+    """D-137: per-court counts (own feeds, own legal, feeder feeds, feeder legal) add up to the side counts, and every
+    feed started (feeder balls, hand-offs) is counted."""
+    from picklebot_mj.pairs import PairCourts
+    pc = PairCourts(4, "cpu", handoff="contact")
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    pc.on_reset(torch.arange(4))
+    fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=Z)[0] for _ in range(30)) if f.any()]
+    a, b = (2, 0) if fires[0][2] else (0, 2)
+    pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(a))  # a hits the feeder ball, b receives
+    pc.step(F(a), F(a), Z, Z, 0.01, 0.1, contact=Z)  # a's return lands
+    pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(b))  # b hits, a receives
+    pc.step(F(b), F(b), Z, Z, 0.01, 0.1, contact=Z)  # b's return lands
+    pc.step(F(a), Z, Z, Z, 0.01, 0.1, contact=Z)  # a misses
+    s = pc.summary()
+    cc = torch.tensor(s["court_counts"]).sum(0).tolist()
+    own = sum(v["feeds"] for v in s["sides_own_ball"].values())
+    assert cc[0] == own == 2 and cc[1] == 1 and cc[2] == 1 and cc[3] == 1
+    assert s["started"] == {"feeder": 2, "handoffs": 2}  # both courts started a rally

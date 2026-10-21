@@ -34,7 +34,7 @@ A routine continuation that the panel already agreed on does not need a new roun
 ## Standing rules (unchanged)
 
 - One change per run.
-- Each run is at most 2 h, with a fixed endpoint and an early kill check at about 30 %.
+- Each run is at most 6 h (the user's approval on 2026-10-21, D-137; it was 2 h), with a fixed endpoint and an early kill check at about 30 %.
 - Development seeds only, recorded in the seed ledger.
 - Never loosen a threshold. A gate changes only through a decision that names the premise that changed.
 - Report failures as plainly as successes.
@@ -45,5 +45,5 @@ A routine continuation that the panel already agreed on does not need a new roun
 - Unity or the `feat/hierarchical-control` checkout;
 - deleting anything;
 - any download;
-- any run over 2 h;
+- any run over 6 h;
 - using final seeds.

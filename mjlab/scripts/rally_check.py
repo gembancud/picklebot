@@ -2,6 +2,7 @@
 
 Usage:
   rally_check.py early PREFIX   the early-kill read: PREFIX-{early,parent-early}-{v2,move,court,pairs}.json; exit 1 = kill
+  rally_check.py m1 PREFIX TAG      milestone M1 (rally-milestones.md) on PREFIX-target.json; exit 1 = not met
   rally_check.py target PREFIX TAG  the target read: PREFIX-target.json (contact hand-off), PREFIX-target-crossing.json
                                 (reported) and court falls from the endpoint summary (results/stage5f-TAG-summary.json)
 """
@@ -79,8 +80,43 @@ def target(prefix: str, tag: str) -> bool:
     return met
 
 
+def boot_low(cc: list, num: int, den: int, reps: int = 2000) -> tuple[float, float]:
+    """D-137: (point, court-cluster bootstrap 95 % lower bound) of sum(cc[:, num]) / sum(cc[:, den]); courts resampled
+    with replacement, generator seed 0 (rally-milestones.md)."""
+    import numpy as np
+    c = np.asarray(cc, dtype=np.float64)
+    c = c[c[:, den] > 0]
+    if len(c) == 0:
+        return 0.0, 0.0
+    rng = np.random.default_rng(0)
+    idx = rng.integers(0, len(c), size=(reps, len(c)))
+    r = c[idx, num].sum(1) / np.maximum(c[idx, den].sum(1), 1.0)
+    return float(c[:, num].sum() / c[:, den].sum()), float(np.percentile(r, 2.5))
+
+
+def milestone(prefix: str, tag: str) -> bool:
+    """M1 (rally-milestones.md) on PREFIX-target.json (the endpoint's pre-registered contact read)."""
+    p = json.load(open(f"{prefix}-target.json"))["pairs"]
+    P = pair_stats(p)
+    own, own_lo = boot_low(p["court_counts"], 1, 0)
+    fed, fed_lo = boot_low(p["court_counts"], 3, 2)
+    falls = json.load(open(f"results/stage5f-{tag}-summary.json"))["falls_court"]
+    gap = abs(P["sides"]["A"] - P["sides"]["B"])
+    hist, n = p["len_hist"], p["rallies"]
+    print(f"M1: partner-ball legal {own:.4f} (bootstrap low {own_lo:.4f}; bar >= 0.50, low >= 0.49); feeder-ball legal "
+          f"{fed:.4f} (low {fed_lo:.4f}; bar >= 0.85, low >= 0.84); sides {P['sides']} (gap {100 * gap:.1f}, <= 3); "
+          f"court falls {falls} (<= 0.04); rallies {n}")
+    print(f"M1 reported: P(3+) {sum(hist[3:]) / max(n, 1):.4f}; P(5+) {P['p5']:.4f}; falls per shot "
+          f"{ {k: v['falls_per_shot'] for k, v in p['sides'].items()} }; started {p.get('started')}")
+    met = n >= 1000 and own >= 0.50 and own_lo >= 0.49 and fed >= 0.85 and fed_lo >= 0.84 and gap <= 0.03 and falls <= 0.04
+    print("M1 MET" if met else "M1 not met")
+    return met
+
+
 if __name__ == "__main__":
     mode, prefix = sys.argv[1], sys.argv[2]
     if mode == "early":
         sys.exit(0 if early(prefix) else 1)
+    if mode == "m1":
+        sys.exit(0 if milestone(prefix, sys.argv[3]) else 1)
     target(prefix, sys.argv[3])

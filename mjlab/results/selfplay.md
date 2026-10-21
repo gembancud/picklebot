@@ -43,3 +43,16 @@ R4 protocol, 2,048 envs (1,024 courts), 120 s. `scripts/rally_baseline.sh`. Resu
 - **Plainly:** training with the ball handed over at the partner's contact made the robot worse at returning the partner's shots, and it forgot part of its side-stepping. The endpoint battery was skipped.
 - **A check for a training-side bug:** the rewards have no miss penalty, so a partner's faulted shot gives the receiver nothing (no wrong punishment).
 - Panel round 23 decides what comes next.
+
+## Run 2: cooperative credit (D-137)
+
+`scripts/rally_run02.sh`.
+- **Task:** `Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-G1`: placement weight 0, partner_return 150, court share 0.80.
+- **Training:** parent s5h-04-pairs/model_3398, 3,200 iterations, 6 h cap, training seed 80, 12,288 envs.
+- **Checks:** early kill at model_4400. Endpoint: M1 (`rally-milestones.md`) and the target, read once on 4218232.
+
+**The court-share dry read** (rally run 1's task and the parent, training conditions, 4218200, `rally-02-share.json`):
+- hand-offs were 49.97 % of feeds started (9,568 of 19,148), so run 1 trained on about 34 % court feeds;
+- partner-ball legal 15.0 % (bootstrap low 14.1 %), feeder-ball legal 78.2 % (low 77.2 %).
+
+(pending)

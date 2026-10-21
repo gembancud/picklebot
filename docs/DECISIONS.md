@@ -3649,3 +3649,43 @@ The panel's plain note: about 96 % per shot is very hard within 2 h runs.
 2. An added intermediate milestone first, for example partner-ball legal >= 50 % and feeder-ball legal >= 85 %, then P(3+) >= 50 %.
 3. Footwork first: move arrival >= 95 % in every direction and falls under 1 % per shot.
 4. A bigger controller (teacher, then distilled student). It comes last: no evidence yet that capacity is the limit.
+
+## D-137 - The user approves longer runs and options 1 + 2; milestone M1; rally run 2 = cooperative credit (panel round 24, 2026-10-21)
+
+**The user's answer to D-136:**
+- They approved option 1 (a cooperative reward with longer runs) and option 2 (an intermediate milestone first).
+- On run length, quoted: "i dont have a problem with training for longer".
+
+**Changed premise:** the 2 h run cap (PANEL.md, the loop's rules) becomes **6 h**, with a fixed endpoint and an early kill at about 30 % as before. PANEL.md is updated. Runs over 6 h still need the user.
+
+**Milestones** (`mjlab/results/rally-milestones.md`, frozen before any read; the 80 % target is unchanged):
+- **M1:**
+  - partner-ball legal >= 50 % (bootstrap lower bound >= 0.49);
+  - feeder-ball legal >= 85 % (lower bound >= 0.84);
+  - sides within 3 points;
+  - court falls <= 4 %.
+
+  Read once at a fixed endpoint (contact hand-off, R4 protocol, 2,048 envs, 120 s). Lower bounds are court-cluster bootstraps, not Wilson: shots are clustered by court (experiment design, round 23).
+- **M2:** P(3+) >= 50 %.
+
+The user gets a panel-approved rally video at M1, and the loop continues.
+
+**Corrections to round 23 (round 24):**
+- The pair task has no pace term: return_shaping was replaced by keep_alive in D-129.
+- The competitive pull is **placement**. It pays up to 150 for landing at (4.5, +-1.6), 1.6 m to one side, against keep-alive's 100 for a centred ball.
+
+**Rally run 2** (5/5 for "cooperative credit" as one change):
+- **The change:**
+  - placement weight 0 (the target observation stays, so the parent loads);
+  - `partner_return` at weight 150 (3/5; 2 wanted 250), paid to the hitter on the step its partner's return of its ball turns legal, landed or volleyed back (4/5; RL wanted the partner's contact).
+- **Under the contact hand-off,** the hitter has the partner's ball in view on that step.
+- **Exclusions:** feeder balls, faults and finished courts pay no one (tests).
+- **Correction, not a change (5/5):** the court share. A dry read in training conditions (development seed 4218200, `rally-02-share.json`) found hand-offs were 49.97 % of feeds started, so run 1 trained on about 34 % court feeds, not 40 %. Run 2 uses 0.80, so about 40 %. Plainly: run 2 is "run 1 corrected + cooperative credit". Its gain cannot be credited to the credit alone.
+- **Parent and length:** s5h-04-pairs/model_3398, training seed 80, 3,200 iterations, wall cap 6 h.
+- **Early kill at model_4400 (31 %)** on parent reads with the same seeds (4218201-4218204). Kill if:
+  - partner-ball legal is not above the parent's Wilson upper bound;
+  - feeder-ball legal, court main, drill v2 or the lowest move arrival is more than 5 points below the parent;
+  - falls have a Wilson low over 4 % or a point over 7.4 %.
+- **Endpoint:** h5f_clean_eval on 4218210-4218225; the M1 and target read on 4218232 (contact) and 4218233 (crossing, reported).
+- **Panel trigger, not a stop:** a partner-ball gain under +8 points at the endpoint.
+- **Pre-launch:** 9 tests pass. In a 20-iteration smoke run, partner_return pays and placement pays 0.

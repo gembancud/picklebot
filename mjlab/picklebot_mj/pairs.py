@@ -43,6 +43,10 @@ class PairCourts:
         self.handed = torch.zeros(n, dtype=torch.bool, device=device)
         self.side_stats_own = torch.zeros(2, 3, dtype=torch.long, device=device)
         self.waiting = torch.zeros(n, dtype=torch.bool, device=device)  # D-135: holds the partner's ball, not yet touched
+        # D-137: per-court counts for court-cluster bootstrap intervals: [own-ball feeds, own legal, feeder feeds, feeder
+        # legal], and all feeds started (feeder balls, hand-offs, faulted hand-offs included) for the court share
+        self.court_counts = torch.zeros(self.h, 4, dtype=torch.long, device=device)
+        self.n_started = torch.zeros(2, dtype=torch.long, device=device)  # feeder balls, hand-offs
 
     def court(self, mask: torch.Tensor) -> torch.Tensor:
         """Per-env mask -> per-court mask (either env)."""
@@ -90,6 +94,9 @@ class PairCourts:
         self.side_stats += torch.stack([cnt(over), cnt(over & legal), cnt(over & fell)], -1)
         own = over & self.handed
         self.side_stats_own += torch.stack([cnt(own), cnt(own & legal), cnt(own & fell)], -1)
+        fed = over & ~self.handed
+        per = torch.stack([own, own & legal, fed, fed & legal], -1) & live.unsqueeze(-1)
+        self.court_counts.index_add_(0, torch.arange(self.n, device=over.device) % self.h, per.long())
         ok = (over & legal).long()
         self.rally_len += torch.where(self.court_dead, torch.zeros_like(self.rally_len), ok[: self.h] + ok[self.h:])
         self._end(over & ~legal)
@@ -98,6 +105,7 @@ class PairCourts:
         receive = trigger[self.partner] & ~self.court_dead.repeat(2)
         self.parked &= ~receive
         self.handed = self.handed | receive  # the feed now in play is a partner's ball
+        self.n_started[1] += receive.sum()
         self.waiting = (self.waiting & ~done) | receive
         both_idle = self.parked[: self.h] & self.parked[self.h:]
         start = self.court_dead & both_idle & (self.timer < 0)
@@ -112,6 +120,7 @@ class PairCourts:
         fire = torch.cat([go & ~pick_b, go & pick_b])
         self.parked &= ~fire
         self.handed &= ~fire  # a feeder ball
+        self.n_started[0] += fire.sum()
         self.waiting &= ~fire
         return fire, receive
 
@@ -126,5 +135,6 @@ class PairCourts:
         so = self.side_stats_own.tolist()
         side_own = {name: {"feeds": f, "legal": round(l / f, 4) if f else None} for name, (f, l, x) in zip(("A", "B"), so)}
         return {"rallies": n, "p_len_ge_4": ge(4), "p_len_ge_5": ge(5), "p_len_ge_10": ge(10), "mean_len": mean,
-                "handoff": self.handoff, "sides": side,
+                "handoff": self.handoff, "sides": side, "started": {"feeder": int(self.n_started[0]),
+                "handoffs": int(self.n_started[1])}, "court_counts": self.court_counts.tolist(),
                 "sides_own_ball": side_own, "len_hist": h}

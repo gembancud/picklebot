@@ -77,3 +77,33 @@ None of these would lift 19 % per shot to 96 %.
 | An added intermediate milestone (partner-ball legal >= 50 %, feeder-ball >= 85 %, then P(3+) >= 50 %); the 80 % bar stays | coach, experiment design, architecture |
 | Footwork first (arrival >= 95 % in every direction, falls < 1 % per shot) | motion (first) |
 | A bigger controller (teacher, then distilled student) | all: last, no evidence that capacity is the limit |
+
+## Round 24 - the user's answer; rally run 2 (2026-10-21)
+
+**Brief:** the user approved a cooperative reward plus an intermediate milestone, and longer runs (cap 6 h). The draft M1 was partner-ball >= 50 % and feeder-ball >= 85 %.
+
+**Correction check:**
+- Round 23's "pace term" does not exist in the pair task. The competitive pull is placement: up to 150 for a landing 1.6 m to one side, against keep-alive's 100 for a centred ball. It sends the partner to its weakest directions (left and fwd-left, about 87 % arrival).
+- **Architecture:** `targets=False` would drop observation columns and break the parent load, so use placement weight 0.
+- **Experiment design:** the 2 h cap was a PANEL.md rule. D-137 names the changed premise (the user's approval).
+
+**Votes:**
+
+| Question | Result |
+|---|---|
+| Run 2 = cooperative credit (placement 0 + partner_return), one change | 5/5 |
+| partner_return weight | 150 (coach, motion, RL) vs 250 (experiment design, architecture): 150 |
+| When it pays | at the partner's legal return (coach, motion, experiment design, architecture) vs the partner's contact (RL): legal return |
+| Court share corrected as a fix of run 1's hidden change | 5/5 (measured: hand-offs 49.97 % of feeds started, so 0.80) |
+| M1 adds sides within 3 points | 4/5 |
+| M1 uses court-cluster bootstrap lower bounds | 3/5 (RL, experiment design, motion) |
+| M1 read once at a fixed endpoint | experiment design, unopposed |
+
+**Not adopted (one member each):**
+- falls per shot <= 2 % and arrival >= parent as M1 bars (motion): reported instead;
+- a 10 % footwork tripwire (motion);
+- a 63 % stop check (experiment design).
+
+**The RL member's timing point,** answered: under the contact hand-off, the hitter already holds the partner's return in view when the credit lands, so it is not a parked, ball-free state.
+
+**Experiment design's caution:** run 2 = run 1 corrected + cooperative credit. Its gain is not credited to the credit alone.

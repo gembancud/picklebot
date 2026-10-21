@@ -1862,3 +1862,32 @@ def _latent_court_v2_res_clean_mix_ka_pairs_contact(play=False):
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_CONTACT,
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_contact(), runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_contact(True), rl_cfg=_s5e_rl_cfg())
+
+
+# Rally run 2 (D-137, panel round 24): cooperative credit. Rally run 1's task with the placement reward off (weight 0;
+# the target observation stays, so the parent loads) and partner_return (150, the placement maximum it replaces): the
+# hitter is paid when its partner legally returns the ball it hit. The court share is corrected so court feeds are
+# about 40 % of all feeds started with the contact hand-off (a correction of run 1's hidden change, measured in
+# results/rally-02-share.json). Parent s5h-04-pairs/model_3398.
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-G1"
+PARTNER_RETURN_WEIGHT = 150.0
+PAIRS_CONTACT_COURT_FEED_PROB = 0.80  # D-137: hand-offs were 49.97 % of feeds started (results/rally-02-share.json); 0.4 / 0.5
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop(play=False):
+    from picklebot_mj.tasks.return_stand import partner_return
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_contact(play)
+    cfg.actions["ball"].court_feed_prob = PAIRS_CONTACT_COURT_FEED_PROB
+    cfg.rewards["placement"] = _dc.replace(cfg.rewards["placement"], weight=0.0)
+    rewards = {}
+    for k, v in cfg.rewards.items():
+        if k == "legal_return":
+            rewards["partner_return"] = RewardTermCfg(func=partner_return, weight=PARTNER_RETURN_WEIGHT)
+        rewards[k] = v
+    cfg.rewards = rewards
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop(), runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop(True), rl_cfg=_s5e_rl_cfg())
