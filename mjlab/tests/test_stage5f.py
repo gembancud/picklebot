@@ -864,3 +864,13 @@ def test_d131_realised_shares_are_40_40_20(tmp_path):
         n += t.num_envs; rep += int(t.replay_feed.sum()); court += int(t.court_feed.sum())
     env.close()
     assert abs(rep / n - 0.4) < 0.02 and abs(court / n - 0.4) < 0.02 and abs(1 - (rep + court) / n - 0.2) < 0.02
+
+
+def test_d132_pairs_task_changes_only_pair_mode_and_the_court_share():
+    """D-132: run 4's task is run 1's with pair_mode and the feeder's court share 0.678 (40 % of all feeds)."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a, b = T._latent_court_v2_res_clean_mix_ka().actions["ball"], T._latent_court_v2_res_clean_mix_ka_pairs().actions["ball"]
+    diff = sorted(f.name for f in dataclasses.fields(a) if getattr(a, f.name) != getattr(b, f.name))
+    assert diff == ["court_feed_prob", "pair_mode"] and b.pair_mode and abs(b.court_feed_prob - 0.678) < 1e-9
+    assert b.replay_file == ""

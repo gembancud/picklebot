@@ -1823,3 +1823,25 @@ def _latent_court_v2_res_clean_mix_ka_own_c40(play=False):
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_OWN_C40,
                     env_cfg=_latent_court_v2_res_clean_mix_ka_own_c40(), runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_own_c40(True), rl_cfg=_s5e_rl_cfg())
+
+
+# Stage 5H run 4 (D-132, panel round 20): pair-mode training, the loop's self-play setup. Run 1's task (no replay file)
+# with pair_mode: env i and env i + n/2 share one court, a return crossing the net becomes the partner's next feed, and a
+# feeder ball starts each rally. One shared policy on both sides. The feeder's court share is raised so court feeds stay
+# about 40 % of all feeds: hand-offs were 41 % of feeds in run 1's pair read (26,691 of 64,941), so 0.4 / 0.59 = 0.678.
+# Parent run 1's endpoint (s5h-01-keepalive/model_2599). The hand-off point (the net crossing) is unchanged.
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-G1"
+PAIRS_COURT_FEED_PROB = 0.678
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka(play)
+    b = cfg.actions["ball"]
+    b.pair_mode = True
+    b.court_feed_prob = PAIRS_COURT_FEED_PROB
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS, env_cfg=_latent_court_v2_res_clean_mix_ka_pairs(),
+                    runner_cls=CriticWarmupHoldLrRunner, play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs(True),
+                    rl_cfg=_s5e_rl_cfg())

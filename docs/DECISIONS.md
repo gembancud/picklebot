@@ -3548,3 +3548,17 @@ Panel round 19 (`mjlab/results/stage5h-review.md`).
 **Run 3:** court_feed_prob 2/3 of the non-replay feeds (40 / 40 / 20 % replay / court / drill v2), from run 1's endpoint. Same kill lines. At the endpoint, R2 below 20 % ends Stage 5H.
 
 **From now on,** every plan states its realised feed shares and checks them in a smoke test before launch.
+
+## D-132 - Stage 5H run 4: pair-mode training; back to the user after it (2026-10-21)
+
+Panel round 20 (`mjlab/results/stage5h-review.md`).
+
+**Run 3** (40 % own-return replays) tripled R2 to 29.8 % and cut own-ball falls to 0.8 % per shot. R4 P(4+) rose to 0.33 %. But court main is 75.1 %, under 76.8 %, so the stage rules kill it (2 kills in a row).
+
+**Diagnostic:** R2 with no refeed delay is 29.9 %, so recovery time does not explain own-ball legal in pairs (about 12 %). The pairs hand-off at the net crossing, where the ball first appears mid-flight, is the likely cause. That is recorded, and the R4 protocol is unchanged.
+
+**Run 4:** run 1's task with pair_mode (shared-policy self-play on mirrored env pairs, a feeder ball starts each rally), with the feeder court share 0.678 (about 40 % of all feeds), from run 1's endpoint.
+
+**Kill lines:** run 3's, with the progress line on own-ball legal in pairs above 6.5 %.
+
+**After run 4:** back to the user with an interim video and the gap stated (P(4+) far under the 10 % bar).

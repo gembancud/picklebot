@@ -112,3 +112,38 @@ Brief: run 1 is not a kill.
    - R2 below 20 % ends Stage 5H, and the user gets the interim video with the gap stated;
    - P(4+) under 1 % at the stage's end also ends it.
    - Experiment design's extra rule, "a second court-main kill ends Stage 5H", got 1 of 5 and is recorded.
+
+# Round 20: run 3 at its endpoint; the last Stage 5H run (2026-10-21)
+
+**Brief:** run 3 tripled R2 to 29.8 %, cut falls on own balls to 0.8 % per shot, and raised R4 P(4+) to 0.33 %. Court main is 75.1 %, under the 76.8 % stage line. Own-ball legal in pairs is only about 12 %.
+
+## Correction check
+
+- **The stage-rule kill is applied correctly and counts** (5 of 5). It is Stage 5H's second kill in a row. Run 3 is never a parent, and court main's interval belongs in the report (coach, RL, experiment design).
+- **The brief was wrong in one place** (experiment design, motion, RL). `_refeed` never moves the robot back to the start spot: replays fire 0.5 s after the robot's own ball lands, from wherever it has recovered to.
+- **The pairs-vs-replay gap (12 % vs 30 %) is partly a protocol artifact** (RL, motion, architecture). `pairs.py` hands the ball over at the **net crossing**. The receiver first sees it mid-flight, about 0.55-0.9 s before contact against about 1.1-1.4 s on replays, and the ball history jumps at that moment. A real opponent's ball is visible from the paddle.
+- **Diagnostic** (motion's, no new code; seed 4217305): R2 on run 3's endpoint with **no refeed delay** is **29.9 % [29.3, 30.6]**, the same as 29.8 % with 0.5 s. So recovery time is not the cause; the late, jumping sight of the ball in pairs is the likely one.
+  - This is recorded, not changed. Moving the hand-off to the partner's contact would change the frozen R4 protocol, so it needs a D-entry; it goes to the user (motion) or a later round (architecture's 2-line fix, RL's check).
+
+## Decisions
+
+1. **Run 4 = (a), pair-mode training** (4 of 5; coach preferred a hit-and-recover feeder).
+   - **The task:** run 1's task with `pair_mode` and no replay file (3 of 5). It is the loop's self-play setup: one shared policy on both envs of a pair, and a feeder ball starts each rally.
+   - **The court share is kept at about 40 % of all feeds** (motion, architecture, experiment design: the round-19 lesson). Hand-offs were 41 % of feeds in run 1's pair read, so the feeder's court_feed_prob is 0.678.
+   - **Parent:** s5h-01-keepalive/model_2599.
+   - **Smoke:** 3 PPO iterations in pair mode run cleanly; `test_d132_pairs_task_changes_only_pair_mode_and_the_court_share` passes.
+2. **Kill at model_2900,** with the parent read on the same seeds (4217300-4217303):
+   - drill v2 or court main more than 5 points below the parent;
+   - arrival below 90 %;
+   - falls above 7.4 % per episode;
+   - **progress:** own-ball legal per shot in pairs (R4 protocol, 1,024 envs) not above 6.5 %, run 1's (RL, motion, architecture). Experiment design proposed run 3's 11.8 %.
+3. **After run 4, back to the user whatever the result** (5 of 5). Stage 5H's 4 runs are used, and D-129 (P(4+) under 1 %) almost certainly fires; even 30 % per shot gives only about 0.8 %.
+   - **Interim video,** labelled interim, from the best policy that passes the stage rules:
+     - random pair rallies on a fixed development seed;
+     - the longest rally, labelled as hand-picked;
+     - the failure mode;
+     - on screen: legal per shot against the 56 % bar, and P(4+).
+   - **Questions for the user:**
+     - a pair-mode stage with runs over 2 h;
+     - the hand-off fix (a change to the R4 protocol);
+     - R3 falls.
