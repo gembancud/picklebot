@@ -903,6 +903,9 @@ def test_d135_contact_handoff_receives_at_contact_and_charges_faults_to_the_hitt
     assert s["sides"][side_a]["feeds"] == 1 and s["sides"][side_a]["legal"] == 1.0  # a's received copy not counted
     assert s["sides"][side_b]["feeds"] == 1 and s["sides"][side_b]["legal"] == 0.0  # the fault is b's
     assert s["handoff"] == "contact" and "p_len_ge_5" in s
+    # both envs are idle again, so the court restarts with a feeder ball after the delay (it used to stall, D-135)
+    assert bool(pc.parked[a]) and bool(pc.parked[b]) and not pc.waiting.any()
+    assert any(pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=Z)[0].any() for _ in range(30))
 
 
 def test_d135_crossing_handoff_is_unchanged():

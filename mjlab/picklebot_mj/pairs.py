@@ -76,10 +76,14 @@ class PairCourts:
         if self.handoff == "contact":
             # D-135: the receiver's copy of a return that faulted (net, out) ends on the same step as the hitter's own
             # copy; that fault is the hitter's, so it is not counted as the receiver's feed or miss.
+            # The copy still ends (the env is parked below), it is only left out of the counts.
             if contact is not None:
                 self.waiting &= ~contact
+            done = over
             over = over & ~(self.waiting & ~legal & (over & ~legal)[self.partner])
-            self.waiting &= ~over
+            self.waiting &= ~done
+        else:
+            done = over
         s = self.side
         live = ~self.court_dead.repeat(2)  # feeds of a court whose rally has ended are not counted
         cnt = lambda m: torch.stack([(m & live & (s == k)).sum() for k in (0, 1)])  # noqa: E731
@@ -89,12 +93,12 @@ class PairCourts:
         ok = (over & legal).long()
         self.rally_len += torch.where(self.court_dead, torch.zeros_like(self.rally_len), ok[: self.h] + ok[self.h:])
         self._end(over & ~legal)
-        self.parked |= over  # a finished feed leaves no ball in play in this env
+        self.parked |= done  # a finished feed leaves no ball in play in this env
         trigger = contact if (self.handoff == "contact" and contact is not None) else crossing
         receive = trigger[self.partner] & ~self.court_dead.repeat(2)
         self.parked &= ~receive
         self.handed = self.handed | receive  # the feed now in play is a partner's ball
-        self.waiting = (self.waiting & ~over) | receive
+        self.waiting = (self.waiting & ~done) | receive
         both_idle = self.parked[: self.h] & self.parked[self.h:]
         start = self.court_dead & both_idle & (self.timer < 0)
         self.timer = torch.where(start, torch.full_like(self.timer, delay), self.timer)
