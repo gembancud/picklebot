@@ -3586,3 +3586,15 @@ Panel round 20 (`mjlab/results/stage5h-review.md`).
 - shot softness and depth.
 
 **The loop's "third kill in a row" rule** would take the pre-registered exit. The exit (the goal-conditioned controller) is Stage 5G, which is already closed, so the next direction is the user's call.
+
+## D-134 - New target from the user: two-robot rallies, 5 good shots in 80 % of rallies (2026-10-21)
+
+**The user's direction:**
+- Reliable 1v1 rallies first, then competitive self-play ("get really good to beat itself"), then 2v2.
+- The target: **80 % of rallies reach 5 good robot-to-robot shots in a row.**
+
+It is frozen in `mjlab/results/rally-target.md` (Wilson lower bound >= 0.78, >= 1,000 rallies on development seeds, sides within 3 points, falls <= 4 %). It replaces the 10 % video bar of D-124 as the goal, and is stricter.
+
+**Unchanged:** runs stay at most 2 h unless the user approves longer, and all standing rules hold.
+
+**The loop restarts toward this target.**
