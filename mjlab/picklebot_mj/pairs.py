@@ -79,10 +79,13 @@ class PairCourts:
         self.court_dead |= c
 
     def step(self, over: torch.Tensor, legal: torch.Tensor, fell: torch.Tensor, crossing: torch.Tensor,
-             dt: float, delay: float, contact: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+             dt: float, delay: float, contact: torch.Tensor | None = None,
+             busy: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
         """One physics step. over: this env's feed finished now; legal: it finished as a legal return; fell: it
         finished by a fall; crossing: this env's return crossed the net now; contact: this env's robot made its first
-        legal contact now (used by the "contact" hand-off). Returns (feeder_fire, receive) masks."""
+        legal contact now (used by the "contact" hand-off); busy: this env's robot is in a ball-free drill episode (a
+        move-to-spot episode, D-140), so it gets no ball: a return to it ends the rally once it lands, and the feeder
+        ball goes to the other side. Returns (feeder_fire, receive) masks."""
         if self.handoff == "contact":
             # D-135: the receiver's copy of a return that faulted (net, out) ends on the same step as the hitter's own
             # copy; that fault is the hitter's, so it is not counted as the receiver's feed or miss.
@@ -106,9 +109,13 @@ class PairCourts:
         ok = (over & legal).long()
         self.rally_len += torch.where(self.court_dead, torch.zeros_like(self.rally_len), ok[: self.h] + ok[self.h:])
         self._end(over & ~legal)
+        if busy is not None:  # D-140: a legal return to a busy partner ends the rally (nobody can play it)
+            self._end(over & legal & busy[self.partner])
         self.parked |= done  # a finished feed leaves no ball in play in this env
         trigger = contact if (self.handoff == "contact" and contact is not None) else crossing
         receive = trigger[self.partner] & ~self.court_dead.repeat(2)
+        if busy is not None:
+            receive = receive & ~busy
         self.parked &= ~receive
         self.handed = self.handed | receive  # the feed now in play is a partner's ball
         self.n_started[1] += receive.sum()
@@ -119,10 +126,16 @@ class PairCourts:
         run = self.timer >= 0
         self.timer = torch.where(run, self.timer - dt, self.timer)
         go = run & (self.timer <= 0)
+        if busy is not None:  # D-140: a court with both robots busy waits (its timer holds at 0)
+            both_busy = busy[: self.h] & busy[self.h:]
+            self.timer = torch.where(go & both_busy, torch.zeros_like(self.timer), self.timer)
+            go = go & ~both_busy
         self.timer = torch.where(go, torch.full_like(self.timer, -1.0), self.timer)
         self.court_dead &= ~go
         self.started |= go
         pick_b = (self.rally_idx % 2).bool()  # alternate the side that receives the feeder ball
+        if busy is not None:  # D-140: never to a busy robot
+            pick_b = torch.where(busy[: self.h], torch.ones_like(pick_b), torch.where(busy[self.h:], torch.zeros_like(pick_b), pick_b))
         fire = torch.cat([go & ~pick_b, go & pick_b])
         self.parked &= ~fire
         self.handed &= ~fire  # a feeder ball

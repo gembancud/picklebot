@@ -1034,3 +1034,34 @@ def test_d138_a_fall_is_a_miss_in_every_count():
     cc = torch.tensor(s["court_counts"]).sum(0).tolist()
     assert own == 1 and cc[0] == 1 and cc[1] == 0  # b's fall is a missed partner ball
     assert sum(v["feeds"] for v in s["sides"].values()) == cc[0] + cc[2]  # every count sees the same feeds
+
+
+def test_d140_a_busy_robot_gets_no_ball():
+    """D-140: with busy (a move-drill episode), the feeder ball goes to the free side, a return to the busy robot is
+    not handed over and ends the rally when it lands (one good shot), and a court with both robots busy waits."""
+    from picklebot_mj.pairs import PairCourts
+    pc = PairCourts(4, "cpu", handoff="contact")  # courts (0, 2), (1, 3)
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    busy = F(2, 1, 3)  # court 0: env 2 busy, env 0 free; court 1: both busy
+    pc.on_reset(torch.arange(4))
+    fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=Z, busy=busy)[0] for _ in range(30)) if f.any()]
+    assert len(fires) == 1 and fires[0].tolist() == [True, False, False, False]  # only court 0, only to env 0
+    fire, recv = pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(0), busy=busy)  # env 0 hits the feeder ball
+    assert not recv.any()
+    pc.step(F(0), F(0), Z, Z, 0.01, 0.1, contact=Z, busy=busy)  # its return lands: the rally ends
+    s = pc.summary()
+    assert s["rallies"] == 1 and s["len_hist"][1] == 1
+    fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=Z, busy=busy)[0] for _ in range(30)) if f.any()]
+    assert fires and all(f.tolist() == [True, False, False, False] for f in fires)  # court 0 restarts on env 0 again
+
+
+def test_d140_no_busy_mask_is_unchanged():
+    """D-140: without a busy mask the pair logic is the D-135/D-138 one (the feeder ball alternates sides)."""
+    from picklebot_mj.pairs import PairCourts
+    pc = PairCourts(4, "cpu", handoff="contact")
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    pc.on_reset(torch.arange(4))
+    fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=Z)[0] for _ in range(30)) if f.any()]
+    assert fires[0].sum() == 2  # both courts start

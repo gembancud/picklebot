@@ -143,7 +143,45 @@ Recovery time does not explain the feeder-ball gap.
 
 **Plainly:** after 900 more iterations nothing moved, with no gain and no loss. As pre-registered, the run continues to its fixed endpoint (no early stop for futility). The panel plans run 4 at the endpoint.
 
-(endpoint pending)
+**Endpoint: model_9200** (the 6 h cap). M1 read on 4218332, read once (`rally-03-target.json`, 24,350 rallies):
+
+| M1 item | Value | Bar | |
+|---|---|---|---|
+| Partner-ball legal | **55.9 %** (bootstrap low 55.4 %) | >= 50 % | met |
+| Feeder-ball legal | **77.9 %** (low 77.4 %; D-138 counting) | >= 85 % | **not met** |
+| Sides | 63.9 / 64.0 % (gap 0.1) | within 3 points | met |
+| Court falls per episode | 2.3 % | <= 4 % | met |
+
+**M1 is not met.**
+
+| Reported | Value |
+|---|---|
+| **P(5+)** | **8.9 %** [8.5, 9.2] (run 2: 7.9 %) |
+| P(3+) | 21.2 % |
+| P(4+) | 13.7 % |
+| Mean rally length | 1.71 |
+| Rallies of 10, 11, 12, 13 good shots | 65, 38, 36, 16 |
+| Falls per shot | 0.4 / 0.5 % |
+| Crossing read (4218333) | P(5+) 4.1 %, own-ball 42.5 % |
+
+**The endpoint battery:**
+- drill v2 86.3 %, court main 75.7 %;
+- move arrival recovered part of run 2's loss: fwd 81 %, fwd-left 72 %, left 88 %, fwd-right 88 %; the others 93-99 %.
+
+**Feeder-ball legal by family** (feeder balls only, D-139; contact / legal):
+
+| Weakest families | Contact / legal |
+|---|---|
+| **reach_deep** | **38 % / 30 %** |
+| **cross_backhand** | **56 % / 50 %** |
+| fast | 70 % / 60 % |
+| reach_backhand | 73 % / 70 % |
+| low | 79 % / 73 % |
+
+- Every other family is 78-94 % legal.
+- The 17 families are fed evenly. Lifting reach_deep and cross_backhand to 85 % alone would add about 5 points.
+
+**Against the panel trigger** (a feeder-ball gain of at least 3 points): +0.9 to +2.1 points over run 2's endpoint (75.8-77.0 %), so the trigger fires. The continuation gave little: partner-ball +1.6, P(5+) +1.0.
 
 ## Interim video: rally run 2's endpoint (panel round 25, 4/5; M1 not met)
 
@@ -162,3 +200,17 @@ No gate statistic is taken from this read (64 rallies).
 - **If confirmed,** it would explain two problems since Stage 5H run 4:
   - the forward move-arrival forgetting (the move drill is no longer clean practice);
   - part of the partner-ball loss (balls handed to a robot that is walking away).
+
+**The move-drill bug is confirmed** (`scripts/diag/pair_move_bug.py`; rally-03 model_9200, the Coop task in training conditions, 1,024 envs, 40 s):
+
+| | Feeder balls | Hand-offs | Balls to robots in move episodes | Partner-ball legal, free / move-episode robots |
+|---|---|---|---|---|
+| As trained (4218340, `rally-03-movebug.json`) | 5,905 | 6,419 | **38.1 %** | 32.8 % / 27.1 % |
+| With the fix (4218341, `rally-03-movebug-fixed.json`) | 5,903 | 2,664 | 0 % | 32.7 % / none |
+
+- **The fix** (`PairCourts.step(busy=...)`, cfg `pair_respect_moves`, default off; tests `test_d140_*`):
+  - a busy robot gets no ball;
+  - a return to a busy partner ends the rally once it lands;
+  - the feeder ball goes to the free side;
+  - a court with both robots busy waits.
+- **The cost:** hand-offs fall by about 60 % per hour of training. The panel decides how to use the fix (round 26).

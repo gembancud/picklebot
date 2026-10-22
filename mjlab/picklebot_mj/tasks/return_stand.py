@@ -190,6 +190,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # is replaced by the pair logic: a return crossing the net becomes the partner env's feed, mirrored.
     pair_mode: bool = False
     pair_handoff: str = "crossing"  # D-135: "contact" hands a return to the partner at the hitter's legal contact
+    pair_respect_moves: bool = False  # D-140: in pair mode a robot in a move-drill episode gets no ball
 
     def build(self, env) -> "BallPhysicsAction":
         return BallPhysicsAction(self, env)
@@ -935,8 +936,9 @@ class BallPhysicsAction(ActionTerm):
         recv = None
         if self.pairs is not None:  # R4 (D-116): the pair logic replaces the feeder timer
             h0, live0 = self.pairs.handed.clone(), ~self.pairs.court_dead.repeat(2)
+            busy = self.drill.move_ep if (getattr(self.cfg, "pair_respect_moves", False) and self.drill is not None) else None
             fire, recv = self.pairs.step(over, self.return_done, torch.zeros_like(over), crossing, dt,
-                                         self.cfg.refeed_delay_s, contact=first)
+                                         self.cfg.refeed_delay_s, contact=first, busy=busy)
             handed = mirror_ball_states(torch.cat([self.ball.pos, self.ball.vel, self.ball.spin], -1))[self.pairs.partner]
             early = self._credit_early(recv)
             self._credit_partner(over, early, h0, live0)
