@@ -180,3 +180,18 @@ None of these would lift 19 % per shot to 96 %.
 
 - Balls to busy robots: 0 in both.
 - Hand-offs 2,681 against 2,579.
+
+## Round 28 - run 5's endpoint; the trend; run 6, then the user (2026-10-23)
+
+**Brief:** run 5 reached 81.9 % feeder-ball legal (M1 not met) and 55.2 % partner-ball legal, which is flat for four runs. The question: is the target reachable, and is one more run worth it?
+
+**Correction check:**
+- The reads are right (5/5).
+- **Experiment design:** the final target needs about 97 % per partner shot with feeder-ball at about 90 % (P(5+) = feeder x q^4). By shot position, partner-ball legal is 46, 54, 66, 68, 68 %.
+- **Architecture:** a stale footwork reward (stance_progress) on court feeds and hand-offs, verified (D-142).
+- **Motion and coach:** low readiness at the partner's launch, and one hard, deep shot for every return.
+
+**Votes:**
+- **Reachability (5/5):** M1 is 1-2 runs away; M2 and the final target are out of reach within the rules.
+- **Run 6:** first 4/5 run 5 unchanged (architecture: the fix); then a follow-up once the bug was verified, 5/5 for the fix as the one change.
+- **Back to the user after run 6, whatever the result** (coach, motion, RL, architecture; experiment design accepts it in place of a two-run budget).

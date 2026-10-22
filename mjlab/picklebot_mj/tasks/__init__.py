@@ -1932,3 +1932,23 @@ def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak(play=False):
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK,
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak(), runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak(True), rl_cfg=_s5e_rl_cfg())
+
+
+# Rally run 6 (D-142, panel round 28, 3/5 after the follow-up): rally run 5's task with stance_progress off (weight 0).
+# Under drill v2 settings (hit_hint off) stance_xy is written only by the planner, which also turns the term off; on
+# court feeds and partner hand-offs the term therefore pulled the pelvis toward a stale spot (the last planned spot, or
+# (0, 0) after a reset). A correction, as the one change; parent rally-05 model_15000.
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_NOSTANCE = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-NoStance-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_nostance(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak(play)
+    cfg.rewards["stance_progress"] = _dc.replace(cfg.rewards["stance_progress"], weight=0.0)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_NOSTANCE,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_nostance(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_nostance(True), rl_cfg=_s5e_rl_cfg())

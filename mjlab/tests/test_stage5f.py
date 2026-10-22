@@ -1094,3 +1094,16 @@ def test_d141_weak_mix_task_changes_only_the_feed_mix_and_leaves_court_mix_alone
     assert set(load_env_cfg("Picklebot-Latent-Court-Res-G1").actions["ball"].feed_mix.weights.values()) == {1.0}
     w = bb.feed_mix.weights
     assert set(w) == set(T.COURT_MIX.weights) and w["cross_backhand"] == 2.0 and w["short"] == 0.75 and w["deep"] == 1.0
+
+
+def test_d142_nostance_task_changes_only_the_stance_weight():
+    """D-142: rally run 6's task is run 5's with stance_progress weight 0 and nothing else."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_nostance()
+    ba, bb = a.actions["ball"], b.actions["ball"]
+    assert not [f.name for f in dataclasses.fields(ba) if getattr(ba, f.name) != getattr(bb, f.name)]
+    assert list(a.rewards) == list(b.rewards)
+    changed = sorted(k for k in a.rewards if a.rewards[k].weight != b.rewards[k].weight)
+    assert changed == ["stance_progress"] and b.rewards["stance_progress"].weight == 0.0 and a.rewards["stance_progress"].weight == 1.0

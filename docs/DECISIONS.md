@@ -3833,3 +3833,51 @@ The panel plans run 3 in round 25.
 - falls have a Wilson low over 4 % or a point over 7.4 %.
 
 **Endpoint:** the M1 read on 4218532, read once. Panel trigger: a feeder-ball gain under +3 points.
+
+## D-142 - Rally run 5 at its endpoint; a stale footwork reward; run 6 = that fix, then back to the user (panel round 28, 2026-10-23)
+
+**Run 5** (weak-family mix; endpoint model_15000):
+
+| Item | Value |
+|---|---|
+| Feeder-ball legal | **81.9 %** (low 81.4 %; M1 not met, +1.7 points) |
+| Partner-ball legal | 55.2 % |
+| P(5+) | 8.7 % |
+| P(3+) | 19.7 % |
+| Lowest move arrival | 97.3 % |
+| Falls | 3.1 % |
+
+The drilled backhand-side families gained 4-5 points each.
+
+**The trend (5/5):**
+- Feeder-ball rises about 2.1 points per 6 h run (OLS on runs 2-5: +2.06 [+1.7, +2.4]). The projected M1 chance is about 15-20 % at run 6 and 55-75 % by run 7.
+- Partner-ball is flat at 54-56 % for four runs (+0.07 per run [-2.0, +2.2]).
+- **The final target** (P(5+) >= 80 %, about 97 % per partner shot with feeder-ball at about 90 %) **is out of reach within these rules**, and so is M2 (about 75 % per partner shot).
+- **Causes the panel names** for the partner-ball plateau (not proven):
+  - the receiver is not ready (ready stance 26 % at the partner's launch; recovery error median 0.38 m);
+  - every return is the same hard, deep ball (about 10.4 m/s, x 4.1 m, 17 % in the keep-alive box);
+  - the first partner ball after the feeder return is the weakest (46 % returned against 66-68 % later in a rally);
+  - about 60 % fewer hand-offs since D-140.
+
+**A reward bug (architecture; verified in code):**
+- `stance_progress` (weight 1.0, from Stage 5D H4) pays pelvis speed toward `stance_xy`.
+- Under drill v2 settings `stance_xy` is written only by the planner, on drill v2 feeds, which also switch the term off.
+- So on court feeds (80 % of feeder balls) and on partner hand-offs, it pulled the pelvis toward a stale spot: the last planned spot, or (0, 0) after a reset.
+
+**Votes:**
+- First, 4/5 to continue run 5 unchanged (architecture: the fix).
+- Then, in a follow-up once the bug was known, **5/5 for the fix** as run 6's one change: stance_progress weight 0, a new task (`...-Coop-Moves-Weak-NoStance-G1`).
+
+**Run 6:**
+- From rally-05 model_15000 with its optimizer, training seed 84, 6 h cap.
+- Early kill at model_15900 on D-141's lines (the parent re-read on 4218601-4218604).
+- Endpoint: the M1 read on 4218632, read once.
+- **Benchmark** (experiment design): the linear projection of feeder-ball legal, 84.1 % +- about 1 point.
+
+**Then back to the user, whatever the result** (a real reason under D-123: the final target is out of reach within these rules). With the evidence and the options:
+- a readiness and recovery curriculum on partner balls;
+- pace control (cooperative shots);
+- a faster or more agile controller (25-80 GPU-hours, so runs over 6 h);
+- longer runs.
+
+If M1 is met, the M1 video goes too.

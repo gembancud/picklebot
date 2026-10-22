@@ -316,4 +316,48 @@ The realised family shares are in round 27.
 
 **Plainly:** after a third of the run, the weak families moved a little and feeder-ball legal did not. The run continues to its fixed endpoint.
 
-(endpoint pending)
+**Endpoint: model_15000** (the 6 h cap). M1 read on 4218532, read once (`rally-05-target.json`, 24,078 rallies):
+
+| M1 item | Value | Bar | |
+|---|---|---|---|
+| Partner-ball legal | **55.2 %** (bootstrap low 54.6 %) | >= 50 % | met |
+| Feeder-ball legal | **81.9 %** (low 81.4 %) | >= 85 % | **not met** |
+| Sides | 64.8 / 64.5 % (gap 0.3) | within 3 points | met |
+| Court falls per episode | 3.1 % | <= 4 % | met |
+
+**M1 is not met** (+1.7 points; the panel trigger fires).
+
+| Reported | Value |
+|---|---|
+| P(5+) | 8.7 % |
+| P(3+) | 19.7 % |
+| Lowest move arrival | 97.3 % |
+| Drill v2 | 88.8 % |
+| Court main | 76.9 % |
+
+**Feeder families, run 4 to run 5:**
+
+| Family | Run 4 | Run 5 |
+|---|---|---|
+| backhand | 77.2 % | 81.7 % |
+| reach_backhand | 73.1 % | 76.8 % |
+| cross_backhand | 55.8 % | 60.5 % |
+| fast | 65.5 % | 69.7 % |
+| drop | 75.0 % | 77.3 % |
+| reach_deep | 44.8 % | 45.2 % |
+| low | 75.3 % | 75.7 % |
+
+The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 %.
+
+**Plainly:** the drilled backhand-side families gained 4-5 points each, and feeder-ball legal rose another 1.7 points. reach_deep did not move.
+
+## Run 6: the stale footwork reward off (D-142)
+
+`scripts/rally_run06.sh`.
+- **Task:** Coop-Moves-Weak-NoStance (stance_progress weight 0), from rally-05 model_15000 with its optimizer.
+- **Training:** training seed 84, no critic warm-up, 6 h cap.
+- **Checks:** early kill at model_15900 on D-141's lines. Endpoint: M1 on 4218632, read once.
+- **Benchmark:** 84.1 % +- 1 feeder-ball (the linear trend).
+- **Then back to the user.**
+
+(pending)
