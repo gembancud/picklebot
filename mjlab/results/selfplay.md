@@ -288,4 +288,32 @@ The rest are 85-94 %.
 
 The realised family shares are in round 27.
 
-(pending)
+**The early check passed** (model_13000; the parent re-read on 4218501-4218504, the pair read at 2,048 envs, 120 s):
+
+| Measure | Parent (run 4 endpoint) | Run 5 | Kill line |
+|---|---|---|---|
+| Partner-ball legal | 53.9 % | 52.5 % (low 51.8 %) | 50.9 % |
+| Feeder-ball legal (even mix) | 80.1 % | 80.3 % (low 79.8 %) | 78.1 % |
+| P(5+) | 8.0 % | 7.6 % | reported |
+| Court main | 77.2 % | 76.6 % | -5 points |
+| Drill v2 | 83.0 % | 83.3 % | -5 points |
+| Lowest move arrival | 96.5 % | 94.4 % | -5 points |
+| Court falls per episode | | 3.8 % (Wilson low 2.6 %) | met |
+
+**Weighted families** (parent to run 5):
+
+| Family | Parent | Run 5 |
+|---|---|---|
+| backhand | 78.3 % | 80.5 % |
+| cross_backhand | 54.7 % | 57.4 % |
+| fast | 64.3 % | 65.4 % |
+| reach_deep | 41.9 % | 45.3 % |
+| drop | 72.4 % | 73.8 % |
+| low | 74.3 % | 74.9 % |
+| **reach_backhand** | 74.7 % | **71.9 %** |
+
+**Down-weighted families (guard):** short 95.2 to 94.0 %, high 93.1 to 92.6 %, reach_forehand 92.5 to 92.9 %. All are within 5 points.
+
+**Plainly:** after a third of the run, the weak families moved a little and feeder-ball legal did not. The run continues to its fixed endpoint.
+
+(endpoint pending)
