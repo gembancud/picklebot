@@ -58,8 +58,10 @@ def main():
          ("fire_free", "fire_move", "recv_free", "recv_move", "own_free", "own_free_legal", "own_move", "own_move_legal")}
     step0 = pc.step
 
+    sh = term.shadow
+
     def step(over, legal, fell, crossing, dt, delay, contact=None, busy=None):
-        mv = dr.move_ep.clone()
+        mv = dr.move_ep.clone() if sh is None else dr.move_ep | sh.swing_ep  # round 26: swing episodes are ball-free too
         own = over & pc.handed  # a partner ball finished in this env
         c["own_free"] += (own & ~mv).sum(); c["own_free_legal"] += (own & legal & ~mv).sum()
         c["own_move"] += (own & mv).sum(); c["own_move_legal"] += (own & legal & mv).sum()
@@ -75,6 +77,7 @@ def main():
             obs, _, _, _ = venv.step(policy(obs))
     r = {k: int(v) for k, v in c.items()}
     r["move_share_of_envs"] = round(float(dr.move_ep.float().mean()), 4)
+    r["swing_share_of_envs"] = round(float(sh.swing_ep.float().mean()), 4) if sh is not None else 0.0
     r["share_of_balls_to_move_episodes"] = round((r["fire_move"] + r["recv_move"]) / max(sum(r[k] for k in ("fire_free", "fire_move", "recv_free", "recv_move")), 1), 4)
     r["partner_legal_free"] = round(r["own_free_legal"] / max(r["own_free"], 1), 4)
     r["partner_legal_move"] = round(r["own_move_legal"] / max(r["own_move"], 1), 4)

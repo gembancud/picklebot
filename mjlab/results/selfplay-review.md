@@ -132,3 +132,20 @@ None of these would lift 19 % per shot to 96 %.
 - **The next lever if it stalls:** footwork rehearsal (`move_prob` / `move_sector_weights`, weighted toward the forward directions), or the court-family mix (`COURT_MIX`) toward the weak families.
 
 **Motion:** a training-free reach check against the controller's speed envelope would tell whether 85 % is physically reachable. If it is not, the next decision is a controller change, which is the user's call.
+
+## Round 26 - run 3's endpoint; the drill-episode bug; run 4 (2026-10-22)
+
+**Brief:** run 3 ended with feeder-ball legal at 77.9 % (M1 not met). The move-drill pair bug is confirmed: 38 % of balls went to robots in move episodes.
+
+**Correction check:**
+- The bug reading and the fix are right (5/5).
+- **Architecture:** the feeds also overwrote the move spot. Swing episodes stalled their court, so they are now busy too.
+- **Motion:** idle swing episodes are the cost. Re-measured: 0 balls to busy robots, with feeder balls up 5 % because stalls are gone.
+- **Experiment design:** the footwork link is a hypothesis, not a claim.
+
+**Votes:** see D-140.
+- Run 4 = the fix only (5/5).
+- Correction against change (3/2).
+- No court-share retune (4/1).
+
+**Lined up:** a feeder family mix toward the weak families, after a reach check.

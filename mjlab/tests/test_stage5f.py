@@ -1065,3 +1065,15 @@ def test_d140_no_busy_mask_is_unchanged():
     pc.on_reset(torch.arange(4))
     fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=Z)[0] for _ in range(30)) if f.any()]
     assert fires[0].sum() == 2  # both courts start
+
+
+def test_d140_moves_task_changes_only_the_flag():
+    """D-140: rally run 4's task is the Coop task with pair_respect_moves and nothing else."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves()
+    ba, bb = a.actions["ball"], b.actions["ball"]
+    diff = sorted(f.name for f in dataclasses.fields(ba) if getattr(ba, f.name) != getattr(bb, f.name))
+    assert diff == ["pair_respect_moves"] and bb.pair_respect_moves and not ba.pair_respect_moves
+    assert list(a.rewards) == list(b.rewards) and all(a.rewards[k].weight == b.rewards[k].weight for k in a.rewards)

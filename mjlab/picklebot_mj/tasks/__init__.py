@@ -1891,3 +1891,21 @@ def _latent_court_v2_res_clean_mix_ka_pairs_coop(play=False):
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP,
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop(), runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop(True), rl_cfg=_s5e_rl_cfg())
+
+
+# Rally run 4 (D-140, panel round 26): rally run 2's Coop task with the move-drill episodes respected in pair mode
+# (pair_respect_moves): a robot in a move-to-spot episode gets no ball, a return to it ends the rally once it lands,
+# and the feeder ball goes to the free side. Before, 38 % of all balls went to robots the move drill was steering to a
+# spot (results/rally-03-movebug.json). The one change; parent rally-03 model_9200.
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop(play)
+    cfg.actions["ball"].pair_respect_moves = True
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves(), runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves(True), rl_cfg=_s5e_rl_cfg())

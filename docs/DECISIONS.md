@@ -3750,3 +3750,46 @@ The panel plans run 3 in round 25.
 - no gate statistic is taken from it.
 
 **A reporting fix (architecture):** in pair mode a handed-over ball carried a random family label, so the per-family table mixed feeder and partner balls. It now counts feeder balls only. Training is unchanged.
+
+## D-140 - A pair-mode training bug: drill episodes were fed balls; rally run 4 = the fix only (panel round 26, 2026-10-22)
+
+**Run 3** (run 2 continued, endpoint model_9200):
+
+| Item | Value |
+|---|---|
+| Partner-ball legal | 55.9 % |
+| Feeder-ball legal | **77.9 %** (M1 not met) |
+| P(5+) | 8.9 % |
+| P(3+) | 21.2 % |
+
+- The panel trigger fired: the feeder-ball gain was under 3 points.
+- Feeder-ball legal by family (feeder balls only): reach_deep 30 %, cross_backhand 50 %, fast 60 %; the rest mostly 73-94 %.
+
+**The bug** (confirmed with `scripts/diag/pair_move_bug.py`, `results/rally-03-movebug.json`):
+- In pair mode, ball-free drill episodes were still fed. The move drill (35 % of episodes, walk to a spot) received **38 % of all balls**. `_refeed` also overwrote its spot with the feed's recovery spot.
+- The architecture review found the same for swing episodes (5 %, a ghost ball): a hand-off left them tallied and unparked, so their court stalled until the episode reset.
+- This has been so since the first pair training (Stage 5H run 4).
+- **The fix** (`pair_respect_moves`, default off, so every older task is unchanged; tests `test_d140_*`):
+  - a busy robot (move or swing episode) gets no ball;
+  - a return to it ends the rally once it lands;
+  - the feeder ball goes to the free side;
+  - a court with both robots busy waits.
+- **Pre-launch read** (`rally-04-precheck.json`): 0 balls to busy robots. Feeder balls 6,201, hand-offs 2,685, so court feeds are about 56 % of balls at court share 0.80, and hand-offs fall about 60 % per hour. Swing episodes now stand idle in pair mode (5 % of episodes).
+
+**Votes:**
+
+| Question | Result |
+|---|---|
+| Run 4 = the fix only | 5/5 |
+| The fix as a correction | 3/2 (RL, architecture, motion) |
+| The court share stays at 0.80 (no second knob) | 4/1 (architecture wanted 0.58) |
+| move_prob stays | 5/5 |
+
+**Experiment design's caution:** that the bug caused the footwork forgetting is a hypothesis, because pair mode began at the same time. It is not claimed.
+
+**Rally run 4:**
+- the Coop-Moves task from rally-03 model_9200 with its optimizer, training seed 82, no critic warm-up, 6 h cap;
+- early kill at model_10100 on D-139's lines (parent re-read on 4218401-4218404);
+- endpoint: the M1 read on 4218432, read once.
+
+**Next if the feeder trigger fires again:** a family mix weighted toward reach_deep, cross_backhand and fast (about 2x, every other family at least 0.5x; coach). Before that, a training-free reach check on those families (motion).
