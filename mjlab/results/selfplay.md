@@ -120,7 +120,30 @@ R4 protocol, 2,048 envs (1,024 courts), 120 s. `scripts/rally_baseline.sh`. Resu
 
 `scripts/rally_run03.sh`. Parent rally-02-coop/model_6400 with its optimizer, the same task, training seed 81, no critic warm-up, 6 h cap. Early kill at model_7300 (`rally_check.py early-continuation`). Endpoint: M1 on 4218332, read once.
 
-(pending)
+**Pre-launch diagnostic** (model_6400, pairs, contact; reported): with a 2 s refeed delay (4218305) against 0.2 s (4218304):
+
+| Refeed delay | Partner-ball legal | Feeder-ball legal | P(5+) |
+|---|---|---|---|
+| 0.2 s | 53.0 % | 75.1 % | 6.7 % |
+| 2 s | 55.6 % | 75.5 % | 8.1 % |
+
+Recovery time does not explain the feeder-ball gap.
+
+**The early check passed** (model_7300; the parent re-read on 4218301-4218304), but the run is flat:
+
+| Measure | Parent | Run 3 | Kill line |
+|---|---|---|---|
+| Partner-ball legal | 53.0 % (low 51.8 %) | 51.7 % (low 50.6 %) | 49.8 % |
+| Feeder-ball legal | 75.1 % | 75.7 % (low 74.6 %) | 72.1 % |
+| P(5+) | 6.7 % | 6.3 % | reported |
+| Court main | 75.6 % | 74.5 % | -5 points |
+| Drill v2 | 79.3 % | 78.9 % | -5 points |
+| Lowest move arrival | 61.5 % | 61.1 % | -5 points |
+| Court falls per episode | | 2.0 % | met |
+
+**Plainly:** after 900 more iterations nothing moved, with no gain and no loss. As pre-registered, the run continues to its fixed endpoint (no early stop for futility). The panel plans run 4 at the endpoint.
+
+(endpoint pending)
 
 ## Interim video: rally run 2's endpoint (panel round 25, 4/5; M1 not met)
 
