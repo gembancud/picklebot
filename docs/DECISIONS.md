@@ -3793,3 +3793,43 @@ The panel plans run 3 in round 25.
 - endpoint: the M1 read on 4218432, read once.
 
 **Next if the feeder trigger fires again:** a family mix weighted toward reach_deep, cross_backhand and fast (about 2x, every other family at least 0.5x; coach). Before that, a training-free reach check on those families (motion).
+
+## D-141 - Rally run 4 at its endpoint; run 5 = practise the weak feeder families (panel round 27, 2026-10-22)
+
+**Run 4** (D-140, the drill-episode fix only; endpoint model_12100):
+
+| Item | Value |
+|---|---|
+| Partner-ball legal | 53.9 % |
+| Feeder-ball legal | **80.2 %** (M1 not met; +2.3 points, so the panel trigger fires) |
+| P(5+) | 8.1 % |
+| Lowest move arrival | **95.7 %** (every direction 95.7-99.7 %; was 72 %) |
+| Falls | 2.7 % |
+
+**A training-free reach check** (`scripts/diag/feeder_reach.py`):
+- the planner's walking-speed model is conservative (56 % feasible against 80 % returned), so it ranks the families but sets no ceiling;
+- reach_deep is the hardest by geometry (median 2.35 m/s);
+- at similar speed, backhand-side families trail their forehand mirrors by 10-30 points, which is a stroke-skill gap.
+
+**Panel (5/5): run 5 = a weighted court-feed family mix** (`COURT_MIX_WEAK`, the per-family median of the five members' weights):
+
+| Weight | Families |
+|---|---|
+| 2.0 | backhand, reach_backhand, cross_backhand, fast |
+| 1.5 | drop, low, reach_deep |
+| 0.75 | short, high, reach_forehand |
+| 1.0 | the rest |
+
+- It is a new mix on a new task (`...-Pairs-Coop-Moves-Weak-G1`). COURT_MIX, and so every evaluation task including the M1 read's, is unchanged (test).
+- The mix reaches court feeds only (80 % of feeder balls).
+- **The partner-ball drop since run 3** (2 points) is about 1.5 times the seed-to-seed swing. The panel read it as a likely cost of fewer hand-offs, not proven, and with the bar still met.
+- **Forecasts** (motion, experiment design): M1 from this run alone is possible but unlikely; 85 % needs about +0.8 summed family-points.
+
+**Early kill at model_13000** (the parent re-read on 4218501-4218504; the pair read at 2,048 envs, 120 s for the family guard). Kill if:
+- partner-ball legal is below max(50 %, parent - 3 points);
+- feeder-ball legal (even mix) is below parent - 2 points;
+- short, high or reach_forehand is more than 5 points below the parent;
+- court main, drill v2 or the lowest move arrival is more than 5 points below the parent;
+- falls have a Wilson low over 4 % or a point over 7.4 %.
+
+**Endpoint:** the M1 read on 4218532, read once. Panel trigger: a feeder-ball gain under +3 points.

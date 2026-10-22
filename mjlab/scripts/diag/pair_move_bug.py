@@ -76,6 +76,9 @@ def main():
         for _ in range(int(round(args.seconds / env.step_dt))):
             obs, _, _, _ = venv.step(policy(obs))
     r = {k: int(v) for k, v in c.items()}
+    from picklebot_mj.feeds import FAMILY_NAMES  # D-141: realised feeder-ball family shares (ep_family: feeder balls only)
+    fe = term.ep_family[:, 0].float()
+    r["feeder_family_share"] = {n: round(float(fe[i] / fe.sum().clamp(min=1)), 4) for i, n in enumerate(FAMILY_NAMES)}
     r["move_share_of_envs"] = round(float(dr.move_ep.float().mean()), 4)
     r["swing_share_of_envs"] = round(float(sh.swing_ep.float().mean()), 4) if sh is not None else 0.0
     r["share_of_balls_to_move_episodes"] = round((r["fire_move"] + r["recv_move"]) / max(sum(r[k] for k in ("fire_free", "fire_move", "recv_free", "recv_move")), 1), 4)

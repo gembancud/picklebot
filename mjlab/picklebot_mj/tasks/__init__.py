@@ -1909,3 +1909,26 @@ def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves(play=False):
 register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES,
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves(), runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves(True), rl_cfg=_s5e_rl_cfg())
+
+
+# Rally run 5 (D-141, panel round 27, 5/5): the Coop-Moves task with a court-feed family mix weighted toward the weak
+# feeder families of run 4's M1 read (the per-family median of the five members' weights). Its own FeedMix: COURT_MIX
+# (and so every evaluation task, including the M1 read's) is unchanged. The mix reaches court feeds only (80 % of
+# feeder balls); drill v2 feeds and partner hand-offs are unaffected. Parent rally-04 model_12100.
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-G1"
+WEAK_FAMILY_WEIGHTS = {"backhand": 2.0, "reach_backhand": 2.0, "cross_backhand": 2.0, "fast": 2.0,
+                       "drop": 1.5, "low": 1.5, "reach_deep": 1.5,
+                       "short": 0.75, "high": 0.75, "reach_forehand": 0.75}
+COURT_MIX_WEAK = FeedMix({name: WEAK_FAMILY_WEIGHTS.get(name, 1.0) for name in COURT_MIX.weights})
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves(play)
+    cfg.actions["ball"].feed_mix = COURT_MIX_WEAK
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak(), runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak(True), rl_cfg=_s5e_rl_cfg())

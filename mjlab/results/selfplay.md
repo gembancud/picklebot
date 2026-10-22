@@ -277,3 +277,15 @@ The rest are 85-94 %.
 - The model is conservative: 56 % of feeds need 1.5 m/s or less, yet 80 % are returned.
 - reach_deep is the hardest by geometry (median 2.35 m/s).
 - At similar speeds, backhand-side families trail their forehand mirrors by 10-30 points (reach 73 / 94 %, cross 56 / 85 %, plain 77 / 88 %). That is a backhand skill gap, not a reach limit.
+
+## Run 5: practise the weak feeder families (D-141)
+
+`scripts/rally_run05.sh`.
+- **Task:** Coop-Moves-Weak (COURT_MIX_WEAK), from rally-04 model_12100 with its optimizer.
+- **Training:** training seed 83, no critic warm-up, 6 h cap.
+- **Early kill at model_13000** (`rally_check.py early-weak`; the pair read at 2,048 envs, 120 s).
+- **Endpoint:** M1 on 4218532, read once.
+
+The realised family shares are in round 27.
+
+(pending)

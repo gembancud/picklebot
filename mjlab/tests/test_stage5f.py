@@ -1077,3 +1077,20 @@ def test_d140_moves_task_changes_only_the_flag():
     diff = sorted(f.name for f in dataclasses.fields(ba) if getattr(ba, f.name) != getattr(bb, f.name))
     assert diff == ["pair_respect_moves"] and bb.pair_respect_moves and not ba.pair_respect_moves
     assert list(a.rewards) == list(b.rewards) and all(a.rewards[k].weight == b.rewards[k].weight for k in a.rewards)
+
+
+def test_d141_weak_mix_task_changes_only_the_feed_mix_and_leaves_court_mix_alone():
+    """D-141: rally run 5's task is Coop-Moves with its own weighted feed mix; COURT_MIX, the Coop-Moves task and the M1
+    read's task (Picklebot-Latent-Court-Res-G1) keep the even mix."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    from mjlab.tasks.registry import load_env_cfg
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak()
+    ba, bb = a.actions["ball"], b.actions["ball"]
+    diff = sorted(f.name for f in dataclasses.fields(ba) if getattr(ba, f.name) != getattr(bb, f.name))
+    assert diff == ["feed_mix"]
+    assert set(T.COURT_MIX.weights.values()) == {1.0} and ba.feed_mix.weights == T.COURT_MIX.weights
+    assert set(load_env_cfg("Picklebot-Latent-Court-Res-G1").actions["ball"].feed_mix.weights.values()) == {1.0}
+    w = bb.feed_mix.weights
+    assert set(w) == set(T.COURT_MIX.weights) and w["cross_backhand"] == 2.0 and w["short"] == 0.75 and w["deep"] == 1.0

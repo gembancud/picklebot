@@ -149,3 +149,34 @@ None of these would lift 19 % per shot to 96 %.
 - No court-share retune (4/1).
 
 **Lined up:** a feeder family mix toward the weak families, after a reach check.
+
+## Round 27 - run 4's endpoint; run 5 (2026-10-22)
+
+**Brief:** run 4 ended with feeder-ball legal at 80.2 % (M1 not met, trigger fired), partner-ball at 53.9 %, and footwork restored (all directions 95.7 % or more). A training-free reach check found a backhand stroke gap, not a reach limit.
+
+**Correction check (5/5):**
+- The reads are right. The partner-ball drop (2 points) is about 1.5 times the seed-to-seed swing: likely a cost of fewer hand-offs, not proven. The bar is still met.
+- The reach model is conservative: a ranking, not a ceiling.
+
+**Votes:**
+- Run 5 = a weighted court-feed family mix, on a new task (5/5).
+- The weights are the per-family median of the five proposals (D-141).
+- The kill lines blend the majority positions (D-141).
+
+**Pre-launch read** (training conditions, rally-04 model_12100; `rally-05-precheck-{even,weak}.json`): realised feeder-ball family shares, even mix against weak mix:
+
+| Family | Even | Weak |
+|---|---|---|
+| backhand | 6.3 % | 9.2 % |
+| fast | 5.4 % | 9.1 % |
+| cross_backhand | 5.1 % | 8.3 % |
+| reach_backhand | 5.6 % | 7.7 % |
+| high | 6.6 % | 3.9 % |
+| reach_forehand | 5.6 % | 3.5 % |
+| short | 5.4 % | 4.4 % |
+| reach_deep | 5.2 % | 5.6 % (little moved) |
+| drop | 5.2 % | 5.8 % (little moved) |
+| low | 6.8 % | 6.8 % (zone filter and drill v2 dilute these) |
+
+- Balls to busy robots: 0 in both.
+- Hand-offs 2,681 against 2,579.
