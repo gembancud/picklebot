@@ -214,3 +214,27 @@ No gate statistic is taken from this read (64 rallies).
   - the feeder ball goes to the free side;
   - a court with both robots busy waits.
 - **The cost:** hand-offs fall by about 60 % per hour of training. The panel decides how to use the fix (round 26).
+
+## Run 4: ball-free drill episodes respected in pair mode (D-140)
+
+`scripts/rally_run04.sh`. Coop-Moves task, from rally-03 model_9200 with its optimizer, training seed 82, no critic warm-up, 6 h cap.
+- **Training log:** the move_arrival reward rose from 0.025 (end of run 3) to about 0.21 in the first 350 iterations, so the move drill is being completed again.
+- **The partner_return reward** fell from about 0.10 to 0.04, as expected with about 60 % fewer hand-offs.
+
+**The early check passed** (model_10100; the parent re-read on 4218401-4218404):
+
+| Measure | Parent (run 3 endpoint) | Run 4 | Kill line |
+|---|---|---|---|
+| Partner-ball legal | 54.7 % (low 53.5 %) | 52.6 % (low 51.3 %) | 51.5 % |
+| Feeder-ball legal | 76.4 % | 77.0 % (low 75.9 %) | 73.4 % |
+| P(5+) | 7.6 % | 6.9 % | reported |
+| Court main | 74.7 % | 75.4 % | -5 points |
+| Drill v2 | 80.1 % | **82.2 %** | -5 points |
+| **Lowest move arrival** | 69.2 % | **92.7 %** | -5 points |
+| Court falls per episode | | 2.5 % | met |
+
+- **Plainly:** with the drill episodes clean, the footwork came back. The lowest direction rose 23 points, the largest single gain in this loop.
+- Feeder-ball legal has not moved yet. Partner-ball legal fell 2 points (fewer hand-offs to learn from), close to its kill line.
+- The run continues to its fixed endpoint.
+
+(endpoint pending)
