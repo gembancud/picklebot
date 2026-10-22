@@ -154,3 +154,11 @@ Recovery time does not explain the feeder-ball gap.
 No gate statistic is taken from this read (64 rallies).
 
 **A cost to note:** the render took 2 h 33 min of wall time (CPU-bound). Run 3 waited for it, so nothing else used the GPU while it trained. Future videos should be shorter (30-45 s).
+
+**A suspected training-side bug, found while run 3 trains (to verify after its endpoint, then panel):**
+- In pair mode, move-drill episodes (`move_prob` 0.35: walk to a spot, no ball; `move_drill.py`) are not respected.
+- `PairCourts` hands partner returns and feeder balls to any parked env, and `_refeed` does not check `drill.move_ep`. So a robot in a move episode is fed balls while it is told to walk to a spot. Its ball-approach shaping is also switched off in move episodes (`return_stand.py` ~line 1165).
+- Outside pair mode this cannot happen: a move episode is tallied, so it never refeeds.
+- **If confirmed,** it would explain two problems since Stage 5H run 4:
+  - the forward move-arrival forgetting (the move drill is no longer clean practice);
+  - part of the partner-ball loss (balls handed to a robot that is walking away).
