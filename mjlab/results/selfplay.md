@@ -237,4 +237,43 @@ No gate statistic is taken from this read (64 rallies).
 - Feeder-ball legal has not moved yet. Partner-ball legal fell 2 points (fewer hand-offs to learn from), close to its kill line.
 - The run continues to its fixed endpoint.
 
-(endpoint pending)
+**Endpoint: model_12100** (the 6 h cap). M1 read on 4218432, read once (`rally-04-target.json`, 24,701 rallies):
+
+| M1 item | Value | Bar | |
+|---|---|---|---|
+| Partner-ball legal | **53.9 %** (bootstrap low 53.2 %) | >= 50 % | met |
+| Feeder-ball legal | **80.2 %** (low 79.7 %) | >= 85 % | **not met** |
+| Sides | 63.7 / 63.4 % (gap 0.3) | within 3 points | met |
+| Court falls per episode | 2.7 % | <= 4 % | met |
+
+**M1 is not met.** Feeder-ball legal is the closest yet (+2.3 points on run 3), but the panel trigger (+3) fires.
+
+| Reported | Value |
+|---|---|
+| P(5+) | 8.1 % [7.7, 8.4] (run 3: 8.9 %) |
+| P(3+) | 18.6 % |
+| P(4+) | 12.1 % |
+| Rallies of 12-15 good shots | 35, 28, 16, 8 |
+| Crossing read (4218433) | P(5+) 4.2 %, own-ball 39.7 % |
+
+- **Footwork is restored everywhere:** move arrival is 95.7-99.7 % in all 8 directions. The old stage item "arrival >= 90 % every direction" is met for the first time since Stage 5F. Drill v2 87.2 %, court main 75.9 %.
+- **Partner-ball legal fell 2 points** with about 60 % fewer hand-offs to practise on.
+
+**Feeder-ball legal by family** (contact / legal), against run 3:
+
+| Family | Run 3 legal | Run 4 contact / legal |
+|---|---|---|
+| reach_deep | 30 % | 57 / 45 % |
+| cross_backhand | 50 % | 63 / 56 % |
+| fast | 60 % | 75 / 66 % |
+| reach_backhand | | 77 / 73 % |
+| low | | 81 / 75 % |
+| drop | | 83 / 75 % |
+| backhand | | 82 / 77 % |
+
+The rest are 85-94 %.
+
+**Training-free reach check** (`scripts/diag/feeder_reach.py`, seed 4218440, `feeder-reach-check.json`): the least walking speed to a contact stance per feed, from the planner's walkable-contact model.
+- The model is conservative: 56 % of feeds need 1.5 m/s or less, yet 80 % are returned.
+- reach_deep is the hardest by geometry (median 2.35 m/s).
+- At similar speeds, backhand-side families trail their forehand mirrors by 10-30 points (reach 73 / 94 %, cross 56 / 85 %, plain 77 / 88 %). That is a backhand skill gap, not a reach limit.
