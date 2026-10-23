@@ -3881,3 +3881,28 @@ The drilled backhand-side families gained 4-5 points each.
 - longer runs.
 
 If M1 is met, the M1 video goes too.
+
+## D-143 - Rally run 6 at its endpoint; the loop goes back to the user (2026-10-23)
+
+**Run 6** (stale stance reward off; endpoint model_17900):
+
+| Item | Value |
+|---|---|
+| Feeder-ball legal | **81.3 %** (benchmark 84.1 +- 1; run 5 81.9 %) |
+| Partner-ball legal | 52.1 % (run 5 55.2 %) |
+| P(5+) | 7.7 % |
+| Falls | 3.5 % |
+| Lowest move arrival | 98.7 % |
+
+M1 is not met. The fix did not help.
+
+**Per D-142, the loop stops here and goes back to the user.**
+- **Best rally policy:** rally run 5, model_15000.
+  - Feeder-ball 81.9 %, partner-ball 55.2 %, P(5+) 8.7 %.
+  - Footwork 97 % or more in every direction.
+- **The final target** (P(5+) >= 80 %) **and M2 are out of reach within these rules** (5/5, round 28). Partner-ball has been flat at 52-56 % for five runs.
+- **Options for the user:**
+  - a partner-ball run (readiness and recovery, cooperative pace) within 6 h runs;
+  - a faster or more agile controller (25-80 GPU-hours, so runs over 6 h);
+  - longer runs;
+  - moving on to competitive self-play or 2v2 at the current level.

@@ -376,4 +376,40 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - The feeder families moved by -2.6 to +1.3 points; none of the guards fired.
 - **Plainly:** with the stale stance reward off, nothing has moved after a third of the run. The run continues to its fixed endpoint.
 
-(endpoint pending)
+**Endpoint: model_17900** (the 6 h cap). M1 read on 4218632, read once (`rally-06-target.json`, 25,096 rallies):
+
+| M1 item | Value | Bar | |
+|---|---|---|---|
+| Partner-ball legal | **52.1 %** (bootstrap low 51.5 %) | >= 50 % | met |
+| Feeder-ball legal | **81.3 %** (low 80.7 %) | >= 85 % | **not met** |
+| Sides | 62.9 / 62.9 % (gap 0.0) | within 3 points | met |
+| Court falls per episode | 3.5 % | <= 4 % | met |
+
+**M1 is not met.** Against the benchmark (84.1 % +- 1), feeder-ball came in 2.8 points low and 0.6 points below run 5.
+
+| Reported | Value |
+|---|---|
+| P(5+) | 7.7 % |
+| P(3+) | 17.2 % |
+| Lowest move arrival | 98.7 % |
+| Drill v2 | 88.7 % |
+| Court main | 77.6 % |
+
+**Next-shot rate by position** (the chance a rally of length k continues): 78.5 % for the feeder return, then 41.7, 52.6, 65.1, 69.0, 67.3, 67.2 %.
+
+**Plainly:** turning off the stale stance reward did not help. Feeder-ball was flat, and partner-ball fell 3 points. **Run 5's model_15000 remains the best rally policy.** Per D-142, the loop goes back to the user.
+
+## Where the loop stands (2026-10-23, after 6 runs and about 37 GPU-hours)
+
+| Run | Change | Partner-ball | Feeder-ball | P(5+) | P(3+) |
+|---|---|---|---|---|---|
+| base | Stage 5H run 4 (contact read) | 19.2 % | 64.7 % | 0.4 % | |
+| 1 | contact hand-off in training | killed early | | | |
+| 2 | cooperative credit | 54.3 % | 75.8-77.0 % | 7.9 % | 18.8 % |
+| 3 | run 2 continued | 55.9 % | 77.9 % | 8.9 % | 21.2 % |
+| 4 | drill-episode fix | 53.9 % | 80.2 % | 8.1 % | 18.6 % |
+| 5 | weak-family mix | **55.2 %** | **81.9 %** | **8.7 %** | 19.7 % |
+| 6 | stale stance reward off | 52.1 % | 81.3 % | 7.7 % | 17.2 % |
+
+- **M1** (feeder-ball >= 85 %): not met; the best is 81.9 %.
+- **The final target** (80 % of rallies reach 5 good shots): about 9 %.
