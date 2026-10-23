@@ -384,7 +384,7 @@ class BallPhysicsAction(ActionTerm):
                      ("n_contact", "paddle_speed", "paddle_speed_sq", "ball_in_speed", "ball_out_speed",
                       "contact_height", "n_cross", "n_land", "land_x", "land_x_sq", "land_y_abs", "net_clear",
                       "land_in_A", "land_in_B", "target_hit", "placement", "land_keep_alive_box", "keep_alive",
-                      "flight_s")}
+                      "flight_s", "ball_out_fast")}
         # D-129: time since the first legal contact (physics steps), and the keep-alive score of a legal landing
         self.flight_t = torch.zeros(n, device=dev)
         self.keep_alive_now = torch.zeros(n, device=dev)
@@ -829,6 +829,7 @@ class BallPhysicsAction(ActionTerm):
             d["paddle_speed_sq"] += (ps * ps * f).sum()
             d["ball_in_speed"] += (before.vel.norm(dim=-1) * f).sum()
             d["ball_out_speed"] += (self.ball.vel.norm(dim=-1) * f).sum()
+            d["ball_out_fast"] += ((self.ball.vel.norm(dim=-1) > 11.0).float() * f).sum()  # D-145 manipulation check
             d["contact_height"] += (self.ball.pos[:, 2] * f).sum()
         self.hit_now |= first
         self.hit_out_pos = torch.where(first.unsqueeze(-1), self.ball.pos, self.hit_out_pos)
@@ -1223,6 +1224,14 @@ def return_shaping(env, margin: float = 0.0) -> torch.Tensor:
     """One-shot at the first legal contact: return_quality of the outgoing ball (read before legal_return)."""
     t = _term(env)
     return return_quality(t.hit_out_pos, t.hit_out_vel, margin) * t.hit_now.float()
+
+
+def ball_out_over(env, v0: float = 9.5, span: float = 2.0) -> torch.Tensor:
+    """D-145 (pace ceiling): one-shot at the first legal contact: clamp((|ball out| - v0) / span, 0, 1), used with a
+    negative weight (round 30: the partner's fastest shots, above about 11 m/s, are reached far less often). Must be
+    read before legal_return, which clears the step flags."""
+    t = _term(env)
+    return ((t.hit_out_vel.norm(dim=-1) - v0) / span).clamp(0.0, 1.0) * t.hit_now.float()
 
 
 def rally_bonus(env, cap: int = 10) -> torch.Tensor:

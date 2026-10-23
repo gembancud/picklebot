@@ -157,6 +157,46 @@ def early_pace(prefix: str) -> bool:
             and c1 >= c0 - 0.05 and v1 >= v0 - 0.05 and a1 >= a0 - 0.05 and flo <= 0.04 and f1 <= 0.074)
 
 
+def early_ceiling(prefix: str) -> bool:
+    """Rally run 8 (D-145, experiment design's lines): the early-kill read against the parent's reads on the same seeds."""
+    ld = lambda k: json.load(open(f"{prefix}-{k}.json"))  # noqa: E731
+    v0, v1 = ld("parent-early-v2")["drill_v2"]["per_shot_p"], ld("early-v2")["drill_v2"]["per_shot_p"]
+    pc, ec = ld("parent-early-court"), ld("early-court")
+    c0, c1 = pc["legal_return_rate"], ec["legal_return_rate"]
+    k0, k1 = pc["contact_rate"], ec["contact_rate"]
+    lc0, lc1 = c0 / max(k0, 1e-9), c1 / max(k1, 1e-9)
+    fk, fn = ec["robot_falls"], ec["robot_episodes"]
+    f1, flo = fk / max(fn, 1), wilson(fk, fn)[0]
+    arr = lambda d: min(s["arrival_rate"] for s in d["move_drill"]["sectors"]  # noqa: E731
+                        if s["sector"] < 8 and s.get("arrival_rate") is not None)
+    a0, a1 = arr(ld("parent-early-move")), arr(ld("early-move"))
+    j0, j1 = ld("parent-early-pairs"), ld("early-pairs")
+    own0, _ = boot_low(j0["pairs"]["court_counts"], 1, 0)
+    own1, own1_lo = boot_low(j1["pairs"]["court_counts"], 1, 0)
+    fed0, _ = boot_low(j0["pairs"]["court_counts"], 3, 2)
+    fed1, fed1_lo = boot_low(j1["pairs"]["court_counts"], 3, 2)
+    d0, d1 = j0["contact_diagnostics"], j1["contact_diagnostics"]
+    # pair contact rate: first contacts over finished feeds (both ball types)
+    pk = lambda j: j["contact_diagnostics"]["first_contacts"] / max(sum(r[0] + r[2] for r in j["pairs"]["court_counts"]), 1)  # noqa: E731
+    pk0, pk1 = pk(j0), pk(j1)
+    s0, s1 = d0["ball_speed_out_mean"], d1["ball_speed_out_mean"]
+    h0, h1 = d0["ball_out_share_above_11"], d1["ball_out_share_above_11"]
+    print(f"early: manipulation: pair ball out {s0} -> {s1} m/s (needs <= {s0 - 0.4:.3f}); share above 11 m/s {h0} -> {h1} "
+          f"(needs <= {h0 - 0.08:.4f}); kill if neither")
+    print(f"early: partner-ball legal {own0:.4f} -> {own1:.4f} (low {own1_lo:.4f}; kill below {max(0.50, own0 - 0.03):.4f}); "
+          f"feeder-ball legal {fed0:.4f} -> {fed1:.4f} (low {fed1_lo:.4f}; kill below {fed0 - 0.02:.4f}); "
+          f"P(5+) {j0['pairs']['p_len_ge_5']} -> {j1['pairs']['p_len_ge_5']}")
+    print(f"early: court legal given contact {lc0:.4f} -> {lc1:.4f} (kill below {lc0 - 0.03:.4f}); court contact {k0} -> {k1} "
+          f"(kill below {k0 - 0.03:.4f}); pair contact {pk0:.4f} -> {pk1:.4f} (kill below {pk0 - 0.03:.4f}); court main "
+          f"{c0} -> {c1} ({100 * (c1 - c0):+.1f}; kill below -5); drill v2 {v0} -> {v1} ({100 * (v1 - v0):+.1f}; kill below "
+          f"-5); move arrival min {a0} -> {a1} ({100 * (a1 - a0):+.1f}; kill below -5); court falls/episode {f1:.4f} "
+          f"(low {flo}; kill if low > 0.04 or point > 0.074)")
+    engaged = s1 <= s0 - 0.4 or h1 <= h0 - 0.08
+    return (engaged and own1 >= max(0.50, own0 - 0.03) and fed1 >= fed0 - 0.02 and lc1 >= lc0 - 0.03
+            and k1 >= k0 - 0.03 and pk1 >= pk0 - 0.03 and c1 >= c0 - 0.05 and v1 >= v0 - 0.05 and a1 >= a0 - 0.05
+            and flo <= 0.04 and f1 <= 0.074)
+
+
 def target(prefix: str, tag: str) -> bool:
     P = pair_stats(json.load(open(f"{prefix}-target.json"))["pairs"])
     try:
@@ -217,6 +257,8 @@ if __name__ == "__main__":
         sys.exit(0 if early_weak(prefix) else 1)
     if mode == "early-pace":
         sys.exit(0 if early_pace(prefix) else 1)
+    if mode == "early-ceiling":
+        sys.exit(0 if early_ceiling(prefix) else 1)
     if mode == "m1":
         sys.exit(0 if milestone(prefix, sys.argv[3]) else 1)
     target(prefix, sys.argv[3])

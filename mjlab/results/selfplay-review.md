@@ -214,3 +214,26 @@ None of these would lift 19 % per shot to 96 %.
 - **Result:** (a) 5/5 by the pre-registered rules.
 
 **Next if it stalls:** run 8 = (b) or a ball-out speed ceiling; then the user (controller or runs over 6 h).
+
+
+## Round 30 - run 7 killed; run 8 (2026-10-23)
+
+**Brief:** run 7 (keep_alive x2) was killed at the early check: partner-ball legal 55.3 -> 47.8 %, ball out 10.54 -> 10.81 m/s, landings deeper.
+
+**Correction check (5/5):** the kill is right. The keep-alive box does not steer pace; it paid for deeper, faster balls. Experiment design: the drop is about 5 times the seed swing and the mechanism did engage, so it is a real regression; pace is the leading cause, still confounded with depth. The ready reward is out (the premise read found no readiness effect).
+
+**Votes (all (a), a ball-out speed ceiling at the first legal contact):**
+
+| Member | Ramp | Weight |
+|---|---|---|
+| Motion | 9 -> 12 m/s | -50 |
+| Coach | 10 -> 12 m/s | -50 |
+| RL | 10.5 -> 12.5 m/s (hinge) | up to -100 |
+| Experiment design | 9.5 -> 11.5 m/s | -50 |
+| Architecture | 9 -> 12 m/s | -50 |
+
+- **Weight -50:** 4/5. **Ramp:** no majority; same code, so experiment design's 9.5 -> 11.5 m/s by the tie rule.
+- **Kill lines:** experiment design's (a manipulation check on the mean ball out or the share above 11 m/s; contact guards against an escape into the net or into skipped contacts), plus run 7's lines unchanged.
+- **If it stalls:** back to the user (5/5).
+
+Run 8 = D-145.

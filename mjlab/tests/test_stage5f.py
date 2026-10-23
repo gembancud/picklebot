@@ -1121,3 +1121,33 @@ def test_d144_ka2_task_doubles_only_keep_alive():
     assert list(a.rewards) == list(b.rewards)
     changed = sorted(k for k in a.rewards if a.rewards[k].weight != b.rewards[k].weight)
     assert changed == ["keep_alive"] and b.rewards["keep_alive"].weight == 2.0 * a.rewards["keep_alive"].weight == 200.0
+
+
+
+def test_d145_ball_out_over_ramp_and_task():
+    """D-145: the pace ceiling is clamp((|v| - 9.5) / 2, 0, 1) at the first legal contact only, cleared with the step
+    flags; rally run 8's task is run 5's plus that term (weight -50) just before legal_return, nothing else changed."""
+    import dataclasses
+    import types
+    import torch
+    import picklebot_mj.tasks as T
+    from picklebot_mj.tasks import return_stand as rs
+    v = torch.tensor([7.0, 9.5, 10.5, 11.5, 14.0, 14.0])
+    fake = types.SimpleNamespace(hit_out_vel=torch.stack([v, torch.zeros(6), torch.zeros(6)], -1),
+                                 hit_now=torch.tensor([1, 1, 1, 1, 1, 0], dtype=torch.bool))
+    old = rs._term
+    rs._term = lambda env: fake
+    try:
+        r = rs.ball_out_over(None)
+    finally:
+        rs._term = old
+    assert torch.allclose(r, torch.tensor([0.0, 0.0, 0.5, 1.0, 1.0, 0.0]))
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace()
+    ba, bb = a.actions["ball"], b.actions["ball"]
+    assert not [f.name for f in dataclasses.fields(ba) if getattr(ba, f.name) != getattr(bb, f.name)]
+    ka, kb = list(a.rewards), list(b.rewards)
+    assert kb[-1] == "legal_return" and kb[-2] == "ball_out_over" and kb[:-2] == ka[:-1] and ka[-1] == "legal_return"
+    assert all(a.rewards[k] == b.rewards[k] for k in ka)
+    t = b.rewards["ball_out_over"]
+    assert t.func is rs.ball_out_over and t.weight == -50.0 == -a.rewards["paddle_contact"].weight

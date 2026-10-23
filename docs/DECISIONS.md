@@ -3949,3 +3949,23 @@ The (b) voters pre-committed to switch to (a) if ready receivers reached the bal
 **Endpoint:** the M1 read on 4218742, read once.
 - **Success:** partner-ball legal >= 58.2 % with a bootstrap low > 55.2 %.
 - **If it stalls:** run 8 = (b), the ready reward, or a ball-out speed ceiling (coach); then back to the user for the controller or runs over 6 h.
+
+
+## D-145 - Rally run 8: a ball-out pace ceiling (panel round 30, 2026-10-23)
+
+**Why:** rally run 7 (keep_alive x2, D-144) was killed at the early check: partner-ball legal fell from 55.3 % to 47.8 % (line 52.3 %). The keep-alive box did engage (22.5 % -> 28.4 %), but the robots hit deeper and faster (ball out 10.54 -> 10.81 m/s), not softer. The box is deep and only loosely tied to flight time, so it does not steer pace. The round 29 premise read still stands: the partner's fastest third of shots (above 11.0 m/s, mean 11.7) is reached 44 % of the time against 74-76 % for the rest, and readiness makes no difference (so the ready reward is ruled out).
+
+**Decision (5/5 for a pace ceiling; the form by the tie rule):**
+- New reward `ball_out_over` (`return_stand.py`): clamp((|ball out| - 9.5) / 2, 0, 1) at the first legal contact (`hit_now`), read before legal_return. Weight -50 (minus paddle_contact): a contact never scores below a miss, and legal_return (250) still dominates. Task `...-Coop-Moves-Weak-Pace-G1`, from rally-05 model_15000 with its optimizer, training seed 86, 6 h cap.
+- The weight (-50, 4/5) and the place (the first legal contact) had majorities. The ramp had none (9-12: motion, architecture; 10-12: coach; 10.5-12.5: RL; 9.5-11.5: experiment design). All forms are the same code, so the tie went to experiment design: 9.5-11.5 m/s, which spans the cliff at about 11 m/s.
+- A diagnostic `ball_out_share_above_11` (first contacts with ball out above 11 m/s) is added to stage2_eval's contact_diagnostics for the manipulation check.
+
+**Early kill at model_15900** (`rally_check.py early-ceiling`, parent re-read on 4218811-4218814). Kill if:
+- the mechanism did not engage: pair ball out not down at least 0.4 m/s and the share above 11 m/s not down at least 8 points;
+- partner-ball legal < max(50 %, parent - 3); feeder-ball legal < parent - 2;
+- court legal given contact, court contact or pair contact more than 3 points below the parent (no escape into the net or into skipped contacts);
+- court main, drill v2 or the lowest move arrival more than 5 points below the parent; falls Wilson low over 4 % or point over 7.4 %.
+
+**Endpoint:** the M1 read on 4218842, read once. **Success:** partner-ball legal >= 58.2 % with a bootstrap low > 55.2 %.
+
+**If it stalls:** back to the user (the controller option or runs over 6 h), as D-144 says. No run 9 without the user.

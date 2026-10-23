@@ -362,6 +362,7 @@ def main():
         "paddle_speed_std": round(math.sqrt(max(d["paddle_speed_sq"] / nc - (d["paddle_speed"] / nc) ** 2, 0)), 3),
         "ball_speed_in_mean": round(d["ball_in_speed"] / nc, 3),
         "ball_speed_out_mean": round(d["ball_out_speed"] / nc, 3),
+        "ball_out_share_above_11": round(d.get("ball_out_fast", 0.0) / nc, 4),  # D-145
         "contact_height_mean": round(d["contact_height"] / nc, 3),
         "net_crossings": int(d["n_cross"]),
         "net_clearance_mean_m": round(d["net_clear"] / max(d["n_cross"], 1.0), 3),

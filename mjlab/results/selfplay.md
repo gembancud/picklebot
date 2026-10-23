@@ -441,3 +441,13 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 | Court falls per episode | | 3.5 % | |
 
 **Plainly:** doubling the keep-alive reward made the robots hit deeper and a little faster, not softer. The box is deep and only loosely tied to flight time. The partner's balls got harder, and partner-ball legal fell 7.5 points. Panel round 30 plans run 8.
+
+
+## Run 8: a ball-out pace ceiling (D-145)
+
+`scripts/rally_run08.sh`.
+- **Task:** Coop-Moves-Weak-Pace: -50 x clamp((|ball out| - 9.5) / 2, 0, 1) at the first legal contact, from rally-05 model_15000 with its optimizer.
+- **Training:** training seed 86, no critic warm-up, 6 h cap.
+- **Smoke** (`scripts/rally_run08_smoke.sh`): 3 iterations ran; the new term logs a negative reward (-0.0049 against paddle_contact +0.0073); the new diagnostic reads 10.33 m/s mean and 25.6 % above 11 m/s on a 64-env pairs read.
+- **Checks:** early kill at model_15900 (`rally_check.py early-ceiling`). Endpoint: M1 on 4218842, read once.
+- **Success:** partner-ball >= 58.2 % (bootstrap low > 55.2 %). If it stalls: back to the user.

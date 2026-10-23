@@ -1974,3 +1974,29 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_ka2(),
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_ka2(True), rl_cfg=_s5e_rl_cfg())
+
+
+
+# Rally run 8 (D-145, panel round 30): rally run 5's task with a ball-out pace ceiling: -50 x clamp((|v_out| - 9.5) / 2,
+# 0, 1) at the first legal contact (read before legal_return). Run 7 showed keep_alive does not steer pace (doubling it
+# gave deeper, faster balls and partner-ball legal fell 7.5 points); the round 29 premise read found the partner's
+# fastest third of shots (about 11.7 m/s) reached 44 % of the time against 74-76 % for the rest. The weight equals
+# paddle_contact, so a contact never scores below a miss and legal_return still dominates. Parent rally-05 model_15000.
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace-G1"
+BALL_OUT_OVER_WEIGHT = -50.0  # D-145: minus the paddle_contact weight
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace(play=False):
+    from picklebot_mj.tasks.return_stand import ball_out_over
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak(play)
+    legal = cfg.rewards.pop("legal_return")
+    cfg.rewards["ball_out_over"] = RewardTermCfg(func=ball_out_over, weight=BALL_OUT_OVER_WEIGHT)
+    cfg.rewards["legal_return"] = legal  # last: it clears the step flags
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace(True), rl_cfg=_s5e_rl_cfg())
