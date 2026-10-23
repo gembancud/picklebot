@@ -3906,3 +3906,46 @@ M1 is not met. The fix did not help.
   - a faster or more agile controller (25-80 GPU-hours, so runs over 6 h);
   - longer runs;
   - moving on to competitive self-play or 2v2 at the current level.
+
+## D-144 - The user restarts the loop; rally run 7 = softer shots (keep_alive x2), chosen by a premise read (panel round 29, 2026-10-23)
+
+**The user's answer to D-143:** "lets vote and continue. press on with loop. we need to get a working rally do what you have to do". The 6 h run cap stays; runs over 6 h are still the user's call.
+
+**Round 29 votes, before the premise read:**
+
+| Option | Votes |
+|---|---|
+| (b) the existing ready_reward at launches and hand-offs | RL, motion, coach |
+| (a) keep_alive 100 -> 200 | architecture, experiment design |
+
+The (b) voters pre-committed to switch to (a) if ready receivers reached the ball less than 5 points more often. Experiment design pre-registered (a) if slow incoming balls were reached at least 8 points more often than fast ones, and by more than the readiness gap.
+
+**The premise read** (`scripts/diag/ready_contact_split.py` on rally-05 model_15000, the M1 read's settings, seed 4218702, `results/ready-contact-split.json`):
+
+| Split | Contact | Legal |
+|---|---|---|
+| Partner ball, receiver ready at the launch | 64.1 % | 55.7 % |
+| Partner ball, receiver not ready | 64.8 % | 55.1 % |
+| Partner ball, slow third (<= 10.2 m/s, mean 9.5) | 74.3 % | 66.3 % |
+| Partner ball, middle third (mean 10.6) | 75.8 % | 66.6 % |
+| Partner ball, fast third (> 11.0 m/s, mean 11.7) | **43.8 %** | **32.7 %** |
+
+- **Readiness gap:** -0.7 points.
+- **Slow minus fast:** +30.5 points.
+- Two earlier versions of the read are kept and superseded: v1 counted the receiver's copies of hitter faults; v2 used the training recovery mode.
+
+**So run 7 = (a), 5/5 by the pre-registered rules:** keep_alive weight 100 -> 200 (a new task, `...-Coop-Moves-Weak-KA2-G1`).
+- From rally-05 model_15000 with its optimizer, training seed 85, 6 h cap.
+- stance_progress is kept as in the parent: run 6's removal did not help.
+
+**Early kill at model_15900** (experiment design's lines, `rally_check.py early-pace`; parent re-read on 4218711-4218714). Kill if:
+- the mechanism did not engage (box share < 27 % and flight < 1.28 s);
+- partner-ball legal < max(50 %, parent - 3);
+- feeder-ball legal < parent - 2;
+- court legal given contact is more than 3 points below the parent;
+- court main, drill v2 or the lowest arrival is more than 5 points below the parent;
+- falls have a Wilson low over 4 % or a point over 7.4 %.
+
+**Endpoint:** the M1 read on 4218742, read once.
+- **Success:** partner-ball legal >= 58.2 % with a bootstrap low > 55.2 %.
+- **If it stalls:** run 8 = (b), the ready reward, or a ball-out speed ceiling (coach); then back to the user for the controller or runs over 6 h.

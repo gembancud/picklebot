@@ -195,3 +195,22 @@ None of these would lift 19 % per shot to 96 %.
 - **Reachability (5/5):** M1 is 1-2 runs away; M2 and the final target are out of reach within the rules.
 - **Run 6:** first 4/5 run 5 unchanged (architecture: the fix); then a follow-up once the bug was verified, 5/5 for the fix as the one change.
 - **Back to the user after run 6, whatever the result** (coach, motion, RL, architecture; experiment design accepts it in place of a two-run budget).
+
+## Round 29 - the user's answer; the partner-ball run (2026-10-23)
+
+**Brief:**
+- The user asked for a vote and to press on with the loop, "do what you have to do".
+- The panel's earlier read: partner balls are the blocker (flat at 52-56 %); contact about 67 %, legal given contact about 90 %.
+
+**Correction check:**
+- **RL and experiment design:** the next-shot rates by position are survival-conditioned, so the first-partner-ball deficit is overstated.
+- **Architecture:** ready_reward fires on hand-offs (fire includes recv before ready.launch).
+- **Motion:** watch for bobbing to farm the dip score.
+- **Experiment design:** run 6's -3.1 points is about twice the seed swing, a probable regression.
+
+**Votes:**
+- **Before the premise read:** (b) readiness: RL, motion, coach; (a) keep_alive x2: architecture, experiment design.
+- **Both sides pre-registered a premise read.** It found readiness makes no difference (-0.7 points of contact), and the partner's fastest third of shots is reached 44 % of the time against 74-76 % (D-144).
+- **Result:** (a) 5/5 by the pre-registered rules.
+
+**Next if it stalls:** run 8 = (b) or a ball-out speed ceiling; then the user (controller or runs over 6 h).

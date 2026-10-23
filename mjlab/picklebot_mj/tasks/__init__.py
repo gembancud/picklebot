@@ -1952,3 +1952,25 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_nostance(),
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_nostance(True), rl_cfg=_s5e_rl_cfg())
+
+
+
+# Rally run 7 (D-144, panel round 29): rally run 5's task with the keep-alive landing reward doubled (100 -> 200): pay
+# more for returns that land in the keep-alive box with a 1.3-1.5 s flight (softer, deeper, returnable shots). The
+# round 29 premise read (results/ready-contact-split.json) found the partner's fastest third of shots (about 11.7 m/s)
+# reached only 44 % of the time against 74-76 % for the rest, while readiness at the launch made no difference. One
+# change; parent rally-05 model_15000 (stance_progress kept as in run 5; run 6's removal did not help).
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_KA2 = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-KA2-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_ka2(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak(play)
+    cfg.rewards["keep_alive"] = _dc.replace(cfg.rewards["keep_alive"], weight=2.0 * cfg.rewards["keep_alive"].weight)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_KA2,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_ka2(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_ka2(True), rl_cfg=_s5e_rl_cfg())

@@ -413,3 +413,15 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 
 - **M1** (feeder-ball >= 85 %): not met; the best is 81.9 %.
 - **The final target** (80 % of rallies reach 5 good shots): about 9 %.
+
+## Run 7: softer shots, keep_alive x2 (D-144)
+
+`scripts/rally_run07.sh`.
+- **Task:** Coop-Moves-Weak-KA2 (keep_alive 100 -> 200), from rally-05 model_15000 with its optimizer.
+- **Training:** training seed 85, no critic warm-up, 6 h cap.
+- **Checks:** early kill at model_15900 (`rally_check.py early-pace`). Endpoint: M1 on 4218742, read once.
+- **Success:** partner-ball >= 58.2 % (bootstrap low > 55.2 %).
+
+**Premise read** (`ready-contact-split.json`): partner balls reached 74-76 % of the time when slow or medium (<= 11.0 m/s), and 44 % when fast (mean 11.7 m/s). Readiness at the launch made no difference.
+
+(pending)

@@ -1107,3 +1107,17 @@ def test_d142_nostance_task_changes_only_the_stance_weight():
     assert list(a.rewards) == list(b.rewards)
     changed = sorted(k for k in a.rewards if a.rewards[k].weight != b.rewards[k].weight)
     assert changed == ["stance_progress"] and b.rewards["stance_progress"].weight == 0.0 and a.rewards["stance_progress"].weight == 1.0
+
+
+
+def test_d144_ka2_task_doubles_only_keep_alive():
+    """D-144: rally run 7's task is run 5's with the keep_alive weight doubled and nothing else."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_ka2()
+    ba, bb = a.actions["ball"], b.actions["ball"]
+    assert not [f.name for f in dataclasses.fields(ba) if getattr(ba, f.name) != getattr(bb, f.name)]
+    assert list(a.rewards) == list(b.rewards)
+    changed = sorted(k for k in a.rewards if a.rewards[k].weight != b.rewards[k].weight)
+    assert changed == ["keep_alive"] and b.rewards["keep_alive"].weight == 2.0 * a.rewards["keep_alive"].weight == 200.0

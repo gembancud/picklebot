@@ -122,6 +122,41 @@ def early_weak(prefix: str) -> bool:
             and a1 >= a0 - 0.05 and flo <= 0.04 and f1 <= 0.074)
 
 
+def early_pace(prefix: str) -> bool:
+    """Rally run 7 (D-144, experiment design's lines): the early-kill read against the parent's reads on the same seeds."""
+    ld = lambda k: json.load(open(f"{prefix}-{k}.json"))  # noqa: E731
+    v0, v1 = ld("parent-early-v2")["drill_v2"]["per_shot_p"], ld("early-v2")["drill_v2"]["per_shot_p"]
+    pc, ec = ld("parent-early-court"), ld("early-court")
+    c0, c1 = pc["legal_return_rate"], ec["legal_return_rate"]
+    lc0 = pc["legal_return_rate"] / max(pc["contact_rate"], 1e-9)
+    lc1 = ec["legal_return_rate"] / max(ec["contact_rate"], 1e-9)
+    fk, fn = ec["robot_falls"], ec["robot_episodes"]
+    f1, flo = fk / max(fn, 1), wilson(fk, fn)[0]
+    arr = lambda d: min(s["arrival_rate"] for s in d["move_drill"]["sectors"]  # noqa: E731
+                        if s["sector"] < 8 and s.get("arrival_rate") is not None)
+    a0, a1 = arr(ld("parent-early-move")), arr(ld("early-move"))
+    j0, j1 = ld("parent-early-pairs"), ld("early-pairs")
+    own0, _ = boot_low(j0["pairs"]["court_counts"], 1, 0)
+    own1, own1_lo = boot_low(j1["pairs"]["court_counts"], 1, 0)
+    fed0, _ = boot_low(j0["pairs"]["court_counts"], 3, 2)
+    fed1, fed1_lo = boot_low(j1["pairs"]["court_counts"], 3, 2)
+    d0, d1 = j0["contact_diagnostics"], j1["contact_diagnostics"]
+    box0, box1 = d0["keep_alive_box_share_of_legal_landings"], d1["keep_alive_box_share_of_legal_landings"]
+    fl0, fl1 = d0["flight_time_mean_s"], d1["flight_time_mean_s"]
+    print(f"early: manipulation: keep-alive-box share {box0} -> {box1}; flight {fl0} -> {fl1} s; ball out "
+          f"{d0['ball_speed_out_mean']} -> {d1['ball_speed_out_mean']} m/s (kill if box < 0.27 and flight < 1.28)")
+    print(f"early: partner-ball legal {own0:.4f} -> {own1:.4f} (low {own1_lo:.4f}; kill below {max(0.50, own0 - 0.03):.4f}); "
+          f"feeder-ball legal {fed0:.4f} -> {fed1:.4f} (low {fed1_lo:.4f}; kill below {fed0 - 0.02:.4f}); "
+          f"P(5+) {j0['pairs']['p_len_ge_5']} -> {j1['pairs']['p_len_ge_5']}")
+    print(f"early: court legal given contact {lc0:.4f} -> {lc1:.4f} (kill below {lc0 - 0.03:.4f}); court main {c0} -> {c1} "
+          f"({100 * (c1 - c0):+.1f}; kill below -5); drill v2 {v0} -> {v1} ({100 * (v1 - v0):+.1f}; kill below -5); "
+          f"move arrival min {a0} -> {a1} ({100 * (a1 - a0):+.1f}; kill below -5); court falls/episode {f1:.4f} "
+          f"(low {flo}; kill if low > 0.04 or point > 0.074)")
+    engaged = not (box1 < 0.27 and fl1 < 1.28)
+    return (engaged and own1 >= max(0.50, own0 - 0.03) and fed1 >= fed0 - 0.02 and lc1 >= lc0 - 0.03
+            and c1 >= c0 - 0.05 and v1 >= v0 - 0.05 and a1 >= a0 - 0.05 and flo <= 0.04 and f1 <= 0.074)
+
+
 def target(prefix: str, tag: str) -> bool:
     P = pair_stats(json.load(open(f"{prefix}-target.json"))["pairs"])
     try:
@@ -180,6 +215,8 @@ if __name__ == "__main__":
         sys.exit(0 if early_continuation(prefix) else 1)
     if mode == "early-weak":
         sys.exit(0 if early_weak(prefix) else 1)
+    if mode == "early-pace":
+        sys.exit(0 if early_pace(prefix) else 1)
     if mode == "m1":
         sys.exit(0 if milestone(prefix, sys.argv[3]) else 1)
     target(prefix, sys.argv[3])
