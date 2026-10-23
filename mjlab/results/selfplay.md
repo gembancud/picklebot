@@ -424,4 +424,20 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 
 **Premise read** (`ready-contact-split.json`): partner balls reached 74-76 % of the time when slow or medium (<= 11.0 m/s), and 44 % when fast (mean 11.7 m/s). Readiness at the launch made no difference.
 
-(pending)
+**Killed at the early check** (model_15900; the parent re-read on 4218711-4218714):
+
+| Measure | Parent | Run 7 | Kill line |
+|---|---|---|---|
+| **Partner-ball legal** | 55.3 % | **47.8 %** (low 47.1 %) | 52.3 % (failed) |
+| Feeder-ball legal | 81.6 % | 80.9 % | 79.6 % |
+| P(5+) | 8.7 % | 6.0 % | reported |
+| Keep-alive-box share | 22.5 % | 28.4 % | engaged |
+| Flight | 1.23 s | 1.26 s | |
+| **Ball out** | 10.54 m/s | **10.81 m/s** | |
+| Court landing x | 4.69 m | 4.91 m | |
+| Court legal given contact | 91.5 % | 90.7 % | |
+| Drill v2 | 84.0 % | 82.2 % | |
+| Lowest move arrival | 94.9 % | 96.9 % | |
+| Court falls per episode | | 3.5 % | |
+
+**Plainly:** doubling the keep-alive reward made the robots hit deeper and a little faster, not softer. The box is deep and only loosely tied to flight time. The partner's balls got harder, and partner-ball legal fell 7.5 points. Panel round 30 plans run 8.
