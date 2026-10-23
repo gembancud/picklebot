@@ -360,4 +360,20 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Benchmark:** 84.1 % +- 1 feeder-ball (the linear trend).
 - **Then back to the user.**
 
-(pending)
+**The early check passed** (model_15900; the parent re-read on 4218601-4218604):
+
+| Measure | Parent (run 5 endpoint) | Run 6 | Kill line |
+|---|---|---|---|
+| Partner-ball legal | 55.4 % | 55.1 % (low 54.5 %) | 52.4 % |
+| Feeder-ball legal | 81.3 % | 80.7 % (low 80.2 %) | 79.3 % |
+| P(5+) | 8.8 % | 8.7 % | reported |
+| Court main | 78.3 % | 78.3 % | -5 points |
+| Drill v2 | 85.1 % | 84.1 % | -5 points |
+| Lowest move arrival | 96.1 % | 97.5 % | -5 points |
+| Court falls per episode | | **4.0 %** (Wilson low 2.8 %) | met |
+
+- **Motion's reported tripwire (3.5 %) is exceeded.** The kill line is not.
+- The feeder families moved by -2.6 to +1.3 points; none of the guards fired.
+- **Plainly:** with the stale stance reward off, nothing has moved after a third of the run. The run continues to its fixed endpoint.
+
+(endpoint pending)
