@@ -3974,3 +3974,21 @@ The (b) voters pre-committed to switch to (a) if ready receivers reached the bal
 ## D-146 - Rally run 8 killed; options put to the user (panel round 31, 2026-10-24)
 
 Rally run 8 (D-145) was killed at the early check by the pre-registered feeder line. Feeder-ball legal read 81.2 -> 78.4 %, below the 79.2 % line, while partner-ball legal rose 54.2 -> 64.7 % and P(5+) 8.4 -> 13.9 %. Partner-ball legal now clears its M1 bar, so the only M1 blocker is feeder-ball legal (85 %; best ever 81.9 %). As pre-registered, the loop goes back to the user. The panel's ranked options are in round 31: (1) run 9 = the ceiling on returns of partner balls only (3/5); (2) the controller option; (3) a run over 6 h. Nothing is launched until the user chooses.
+
+
+## D-147 - The loop presses on with the panel's decisions (the user, 2026-10-24)
+
+After D-146 put run 8's options to the user, the user said: "please don't hold it up on my decision when it's clear what the panel is suggesting ... get back to me [when] you've either reached the threshold that I was originally pointing out, or if the panel has voted to put a stop ... I wouldn't really be afraid to train more ... please continue with whatever the panel is deciding."
+
+- The loop no longer stops for a next run, a plateau or a longer run. The panel decides and the loop presses on. D-145's and D-146's "back to the user" rules are withdrawn.
+- The 6 h run cap (D-137) is lifted. Run length is the panel's choice; every run still has a fixed endpoint and an early kill at about 30 %.
+- The loop goes back to the user only when the target (rally-target.md, D-134) is met, or when the panel votes to stop. M1 videos are sent as progress updates without stopping.
+- Still the user's: sudo or system changes, Unity or the feat/hierarchical-control checkout, deleting anything, downloads, final seeds. The charter (docs/PANEL.md) is updated.
+
+## D-148 - Rally run 9: the pace ceiling on partner-ball returns only (panel round 31, 2026-10-24)
+
+The panel's majority first choice in round 31 (RL, architecture, experiment design), taken under D-147. `ball_out_over` gains `partner_only` (gated by pairs.handed, the ball in play was handed over by the partner), so feeder-ball returns are exempt. Task `...-Coop-Moves-Weak-PaceOwn-G1`, the one change against run 8, from rally-05 model_15000 with its optimizer, training seed 87, 3,200 iterations, 6 h cap (the panel's choice).
+
+- **Early kill at model_15900** (`rally_check.py early-ceiling-own`, parent re-read on 4218911-4218914): D-145's lines unchanged, plus any feeder-ball family losing more than 5 points of contact (experiment design). Run 8 would have failed this guard too (reach_deep -11.4).
+- **Endpoint:** the M1 read on 4218942, read once. **Success:** partner-ball legal >= 58.2 % with a bootstrap low > 55.2 %, and feeder-ball legal >= 81.9 % (run 5's M1 read: no loss).
+- **Smoke** (`scripts/rally_run09_smoke.sh`, 40 iterations): the gated term fires on partner-ball returns (about -0.001 to -0.005 per episode, against -0.005 at 3 iterations for run 8's ungated term).

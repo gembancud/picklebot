@@ -2000,3 +2000,24 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace(),
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace(True), rl_cfg=_s5e_rl_cfg())
+
+
+
+# Rally run 9 (D-148, panel round 31): rally run 8's pace ceiling on returns of a partner's ball only (pairs.handed);
+# feeder-ball returns are exempt. Run 8 raised partner-ball legal 54.2 -> 64.7 % but cost feeder-ball legal 2.8 points,
+# mostly lost contacts on hard, deep and reach feeds, whose returns come off fast whatever the swing (the penalty
+# cancelled the contact reward on them). One change against run 8; parent rally-05 model_15000.
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE_OWN = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-PaceOwn-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace_own(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace(play)
+    cfg.rewards["ball_out_over"] = _dc.replace(cfg.rewards["ball_out_over"], params={"partner_only": True})
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE_OWN,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace_own(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace_own(True), rl_cfg=_s5e_rl_cfg())

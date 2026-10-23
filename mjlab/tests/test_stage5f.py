@@ -1151,3 +1151,35 @@ def test_d145_ball_out_over_ramp_and_task():
     assert all(a.rewards[k] == b.rewards[k] for k in ka)
     t = b.rewards["ball_out_over"]
     assert t.func is rs.ball_out_over and t.weight == -50.0 == -a.rewards["paddle_contact"].weight
+
+
+
+def test_d148_ball_out_over_partner_only():
+    """D-148: with partner_only the pace ceiling fires only where pairs.handed (a partner's ball), is 0 without pairs;
+    rally run 9's task differs from run 8's only in that flag."""
+    import dataclasses
+    import types
+    import torch
+    import picklebot_mj.tasks as T
+    from picklebot_mj.tasks import return_stand as rs
+    v = torch.tensor([12.0, 12.0, 10.5, 7.0])
+    fake = types.SimpleNamespace(hit_out_vel=torch.stack([v, torch.zeros(4), torch.zeros(4)], -1),
+                                 hit_now=torch.ones(4, dtype=torch.bool),
+                                 pairs=types.SimpleNamespace(handed=torch.tensor([True, False, True, True])))
+    old = rs._term
+    rs._term = lambda env: fake
+    try:
+        assert torch.allclose(rs.ball_out_over(None), torch.tensor([1.0, 1.0, 0.5, 0.0]))
+        assert torch.allclose(rs.ball_out_over(None, partner_only=True), torch.tensor([1.0, 0.0, 0.5, 0.0]))
+        fake.pairs = None
+        assert torch.allclose(rs.ball_out_over(None, partner_only=True), torch.zeros(4))
+    finally:
+        rs._term = old
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace_own()
+    ba, bb = a.actions["ball"], b.actions["ball"]
+    assert not [f.name for f in dataclasses.fields(ba) if getattr(ba, f.name) != getattr(bb, f.name)]
+    assert list(a.rewards) == list(b.rewards)
+    assert [k for k in a.rewards if a.rewards[k] != b.rewards[k]] == ["ball_out_over"]
+    assert b.rewards["ball_out_over"].params == {"partner_only": True}
+    assert b.rewards["ball_out_over"].weight == a.rewards["ball_out_over"].weight == -50.0

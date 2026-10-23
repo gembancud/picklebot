@@ -1226,12 +1226,17 @@ def return_shaping(env, margin: float = 0.0) -> torch.Tensor:
     return return_quality(t.hit_out_pos, t.hit_out_vel, margin) * t.hit_now.float()
 
 
-def ball_out_over(env, v0: float = 9.5, span: float = 2.0) -> torch.Tensor:
+def ball_out_over(env, v0: float = 9.5, span: float = 2.0, partner_only: bool = False) -> torch.Tensor:
     """D-145 (pace ceiling): one-shot at the first legal contact: clamp((|ball out| - v0) / span, 0, 1), used with a
     negative weight (round 30: the partner's fastest shots, above about 11 m/s, are reached far less often). Must be
-    read before legal_return, which clears the step flags."""
+    read before legal_return, which clears the step flags. partner_only (D-148): only on returns of a partner's ball
+    (pairs.handed; feeder-ball returns are exempt, and the term is 0 without pairs)."""
     t = _term(env)
-    return ((t.hit_out_vel.norm(dim=-1) - v0) / span).clamp(0.0, 1.0) * t.hit_now.float()
+    r = ((t.hit_out_vel.norm(dim=-1) - v0) / span).clamp(0.0, 1.0) * t.hit_now.float()
+    if partner_only:
+        pairs = getattr(t, "pairs", None)
+        r = r * pairs.handed.float() if pairs is not None else torch.zeros_like(r)
+    return r
 
 
 def rally_bonus(env, cap: int = 10) -> torch.Tensor:

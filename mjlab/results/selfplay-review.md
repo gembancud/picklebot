@@ -265,3 +265,5 @@ Run 8 = D-145.
 3. A longer run.
 
 Waiting for the user (D-145: no run 9 without the user).
+
+**Addendum (2026-10-24):** the user answered: press on with the panel's decisions, no 6 h cap, back to the user only at the target or a panel stop vote (D-147). So run 9 = the majority first choice, the ceiling on partner-ball returns only, with experiment design's added family guard (D-148).

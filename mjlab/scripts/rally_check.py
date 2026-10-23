@@ -197,6 +197,17 @@ def early_ceiling(prefix: str) -> bool:
             and flo <= 0.04 and f1 <= 0.074)
 
 
+def early_ceiling_own(prefix: str) -> bool:
+    """Rally run 9 (D-148): early_ceiling's lines unchanged, plus experiment design's guard: no feeder-ball family in
+    the pairs read loses more than 5 points of contact against the parent."""
+    ok = early_ceiling(prefix)
+    f0 = json.load(open(f"{prefix}-parent-early-pairs.json"))["per_family"]
+    f1 = json.load(open(f"{prefix}-early-pairs.json"))["per_family"]
+    worst = min(((f1[k]["contact"] - f0[k]["contact"], k) for k in f0 if k in f1), default=(0.0, None))
+    print(f"early: worst feeder-family contact change {100 * worst[0]:+.1f} points ({worst[1]}; kill below -5)")
+    return ok and worst[0] >= -0.05
+
+
 def target(prefix: str, tag: str) -> bool:
     P = pair_stats(json.load(open(f"{prefix}-target.json"))["pairs"])
     try:
@@ -259,6 +270,8 @@ if __name__ == "__main__":
         sys.exit(0 if early_pace(prefix) else 1)
     if mode == "early-ceiling":
         sys.exit(0 if early_ceiling(prefix) else 1)
+    if mode == "early-ceiling-own":
+        sys.exit(0 if early_ceiling_own(prefix) else 1)
     if mode == "m1":
         sys.exit(0 if milestone(prefix, sys.argv[3]) else 1)
     target(prefix, sys.argv[3])

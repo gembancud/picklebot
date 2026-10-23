@@ -34,7 +34,7 @@ A routine continuation that the panel already agreed on does not need a new roun
 ## Standing rules (unchanged)
 
 - One change per run.
-- Each run is at most 6 h (the user's approval on 2026-10-21, D-137; it was 2 h), with a fixed endpoint and an early kill check at about 30 %.
+- Each run has a fixed endpoint and an early kill check at about 30 %. The run length is the panel's choice: the user said on 2026-10-24 (D-147) "I wouldn't really be afraid to train more" (it was 6 h under D-137, 2 h before).
 - Development seeds only, recorded in the seed ledger.
 - Never loosen a threshold. A gate changes only through a decision that names the premise that changed.
 - Report failures as plainly as successes.
@@ -45,5 +45,11 @@ A routine continuation that the panel already agreed on does not need a new roun
 - Unity or the `feat/hierarchical-control` checkout;
 - deleting anything;
 - any download;
-- any run over 6 h;
 - using final seeds.
+
+## Autonomy (D-147, the user on 2026-10-24)
+
+The user: "please don't hold it up on my decision when it's clear what the panel is suggesting ... get back to me [when] you've either reached the threshold ... or if the panel has voted to put a stop ... please continue with whatever the panel is deciding."
+- The loop no longer goes back to the user for a next run, a longer run or a plateau. The panel decides and the loop presses on.
+- The loop goes back to the user only when the target (rally-target.md) is met, when the panel votes to stop, or before one of the items above that are still the user's to decide.
+- M1 videos are still sent as progress updates without stopping.

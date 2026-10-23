@@ -472,3 +472,11 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - The feeder-ball drop is mostly missed contacts on hard feeds: reach_deep contact 56 -> 45 %, fast 76 -> 71 %, reach_backhand 80 -> 75 %, low 82 -> 78 %; drop and reach_short improved.
 
 **Plainly:** slowing the shots worked on its target. The partner's balls got slower, partner-ball legal rose 10.5 points (the biggest move in eight runs), and P(5+) rose by two thirds. But feeder balls (the rally's first ball) lost 2.8 points, past the pre-registered line, so the run was killed. Back to the user (D-145); panel round 31 ranks the options.
+
+## Run 9: the pace ceiling on partner-ball returns only (D-148)
+
+`scripts/rally_run09.sh`.
+- **Task:** Coop-Moves-Weak-PaceOwn: run 8's ceiling, gated by `pairs.handed`, so feeder-ball returns are exempt. From rally-05 model_15000 with its optimizer.
+- **Training:** training seed 87, no critic warm-up, 6 h cap (the panel's choice; D-147 lifted the user's cap).
+- **Checks:** early kill at model_15900 (`rally_check.py early-ceiling-own`: D-145's lines plus no feeder family losing more than 5 points of contact). Endpoint: M1 on 4218942, read once.
+- **Success:** partner-ball >= 58.2 % (low > 55.2 %) and feeder-ball >= 81.9 %.
