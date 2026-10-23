@@ -480,3 +480,30 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Training:** training seed 87, no critic warm-up, 6 h cap (the panel's choice; D-147 lifted the user's cap).
 - **Checks:** early kill at model_15900 (`rally_check.py early-ceiling-own`: D-145's lines plus no feeder family losing more than 5 points of contact). Endpoint: M1 on 4218942, read once.
 - **Success:** partner-ball >= 58.2 % (low > 55.2 %) and feeder-ball >= 81.9 %.
+
+**Killed at the early check** (model_15900; the parent re-read on 4218911-4218914). The mechanism did not engage:
+
+| Measure | Parent | Run 9 | Kill line |
+|---|---|---|---|
+| Pair ball out | 10.56 m/s | **10.56 m/s** | <= 10.16 (**failed**) |
+| Share above 11 m/s | 35.4 % | 36.8 % | <= 27.4 % (**failed**) |
+| Partner-ball legal | 55.0 % | 52.3 % (low 51.6 %) | 52.0 % (pass) |
+| Feeder-ball legal | 81.5 % | 81.1 % (low 80.6 %) | 79.5 % (pass) |
+| P(5+) | 8.8 % | 7.7 % | reported |
+| Court legal given contact | 92.7 % | 91.0 % | 89.7 % |
+| Court main | 77.7 % | 75.2 % | -5 points |
+| Worst feeder-family contact | | -4.0 (reach_deep) | -5 points |
+| Court falls per episode | | 2.0 % | 4 % |
+
+- In training, the gated penalty averaged -0.009 per episode, against -0.046 for run 8's ungated one (paddle_contact 0.138 in both). Partner-ball returns are a small share of the balls in training, where most feeds are feeder balls and drill episodes, and the policy cannot see which kind of ball it is playing.
+
+**Plainly:** limiting the penalty to partner balls made it about five times weaker, too weak to change anything. Shots stayed as fast as before, and partner-ball legal fell a little. Panel round 32 plans run 10.
+
+## Run 10: run 8's pace ceiling at half the weight (D-149)
+
+`scripts/rally_run10.sh`.
+- **Task:** Coop-Moves-Weak-Pace25: -25 x clamp((|ball out| - 9.5) / 2, 0, 1) at the first legal contact, on all returns. From rally-05 model_15000 with its optimizer.
+- **Training:** training seed 88, 6,400 iterations (about 13 h).
+- **Checks:** early kill at model_16900 (`early-ceiling-own`). Endpoint: model_21400, M1 read on 4219242, read once.
+- **Smoke:** the term was 0.22 of paddle_contact (run 9: 0.05; run 8 in training: 0.33).
+- **Success:** partner-ball >= 58.2 % (low > 55.2 %) and feeder-ball >= 81.9 %.

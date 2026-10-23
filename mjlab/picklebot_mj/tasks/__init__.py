@@ -2021,3 +2021,25 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace_own(),
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace_own(True), rl_cfg=_s5e_rl_cfg())
+
+
+
+# Rally run 10 (D-149, panel round 32): rally run 8's ungated pace ceiling at half the weight (-50 -> -25). Run 8 at -50
+# raised partner-ball legal 54.2 -> 64.7 % but cost feeder-ball legal 2.8 points, mostly lost contacts on hard feeds,
+# whose returns come off fast whatever the swing: there the penalty cancelled the +50 contact reward. At -25 every
+# contact still nets at least +25. Run 9's gate (partner balls only) diluted the term about 5x and did not engage.
+# One change against run 8; parent rally-05 model_15000; 6,400 iterations (the panel's choice, D-147).
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25 = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace(play)
+    cfg.rewards["ball_out_over"] = _dc.replace(cfg.rewards["ball_out_over"], weight=0.5 * BALL_OUT_OVER_WEIGHT)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25(True), rl_cfg=_s5e_rl_cfg())

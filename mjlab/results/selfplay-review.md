@@ -267,3 +267,27 @@ Run 8 = D-145.
 Waiting for the user (D-145: no run 9 without the user).
 
 **Addendum (2026-10-24):** the user answered: press on with the panel's decisions, no 6 h cap, back to the user only at the target or a panel stop vote (D-147). So run 9 = the majority first choice, the ceiling on partner-ball returns only, with experiment design's added family guard (D-148).
+
+## Round 32 - run 9 killed (no engagement); run 10 (2026-10-24)
+
+**Brief:** run 9 (the ceiling on partner-ball returns only) did not engage. Ball out stayed at 10.56 m/s and the share above 11 m/s rose 35.4 -> 36.8 %. In training the gated term was about 5 times weaker than run 8's (-0.009 against -0.046).
+
+**Correction check (5/5):**
+- The kill is right. The code worked, but the premise was wrong. Partner balls are a small share of training balls, and the policy cannot see which kind it is playing, so the gate only diluted the signal.
+- **Experiment design:** run 9 doubles as a null run from the same parent (feeder -0.4, partner -2.7). So run 8's +10.5 / -2.8 is a real effect with a real cost.
+- **Architecture, our own miss:** run 9's smoke already showed a small term. From now on, the smoke compares a new term's size with its parent's before launch.
+
+**Votes:**
+
+| Member | Option | Length |
+|---|---|---|
+| Motion | (a) run 8's ceiling at -25 | 6,400 iterations |
+| RL | (a) | 3,200 |
+| Experiment design | (a) | 6,400 |
+| Coach | (b) ramp 10.5-12.5 m/s at -50 | 4,500 |
+| Architecture | (b) | 3,200 |
+
+- **Run 10 = (a), 3/5.** At -25, every contact still nets at least +25 on hard feeds.
+- **Length:** no majority. Both forms are the same code, so the tie goes to experiment design: 6,400 iterations, early check at model_16900.
+- **Not stopping (5/5).**
+- **RL, experiment design, architecture:** no pace ceiling can lift feeder-ball legal to 85 % on its own. After run 10, the panel must name a lever aimed at feeder balls. Experiment design pre-registered that if run 10 and the next run both end with feeder-ball legal at or below 81.9 %, the next step is the controller option or a stop vote.

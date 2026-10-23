@@ -1183,3 +1183,18 @@ def test_d148_ball_out_over_partner_only():
     assert [k for k in a.rewards if a.rewards[k] != b.rewards[k]] == ["ball_out_over"]
     assert b.rewards["ball_out_over"].params == {"partner_only": True}
     assert b.rewards["ball_out_over"].weight == a.rewards["ball_out_over"].weight == -50.0
+
+
+
+def test_d149_pace25_task_halves_only_the_ceiling():
+    """D-149: rally run 10's task is run 8's with the ball_out_over weight halved (-50 -> -25) and nothing else."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25()
+    ba, bb = a.actions["ball"], b.actions["ball"]
+    assert not [f.name for f in dataclasses.fields(ba) if getattr(ba, f.name) != getattr(bb, f.name)]
+    assert list(a.rewards) == list(b.rewards)
+    assert [k for k in a.rewards if a.rewards[k] != b.rewards[k]] == ["ball_out_over"]
+    t = b.rewards["ball_out_over"]
+    assert t.weight == -25.0 and t.func is a.rewards["ball_out_over"].func and t.params == a.rewards["ball_out_over"].params

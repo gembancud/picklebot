@@ -3992,3 +3992,15 @@ The panel's majority first choice in round 31 (RL, architecture, experiment desi
 - **Early kill at model_15900** (`rally_check.py early-ceiling-own`, parent re-read on 4218911-4218914): D-145's lines unchanged, plus any feeder-ball family losing more than 5 points of contact (experiment design). Run 8 would have failed this guard too (reach_deep -11.4).
 - **Endpoint:** the M1 read on 4218942, read once. **Success:** partner-ball legal >= 58.2 % with a bootstrap low > 55.2 %, and feeder-ball legal >= 81.9 % (run 5's M1 read: no loss).
 - **Smoke** (`scripts/rally_run09_smoke.sh`, 40 iterations): the gated term fires on partner-ball returns (about -0.001 to -0.005 per episode, against -0.005 at 3 iterations for run 8's ungated term).
+
+
+## D-149 - Rally run 10: run 8's pace ceiling at half the weight, 6,400 iterations (panel round 32, 2026-10-24)
+
+Run 9 (D-148) was killed at its early check because it did not engage. The partner-ball gate diluted the term about 5 times (partner balls are a small share of training, and the policy cannot see which kind of ball it is playing). The panel chose (3/5: motion, RL, experiment design) run 8's ungated ceiling with the weight halved, -50 -> -25 (task `...-Coop-Moves-Weak-Pace25-G1`). At -25 a contact on a hard feed still nets at least +25, which addresses run 8's diagnosed feeder cost.
+
+- **Length:** 6,400 iterations, early check at model_16900, endpoint model_21400. There was no majority, so the tie rule gave experiment design's choice. D-147 allows longer runs; the wall cap of 18 h is only a guard.
+- **Parent:** rally-05 model_15000 with its optimizer, training seed 88.
+- **Kill lines:** D-145's and D-148's, unchanged (`rally_check.py early-ceiling-own`). **Success:** D-148's bars.
+- **Smoke check (new, architecture):** over 40 iterations the term was 0.22 of paddle_contact, against 0.05 for run 9's gate and 0.33 for run 8 in training.
+- **Seeds:** the rally allocation (4218000-4218999) is used up, so 4219200-4219999 is added; 4219000-4219199 stays stage 5F's reserved read.
+- **Pre-registered:** if run 10 and the next run both end with feeder-ball legal at or below 81.9 %, the next step is the controller option or a stop vote.
