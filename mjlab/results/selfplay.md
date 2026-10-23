@@ -451,3 +451,24 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Smoke** (`scripts/rally_run08_smoke.sh`): 3 iterations ran; the new term logs a negative reward (-0.0049 against paddle_contact +0.0073); the new diagnostic reads 10.33 m/s mean and 25.6 % above 11 m/s on a 64-env pairs read.
 - **Checks:** early kill at model_15900 (`rally_check.py early-ceiling`). Endpoint: M1 on 4218842, read once.
 - **Success:** partner-ball >= 58.2 % (bootstrap low > 55.2 %). If it stalls: back to the user.
+
+**Killed at the early check** (model_15900; the parent re-read on 4218811-4218814) by the feeder line:
+
+| Measure | Parent | Run 8 | Kill line |
+|---|---|---|---|
+| Pair ball out | 10.54 m/s | **9.95 m/s** | <= 10.14 (engaged) |
+| Share above 11 m/s | 34.7 % | **14.4 %** | <= 26.7 % (engaged) |
+| **Partner-ball legal** | 54.2 % | **64.7 %** (low 64.2 %) | 51.2 % (pass) |
+| **Feeder-ball legal** | 81.2 % | **78.4 %** (low 77.8 %) | 79.2 % (**failed**) |
+| P(5+) | 8.4 % | **13.9 %** | reported |
+| Pair contact | 74.5 % | 78.4 % | 71.5 % |
+| Court legal given contact | 91.5 % | 92.9 % | 88.5 % |
+| Court contact | 84.6 % | 83.3 % | 81.6 % |
+| Court main | 77.4 % | 77.4 % | -5 points |
+| Drill v2 | 85.4 % | 84.3 % | -5 points |
+| Lowest move arrival | 98.2 % | 98.6 % | -5 points |
+| Court falls per episode | 3.2 % | 2.7 % | 4 % low / 7.4 % point |
+
+- The feeder-ball drop is mostly missed contacts on hard feeds: reach_deep contact 56 -> 45 %, fast 76 -> 71 %, reach_backhand 80 -> 75 %, low 82 -> 78 %; drop and reach_short improved.
+
+**Plainly:** slowing the shots worked on its target. The partner's balls got slower, partner-ball legal rose 10.5 points (the biggest move in eight runs), and P(5+) rose by two thirds. But feeder balls (the rally's first ball) lost 2.8 points, past the pre-registered line, so the run was killed. Back to the user (D-145); panel round 31 ranks the options.

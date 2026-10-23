@@ -237,3 +237,31 @@ None of these would lift 19 % per shot to 96 %.
 - **If it stalls:** back to the user (5/5).
 
 Run 8 = D-145.
+
+## Round 31 - run 8 killed on the feeder line; back to the user (2026-10-24)
+
+**Brief:** run 8 (the pace ceiling) engaged strongly (ball out 10.54 -> 9.95 m/s; share above 11 m/s 34.7 -> 14.4 %). Partner-ball legal rose 54.2 -> 64.7 % and P(5+) 8.4 -> 13.9 %, but feeder-ball legal fell 81.2 -> 78.4 %, below the 79.2 % line, so the run was killed.
+
+**Correction check (5/5):**
+- The kill is right by the rules. Experiment design's court bootstrap of the difference gives -2.8 points (95 % interval -3.6 to -2.0): real, not noise.
+- **RL and experiment design, a planning error:** run 8 aimed at partner-ball legal, whose M1 bar (50 %) was already met. The M1 blocker is feeder-ball legal (85 %), and nothing aimed at it.
+- **Likely cause (RL, motion, architecture, experiment design):** the -50 penalty cancels the +50 contact reward on hard, deep and reach feeds, whose returns come off fast whatever the swing. Paddle speed fell everywhere (6.55 -> 6.34 m/s), and second-bounce endings rose (8,525 -> 11,122). Repositioning for shorter partner balls is a possible second cause: the court drill lost only 1.3 points of contact.
+- **Coach's option (a ramp from the larger of 9.5 m/s and the incoming speed) is close to a no-op:** the mean incoming speed at contact is 3.9-4.1 m/s, so the ramp would almost always still start at 9.5 m/s.
+
+**Options to put to the user (first choices):**
+
+| Option | First choice |
+|---|---|
+| Ceiling on returns of partner balls only (`pairs.handed` gate; about 3 lines) | RL, architecture, experiment design |
+| Weight -25 | motion |
+| Charge only the added pace | coach |
+
+- **Second choice:** the controller option (RL, coach, experiment design; motion and architecture third).
+- **A run over 6 h:** last for four members. Architecture ranks it second, to test an early-training transient.
+
+**Recommendation to the user (majority):**
+1. Run 9 = the ceiling on partner-ball returns only, from rally-05 model_15000, kill lines of D-145 unchanged. Additions: kill if any feeder family loses more than 5 points of contact (experiment design). Endpoint success also needs feeder-ball legal at or above the parent (experiment design; RL: parent + 2).
+2. The controller option.
+3. A longer run.
+
+Waiting for the user (D-145: no run 9 without the user).

@@ -3969,3 +3969,8 @@ The (b) voters pre-committed to switch to (a) if ready receivers reached the bal
 **Endpoint:** the M1 read on 4218842, read once. **Success:** partner-ball legal >= 58.2 % with a bootstrap low > 55.2 %.
 
 **If it stalls:** back to the user (the controller option or runs over 6 h), as D-144 says. No run 9 without the user.
+
+
+## D-146 - Rally run 8 killed; options put to the user (panel round 31, 2026-10-24)
+
+Rally run 8 (D-145) was killed at the early check by the pre-registered feeder line. Feeder-ball legal read 81.2 -> 78.4 %, below the 79.2 % line, while partner-ball legal rose 54.2 -> 64.7 % and P(5+) 8.4 -> 13.9 %. Partner-ball legal now clears its M1 bar, so the only M1 blocker is feeder-ball legal (85 %; best ever 81.9 %). As pre-registered, the loop goes back to the user. The panel's ranked options are in round 31: (1) run 9 = the ceiling on returns of partner balls only (3/5); (2) the controller option; (3) a run over 6 h. Nothing is launched until the user chooses.
