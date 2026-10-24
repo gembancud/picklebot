@@ -4004,3 +4004,15 @@ Run 9 (D-148) was killed at its early check because it did not engage. The partn
 - **Smoke check (new, architecture):** over 40 iterations the term was 0.22 of paddle_contact, against 0.05 for run 9's gate and 0.33 for run 8 in training.
 - **Seeds:** the rally allocation (4218000-4218999) is used up, so 4219200-4219999 is added; 4219000-4219199 stays stage 5F's reserved read.
 - **Pre-registered:** if run 10 and the next run both end with feeder-ball legal at or below 81.9 %, the next step is the controller option or a stop vote.
+
+
+## D-150 - Rally run 11: a feeder-ball bonus on the five weakest families (panel round 33, 2026-10-24)
+
+Rally run 10 (D-149) ended at partner-ball 63.1 %, feeder-ball 80.1 % (it missed its 81.9 % line) and P(5+) 13.3 % (best yet). D-149 required run 11 to be aimed at feeder balls. The panel chose 3/5 (RL, motion, architecture) a training-signal lever over a heavier practice mix (coach, experiment design).
+
+- **Change:** `feeder_family_return`, a one-shot +50 (the paddle_contact weight) on a legal return of a feeder ball whose family is reach_deep, cross_backhand, fast, reach_backhand or backhand. The new flag `feeder_return_now` is set in the pair block from h0, the ball type before the pair update, so a feeder-ball return that the partner volleys back still counts. Task `...-Weak-Pace25-FeedBonus-G1`: run 10's task plus that term, read before legal_return.
+- **Parent:** rally-10 model_21399 with its optimizer, training seed 89, 6,400 iterations.
+- **Early kill at model_23300** (`rally_check.py early-feedbonus`, parent re-read on 4219311-4219314): D-145's and D-148's lines without the pace engagement check, plus a kill if the five families' combined feeder-ball legal is not up.
+- **Endpoint:** the M1 read on 4219342, read once. **Success:** feeder-ball legal >= 81.9 % with a court-bootstrap low > 80.1 %, partner-ball legal >= 58.2 %, sides within 3 points, court falls <= 4 %.
+- **Smoke:** over 40 iterations the term was 0.26 of paddle_contact.
+- **D-149 still applies:** if feeder-ball legal ends at or below 81.9 % again, the next step is the controller option or a stop vote.

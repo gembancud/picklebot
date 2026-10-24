@@ -157,7 +157,7 @@ def early_pace(prefix: str) -> bool:
             and c1 >= c0 - 0.05 and v1 >= v0 - 0.05 and a1 >= a0 - 0.05 and flo <= 0.04 and f1 <= 0.074)
 
 
-def early_ceiling(prefix: str) -> bool:
+def early_ceiling(prefix: str, engage_check: bool = True) -> bool:
     """Rally run 8 (D-145, experiment design's lines): the early-kill read against the parent's reads on the same seeds."""
     ld = lambda k: json.load(open(f"{prefix}-{k}.json"))  # noqa: E731
     v0, v1 = ld("parent-early-v2")["drill_v2"]["per_shot_p"], ld("early-v2")["drill_v2"]["per_shot_p"]
@@ -191,7 +191,7 @@ def early_ceiling(prefix: str) -> bool:
           f"{c0} -> {c1} ({100 * (c1 - c0):+.1f}; kill below -5); drill v2 {v0} -> {v1} ({100 * (v1 - v0):+.1f}; kill below "
           f"-5); move arrival min {a0} -> {a1} ({100 * (a1 - a0):+.1f}; kill below -5); court falls/episode {f1:.4f} "
           f"(low {flo}; kill if low > 0.04 or point > 0.074)")
-    engaged = s1 <= s0 - 0.4 or h1 <= h0 - 0.08
+    engaged = s1 <= s0 - 0.4 or h1 <= h0 - 0.08 or not engage_check
     return (engaged and own1 >= max(0.50, own0 - 0.03) and fed1 >= fed0 - 0.02 and lc1 >= lc0 - 0.03
             and k1 >= k0 - 0.03 and pk1 >= pk0 - 0.03 and c1 >= c0 - 0.05 and v1 >= v0 - 0.05 and a1 >= a0 - 0.05
             and flo <= 0.04 and f1 <= 0.074)
@@ -206,6 +206,25 @@ def early_ceiling_own(prefix: str) -> bool:
     worst = min(((f1[k]["contact"] - f0[k]["contact"], k) for k in f0 if k in f1), default=(0.0, None))
     print(f"early: worst feeder-family contact change {100 * worst[0]:+.1f} points ({worst[1]}; kill below -5)")
     return ok and worst[0] >= -0.05
+
+
+FEEDER_BONUS_FAMILIES = ("reach_deep", "cross_backhand", "fast", "reach_backhand", "backhand")
+
+
+def early_feedbonus(prefix: str) -> bool:
+    """Rally run 11 (D-150): early_ceiling's lines without its pace engagement check (the parent already has the
+    ceiling), D-148's family-contact guard, and the new engagement check (architecture): the five bonus families'
+    combined feeder-ball legal in the pairs read is up on the parent."""
+    ok = early_ceiling(prefix, engage_check=False)
+    f0 = json.load(open(f"{prefix}-parent-early-pairs.json"))["per_family"]
+    f1 = json.load(open(f"{prefix}-early-pairs.json"))["per_family"]
+    worst = min(((f1[k]["contact"] - f0[k]["contact"], k) for k in f0 if k in f1), default=(0.0, None))
+    legal = lambda f: sum(f[k]["legal_return"] * f[k]["episodes"] for k in FEEDER_BONUS_FAMILIES) / max(  # noqa: E731
+        sum(f[k]["episodes"] for k in FEEDER_BONUS_FAMILIES), 1)
+    g0, g1 = legal(f0), legal(f1)
+    print(f"early: worst feeder-family contact change {100 * worst[0]:+.1f} points ({worst[1]}; kill below -5)")
+    print(f"early: bonus families' feeder-ball legal {g0:.4f} -> {g1:.4f} ({100 * (g1 - g0):+.1f}; kill if not up)")
+    return ok and worst[0] >= -0.05 and g1 > g0
 
 
 def target(prefix: str, tag: str) -> bool:
@@ -272,6 +291,8 @@ if __name__ == "__main__":
         sys.exit(0 if early_ceiling(prefix) else 1)
     if mode == "early-ceiling-own":
         sys.exit(0 if early_ceiling_own(prefix) else 1)
+    if mode == "early-feedbonus":
+        sys.exit(0 if early_feedbonus(prefix) else 1)
     if mode == "m1":
         sys.exit(0 if milestone(prefix, sys.argv[3]) else 1)
     target(prefix, sys.argv[3])

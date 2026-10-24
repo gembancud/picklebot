@@ -1198,3 +1198,34 @@ def test_d149_pace25_task_halves_only_the_ceiling():
     assert [k for k in a.rewards if a.rewards[k] != b.rewards[k]] == ["ball_out_over"]
     t = b.rewards["ball_out_over"]
     assert t.weight == -25.0 and t.func is a.rewards["ball_out_over"].func and t.params == a.rewards["ball_out_over"].params
+
+
+
+def test_d150_feeder_family_return():
+    """D-150: the feeder bonus fires on a feeder-ball legal return of a listed family only; run 11's task is run 10's
+    plus that term (+50) just before legal_return."""
+    import dataclasses
+    import types
+    import torch
+    import picklebot_mj.tasks as T
+    from picklebot_mj.feeds import FAMILY_NAMES
+    from picklebot_mj.tasks import return_stand as rs
+    fam = torch.tensor([FAMILY_NAMES.index(n) for n in ("reach_deep", "easy_forehand", "fast", "backhand")])
+    fake = types.SimpleNamespace(family=fam, feeder_return_now=torch.tensor([True, True, False, True]))
+    old = rs._term
+    rs._term = lambda env: fake
+    try:
+        r = rs.feeder_family_return(None, families=T.FEEDER_BONUS_FAMILIES)
+    finally:
+        rs._term = old
+    assert torch.equal(r, torch.tensor([1.0, 0.0, 0.0, 1.0]))
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_feed()
+    ba, bb = a.actions["ball"], b.actions["ball"]
+    assert not [f.name for f in dataclasses.fields(ba) if getattr(ba, f.name) != getattr(bb, f.name)]
+    ka, kb = list(a.rewards), list(b.rewards)
+    assert kb[:-2] == ka[:-1] and kb[-2:] == ["feeder_family_return", "legal_return"] and ka[-1] == "legal_return"
+    assert all(a.rewards[k] == b.rewards[k] for k in ka)
+    t = b.rewards["feeder_family_return"]
+    assert t.func is rs.feeder_family_return and t.weight == 50.0 == a.rewards["paddle_contact"].weight
+    assert set(t.params["families"]) <= set(FAMILY_NAMES) and len(t.params["families"]) == 5

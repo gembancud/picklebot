@@ -389,6 +389,7 @@ class BallPhysicsAction(ActionTerm):
         self.flight_t = torch.zeros(n, device=dev)
         self.keep_alive_now = torch.zeros(n, device=dev)
         self.partner_return_now = torch.zeros(n, dtype=torch.bool, device=dev)  # D-137 (pair mode)
+        self.feeder_return_now = torch.zeros(n, dtype=torch.bool, device=dev)  # D-150: a legal return of a feeder ball
 
     # ActionTerm API ---------------------------------------------------------------
     @property
@@ -949,6 +950,9 @@ class BallPhysicsAction(ActionTerm):
             handed = mirror_ball_states(torch.cat([self.ball.pos, self.ball.vel, self.ball.spin], -1))[self.pairs.partner]
             early = self._credit_early(recv)
             self._credit_partner(over, early, h0, live0)
+            # D-150: a legal return (landed, or volleyed back early) of a feeder ball: h0 is the ball type before this
+            # step's pair update, which marks the hitter's ball as handed when the partner volleys it back
+            self.feeder_return_now |= self.return_now & ~h0
             self._handoff = recv
             fire = fire | recv
         else:
@@ -1016,6 +1020,7 @@ class BallPhysicsAction(ActionTerm):
         self.placement_now.zero_()
         self.keep_alive_now.zero_()
         self.partner_return_now[:] = False
+        self.feeder_return_now[:] = False
         self.cross_now[:] = False
         if self.ready is not None:
             self.ready.consume()
@@ -1268,6 +1273,14 @@ def partner_return(env) -> torch.Tensor:
     """D-137 (pair mode): one-shot to the hitter when its partner legally returns the ball it hit (cooperative credit).
     Must be read before legal_return."""
     return _term(env).partner_return_now.float()
+
+
+def feeder_family_return(env, families: tuple = ()) -> torch.Tensor:
+    """D-150 (pair mode): one-shot on a legal return of a feeder ball (not a partner's hand-off) whose feed family is
+    in `families`; 0 without pairs. Must be read before legal_return."""
+    t = _term(env)
+    mask = torch.tensor([name in families for name in FAMILY_NAMES], device=t.family.device)
+    return (t.feeder_return_now & mask[t.family]).float()
 
 
 def legal_return(env) -> torch.Tensor:

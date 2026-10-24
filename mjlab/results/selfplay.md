@@ -545,3 +545,12 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - Clean eval battery (h5f): 6/8 Stage 5H gate items (falls <= 1 % and style not met; reported only).
 
 **Plainly:** run 10 has the longest rallies so far: one rally in eight reaches 5 shots, up from one in eleven. The partner balls are now well past their bar. The feeder ball slipped 1.8 points, missing the pre-registered success line, and is further from M1's 85 %. Most feeder misses are on deep reach, cross-court backhand and fast feeds. Panel round 33 picks run 11, aimed at feeder balls (D-149).
+
+## Run 11: a bonus on returns of the weakest feeder balls (D-150)
+
+`scripts/rally_run11.sh`.
+- **Task:** Coop-Moves-Weak-Pace25-FeedBonus: run 10's task plus +50 on a legal return of a feeder ball of reach_deep, cross_backhand, fast, reach_backhand or backhand. From rally-10 model_21399 with its optimizer.
+- **Training:** training seed 89, 6,400 iterations.
+- **Checks:** early kill at model_23300 (`early-feedbonus`). Endpoint: M1 on 4219342, read once.
+- **Smoke:** the term was 0.26 of paddle_contact over 40 iterations.
+- **Success:** feeder-ball >= 81.9 % (low > 80.1 %) and partner-ball >= 58.2 %.

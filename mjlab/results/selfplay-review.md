@@ -291,3 +291,30 @@ Waiting for the user (D-145: no run 9 without the user).
 - **Length:** no majority. Both forms are the same code, so the tie goes to experiment design: 6,400 iterations, early check at model_16900.
 - **Not stopping (5/5).**
 - **RL, experiment design, architecture:** no pace ceiling can lift feeder-ball legal to 85 % on its own. After run 10, the panel must name a lever aimed at feeder balls. Experiment design pre-registered that if run 10 and the next run both end with feeder-ball legal at or below 81.9 %, the next step is the controller option or a stop vote.
+
+## Round 33 - run 10's endpoint; run 11 aimed at feeder balls (2026-10-24)
+
+**Brief:** run 10 ended at partner-ball 63.1 %, feeder-ball 80.1 % (missed its 81.9 % line) and P(5+) 13.3 % (best yet). Feeder misses concentrate in reach_deep, cross_backhand and fast (38 % of 4,655).
+
+**Correction check (5/5):**
+- The run was fair and its miss is real (run 9's null drift was -0.4).
+- The pace ceiling still taxes hard feeds, whose returns come off fast whatever the swing (fast contact 78 -> 71 %, reach_deep 57 -> 52 %).
+- **Motion and coach:** the backhand-side gap is a skill gap (10-30 points behind the forehand mirrors at similar walking speeds). reach_deep and fast need a walk above the 1.5 m/s model cap: a likely controller limit. Both estimate that closing the backhand gap alone falls short of the 1,150 misses M1 needs.
+- **Architecture:** court_feed_prob is already 0.80, so option (b) has little room.
+
+**Votes:**
+
+| Member | Option | Form | Parent | Length |
+|---|---|---|---|---|
+| RL | (c) | +50 on contact with feeder balls of reach_deep / fast / cross_backhand | run 10 | 3,200 |
+| Motion | (c) | +50 on legal feeder-ball returns of 5 families | run 10 | 6,400 |
+| Architecture | (c) | +125 on legal feeder-ball returns of 5 families | run 10 | 6,400 |
+| Coach | (a) | heavier weak-family mix (reach_deep 3, cross_backhand 3, fast 2.5, ...) | run 10 | 6,400 |
+| Experiment design | (a) | reach_deep / cross_backhand / fast weights to 3.0 | run 10 | 6,400 |
+
+- **Run 11 = (c), 3/5:** a one-shot bonus on a legal return of a feeder ball (pairs gate) of reach_deep, cross_backhand, fast, reach_backhand or backhand (2 of the 3 (c) votes for the five families and for legal returns).
+- **Weight +50:** the size two (c) voters named. The +125 had one vote; the tie rule would go to experiment design, who voted (a).
+- **Parent:** run 10's model_21399, 5/5.
+- **Length:** 6,400 iterations, 4/5.
+- **Kill lines:** D-145's and D-148's unchanged, without the pace engagement check (the parent already has the ceiling). Added (architecture): kill if the five families' feeder-ball legal is not up at the early check. **Success:** experiment design's bar.
+- **Not stopping (5/5).** Under D-149, if run 11 also ends with feeder-ball legal at or below 81.9 %, the next step is the controller option (coach, motion, RL, architecture) or a stop vote.

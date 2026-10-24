@@ -2043,3 +2043,30 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25(),
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25(True), rl_cfg=_s5e_rl_cfg())
+
+
+
+# Rally run 11 (D-150, panel round 33): rally run 10's task (pace ceiling at -25) plus a one-shot +50 on a legal return
+# of a feeder ball in the five weakest backhand / reach / fast families. Feeder-ball legal has been flat at 77-82 % for
+# ten runs (M1 needs 85 %); at run 10's endpoint these five families held 2,391 of 4,655 feeder misses, mostly missed
+# contacts, and the pace ceiling still taxes hard feeds. One change against run 10; parent rally-10 model_21399.
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_FEED = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-FeedBonus-G1"
+FEEDER_BONUS_FAMILIES = ("reach_deep", "cross_backhand", "fast", "reach_backhand", "backhand")
+FEEDER_BONUS_WEIGHT = 50.0  # D-150: the paddle_contact weight
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_feed(play=False):
+    from picklebot_mj.tasks.return_stand import feeder_family_return
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25(play)
+    legal = cfg.rewards.pop("legal_return")
+    cfg.rewards["feeder_family_return"] = RewardTermCfg(func=feeder_family_return, weight=FEEDER_BONUS_WEIGHT,
+                                                        params={"families": FEEDER_BONUS_FAMILIES})
+    cfg.rewards["legal_return"] = legal  # last: it clears the step flags
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_FEED,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_feed(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_feed(True), rl_cfg=_s5e_rl_cfg())
