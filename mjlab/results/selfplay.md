@@ -554,3 +554,20 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Checks:** early kill at model_23300 (`early-feedbonus`). Endpoint: M1 on 4219342, read once.
 - **Smoke:** the term was 0.26 of paddle_contact over 40 iterations.
 - **Success:** feeder-ball >= 81.9 % (low > 80.1 %) and partner-ball >= 58.2 %.
+
+**Killed at the early check** (model_23300; the parent, rally-10 model_21399, re-read on 4219311-4219314). The bonus did not engage:
+
+| Measure | Parent | Run 11 | Kill line |
+|---|---|---|---|
+| **Bonus families' feeder-ball legal** | 64.6 % | **64.3 %** | must be up (**failed**) |
+| Feeder-ball legal | 80.4 % | 80.1 % (low 79.5 %) | 78.4 % |
+| Partner-ball legal | 63.2 % | 64.8 % (low 64.2 %) | 60.2 % |
+| P(5+) | 13.4 % | 14.8 % | reported |
+| Worst feeder-family contact | | -2.5 (reach_short) | -5 points |
+| Court legal given contact | 94.1 % | 92.8 % | 91.1 % |
+| Court main | 78.1 % | 75.6 % | -5 points |
+| Drill v2 | 85.2 % | 86.1 % | -5 points |
+| Lowest move arrival | 99.6 % | 99.1 % | -5 points |
+| Court falls per episode | | 3.1 % | 4 % |
+
+**Plainly:** a +50 bonus on returning the five weakest feeder balls did not move them (-0.3 points). This is the second run in a row that ends with feeder-ball legal at or below 81.9 %, so D-149 applies: the controller option or a stop vote. Panel round 34 decides.
