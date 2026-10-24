@@ -507,3 +507,41 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Checks:** early kill at model_16900 (`early-ceiling-own`). Endpoint: model_21400, M1 read on 4219242, read once.
 - **Smoke:** the term was 0.22 of paddle_contact (run 9: 0.05; run 8 in training: 0.33).
 - **Success:** partner-ball >= 58.2 % (low > 55.2 %) and feeder-ball >= 81.9 %.
+
+**Early check passed** (model_16900; the parent re-read on 4219211-4219214):
+
+| Measure | Parent | Run 10 | Kill line |
+|---|---|---|---|
+| Pair ball out | 10.55 m/s | 10.23 m/s | <= 10.15 (not met) |
+| Share above 11 m/s | 34.8 % | **22.1 %** | <= 26.8 % (engaged) |
+| **Partner-ball legal** | 55.5 % | **61.7 %** (low 61.1 %) | 52.5 % |
+| **Feeder-ball legal** | 81.1 % | **80.7 %** (low 80.2 %) | 79.1 % |
+| P(5+) | 9.0 % | **12.1 %** | reported |
+| Court legal given contact | 91.5 % | 92.4 % | 88.5 % |
+| Court contact | 84.2 % | 84.5 % | 81.2 % |
+| Pair contact | 75.2 % | 77.6 % | 72.2 % |
+| Court main | 77.0 % | 78.1 % | -5 points |
+| Drill v2 | 85.5 % | 84.4 % | -5 points |
+| Lowest move arrival | 97.4 % | 98.0 % | -5 points |
+| Worst feeder-family contact | | -4.2 (reach_deep) | -5 points |
+| Court falls per episode | | 2.9 % | 4 % |
+
+**Plainly:** half the penalty kept most of run 8's gain (partner-ball legal +6.2 points, P(5+) +3.1) and almost none of its cost (feeder-ball legal -0.4 points). Training continues to the fixed endpoint, model_21400.
+
+**Endpoint** (model_21399, the last checkpoint; the M1 and target read on 4219242, read once):
+
+| Measure | Run 5 (best before) | Run 10 | Bar |
+|---|---|---|---|
+| **Partner-ball legal** | 55.2 % | **63.1 %** (low 62.6 %) | success >= 58.2 % (met); M1 >= 50 % (met) |
+| **Feeder-ball legal** | 81.9 % | **80.1 %** (low 79.5 %) | success >= 81.9 % (**missed**); M1 >= 85 % (missed) |
+| P(3+) | 19.7 % | **24.9 %** | M2 >= 50 % |
+| **P(5+)** | 8.7 % | **13.3 %** [12.8, 13.8] | target >= 80 % |
+| Sides A / B | | 68.3 / 68.7 % | within 3 points (met) |
+| Court falls per episode | 3.1 % | 3.5 % | <= 4 % (met) |
+| Crossing hand-off P(5+) | | 7.4 % | reported |
+
+- Ball out 10.54 -> 10.14 m/s; share above 11 m/s 19.1 %; landing x 4.25 -> 3.99 m.
+- **Feeder-ball misses by family:** reach_deep 761 (legal 45.2 -> 40.7 %), cross_backhand 516 (59.1 %), fast 510 (69.7 -> 63.5 %), low 338, reach_backhand 317. The first three are 38 % of all 4,655 feeder misses. Reaching 85 % would need about 1,150 fewer misses.
+- Clean eval battery (h5f): 6/8 Stage 5H gate items (falls <= 1 % and style not met; reported only).
+
+**Plainly:** run 10 has the longest rallies so far: one rally in eight reaches 5 shots, up from one in eleven. The partner balls are now well past their bar. The feeder ball slipped 1.8 points, missing the pre-registered success line, and is further from M1's 85 %. Most feeder misses are on deep reach, cross-court backhand and fast feeds. Panel round 33 picks run 11, aimed at feeder balls (D-149).
