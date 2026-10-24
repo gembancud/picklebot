@@ -979,6 +979,21 @@ RES_BASE = str(Path(__file__).resolve().parents[2] / "artifacts" / "train" / "lo
                / "2026-10-16_05-35-35_s5c-18-merge17" / "model_32874.pt")
 
 
+LEG_R = 0.1  # D-152: leg-joint residual range (rad), as the right wrist's wrist_r
+
+
+def _leg_residual(cfg, leg_r: float = LEG_R):
+    """D-152: give the residual executor 12 leg-joint residuals; the last-action observation keeps the base 35 columns."""
+    import dataclasses
+    from picklebot_mj.tasks import latent_reach as _lr
+    cfg.actions["latent"] = dataclasses.replace(cfg.actions["latent"], leg_r=leg_r)
+    for group in cfg.observations.values():
+        for name, term in list(group.terms.items()):
+            if term.func is _lr.mdp.last_action or term.func is _lr.last_action_base:
+                group.terms[name] = dataclasses.replace(term, func=_lr.last_action_base)
+    return cfg
+
+
 def _residualize(cfg, lam_r: float = 1.0, base: str | None = None):
     """Replace a lambda-3 task's latent action term by the residual around `base` (default RES_BASE, D-086)."""
     lt = cfg.actions["latent"]
@@ -991,6 +1006,8 @@ def _residualize(cfg, lam_r: float = 1.0, base: str | None = None):
                                   lam_r=lam_r, wrist_r=0.1)
     cfg.actions = {"latent": res, "ball": cfg.actions["ball"]}
     cfg.rewards["latent_prior"] = RewardTermCfg(func=residual_prior_nll, weight=-0.05)
+    if float(os.environ.get("PICKLEBOT_LEG_R", "0")) > 0:  # D-152: evaluation tasks for leg-residual checkpoints
+        _leg_residual(cfg, float(os.environ["PICKLEBOT_LEG_R"]))
     return cfg
 
 
@@ -2070,3 +2087,24 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_feed(),
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_feed(True), rl_cfg=_s5e_rl_cfg())
+
+
+
+# Rally run 12 (D-152, round 34 e1 rule): rally run 10's task with 12 leg-joint residuals (+-0.1 rad) added to the
+# frozen latent controller's output, as the right wrist already has. The e1 read (results/feeder-speed-envelope.json)
+# met the pre-registered controller-limit rule: reach_deep and fast feeder misses peak at 1.70 m/s (p90) and still end
+# 0.64 m short (median); feeder balls that need a move to the left are returned 36 % of the time, back 52 %, against
+# 92 % forward and 87 % right. Parent rally-10 model_21399 with 12 zero output rows (scripts/leg_residual_init.py).
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LEGRES = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LegRes-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres(play=False):
+    return _leg_residual(_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25(play))
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LEGRES,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres(True),
+                    rl_cfg=_s5e_rl_cfg())

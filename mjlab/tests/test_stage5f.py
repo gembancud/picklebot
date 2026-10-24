@@ -1229,3 +1229,26 @@ def test_d150_feeder_family_return():
     t = b.rewards["feeder_family_return"]
     assert t.func is rs.feeder_family_return and t.weight == 50.0 == a.rewards["paddle_contact"].weight
     assert set(t.params["families"]) <= set(FAMILY_NAMES) and len(t.params["families"]) == 5
+
+
+
+def test_d152_leg_residual_task():
+    """D-152: run 12's task is run 10's with leg_r = 0.1 on the latent action and the last-action observations reading
+    the base 35 columns; nothing else changes."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    from picklebot_mj.tasks.latent_reach import LEGS, last_action_base
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres()
+    assert len(LEGS) == 12 and len(set(LEGS)) == 12
+    la, lb = a.actions["latent"], b.actions["latent"]
+    assert la.leg_r == 0.0 and lb.leg_r == 0.1
+    assert not [f.name for f in dataclasses.fields(la) if f.name != "leg_r" and getattr(la, f.name) != getattr(lb, f.name)]
+    ba, bb = a.actions["ball"], b.actions["ball"]
+    assert not [f.name for f in dataclasses.fields(ba) if getattr(ba, f.name) != getattr(bb, f.name)]
+    assert list(a.rewards) == list(b.rewards) and all(a.rewards[k] == b.rewards[k] for k in a.rewards)
+    for g in ("actor", "critic"):
+        ta, tb = a.observations[g].terms, b.observations[g].terms
+        assert list(ta) == list(tb)
+        changed = [k for k in ta if ta[k] != tb[k]]
+        assert changed == ["actions"] and tb["actions"].func is last_action_base

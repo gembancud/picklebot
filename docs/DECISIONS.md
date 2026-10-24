@@ -4016,3 +4016,25 @@ Rally run 10 (D-149) ended at partner-ball 63.1 %, feeder-ball 80.1 % (it missed
 - **Endpoint:** the M1 read on 4219342, read once. **Success:** feeder-ball legal >= 81.9 % with a court-bootstrap low > 80.1 %, partner-ball legal >= 58.2 %, sides within 3 points, court falls <= 4 %.
 - **Smoke:** over 40 iterations the term was 0.26 of paddle_contact.
 - **D-149 still applies:** if feeder-ball legal ends at or below 81.9 % again, the next step is the controller option or a stop vote.
+
+
+## D-151 - Round 34: measure the controller before changing it (2026-10-25)
+
+Rally run 11 (D-150) was killed at its early check: the feeder bonus did not move its families (64.6 -> 64.3 %). Run 10 and run 11 both ended with feeder-ball legal at or below 81.9 %, so D-149 fired. The panel voted 5/5 against stopping and 4/5 for a training-free check first (e1). The form is architecture's, by the tie rule (least new code).
+
+- **The read:** `scripts/diag/feeder_speed_envelope.py` on rally-10 model_21399, in the M1 pair read's settings (2,048 envs, 120 s), development seed 4219400 (smoke 4219401, 64 envs, 10 s). For each finished feed it logs the peak pelvis ground speed over the feed, the closest paddle-to-ball distance, and the direction the robot had to move. Results go by feeder family and by hit or miss, plus a per-direction split (motion).
+- **Pre-registered rule:** the 90th-percentile peak pelvis speed is taken over reach_deep and fast feeder-ball misses.
+  - If it is >= 1.4 m/s and their median closest distance is > 0.20 m, the controller is the limit. Run 12 then gives the residual joint-space control of the 12 leg joints, as with the right wrist (the cheap e2), from rally-10 model_21399.
+  - Otherwise the limit is the policy or backhand skill, and the panel chooses again (e4 teacher and distillation, or e3).
+- No threshold changes: M1 stays at feeder-ball legal 85 %, the target at P(5+) 80 %.
+
+
+## D-152 - Rally run 12: leg-joint residuals on the frozen controller (round 34 e1 rule, 2026-10-25)
+
+The D-151 read met its pre-registered controller-limit rule: reach_deep and fast feeder misses peak at 1.70 m/s (p90) and still end 0.64 m short (median). By direction, feeder balls that need a move to the left are returned 36 % of the time and back 52 %, against 92 % forward and 87 % right. The robot reaches 2.66 m/s (p99), so the limit is direction (left and back), not top speed (results/feeder-speed-envelope.json).
+
+- **Change (architecture's cheap e2):** `ResidualLatentActionCfg.leg_r = 0.1`. The policy's action gains 12 leg-joint residuals (tanh, +-0.1 rad) added to the frozen latent controller's joint targets, as the right wrist already has. The last-action observation (`last_action_base`) keeps the 35 base columns, so the frozen base executor and the parent's input are unchanged. Evaluation tasks take the residual through `PICKLEBOT_LEG_R`.
+- **Task:** `...-Weak-Pace25-LegRes-G1`. **Parent:** rally-10 model_21399 widened by `scripts/leg_residual_init.py` (zero output rows; std of the new dims = the wrist dims' mean; Adam moments padded with zeros), with its optimizer, training seed 90, 6,400 iterations.
+- **Early kill at model_23300** (`rally_check.py early-legres`, parent re-read on 4219411-4219414): reach_deep + fast feeder-ball contact must be up (coach); D-145's and D-148's lines without the pace engagement check.
+- **Endpoint:** the M1 read on 4219442, read once; style from the h5f battery reported against the parent's. **Success:** feeder-ball legal >= 81.9 % with a low > 80.1 %, partner-ball legal >= 58.2 %, sides within 3 points, falls <= 4 %.
+- **If it fails:** the round 34 options left are e2 proper (fine-tune the decoder, about 300 lines) and e4 (a privileged teacher, then distillation); the panel decides, and a stop vote is on the table (experiment design's line).

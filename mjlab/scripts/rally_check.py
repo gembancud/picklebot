@@ -227,6 +227,21 @@ def early_feedbonus(prefix: str) -> bool:
     return ok and worst[0] >= -0.05 and g1 > g0
 
 
+def early_legres(prefix: str) -> bool:
+    """Rally run 12 (D-152): early_ceiling's lines without the pace engagement check, D-148's family-contact guard, and
+    the engagement check (coach): reach_deep and fast feeder-ball contact in the pairs read is up on the parent."""
+    ok = early_ceiling(prefix, engage_check=False)
+    f0 = json.load(open(f"{prefix}-parent-early-pairs.json"))["per_family"]
+    f1 = json.load(open(f"{prefix}-early-pairs.json"))["per_family"]
+    worst = min(((f1[k]["contact"] - f0[k]["contact"], k) for k in f0 if k in f1), default=(0.0, None))
+    fams = ("reach_deep", "fast")
+    con = lambda f: sum(f[k]["contact"] * f[k]["episodes"] for k in fams) / max(sum(f[k]["episodes"] for k in fams), 1)  # noqa: E731
+    g0, g1 = con(f0), con(f1)
+    print(f"early: worst feeder-family contact change {100 * worst[0]:+.1f} points ({worst[1]}; kill below -5)")
+    print(f"early: reach_deep + fast feeder-ball contact {g0:.4f} -> {g1:.4f} ({100 * (g1 - g0):+.1f}; kill if not up)")
+    return ok and worst[0] >= -0.05 and g1 > g0
+
+
 def target(prefix: str, tag: str) -> bool:
     P = pair_stats(json.load(open(f"{prefix}-target.json"))["pairs"])
     try:
@@ -293,6 +308,8 @@ if __name__ == "__main__":
         sys.exit(0 if early_ceiling_own(prefix) else 1)
     if mode == "early-feedbonus":
         sys.exit(0 if early_feedbonus(prefix) else 1)
+    if mode == "early-legres":
+        sys.exit(0 if early_legres(prefix) else 1)
     if mode == "m1":
         sys.exit(0 if milestone(prefix, sys.argv[3]) else 1)
     target(prefix, sys.argv[3])

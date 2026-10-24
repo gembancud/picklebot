@@ -571,3 +571,37 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 | Court falls per episode | | 3.1 % | 4 % |
 
 **Plainly:** a +50 bonus on returning the five weakest feeder balls did not move them (-0.3 points). This is the second run in a row that ends with feeder-ball legal at or below 81.9 %, so D-149 applies: the controller option or a stop vote. Panel round 34 decides.
+
+## Round 34's controller check (e1, D-151)
+
+`scripts/diag/feeder_speed_envelope.py` on rally-10 model_21399, in the M1 pair read's settings, seed 4219400, `results/feeder-speed-envelope.json`. 8,137 finished feeder balls.
+
+**The pre-registered rule fired (controller limit):** reach_deep and fast feeder-ball misses (464) peak at 1.70 m/s (90th percentile) and still end 0.64 m short (median closest paddle-to-ball distance; the lines were 1.4 m/s and 0.20 m).
+
+**By the direction the robot had to move** (pelvis at the start to the ball at the closest approach):
+
+| Direction | Feeder balls | Legal | Contact | Misses' median closest distance |
+|---|---|---|---|---|
+| Forward | 3,364 | **91.8 %** | 95.0 % | 0.21 m |
+| Right | 2,863 | **87.4 %** | 90.7 % | 0.49 m |
+| Back | 608 | **51.8 %** | 65.5 % | 0.37 m |
+| Left | 1,302 | **36.2 %** | 46.2 % | 0.84 m |
+
+- **Weakest families:**
+  - reach_deep: 38 % legal; its misses go back 54 % and left 35 % of the time.
+  - cross_backhand: 61 %; left 83 %.
+  - reach_backhand: 76 %; left 90 %.
+  - Their misses end 1.8-2.0 m short even at 2.4-2.5 m/s peaks.
+- Peak pelvis speed reaches 2.66 m/s (99th percentile), so the planner's 1.5 m/s cap understates speed. The limit is the direction: the robot moves left and back badly. Motion's reading (Stage 5C: the latent controller barely steps left or back) is confirmed.
+
+**Plainly:** the robot runs fast enough, but it cannot get to balls on its left (the backhand side) or behind it. Only 36 % of the feeder balls that need a move to the left come back. By the pre-registered rule, run 12 gives the policy direct control of the legs on top of the frozen controller.
+
+## Run 12: leg-joint residuals on the frozen controller (D-152)
+
+`scripts/rally_run12.sh`.
+- **Task:** Coop-Moves-Weak-Pace25-LegRes: run 10's task plus 12 leg-joint residuals (+-0.1 rad, as the right wrist) on the latent controller's output.
+- **Parent:** rally-10 model_21399, widened by `scripts/leg_residual_init.py` (12 zero output rows, so it starts as the parent).
+- **Training:** training seed 90, 6,400 iterations.
+- **Smoke:** 40 training iterations ran; the widened checkpoint loads in the evaluation tasks (`PICKLEBOT_LEG_R=0.1`). Run-to-run GPU noise in a 64-env read is as large as the parent-versus-init difference.
+- **Checks:** early kill at model_23300 (`early-legres`: reach_deep + fast feeder contact must be up, plus D-145's and D-148's lines). Endpoint: M1 on 4219442, read once.
+- **Success:** feeder-ball >= 81.9 % (low > 80.1 %) and partner-ball >= 58.2 %.

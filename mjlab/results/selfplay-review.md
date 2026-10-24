@@ -318,3 +318,28 @@ Waiting for the user (D-145: no run 9 without the user).
 - **Length:** 6,400 iterations, 4/5.
 - **Kill lines:** D-145's and D-148's unchanged, without the pace engagement check (the parent already has the ceiling). Added (architecture): kill if the five families' feeder-ball legal is not up at the early check. **Success:** experiment design's bar.
 - **Not stopping (5/5).** Under D-149, if run 11 also ends with feeder-ball legal at or below 81.9 %, the next step is the controller option (coach, motion, RL, architecture) or a stop vote.
+
+## Round 34 - run 11 killed; D-149 fires: the controller option or stop (2026-10-25)
+
+**Brief:** run 11's feeder bonus did not move its five families (64.6 -> 64.3 %). Feeder-ball legal has been flat at 77-82 % for eleven runs. D-149: the controller option or a stop vote.
+
+**Correction check (RL, experiment design, motion, architecture):**
+- The "1.5 m/s cap" behind "reach_deep needs 2.35 m/s" is the planner's assumed walking speed (`planner.WALK_CAP`). The controller's top speed has never been measured, so "controller limit" is an inference.
+- The reach model is conservative: 12 % of reach_deep feeds need 1.5 m/s or less, yet 45 % are returned.
+- **Motion now doubts the backhand-skill reading:** the Stage 5C agility runs found the latent controller barely steps left or back, the directions that backhand-side and deep balls need.
+- **Coach:** D-127 showed that stroke execution is also on the controller side.
+- **Architecture:** the decoder is frozen inside the environment. Unfreezing it (e2) is about 300 lines plus checkpoint surgery, and it breaks the frozen base executor. A cheap e2 exists: give the residual joint-space control of the 12 leg joints, as with the wrist (about 40 lines).
+
+**Votes:**
+
+| Member | Vote |
+|---|---|
+| RL | e1, then e2 or e4 by the measured top speed |
+| Experiment design | e1 (commanded walks at 1.5-3.0 m/s), then a walk_cap run or e2 |
+| Motion | e1 (per-direction envelope against run 10's misses), then e2 if 50 % or more of misses lie outside it |
+| Architecture | e1 (per-feed peak pelvis speed and closest distance in the M1 loop), then the cheap e2 |
+| Coach | e2 (decoder fine-tune), with e1 as a pre-launch check |
+
+- **No STOP vote (5/5).**
+- **e1, 4/5.** No form had a majority, so the tie rule (least new code) gives architecture's form and rule: one script in the M1 loop, no training.
+- Motion's per-direction split is reported alongside.

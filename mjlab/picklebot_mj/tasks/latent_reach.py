@@ -33,6 +33,9 @@ from mjlab.envs import mdp
 from picklebot_mj.latent import GOAL_DIM, LatentController
 
 RIGHT_WRIST = ("right_wrist_roll_joint", "right_wrist_pitch_joint", "right_wrist_yaw_joint")
+# D-152: the 12 leg joints that the residual executor may nudge directly (leg_r > 0)
+LEGS = tuple(f"{side}_{j}_joint" for side in ("left", "right")
+             for j in ("hip_pitch", "hip_roll", "hip_yaw", "knee", "ankle_pitch", "ankle_roll"))
 REACH_TOL = 0.10
 REACH_TOL_WIDE = 0.25  # reported for information only (D-055)
 FALL_Z, FALL_TILT = 0.5, math.radians(60)
@@ -356,6 +359,7 @@ class ResidualLatentActionCfg(LatentJointPositionActionCfg):
     base_actor_cfg: dict = field(default_factory=dict)  # MLPModel kwargs: activation, obs_normalization, distribution_cfg
     lam_r: float = 1.0
     wrist_r: float = 0.1
+    leg_r: float = 0.0  # D-152: joint-space residual (rad) on the 12 leg joints; 0 = off
 
     def build(self, env):
         return ResidualLatentAction(self, env)
@@ -368,8 +372,13 @@ class ResidualLatentAction(LatentJointPositionAction):
         super().__init__(cfg, env)
         self._env_ref = env
         self.base = None  # built on the first step, once the observation manager exists
-        self.base_last = torch.zeros(self.num_envs, self._action_dim, device=self.device)
-        self.a_ref = torch.zeros(self.num_envs, self._action_dim, device=self.device)
+        self._base_dim = self._action_dim  # latent + wrist: the frozen base executor's action
+        if cfg.leg_r > 0:  # D-152: the policy's action gains 12 leg-joint residuals after the base part
+            self.legs = torch.tensor([self._target_names.index(j) for j in LEGS], device=self.device)
+            self._action_dim += len(LEGS)
+            self._raw_actions = torch.zeros(self.num_envs, self._action_dim, device=self.device)
+        self.base_last = torch.zeros(self.num_envs, self._base_dim, device=self.device)
+        self.a_ref = torch.zeros(self.num_envs, self._base_dim, device=self.device)
 
     def _build_base(self, obs_dim: int):
         from rsl_rl.models.mlp_model import MLPModel
@@ -381,7 +390,7 @@ class ResidualLatentAction(LatentJointPositionAction):
         kw = dict(self.cfg.base_actor_cfg)
         kw["hidden_dims"] = tuple(n for _, n in ws[:-1])
         base = MLPModel(TensorDict({"actor": torch.zeros(1, obs_dim)}, batch_size=[1]), {"actor": ["actor"]}, "actor",
-                        self._action_dim, **kw).to(self.device)
+                        self._base_dim, **kw).to(self.device)
         base.load_state_dict(sd, strict=True)
         base.eval()
         for p in base.parameters():
@@ -421,11 +430,20 @@ class ResidualLatentAction(LatentJointPositionAction):
         self.dec = dec.clone()
         self._processed_actions = dec * self._scale + self._offset
         self._processed_actions[:, self.wrist] += (self.cfg.wrist_residual * torch.tanh(a_ref[:, L:])
-                                                   + self.cfg.wrist_r * torch.tanh(actions[:, L:]))
+                                                   + self.cfg.wrist_r * torch.tanh(actions[:, L:self._base_dim]))
+        if self.cfg.leg_r > 0:
+            self._processed_actions[:, self.legs] += self.cfg.leg_r * torch.tanh(actions[:, self._base_dim:])
 
     def reset(self, env_ids=None):
         super().reset(env_ids)
         self.base_last[env_ids] = 0.0  # the action manager zeroes the last action at a reset, as the base was trained
+
+
+def last_action_base(env, action_name: str = "latent") -> torch.Tensor:
+    """D-152: the policy's last action without the leg residual, so the observation (and the frozen base executor's
+    input, which reads it) keeps the parent's 35 columns."""
+    term = env.action_manager.get_term(action_name)
+    return env.action_manager.action[:, :term._base_dim]
 
 
 def residual_prior_nll(env, action_name="latent", move_weight=3.0):
