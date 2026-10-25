@@ -679,3 +679,23 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 | Court falls per episode | | 3.3 % | 4 % |
 
 **Plainly:** the wider latent range is the first footwork change in five runs that helped without breaking anything. Balls on the left are returned 4.6 points more often, partner balls 3.5 points more, and feeder balls 0.8 points more. Walking and falls held. Training continues to the endpoint.
+
+**Endpoint** (model_27798, the last checkpoint; the M1 and target read on 4219642, read once): **success line met**, and the new best policy.
+
+| Measure | Run 10 (old best) | Run 14 | Bar |
+|---|---|---|---|
+| **Partner-ball legal** | 63.1 % | **70.5 %** (low 70.1 %) | success >= 58.2 % (met); M1 >= 50 % (met) |
+| **Feeder-ball legal** | 80.1 % | **81.9 %** (low 81.3 %) | success >= 81.9 % with low > 80.1 % (**met**); M1 >= 85 % (not met) |
+| P(3+) | 24.9 % | **31.6 %** | M2 >= 50 % |
+| **P(5+)** | 13.3 % | **18.7 %** [18.2, 19.3] | target >= 80 % |
+| Mean rally length | 2.06 | 2.63 | |
+| Sides A / B | 68.3 / 68.7 % | 73.7 / 73.5 % | within 3 points (met) |
+| Court falls per episode | 3.5 % | 3.4 % | <= 4 % (met) |
+| Crossing hand-off P(5+) | 7.4 % | 10.5 % | reported |
+| Style (h5f) | 4.26 | 4.24 | reported |
+
+- **Feeder-ball legal by the direction to move** (direction split, 4219644, against D-151's read of run 10): forward 91.8 -> 93.6 %, right 87.4 -> 88.1 %, **left 36.2 -> 43.7 %**, back 51.8 -> 52.7 %.
+- **Feeder families, run 10 -> run 14:** reach_deep 40.7 -> 43.2 %, cross_backhand 59.1 -> 63.8 %, fast 63.5 -> 68.9 %, drop 78.6 -> 83.8 %. reach_backhand (76.3 -> 75.2 %) and backhand (78.9 -> 78.3 %) are flat.
+- M1 needs about 700 fewer feeder misses (18.1 % -> 15 %). reach_deep (632), cross_backhand (374) and fast (369) still hold the most.
+
+**Plainly:** widening the policy's control over the motion controller worked. It is the best robot so far: partner balls come back 70 % of the time, one rally in five reaches 5 shots, and balls on the left come back 44 % of the time instead of 36 %. The feeder ball is at 82 % against M1's 85 %. Panel round 37 picks run 15.
