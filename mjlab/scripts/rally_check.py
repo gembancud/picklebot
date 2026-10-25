@@ -338,7 +338,7 @@ if __name__ == "__main__":
         sys.exit(0 if early_legres(prefix) else 1)
     if mode == "early-legres30":
         sys.exit(0 if early_legres30(prefix) else 1)
-    if mode == "early-lamr2":
+    if mode in ("early-lamr2", "early-lamr3"):  # D-155: run 15 keeps run 14's early lines unchanged
         sys.exit(0 if early_lamr2(prefix) else 1)
     if mode == "m1":
         sys.exit(0 if milestone(prefix, sys.argv[3]) else 1)

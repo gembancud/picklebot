@@ -4062,3 +4062,16 @@ There was no majority among the four other routes: e4-lite hint teacher (coach),
 - **Early kill at model_23300** (`rally_check.py early-lamr2`, parent re-read on 4219611-4219615): left + back feeder-ball contact must be up by at least 2 points (the margin experiment design asked for), plus run 12's lines unchanged.
 - **Endpoint:** the M1 read on 4219642, read once; direction split on 4219644, reported. **Success:** D-152's bars.
 - **If it fails:** RL and experiment design vote STOP. The panel decides between a stop and the standing alternatives (an e4 teacher and distillation, a gait anchor).
+
+
+## D-155 - Rally run 15: the residual's latent range at 3 sigma (panel round 37, 2026-10-26)
+
+Run 14 (D-154, lam_r 1 -> 2) met its success line at model_27798 and is the new best: partner-ball legal 70.5 %, feeder-ball legal 81.9 %, P(5+) 18.7 %, left feeder legal 36.2 -> 43.7 %. Round 37 voted 4/5 to widen again (coach voted to continue run 14 unchanged).
+
+- **Change:** `lam_r` 2 -> 3 on run 14's task (`...-Weak-Pace25-LamR3-G1`, `LAM_R_3`). Run 15's reads set `PICKLEBOT_LAM_R=3`; the parent's re-reads set 2.
+- **Parent:** rally-14 model_27798 with the latent output rows and latent std scaled by 2/3 (`scripts/lam_r_init.py --factor 0.6666667`, `scripts/rally_run15_init.sh`), with its optimizer. Training seed 93, 6,400 iterations, 12,288 envs.
+- **Smoke:** 40 iterations at 1,024 envs (seed 85): mean fell_over 0.099 against run 14 smoke's 0.106 (stop line 0.159, architecture), paddle_contact 0.0445 against 0.0438; the 64-env pairs read (4219702) exits 0.
+- **Early kill at model_29700** (`rally_check.py early-lamr3`, run 14's early-lamr2 lines unchanged; parent re-read on 4219711-4219715): left + back feeder-ball contact up by at least 2 points, and run 12's lines.
+- **Endpoint:** the M1 read on 4219742, read once; crossing 4219743 and direction split 4219744, reported. **Success:** feeder-ball legal >= 83.9 % with a court-bootstrap low > 81.9 %, partner-ball legal >= 68.5 %, sides within 3 points, court falls <= 4 %. Style reported; training time is a confound and is reported.
+- **If it fails to engage:** lam_r stays at 2; the panel chooses among run 14 continued (the control), the e4 teacher, and a stop.
+- **Note:** `test_court_feed_mix_shares_families_recovery_and_planner` is flaky (failed once, passed on the rerun of the same code; unrelated to this change). The other 61 tests in test_stage5f.py pass, including the new `test_d155_lamr3_task_differs_only_in_lam_r`.

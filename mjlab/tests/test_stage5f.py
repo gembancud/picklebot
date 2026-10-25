@@ -1278,3 +1278,16 @@ def test_d154_lamr2_task_doubles_only_lam_r():
     assert (la.lam_r, lb.lam_r) == (1.0, 2.0) and la.leg_r == lb.leg_r == 0.0
     assert not [f.name for f in dataclasses.fields(la) if f.name != "lam_r" and getattr(la, f.name) != getattr(lb, f.name)]
     assert a.rewards == b.rewards and a.observations == b.observations
+
+
+
+def test_d155_lamr3_task_differs_only_in_lam_r():
+    """D-155: rally run 15's task is run 14's with lam_r 3 instead of 2 and nothing else."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr3()
+    la, lb = a.actions["latent"], b.actions["latent"]
+    assert (la.lam_r, lb.lam_r) == (2.0, 3.0) and la.leg_r == lb.leg_r == 0.0
+    assert not [f.name for f in dataclasses.fields(la) if f.name != "lam_r" and getattr(la, f.name) != getattr(lb, f.name)]
+    assert a.rewards == b.rewards and a.observations == b.observations

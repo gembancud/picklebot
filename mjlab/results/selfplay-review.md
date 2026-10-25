@@ -397,3 +397,31 @@ Waiting for the user (D-145: no run 9 without the user).
 - **Not stopping, 4/5.**
 - **No majority on the route,** so the charter's rule (least new code and fewest moving parts) gives RL's lam_r 2. It stays on the decoder's motion manifold, and D-080 and D-090 named the +-1 sigma range as a limit that has never been widened on the rally line.
 - **Pre-registered:** RL and experiment design vote STOP if it fails. Coach and architecture's e4 and motion's gait anchor are the standing alternatives.
+
+
+## Round 37 - run 14 met its success line; run 15 = lam_r 3 (2026-10-26)
+
+**Brief:** run 14 (lam_r 1 -> 2) met its pre-registered success line at model_27798 and is the new best: partner-ball legal 70.5 %, feeder-ball legal 81.9 % (low 81.3 %), P(3+) 31.6 %, P(5+) 18.7 %, left feeder legal 36.2 -> 43.7 %. M1 still needs feeder-ball legal 85 % (about 700 fewer misses).
+
+**Correction check (5/5):**
+- Run 14 was carried out right. Its init started at the parent's point (latent noise flat in TensorBoard, 0.229 -> 0.226), and the kill and success lines were applied as written.
+- Why it helped where the leg residual did not (all five): a latent move stays on the decoder's motion manifold and comes out as one coordinated step. Joint-space noise is off that manifold: no signal when small (run 12), a broken gait when wide (run 13).
+- RL: the prior penalty is counted in prior-sigma units, so the wider range did not make a given move cost more. It lifted the tanh ceiling at 1 sigma, where the converged base had been pinned with a vanishing gradient.
+- Experiment design: the feeder line passed exactly at its bar (81.9 against 81.9). The clear wins are partner balls (+7.4), P(5+) (+5.4) and left (+7.5). Run 14 also trained 6,400 more iterations; runs 12-13 trained the same and did not engage, which mostly, not fully, rules out training time.
+- Motion: left misses still peak below what the robot can do (1.99 against 2.7 m/s): it under-commits. Back contact rose 65.5 -> 69.4 % but legal stayed flat, so the stroke while moving backwards now limits back.
+- Architecture: `lam_r_init.py` keeps the parent only approximately when latent outputs are saturated.
+
+**Votes:**
+
+| Member | Vote |
+|---|---|
+| RL | **a**, lam_r 3, 9,600 iterations |
+| Motion | **a**, lam_r 3, 6,400 iterations (adds a style line at 4.44) |
+| Experiment design | **a**, lam_r 3, 6,400 iterations |
+| Architecture | **a**, lam_r 3, 6,400 iterations (smoke stop if fell_over > 1.5 x run 14's 0.106) |
+| Coach | **b**, run 14 continued for 6,400 iterations (left had not flattened; do not stack a second dose before the first has finished) |
+
+- **Run 15 = (a), 4/5:** lam_r 2 -> 3 from run 14's model_27798 with the latent rows and std scaled by 2/3, 6,400 iterations (3 of 4), early check at model_29700.
+- (b) was judged too slow: left rose about 0.6 points per 1,000 iterations after the early check (experiment design, motion, architecture). (c) changes the same tax and risks style. (d) is more code than the evidence needs yet.
+- **Lines (majority on each):** early kill = run 14's early-lamr2 lines unchanged (left + back feeder contact up >= 2 points). Success = feeder-ball legal >= 83.9 % with low > 81.9 % (4/5), partner-ball legal >= 68.5 % (4/5), sides within 3 points, falls <= 4 %. Style is reported (motion's style kill line had one vote). Architecture's smoke falls line is applied.
+- **Pre-registered:** training time is a confound and is reported (RL). If run 15 fails to engage, lam_r stays at 2 and the panel chooses among run 14 continued (the control: RL, motion), the e4 teacher, and a stop (experiment design).

@@ -699,3 +699,11 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - M1 needs about 700 fewer feeder misses (18.1 % -> 15 %). reach_deep (632), cross_backhand (374) and fast (369) still hold the most.
 
 **Plainly:** widening the policy's control over the motion controller worked. It is the best robot so far: partner balls come back 70 % of the time, one rally in five reaches 5 shots, and balls on the left come back 44 % of the time instead of 36 %. The feeder ball is at 82 % against M1's 85 %. Panel round 37 picks run 15.
+
+## Rally run 15 - lam_r 3 (D-155, panel round 37, 4/5)
+
+- **Change:** the residual's latent range 2 -> 3 prior sigma on run 14's task (`...-Weak-Pace25-LamR3-G1`), the one change.
+- **Parent:** rally-14 model_27798 with the latent rows and std scaled by 2/3, with its optimizer; training seed 93; 6,400 iterations; 12,288 envs. Script `scripts/rally_run15.sh`.
+- **Smoke:** mean fell_over 0.099 (run 14 smoke 0.106; stop line 0.159); paddle_contact 0.0445 (0.0438).
+- **Early kill at model_29700** on run 14's lines (left + back feeder contact up >= 2 points against a parent re-read).
+- **Success (pre-registered):** feeder-ball legal >= 83.9 % with low > 81.9 %, partner-ball legal >= 68.5 %, sides within 3 points, falls <= 4 %.

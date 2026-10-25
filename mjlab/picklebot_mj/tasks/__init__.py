@@ -2154,3 +2154,25 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2(True),
                     rl_cfg=_s5e_rl_cfg())
+
+
+
+# Rally run 15 (D-155, panel round 37, 4/5): rally run 14's task with the residual's latent range at 3 prior sigma
+# (lam_r 2 -> 3), the one change. Run 14 (lam_r 1 -> 2) met its success line and left-side feeder balls were still rising
+# at its endpoint; this is the dose-response step of the one lever that has moved footwork.
+LAM_R_3 = 3.0
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR3 = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LamR3-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr3(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25(play)
+    cfg.actions["latent"] = _dc.replace(cfg.actions["latent"], lam_r=LAM_R_3)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR3,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr3(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr3(True),
+                    rl_cfg=_s5e_rl_cfg())
