@@ -632,3 +632,20 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Smoke:** 40 iterations. fell_over 0.182, against 0.097 for run 12's smoke (1.87x, under the pre-registered 2x line, so the std is kept). The eval path loads.
 - **Checks:** early kill at model_23300 (`early-legres30`: run 12's lines plus left + back feeder contact up, from the direction split). Endpoint: M1 on 4219542, read once.
 - **Success:** feeder-ball >= 81.9 % (low > 80.1 %) and partner-ball >= 58.2 %.
+
+**Killed at the early check** (model_23300; the parent re-read on 4219511-4219515). It made things worse on almost every line:
+
+| Measure | Parent | Run 13 | Kill line |
+|---|---|---|---|
+| **Left + back feeder contact** | 52.2 % | **50.4 %** | must be up (**failed**) |
+| Left / back feeder legal | 36.6 / 52.9 % | 30.5 / 47.8 % | reported |
+| reach_deep + fast feeder contact | 64.0 % | 61.8 % | must be up (**failed**) |
+| Feeder-ball legal | 80.4 % | **76.9 %** | 78.4 % (**failed**) |
+| Partner-ball legal | 63.1 % | **58.0 %** | 60.1 % (**failed**) |
+| P(5+) | 13.3 % | 9.3 % | reported |
+| Worst feeder-family contact | | **-11.1** (cross_backhand) | -5 points (**failed**) |
+| Lowest move arrival | 99.5 % | **82.6 %** | -5 points (**failed**) |
+| Drill v2 | 84.7 % | 80.4 % | -5 points |
+| Court falls per episode | | **4.5 %** (low 3.3 %) | point 7.4 %, low 4 % |
+
+**Plainly:** giving the policy a wide range on the leg joints disturbed the controller's walking instead of improving footwork: move arrival fell 17 points and falls rose. Under D-153 the leg-residual route is closed. Panel round 36 chooses between a decoder fine-tune (e2 proper) and a stop.
