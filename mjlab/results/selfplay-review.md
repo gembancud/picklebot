@@ -372,3 +372,28 @@ Waiting for the user (D-145: no run 9 without the user).
 - No STOP vote.
 - Pre-registered (experiment design, RL): if run 13 fails to engage, the leg-residual route is closed and the panel chooses between e2 proper (decoder fine-tune) and a stop.
 - Not more envs (architecture): 16,384 envs gave only +9 % steps per second (D-065), and memory would leave no room for the early reads.
+
+## Round 36 - run 13 killed; the leg-residual route closed; e2 or stop? (2026-10-25)
+
+**Brief:** run 13 (leg residual at +-0.3 rad) was killed at its early check and made things worse almost everywhere: move arrival -17 points, falls 4.5 %, feeder-ball legal 76.9 %, left legal 36.6 -> 30.5 %. Run 12 (+-0.1 rad) did nothing. Under D-153 the panel chose between e2 proper (decoder fine-tune) and a stop.
+
+**Correction check (5/5):**
+- Joint-space exploration over a converged latent policy does nothing when small and breaks the gait when wide.
+- **Everyone corrected the premise behind D-152:** the decoder can step left and back. Move-drill arrival is 96-99.7 % in all 8 directions, and D-082's floor test found 93 % of the walking teacher's leg actions reproducible.
+- The rally gap is committing and moving with a ball under time pressure (reach_backhand misses peak at 1.28 m/s against 1.83 m/s on hits). That is a policy limit, not a decoder limit.
+- **So e2 is aimed at the wrong part** (RL, motion, coach, architecture, experiment design). PPO's gradient does not reach a deterministic decoder without joint-space noise (run 13's failure). It also breaks the frozen base and is about 300-400 lines.
+- **Experiment design:** run 12's "up" line had no margin; engagement lines need at least +2 points.
+
+**Votes:**
+
+| Member | Vote |
+|---|---|
+| Experiment design | **STOP** (options for the user: e2 decoder tail with a BC anchor / e4 teacher-student / re-distil H1 / end at run 10) |
+| Coach | other: e4-lite, a stance-hint teacher from run 10, then a no-hint DAgger student (about 100 lines) |
+| Architecture | other: e4, a privileged-ball teacher (true contact point and time), then distillation (about 140 lines) |
+| Motion | other: a leg-only gait anchor to the walking teacher steered to the stance spot (about 15 lines) |
+| RL | other: the residual's latent range doubled, lam_r 1 -> 2, std halved (about 10 lines) |
+
+- **Not stopping, 4/5.**
+- **No majority on the route,** so the charter's rule (least new code and fewest moving parts) gives RL's lam_r 2. It stays on the decoder's motion manifold, and D-080 and D-090 named the +-1 sigma range as a limit that has never been widened on the rally line.
+- **Pre-registered:** RL and experiment design vote STOP if it fails. Coach and architecture's e4 and motion's gait anchor are the standing alternatives.

@@ -4049,3 +4049,16 @@ Run 12 (D-152) was killed at its early check: reach_deep + fast feeder contact w
 - **Early kill at model_23300** (`rally_check.py early-legres30`; parent re-read on 4219511-4219515): run 12's lines unchanged, plus left + back feeder-ball contact (the direction split, `feeder_speed_envelope.py`) must be up on the parent.
 - **Endpoint:** the M1 read on 4219542, read once; direction split on 4219544, reported. **Success:** D-152's bars.
 - **If it fails to engage:** the leg-residual route is closed; the panel chooses between e2 proper (decoder fine-tune) and a stop.
+
+
+## D-154 - Rally run 14: the residual's latent range doubled (panel round 36, 2026-10-25)
+
+Run 13 (D-153) was killed at its early check and made things worse almost everywhere. Under D-153 the leg-residual route is closed. Round 36 voted 4/5 against stopping (experiment design for STOP). Every member found the decoder is not the limit: move-drill arrival is 96-99.7 % in all directions, and D-082's floor test is 93 %. So the panel set e2 aside.
+
+There was no majority among the four other routes: e4-lite hint teacher (coach), e4 privileged-ball teacher (architecture), a leg-only gait anchor (motion), and lam_r 2 (RL). The charter's rule (least new code, fewest moving parts) gives lam_r 2.
+
+- **Change:** `lam_r` 1 -> 2 on rally run 10's task (`...-Weak-Pace25-LamR2-G1`). Each latent dimension may move up to 2 prior sigma from the frozen base's choice, on the decoder's motion manifold. Evaluation tasks take it through `PICKLEBOT_LAM_R`.
+- **Parent:** rally-10 model_21399 with the latent output rows and latent std halved (`scripts/lam_r_init.py`), so it starts close to the parent. The smoke's fell_over was 0.106, against 0.102 for run 11's smoke from the same parent. Training seed 92, 6,400 iterations.
+- **Early kill at model_23300** (`rally_check.py early-lamr2`, parent re-read on 4219611-4219615): left + back feeder-ball contact must be up by at least 2 points (the margin experiment design asked for), plus run 12's lines unchanged.
+- **Endpoint:** the M1 read on 4219642, read once; direction split on 4219644, reported. **Success:** D-152's bars.
+- **If it fails:** RL and experiment design vote STOP. The panel decides between a stop and the standing alternatives (an e4 teacher and distillation, a gait anchor).

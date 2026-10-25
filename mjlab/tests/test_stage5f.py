@@ -1265,3 +1265,16 @@ def test_d153_legres30_differs_only_in_range():
     assert (la.leg_r, lb.leg_r) == (0.1, 0.3)
     assert not [f.name for f in dataclasses.fields(la) if f.name != "leg_r" and getattr(la, f.name) != getattr(lb, f.name)]
     assert a.rewards == b.rewards and a.observations == b.observations
+
+
+
+def test_d154_lamr2_task_doubles_only_lam_r():
+    """D-154: rally run 14's task is run 10's with lam_r 2 instead of 1 and nothing else."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2()
+    la, lb = a.actions["latent"], b.actions["latent"]
+    assert (la.lam_r, lb.lam_r) == (1.0, 2.0) and la.leg_r == lb.leg_r == 0.0
+    assert not [f.name for f in dataclasses.fields(la) if f.name != "lam_r" and getattr(la, f.name) != getattr(lb, f.name)]
+    assert a.rewards == b.rewards and a.observations == b.observations

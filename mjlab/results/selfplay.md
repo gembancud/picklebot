@@ -649,3 +649,13 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 | Court falls per episode | | **4.5 %** (low 3.3 %) | point 7.4 %, low 4 % |
 
 **Plainly:** giving the policy a wide range on the leg joints disturbed the controller's walking instead of improving footwork: move arrival fell 17 points and falls rose. Under D-153 the leg-residual route is closed. Panel round 36 chooses between a decoder fine-tune (e2 proper) and a stop.
+
+## Run 14: the residual's latent range doubled (D-154)
+
+`scripts/rally_run14.sh`.
+- **Task:** Coop-Moves-Weak-Pace25-LamR2: run 10's with `lam_r` 2 (no leg residual).
+- **Parent:** rally-10 model_21399 with latent output rows and std halved (`scripts/lam_r_init.py`).
+- **Training:** training seed 92, 6,400 iterations.
+- **Smoke:** 40 iterations. fell_over 0.106 (run 11's smoke from the same parent: 0.102); paddle_contact and legal_return are as the parent's; the eval path loads with `PICKLEBOT_LAM_R=2`.
+- **Checks:** early kill at model_23300 (`early-lamr2`: left + back feeder contact up by >= 2 points, plus run 12's lines). Endpoint: M1 on 4219642, read once.
+- **Success:** feeder-ball >= 81.9 % (low > 80.1 %) and partner-ball >= 58.2 %.

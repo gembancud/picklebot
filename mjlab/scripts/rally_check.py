@@ -255,6 +255,19 @@ def early_legres30(prefix: str) -> bool:
     return ok and g1 > g0
 
 
+def early_lamr2(prefix: str) -> bool:
+    """Rally run 14 (D-154): run 12's early-legres lines unchanged, plus left + back feeder-ball contact (the direction
+    split) up on the parent by at least 2 points (round 36: an engagement line needs a margin, not just "up")."""
+    ok = early_legres(prefix)
+    d0 = json.load(open(f"{prefix}-parent-early-dir.json"))["directions"]
+    d1 = json.load(open(f"{prefix}-early-dir.json"))["directions"]
+    con = lambda d: sum(d[k]["contact"] * d[k]["feeds"] for k in ("left", "back")) / max(d["left"]["feeds"] + d["back"]["feeds"], 1)  # noqa: E731
+    g0, g1 = con(d0), con(d1)
+    print(f"early: left + back feeder-ball contact {g0:.4f} -> {g1:.4f} ({100 * (g1 - g0):+.1f}; kill below +2.0); left legal "
+          f"{d0['left']['legal']} -> {d1['left']['legal']}, back legal {d0['back']['legal']} -> {d1['back']['legal']}")
+    return ok and g1 >= g0 + 0.02
+
+
 def target(prefix: str, tag: str) -> bool:
     P = pair_stats(json.load(open(f"{prefix}-target.json"))["pairs"])
     try:
@@ -325,6 +338,8 @@ if __name__ == "__main__":
         sys.exit(0 if early_legres(prefix) else 1)
     if mode == "early-legres30":
         sys.exit(0 if early_legres30(prefix) else 1)
+    if mode == "early-lamr2":
+        sys.exit(0 if early_lamr2(prefix) else 1)
     if mode == "m1":
         sys.exit(0 if milestone(prefix, sys.argv[3]) else 1)
     target(prefix, sys.argv[3])

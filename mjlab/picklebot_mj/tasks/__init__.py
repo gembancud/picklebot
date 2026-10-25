@@ -996,6 +996,7 @@ def _leg_residual(cfg, leg_r: float = LEG_R):
 
 def _residualize(cfg, lam_r: float = 1.0, base: str | None = None):
     """Replace a lambda-3 task's latent action term by the residual around `base` (default RES_BASE, D-086)."""
+    lam_r = float(os.environ.get("PICKLEBOT_LAM_R", lam_r))  # D-154: evaluation tasks for wider-residual checkpoints
     lt = cfg.actions["latent"]
     rl = asdict(_latent_drill3_lowent_rl_cfg())["actor"]
     res = ResidualLatentActionCfg(entity_name=lt.entity_name, actuator_names=lt.actuator_names, scale=lt.scale,
@@ -2127,4 +2128,29 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres30(),
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres30(True),
+                    rl_cfg=_s5e_rl_cfg())
+
+
+
+# Rally run 14 (D-154, panel round 36, tie rule: least new code): rally run 10's task with the residual's latent range
+# doubled (lam_r 1 -> 2): each latent dimension may move up to 2 prior sigma from the frozen base's choice, on the
+# decoder's motion manifold. Runs 12-13 showed that joint-space leg residuals either do nothing (+-0.1 rad) or break the
+# gait (+-0.3 rad); the move drill reaches 96-99.7 % in every direction, so the decoder can step left and back, and the
+# residual's +-1 sigma range around a base trained without footwork (D-084, D-090) is the suspected limit. Parent
+# rally-10 model_21399 with the latent output rows and std halved (scripts/lam_r_init.py), so it starts close to the parent.
+LAM_R_WIDE = 2.0
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2 = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LamR2-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25(play)
+    cfg.actions["latent"] = _dc.replace(cfg.actions["latent"], lam_r=LAM_R_WIDE)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2(True),
                     rl_cfg=_s5e_rl_cfg())
