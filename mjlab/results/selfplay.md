@@ -659,3 +659,23 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Smoke:** 40 iterations. fell_over 0.106 (run 11's smoke from the same parent: 0.102); paddle_contact and legal_return are as the parent's; the eval path loads with `PICKLEBOT_LAM_R=2`.
 - **Checks:** early kill at model_23300 (`early-lamr2`: left + back feeder contact up by >= 2 points, plus run 12's lines). Endpoint: M1 on 4219642, read once.
 - **Success:** feeder-ball >= 81.9 % (low > 80.1 %) and partner-ball >= 58.2 %.
+
+**Early check passed** (model_23300; the parent re-read on 4219611-4219615):
+
+| Measure | Parent | Run 14 | Kill line |
+|---|---|---|---|
+| **Left + back feeder contact** | 52.9 % | **55.0 %** | up >= 2 points (+2.1, pass) |
+| **Left feeder legal** | 36.2 % | **40.8 %** | reported |
+| Back feeder legal | 49.6 % | 49.0 % | reported |
+| **reach_deep + fast feeder contact** | 62.1 % | **65.7 %** | up (pass) |
+| **Partner-ball legal** | 63.4 % | **66.9 %** (low 66.4 %) | 60.4 % |
+| **Feeder-ball legal** | 80.5 % | **81.3 %** (low 80.7 %) | 78.5 % |
+| P(5+) | 13.4 % | **15.0 %** | reported |
+| Pair contact | 78.6 % | 80.6 % | 75.6 % |
+| Court main | 78.8 % | 78.5 % | -5 points |
+| Drill v2 | 84.5 % | 85.8 % | -5 points |
+| Lowest move arrival | 99.5 % | 98.7 % | -5 points |
+| Worst feeder-family contact | | -1.4 (cross_forehand) | -5 points |
+| Court falls per episode | | 3.3 % | 4 % |
+
+**Plainly:** the wider latent range is the first footwork change in five runs that helped without breaking anything. Balls on the left are returned 4.6 points more often, partner balls 3.5 points more, and feeder balls 0.8 points more. Walking and falls held. Training continues to the endpoint.
