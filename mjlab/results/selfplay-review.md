@@ -343,3 +343,32 @@ Waiting for the user (D-145: no run 9 without the user).
 - **No STOP vote (5/5).**
 - **e1, 4/5.** No form had a majority, so the tie rule (least new code) gives architecture's form and rule: one script in the M1 loop, no training.
 - Motion's per-direction split is reported alongside.
+
+## Round 35 - run 12 killed; run 13 = the leg residual at +-0.3 rad (2026-10-25)
+
+**Brief:** run 12's leg residual (+-0.1 rad) was killed at its early check: reach_deep + fast contact went 63.5 -> 63.2 %. The leg rows were still growing (weight norm 0.11 against 0.28).
+
+**Correction check (5/5): the kill stands (pre-registered), but the test was weak.**
+- **Motion:** +-0.1 rad moves the foot about 6-7 cm on a 0.7 m leg; a sidestep needs about 0.3-0.4 rad of hip roll.
+- **RL:** the gradient into a 0.1·tanh output is small, and the KL-limited step is shared with a converged base.
+- **Architecture:** the leg noise is white each step, and action_rate penalises it although the policy cannot see its last leg action. The -0.3 point change is within GPU read noise (about ±1.4 points).
+- **Coach, RL, experiment design:** the engagement line (reach_deep + fast) was a stand-in. The mechanism is direction: left 36 %, back 52 %. fast misses barely run and split left and right.
+- **Motion, RL:** part of the left gap is backhand reach or late commitment (reach_backhand misses peak at 1.28 m/s against 1.83 m/s on hits).
+
+**Votes:**
+
+| Member | Option | Range | Leg init std | Length | Engagement line |
+|---|---|---|---|---|---|
+| Coach | r1 | 0.3 | unchanged | 6,400 | left + back contact up |
+| Experiment design | r1 | 0.3 | unchanged | 6,400 | reach_deep + fast up **and** left + back up |
+| Architecture | r1 | 0.3 | unchanged; cut if smoke falls rise | 6,400 | unchanged |
+| Motion | r1 | 0.3 | about 0.2 | 9,600 | unchanged |
+| RL | r1 | 0.3 | about 0.25 | 9,600 | left + back up by 2 points |
+
+**Decided:**
+- r1, 5/5. Range 0.3, 5/5. Length 6,400, 3/5.
+- Leg init std: unchanged, 3/5, with architecture's smoke condition. Pre-registered before the smoke: cut to 0.25 if the smoke's fell_over is over 2x run 12's. It was 1.87x (0.182 against 0.097), so the std is kept.
+- Engagement: both lines, each with a 3/5 majority: reach_deep + fast contact up (experiment design, architecture, motion) and left + back contact up (coach, experiment design, RL; "up", 2 of 3).
+- No STOP vote.
+- Pre-registered (experiment design, RL): if run 13 fails to engage, the leg-residual route is closed and the panel chooses between e2 proper (decoder fine-tune) and a stop.
+- Not more envs (architecture): 16,384 envs gave only +9 % steps per second (D-065), and memory would leave no room for the early reads.

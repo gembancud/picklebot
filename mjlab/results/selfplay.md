@@ -623,3 +623,12 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - With tanh and a +-0.1 rad range, the residual was still a small nudge at the early check.
 
 **Plainly:** the policy has only just started to use its new leg control, and it has not yet changed how the robot gets to deep or fast balls. The kill line was pre-registered, so the run stops here. Panel round 34's next options: fine-tune the controller's decoder (e2 proper), a privileged teacher and distillation (e4), or a stop vote. Panel round 35 decides.
+
+## Run 13: the leg residual at +-0.3 rad (D-153)
+
+`scripts/rally_run13.sh`.
+- **Task:** Coop-Moves-Weak-Pace25-LegRes30: run 12's with `leg_r` 0.3. Parent: the same widened rally-10 model_21399.
+- **Training:** training seed 91, 6,400 iterations.
+- **Smoke:** 40 iterations. fell_over 0.182, against 0.097 for run 12's smoke (1.87x, under the pre-registered 2x line, so the std is kept). The eval path loads.
+- **Checks:** early kill at model_23300 (`early-legres30`: run 12's lines plus left + back feeder contact up, from the direction split). Endpoint: M1 on 4219542, read once.
+- **Success:** feeder-ball >= 81.9 % (low > 80.1 %) and partner-ball >= 58.2 %.

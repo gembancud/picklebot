@@ -4038,3 +4038,14 @@ The D-151 read met its pre-registered controller-limit rule: reach_deep and fast
 - **Early kill at model_23300** (`rally_check.py early-legres`, parent re-read on 4219411-4219414): reach_deep + fast feeder-ball contact must be up (coach); D-145's and D-148's lines without the pace engagement check.
 - **Endpoint:** the M1 read on 4219442, read once; style from the h5f battery reported against the parent's. **Success:** feeder-ball legal >= 81.9 % with a low > 80.1 %, partner-ball legal >= 58.2 %, sides within 3 points, falls <= 4 %.
 - **If it fails:** the round 34 options left are e2 proper (fine-tune the decoder, about 300 lines) and e4 (a privileged teacher, then distillation); the panel decides, and a stop vote is on the table (experiment design's line).
+
+
+## D-153 - Rally run 13: the leg residual at +-0.3 rad (panel round 35, 2026-10-25)
+
+Run 12 (D-152) was killed at its early check: reach_deep + fast feeder contact went 63.5 -> 63.2 %. The leg output rows were still growing (weight norm 0.11 against 0.28 for the base rows). The panel (5/5) judged the kill right but the test weak: +-0.1 rad moves the foot about 6-7 cm, while a sidestep needs about 0.3-0.4 rad of hip roll.
+
+- **Change:** `leg_r` 0.1 -> 0.3 (`LEG_R_WIDE`). Task `...-Weak-Pace25-LegRes30-G1`; run 13's reads set `PICKLEBOT_LEG_R=0.3`.
+- **Parent:** the same widened rally-10 model_21399 (rally-12-legres-init), with its optimizer, training seed 91, 6,400 iterations, unchanged leg init std. The pre-registered smoke rule was to cut the std to 0.25 if fell_over exceeded 2x run 12's smoke; it was 1.87x, so the std is kept.
+- **Early kill at model_23300** (`rally_check.py early-legres30`; parent re-read on 4219511-4219515): run 12's lines unchanged, plus left + back feeder-ball contact (the direction split, `feeder_speed_envelope.py`) must be up on the parent.
+- **Endpoint:** the M1 read on 4219542, read once; direction split on 4219544, reported. **Success:** D-152's bars.
+- **If it fails to engage:** the leg-residual route is closed; the panel chooses between e2 proper (decoder fine-tune) and a stop.

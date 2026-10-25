@@ -2108,3 +2108,23 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres(True),
                     rl_cfg=_s5e_rl_cfg())
+
+
+
+# Rally run 13 (D-153, panel round 35, 5/5): rally run 12's leg residual at +-0.3 rad (LEG_R 0.1 -> 0.3), the one change.
+# Run 12 was killed at its early check with the leg rows still growing (weight norm 0.11 against 0.28): +-0.1 rad moves
+# the foot about 6-7 cm on a 0.7 m leg, while a sidestep needs about 0.3-0.4 rad of hip roll (motion).
+LEG_R_WIDE = 0.3
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LEGRES30 = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LegRes30-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres30(play=False):
+    return _leg_residual(_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25(play), leg_r=LEG_R_WIDE)
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LEGRES30,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres30(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres30(True),
+                    rl_cfg=_s5e_rl_cfg())

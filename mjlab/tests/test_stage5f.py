@@ -1252,3 +1252,16 @@ def test_d152_leg_residual_task():
         assert list(ta) == list(tb)
         changed = [k for k in ta if ta[k] != tb[k]]
         assert changed == ["actions"] and tb["actions"].func is last_action_base
+
+
+
+def test_d153_legres30_differs_only_in_range():
+    """D-153: rally run 13's task is run 12's with leg_r 0.3 instead of 0.1 and nothing else."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_legres30()
+    la, lb = a.actions["latent"], b.actions["latent"]
+    assert (la.leg_r, lb.leg_r) == (0.1, 0.3)
+    assert not [f.name for f in dataclasses.fields(la) if f.name != "leg_r" and getattr(la, f.name) != getattr(lb, f.name)]
+    assert a.rewards == b.rewards and a.observations == b.observations
