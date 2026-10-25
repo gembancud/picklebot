@@ -605,3 +605,21 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Smoke:** 40 training iterations ran; the widened checkpoint loads in the evaluation tasks (`PICKLEBOT_LEG_R=0.1`). Run-to-run GPU noise in a 64-env read is as large as the parent-versus-init difference.
 - **Checks:** early kill at model_23300 (`early-legres`: reach_deep + fast feeder contact must be up, plus D-145's and D-148's lines). Endpoint: M1 on 4219442, read once.
 - **Success:** feeder-ball >= 81.9 % (low > 80.1 %) and partner-ball >= 58.2 %.
+
+**Killed at the early check** (model_23300; the parent re-read on 4219411-4219414). The leg residual did not engage:
+
+| Measure | Parent | Run 12 | Kill line |
+|---|---|---|---|
+| **reach_deep + fast feeder contact** | 63.5 % | **63.2 %** | must be up (**failed**) |
+| Feeder-ball legal | 80.4 % | 79.9 % (low 79.3 %) | 78.4 % |
+| Partner-ball legal | 63.5 % | 64.2 % | 60.5 % |
+| P(5+) | 13.9 % | 14.9 % | reported |
+| Worst feeder-family contact | | -3.4 (reach_deep) | -5 points |
+| Court main | 77.1 % | 78.4 % | -5 points |
+| Lowest move arrival | 99.5 % | 96.8 % | -5 points |
+| Court falls per episode | | 3.1 % | 4 % |
+
+- **The leg rows are learning slowly:** the mean output-row weight norm went 0.02 (model_21500) -> 0.07 -> 0.11 (model_23300), against 0.28 for the base rows. The leg std held at 0.72.
+- With tanh and a +-0.1 rad range, the residual was still a small nudge at the early check.
+
+**Plainly:** the policy has only just started to use its new leg control, and it has not yet changed how the robot gets to deep or fast balls. The kill line was pre-registered, so the run stops here. Panel round 34's next options: fine-tune the controller's decoder (e2 proper), a privileged teacher and distillation (e4), or a stop vote. Panel round 35 decides.
