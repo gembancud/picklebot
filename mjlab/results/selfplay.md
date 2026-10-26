@@ -707,3 +707,23 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Smoke:** mean fell_over 0.099 (run 14 smoke 0.106; stop line 0.159); paddle_contact 0.0445 (0.0438).
 - **Early kill at model_29700** on run 14's lines (left + back feeder contact up >= 2 points against a parent re-read).
 - **Success (pre-registered):** feeder-ball legal >= 83.9 % with low > 81.9 %, partner-ball legal >= 68.5 %, sides within 3 points, falls <= 4 %.
+
+**Early check** (model_29700 against a re-read of run 14's model_27798 on 4219711-4219715): **KILLED** on its engagement line. Left + back feeder-ball contact went **down** 58.4 -> 54.9 % (-3.5; the line was +2.0).
+
+| Measure | Parent (run 14, re-read) | Run 15 model_29700 | Line |
+|---|---|---|---|
+| **Left + back feeder contact** | 58.4 % | **54.9 %** | up >= 2 points (**failed**) |
+| Left feeder legal | 45.5 % | **39.6 %** | reported |
+| Back feeder legal | 52.8 % | 49.4 % | reported |
+| Forward / right feeder legal | 93.1 / 89.2 % | 93.3 / 87.6 % | reported |
+| reach_deep + fast feeder contact | 65.2 % | 64.5 % | up (failed) |
+| Partner-ball legal | 69.7 % | 71.8 % | >= 66.7 % (held) |
+| Feeder-ball legal | 81.4 % | 82.1 % | >= 79.4 % (held) |
+| P(5+) | 17.8 % | 19.2 % | reported |
+| Court falls per episode | | 2.6 % | <= 4 % (held) |
+| Move arrival (lowest) | 99.5 % | 99.5 % | within -5 (held) |
+
+- Walking, falls and the other lines held. The policy got slightly better on partner balls and P(5+), but worse at the balls that need a step left or back, which is what the wider range was for.
+- **Dose response:** lam_r 1 -> 2 raised left feeder legal 36 -> 44 %; 2 -> 3 lowered it 45.5 -> 39.6 %. The useful range is about 2 sigma.
+
+**Plainly:** widening the control range a second time made the robot worse at stepping left and back. Under D-155, lam_r stays at 2; panel round 38 chooses among run 14 continued, the e4 teacher, and a stop.
