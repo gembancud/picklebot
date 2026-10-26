@@ -520,3 +520,34 @@ Waiting for the user (D-145: no run 9 without the user).
   - plus the used line: the same checkpoint and seed with the input zeroed (`PICKLEBOT_TEACHER_GAIN=0`) must lose at least 3 points of left + back contact (experiment design and architecture at 3; RL at 2).
 - **Teacher gate unchanged** (D-156).
 - **Pre-registered:** experiment design, architecture and coach vote STOP if run 17 fails its usage line, its engagement line or its gate. No third teacher form.
+
+
+## Round 40 - run 17 killed; the panel votes STOP (5/5) (2026-10-27)
+
+**Brief:** run 17 (the teacher input x30) was killed at model_29700 on both lines.
+- Engagement: left + back feeder contact 55.7 -> 53.0 % (line: +2).
+- Used: with the input zeroed on the same checkpoint and seed, 53.3 % (line: must lose >= 3).
+
+**Correction check (5/5): a fair test, measured correctly.**
+- Experiment design recomputed the counts: 936/1682, 898/1693 and 925/1735.
+- The gain reached the network (architecture checked mjlab's scale path).
+- The zeroed read is clean: the input's own off state, though after normalization it is a constant, not 0 (motion, architecture).
+- The raw teacher column norms (0.03-0.04) are still random-walk size, so PPO gave those columns no steady gradient (RL, architecture, experiment design).
+- **What it refutes:** growing a new pathway in a converged policy fine-tuned at rsl_rl's 1e-5 learning-rate floor (KL already above target). It does not refute a privileged teacher itself (coach, motion, experiment design).
+- **RL:** most of the teacher input is redundant with ball_pos/ball_vel, so advantage gives little credit for using it.
+- **Coach / motion:** the miss pattern is unchanged. 74 % of backhand misses need a move to the left; misses end 0.93-0.97 m from the ball at about 2.0 of 2.7 m/s. The robot reads late and does not commit to the step.
+
+**Votes: STOP, 5/5** (experiment design, architecture and coach as pre-registered; motion and RL too).
+- Seventeen rally runs: feeder-ball legal 77-82 % throughout (M1 needs 85 %). Best P(5+) is 18.7 %; the target needs 80 %, about 96 % per shot.
+- Every warm-start change from a converged policy has read as noise or made things worse. The one exception, lam_r 2, lifted a constraint.
+
+**Options for the user (members' rankings):**
+
+| Option | Ranked | Rough cost |
+|---|---|---|
+| A privileged teacher trained **from scratch** (fresh optimizer, starting learning rate about 3e-4, contact and stance inputs from iteration 0), then a DAgger student; teacher gate at 85 % before distilling | 1st by coach, motion, RL, experiment design; 2nd by architecture | about 80-300 lines; 25-90 GPU-hours |
+| Accept run 14 model_27798 as the result, with a rally video and write-up | 1st by architecture; 2nd by the others | 1-4 hours |
+| A bigger network trained from scratch (the user's scaling interest) | experiment design and architecture, 3rd | 30-100 GPU-hours |
+| Retrain the motion controller (left/back and crossover steps under time pressure), then the rally ladder again | last by all; move arrival is already 96-99.7 % | 40-140 GPU-hours |
+
+- RL and experiment design would not offer the spot-route teacher: it is the same fine-tune at the learning-rate floor, and it starts 6 points down.

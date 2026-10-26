@@ -4115,3 +4115,21 @@ Run 16 (D-156) was killed at its early check: left + back feeder contact fell 1.
 - **Reported:** the normalizer (count about 1.5e10) adapts slowly and lowers the effective gain over the run.
 - **Seeds:** 4219902-4219944 are in the ledger. Run 16's endpoint seeds (4219820-4219844) are retired unread.
 - **Launch:** a detached Windows process (`Start-Process wsl`). Run 16's first attempt died with the WSL session when it was launched from the app's shell.
+
+
+## D-158 - The rally loop stops; back to the user (panel round 40, 2026-10-27)
+
+Run 17 (D-157, teacher input x30) was killed at its early check: left + back feeder contact fell 2.6 points, and zeroing the input changed it by only -0.3 (the used line needed 3). Round 40 voted STOP 5/5, as experiment design, architecture and coach had pre-registered. Under D-147 the loop goes back to the user.
+
+- **Result:** rally run 14 model_27798 (D-154, lam_r 2) is the loop's best.
+  - Partner-ball legal 70.5 %, feeder-ball legal 81.9 %, P(3+) 31.6 %, P(5+) 18.7 %.
+  - Sides 73.7 / 73.5 %, court falls 3.4 %.
+  - Five re-reads on other seeds agree: feeder 81.4-82.0 %, P(5+) 17.8-18.7 %.
+  - Neither M1 (feeder 85 %) nor the target (P(5+) 80 %) is met.
+- **Finding:** fine-tuning the converged rally policy cannot grow a new pathway within a run. The learning rate is pinned at rsl_rl's 1e-5 floor with KL above target. Runs 12, 16 and 17 grew new rows or columns only at random-walk size. Runs 3, 15, 16 and 17 read as run 14 continued.
+- **Options for the user** (round 40):
+  1. a privileged teacher trained from scratch with a fresh optimizer, then a DAgger student (25-90 GPU-hours);
+  2. accept run 14 and make a rally video (1-4 h);
+  3. a bigger network from scratch (30-100 GPU-hours);
+  4. retrain the motion controller (40-140 GPU-hours).
+- Nothing is pushed (the target is not met). Local commits only.
