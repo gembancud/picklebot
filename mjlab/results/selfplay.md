@@ -737,3 +737,21 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Early kill at model_29700** on run 14's lines (left + back feeder contact up >= 2 points against a parent re-read).
 - **Teacher gate (pre-registered):** feeder-ball legal >= 85 % (low >= 84 %), partner-ball legal >= 68.5 %, sides within 3 points, falls <= 4 %. Pass: build the DAgger student; M1 is claimed only from the student.
 - **Attempt 1 lost (2026-10-26):** launched about 13:15. The parent re-reads finished, then training stopped about 4.5 minutes in (model_27820, 22 iterations) with no error and no exit file. The whole WSL session ended (WSL was freshly started at 18:48, and Windows rebooted at 17:19). Logs are kept as `artifacts/train/rally-16-teacher-attempt1*.log`. Relaunched unchanged at 18:51 (same commit 86e1191, same seeds; the parent re-reads repeat) from a detached Windows `wsl` process, so the run no longer depends on the Claude app's shell.
+
+**Early check** (attempt 2; model_29700 against a re-read of run 14's model_27798 on 4219811-4219815): **KILLED** on its engagement line. Left + back feeder-ball contact went **down** 58.0 -> 56.3 % (-1.8; the line was +2.0).
+
+| Measure | Parent (run 14, re-read) | Run 16 model_29700 | Line |
+|---|---|---|---|
+| **Left + back feeder contact** | 58.0 % | **56.3 %** | up >= 2 points (**failed**) |
+| Left / back feeder legal | 40.8 / 56.4 % | 41.0 / 52.5 % | reported |
+| reach_deep + fast feeder contact | 66.9 % | 65.2 % | up (failed) |
+| Partner-ball legal | 70.1 % | 71.3 % | >= 67.1 % (held) |
+| Feeder-ball legal | 81.9 % | 81.4 % | >= 79.9 % (held) |
+| P(5+) / P(3+) | 18.4 / 31.8 % | 19.7 / 32.3 % | reported |
+| Court falls per episode | | 3.4 % | <= 4 % (held) |
+| Move arrival (lowest) | 98.3 % | 98.3 % | within -5 (held) |
+
+- **The test was not fair.** The policy hardly used the new input. The first-layer weight on the five teacher columns grew from 0 to only 0.03-0.06 (column norm) by model_29700, against a median of 3.65 for the original input columns: about 1/60 of an ordinary input. The zero-initialized columns, with the learning rate held at 1e-5, learned far too slowly in 1,900 iterations. This is the same pattern as run 12's leg rows.
+- So run 16 does not show whether the true contact point and time help. It shows that a zero-start privileged input, with run 14's optimizer settings, is not picked up within 30 % of a run.
+
+**Plainly:** the teacher did not learn to look at its new information, so it played like run 14. Panel round 39 decides what to do.
