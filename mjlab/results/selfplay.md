@@ -763,3 +763,22 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Smoke:** fell_over 0.080 (run 14 smoke 0.106); the input is live at gain 30.
 - **Early kill at model_29700:** run 14's lines (left + back feeder contact up >= 2 points against a parent re-read), plus the used line: the same checkpoint and seed with the input zeroed must lose >= 3 points of left + back contact.
 - **Teacher gate:** D-156's, unchanged. Pre-registered STOP votes (experiment design, architecture, coach) if any line fails.
+
+**Early check** (model_29700 against a re-read of run 14's model_27798 on 4219911-4219915): **KILLED** on both its engagement line and its used line.
+
+| Measure | Parent (run 14, re-read) | Run 17 model_29700 | Line |
+|---|---|---|---|
+| **Left + back feeder contact** | 55.7 % | **53.0 %** | up >= 2 points (**failed**) |
+| **Used line:** the same read with the input zeroed | | 53.3 % (input on: 53.0 %) | zeroed loses >= 3 points (**failed**: -0.3) |
+| Left / back feeder legal | 42.3 / 48.7 % | 37.9 / 50.2 % | reported |
+| reach_deep + fast feeder contact | 65.1 % | 63.2 % | up (failed) |
+| Partner-ball legal | 70.3 % | 69.2 % | >= 67.3 % (held) |
+| Feeder-ball legal | 81.6 % | 82.2 % | >= 79.6 % (held) |
+| P(5+) / P(3+) | 18.7 / 31.9 % | 18.4 / 31.2 % | reported |
+| Court falls per episode | | 3.1 % | <= 4 % (held) |
+| Move arrival (lowest) | 98.4 % | 99.5 % | within -5 (held) |
+
+- **Teacher input use.** At model_29700 the raw column norms are 0.03-0.04. With the x30 gain and the normalizer std on those inputs (1.7-3.3; it adapted faster than expected), the effective weight is 0.26-0.75, against a median of 3.65 for the original columns. Zeroing the input changes nothing (-0.3), so the policy still does not use the true contact point and time.
+- **Two teacher runs, the same outcome.** With the information available, zero-start and x30-gain columns are not picked up in 1,900 iterations at the 1e-5 learning-rate floor. The policy plays as run 14 does (partner, feeder and P(5+) within noise).
+
+**Plainly:** even with the ball information made 30 times louder, the robot did not start using it, so the teacher played like run 14. Pre-registered: experiment design, architecture and coach vote STOP. Panel round 40 decides.
