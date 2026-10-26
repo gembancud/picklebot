@@ -1009,6 +1009,19 @@ def _residualize(cfg, lam_r: float = 1.0, base: str | None = None):
     cfg.rewards["latent_prior"] = RewardTermCfg(func=residual_prior_nll, weight=-0.05)
     if float(os.environ.get("PICKLEBOT_LEG_R", "0")) > 0:  # D-152: evaluation tasks for leg-residual checkpoints
         _leg_residual(cfg, float(os.environ["PICKLEBOT_LEG_R"]))
+    if os.environ.get("PICKLEBOT_TEACHER") == "1":  # D-156: evaluation tasks for teacher checkpoints
+        _teacher(cfg)
+    return cfg
+
+
+def _teacher(cfg):
+    """D-156 e4 teacher: the true-state contact point and time (return_stand.teacher_contact_obs) as a trailing actor
+    input; the critic and the frozen base are unchanged."""
+    from mjlab.managers.observation_manager import ObservationTermCfg
+    from picklebot_mj.tasks.return_stand import teacher_contact_obs
+    if "teacher_contact" not in cfg.observations["actor"].terms:
+        cfg.actions["ball"].teacher_contact = True
+        cfg.observations["actor"].terms["teacher_contact"] = ObservationTermCfg(func=teacher_contact_obs)
     return cfg
 
 
@@ -2175,4 +2188,23 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr3(),
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr3(True),
+                    rl_cfg=_s5e_rl_cfg())
+
+
+
+# Rally run 16 (D-156, panel round 38, 3/5): the e4 teacher. Rally run 14's task (lam_r 2) plus the privileged
+# true-state contact point and time as a trailing actor input, the one change; the deployable student is distilled
+# from it only if it passes its gate.
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_TEACHER = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LamR2-Teacher-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher(play=False):
+    return _teacher(_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2(play))
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_TEACHER,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher(True),
                     rl_cfg=_s5e_rl_cfg())

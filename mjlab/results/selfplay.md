@@ -727,3 +727,12 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Dose response:** lam_r 1 -> 2 raised left feeder legal 36 -> 44 %; 2 -> 3 lowered it 45.5 -> 39.6 %. The useful range is about 2 sigma.
 
 **Plainly:** widening the control range a second time made the robot worse at stepping left and back. Under D-155, lam_r stays at 2; panel round 38 chooses among run 14 continued, the e4 teacher, and a stop.
+
+## Rally run 16 - the e4 privileged-ball teacher (D-156, panel round 38, 3/5)
+
+- **Change:** run 14's task (lam_r 2) plus a trailing 5-dimensional actor input on every live feed: the true-state contact point relative to the pelvis, its height, the time to contact, and an on flag (`...-Weak-Pace25-LamR2-Teacher-G1`).
+- **Parent:** rally-14 model_27798 with five zero input columns (exactly the parent at the start), with its optimizer; training seed 94; 6,400 iterations; 12,288 envs. Script `scripts/rally_run16.sh`.
+- **Smoke:** fell_over 0.107 (run 14 smoke 0.106); the teacher input is live on 56 % of env-steps and counts down correctly.
+- **Headroom read (reported):** run 14 with a clean planner spot turned on: feeder-ball legal 82.0 -> 75.9 %, partner 70.5 -> 68.1 %, P(5+) 18.6 -> 15.8 % (4219801). The policy walks to that spot; it is not a test of the teacher's input.
+- **Early kill at model_29700** on run 14's lines (left + back feeder contact up >= 2 points against a parent re-read).
+- **Teacher gate (pre-registered):** feeder-ball legal >= 85 % (low >= 84 %), partner-ball legal >= 68.5 %, sides within 3 points, falls <= 4 %. Pass: build the DAgger student; M1 is claimed only from the student.

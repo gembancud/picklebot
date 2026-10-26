@@ -46,6 +46,7 @@ def main():
     ap.add_argument("--envs", type=int, default=2048)
     ap.add_argument("--seconds", type=float, default=120.0)
     ap.add_argument("--json", default=None)
+    ap.add_argument("--planner", choices=["task", "off", "clean", "noisy"], default="task")  # round 38 headroom read
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "development seeds only"
     cfg = load_env_cfg(TASK)
@@ -57,6 +58,8 @@ def main():
     b.feed_mix = FeedMix({f: 1.0 for f in FAMILY_NAMES})
     b.feed_anchor = "start"
     b.recovery_mode = "fixed"
+    if args.planner != "task":
+        b.planner_mode = args.planner
     cfg.episode_length_s = max(cfg.episode_length_s, args.seconds + 1.0)
     b.pair_mode, b.pair_handoff, b.ready_track = True, "contact", True
     cfg.observations["actor"].enable_corruption = False

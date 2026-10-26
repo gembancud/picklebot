@@ -4075,3 +4075,23 @@ Run 14 (D-154, lam_r 1 -> 2) met its success line at model_27798 and is the new 
 - **Endpoint:** the M1 read on 4219742, read once; crossing 4219743 and direction split 4219744, reported. **Success:** feeder-ball legal >= 83.9 % with a court-bootstrap low > 81.9 %, partner-ball legal >= 68.5 %, sides within 3 points, court falls <= 4 %. Style reported; training time is a confound and is reported.
 - **If it fails to engage:** lam_r stays at 2; the panel chooses among run 14 continued (the control), the e4 teacher, and a stop.
 - **Note:** `test_court_feed_mix_shares_families_recovery_and_planner` is flaky (failed once, passed on the rerun of the same code; unrelated to this change). The other 61 tests in test_stage5f.py pass, including the new `test_d155_lamr3_task_differs_only_in_lam_r`.
+
+
+## D-156 - Rally run 16: the e4 privileged-ball teacher (panel round 38, 2026-10-26)
+
+Run 15 (D-155, lam_r 3) was killed at its early check: left + back feeder contact fell 3.5 points. lam_r stays at 2. Round 38 voted 3/5 for the e4 teacher (experiment design, motion, coach). RL and architecture voted to continue run 14. Their premise, that the actor already sees the planner's stance spot, does not hold for the M1 read: its task has the planner off, and court feeds in training get no spot (D-116).
+
+- **Change:** run 14's task plus `teacher_contact` (`return_stand.teacher_contact_obs`) as a trailing 5-dimensional actor input. It holds the true-state contact point relative to the pelvis (body frame), its height, the time to contact, and an on flag.
+  - Every live feed (feeder ball, partner ball, court feed) is planned once, on the first control step after it starts, by `planner.predict_contact_fast` with true spin and no delay (`BallPhysicsAction._teacher_step`).
+  - The input is zero from the first contact to the next feed, and on dead balls.
+  - Task `...-Weak-Pace25-LamR2-Teacher-G1`; evaluation tasks take it through `PICKLEBOT_TEACHER=1`.
+  - The frozen base executor reads only its own 124 input columns (`ResidualLatentAction._base_in`). The critic is unchanged.
+- **Parent:** rally-14 model_27798, with the actor input widened 124 -> 129: zero weight columns, a (0, 1) normalizer prior and zero-padded Adam moments (`scripts/expand_checkpoint.py`, `scripts/rally_run16_init.sh`). With its optimizer, training seed 94, 6,400 iterations, 12,288 envs.
+- **Smoke:** 40 iterations at 1,024 envs (seed 86): mean fell_over 0.107 against run 14 smoke's 0.106 (stop line 0.159); paddle_contact 0.0456 (0.0438). The teacher input is on in 56 % of env-steps and its time to contact falls by 0.020 s per 0.020 s control step (`scripts/diag/teacher_obs_check.py`, 4219804). The widened parent equals run 14's weights exactly, with zero extra columns (checked tensor by tensor). The 64-env pair reads of the two on 4219803 differ slightly (contact 56.3 vs 54.8 %), but two reads of the same checkpoint on the same seed differ as much (episodes 205 vs 196), because GPU simulation is not bit-exact.
+- **Early kill at model_29700** (`rally_check.py early-teacher`, run 14's early-lamr2 lines unchanged; parent re-read on 4219811-4219815).
+- **Endpoint:** the M1 read on 4219842, read once; crossing 4219843 and direction split 4219844, reported.
+- **Teacher gate** (`rally_check.py teacher-gate`): feeder-ball legal >= 85 % with a court-bootstrap low >= 84 %, partner-ball legal >= 68.5 %, sides within 3 points, court falls <= 4 %.
+  - **Pass:** the panel builds the DAgger student (no-privilege actor, trained on its own rollouts against the teacher's actions). M1 is claimed only from the student, on fresh seeds. Never from the teacher.
+  - **Fail:** no distillation. The panel convenes; motion and coach vote STOP below 85 %, and experiment design below 83.9 %.
+- **Headroom read (reported):** run 14 with a clean planner spot turned on did worse (feeder-ball legal 82.0 -> 75.9 %): the policy walks to that spot. This is not a test of the teacher's input.
+- **Seeds:** 4219801-4219844 in the ledger. Run 15's endpoint seeds (4219720-4219744) are retired unread.

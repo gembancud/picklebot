@@ -145,6 +145,7 @@ class BallPhysicsActionCfg(ActionTermCfg):
     drill_v2: bool = False
     v2_fail_weighting: bool = False  # training only: failure-weighted feeds, extreme share <= 25 %
     planner_mode: str = "off"  # "off", "clean" (true state and spin, no delay) or "noisy" (delay, noise, spin unknown)
+    teacher_contact: bool = False  # D-156 e4 teacher: the true-state contact point and time of every live feed
     planner_delay_s: float = 0.10
     planner_pos_noise: float = 0.03
     planner_vel_noise: float = 0.15
@@ -322,6 +323,13 @@ class BallPhysicsAction(ActionTerm):
             self.plan_pending = torch.zeros(n, dtype=torch.bool, device=dev)
             self.plan_t = torch.zeros(n, device=dev)
             self._phys_i = 0  # host-side physics-step counter: the planner runs once per control step
+        if getattr(cfg, "teacher_contact", False):  # D-156: privileged contact of every feed (planner or not)
+            self.tc_xyz = torch.zeros(n, 3, device=dev)  # court-local contact point
+            self.tc_t = torch.zeros(n, device=dev)  # time since the feed started
+            self.tc_due = torch.zeros(n, device=dev)  # tc_t at the contact
+            self.tc_found = torch.zeros(n, dtype=torch.bool, device=dev)
+            self.tc_pending = torch.zeros(n, dtype=torch.bool, device=dev)
+            self._tc_i = 0  # host-side physics-step counter: planned once per control step
         self.lat_on = None
         if getattr(cfg, "episode_latency", False):  # Stage 5E run 4 (D-105): drawn per robot episode at each reset
             self.gen_lat = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 314161)  # own stream
@@ -559,7 +567,12 @@ class BallPhysicsAction(ActionTerm):
         replay_old = self.replay_feed.clone()
         v2_last_old = self.v2.last_ext.clone() if getattr(self, "v2", None) is not None else None
         plan_old = (self.plan_pending.clone(), self.plan_t.clone()) if getattr(self, "plan_on", False) else None
+        tc_old = (self.tc_pending.clone(), self.tc_found.clone(), self.tc_t.clone()) if hasattr(self, "tc_found") else None
         self._feed(self.all_ids)
+        if tc_old is not None:  # D-156: in-flight feeds keep their planned contact
+            self.tc_pending = torch.where(fire, self.tc_pending, tc_old[0])
+            self.tc_found = torch.where(fire, self.tc_found, tc_old[1])
+            self.tc_t = torch.where(fire, self.tc_t, tc_old[2])
         if v2_last_old is not None:  # only fired envs advance the no-two-extremes state
             self.v2.last_ext = torch.where(fire, self.v2.last_ext, v2_last_old)
         if plan_old is not None:
@@ -636,6 +649,8 @@ class BallPhysicsAction(ActionTerm):
 
     def _feed(self, env_ids):
         k = len(env_ids)
+        if getattr(self.cfg, "teacher_contact", False):  # D-156: this feed's contact is planned on the next control step
+            self.tc_pending[env_ids], self.tc_found[env_ids], self.tc_t[env_ids] = True, False, 0.0
         cprob = getattr(self.cfg, "court_feed_prob", 0.0)
         rprob = getattr(self.cfg, "replay_prob", 1.0) if self.replay is not None else 0.0
         mixed = self.replay is not None and rprob < 1.0  # D-130
@@ -786,6 +801,25 @@ class BallPhysicsAction(ActionTerm):
         self.hit_hint_on = self.hit_hint_on | upd
         self.plan_pending = self.plan_pending & ~upd
 
+    def _teacher_step(self, dt: float, live: torch.Tensor) -> None:
+        """D-156 e4 teacher: once per control step, feeds still unplanned get the true-state contact (point, time;
+        true spin, no delay) from the ball as it now is (a received partner ball is in place by then). A fixed batch,
+        due ones first (no host sync); an env left over is planned on the next step."""
+        from picklebot_mj.planner import predict_contact_fast
+        self.tc_t = self.tc_t + dt
+        self._tc_i += 1
+        if self._tc_i % int(self._env.cfg.decimation) != 0:
+            return
+        due = self.tc_pending & live & ~self.hit_done
+        idx = torch.topk(due.float(), min(PLAN_BATCH, self.num_envs)).indices
+        sel = due[idx]
+        cx, _, ct, found = predict_contact_fast(self.ball.pos[idx], self.ball.vel[idx], self.ball.spin[idx])
+        ok = sel & found
+        self.tc_xyz = self.tc_xyz.index_copy(0, idx, torch.where(ok.unsqueeze(-1), cx, self.tc_xyz[idx]))
+        self.tc_due = self.tc_due.index_copy(0, idx, torch.where(ok, self.tc_t[idx] + ct, self.tc_due[idx]))
+        self.tc_found = self.tc_found.index_copy(0, idx, torch.where(sel, found, self.tc_found[idx]))
+        self.tc_pending = self.tc_pending & ~torch.zeros_like(due).index_copy(0, idx, sel)
+
     def apply_actions(self) -> None:
         env = self._env
         dt = env.physics_dt
@@ -801,6 +835,8 @@ class BallPhysicsAction(ActionTerm):
         live = ~self.rules.dead
         if getattr(self, "plan_on", False):
             self._plan_step(dt, live)
+        if hasattr(self, "tc_found"):
+            self._teacher_step(dt, live)
         if getattr(self.cfg, "court_wide", False):  # kitchen state from the feet (D-076)
             feet = data.body_link_pos_w[:, self._foot_ids] - origins.unsqueeze(1)
             in_k = feet[..., 0] >= -court.KITCHEN_DEPTH  # robot side x < 0; the kitchen line counts as kitchen
@@ -1138,6 +1174,23 @@ def recovery_obs(env) -> torch.Tensor:
     rel = torch.zeros(env.num_envs, 3, device=env.device)
     rel[:, :2] = t.recover_xy - t.pelvis_xy()
     return _rotate_inv(robot.data.root_link_pose_w[:, 3:7], rel)[:, :2] / 3.0
+
+
+def teacher_contact_obs(env) -> torch.Tensor:
+    """D-156 e4 teacher (privileged, actor only): the true-state contact point relative to the pelvis in the body frame
+    (metres / 3), its height (m), the time to contact (s, 0-2) and an on flag. Zeros from the first contact to the next
+    feed, on dead balls, and when no contact was found."""
+    t, robot = _term(env), env.scene["robot"]
+    out = torch.zeros(env.num_envs, 5, device=env.device)
+    if not hasattr(t, "tc_found"):
+        return out
+    rel = torch.zeros(env.num_envs, 3, device=env.device)
+    rel[:, :2] = t.tc_xyz[:, :2] - t.pelvis_xy()
+    out[:, :2] = _rotate_inv(robot.data.root_link_pose_w[:, 3:7], rel)[:, :2] / 3.0
+    out[:, 2] = t.tc_xyz[:, 2]
+    out[:, 3] = (t.tc_due - t.tc_t).clamp(0.0, 2.0)
+    out[:, 4] = 1.0
+    return out * (t.tc_found & ~t.tc_pending & ~t.hit_done & ~t.rules.dead).unsqueeze(-1).float()
 
 
 def recovery_reward(env, std: float = RECOVERY_STD) -> torch.Tensor:

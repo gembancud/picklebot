@@ -268,6 +268,22 @@ def early_lamr2(prefix: str) -> bool:
     return ok and g1 >= g0 + 0.02
 
 
+def teacher_gate(prefix: str, tag: str) -> bool:
+    """D-156: the e4 teacher's gate to distillation (pre-registered, read once on the endpoint's M1 read): feeder-ball
+    legal >= 0.85 with a court-bootstrap low >= 0.84, partner-ball legal >= 0.685, sides within 3 points, court falls
+    <= 4 %. M1 is never claimed from the teacher (it sees privileged inputs)."""
+    p = json.load(open(f"{prefix}-target.json"))["pairs"]
+    P = pair_stats(p)
+    own, _ = boot_low(p["court_counts"], 1, 0)
+    fed, fed_lo = boot_low(p["court_counts"], 3, 2)
+    falls = json.load(open(f"results/stage5f-{tag}-summary.json"))["falls_court"]
+    gap = abs(P["sides"]["A"] - P["sides"]["B"])
+    ok = fed >= 0.85 and fed_lo >= 0.84 and own >= 0.685 and gap <= 0.03 and falls <= 0.04
+    print(f"teacher gate: feeder-ball legal {fed:.4f} (low {fed_lo:.4f}; >= 0.85, low >= 0.84); partner-ball legal "
+          f"{own:.4f} (>= 0.685); gap {100 * gap:.1f} (<= 3); falls {falls} (<= 0.04): {'PASS' if ok else 'not met'}")
+    return ok
+
+
 def target(prefix: str, tag: str) -> bool:
     P = pair_stats(json.load(open(f"{prefix}-target.json"))["pairs"])
     try:
@@ -338,8 +354,10 @@ if __name__ == "__main__":
         sys.exit(0 if early_legres(prefix) else 1)
     if mode == "early-legres30":
         sys.exit(0 if early_legres30(prefix) else 1)
-    if mode in ("early-lamr2", "early-lamr3"):  # D-155: run 15 keeps run 14's early lines unchanged
+    if mode in ("early-lamr2", "early-lamr3", "early-teacher"):  # D-155/D-156: run 14's early lines unchanged
         sys.exit(0 if early_lamr2(prefix) else 1)
+    if mode == "teacher-gate":
+        sys.exit(0 if teacher_gate(prefix, sys.argv[3]) else 1)
     if mode == "m1":
         sys.exit(0 if milestone(prefix, sys.argv[3]) else 1)
     target(prefix, sys.argv[3])

@@ -1291,3 +1291,20 @@ def test_d155_lamr3_task_differs_only_in_lam_r():
     assert (la.lam_r, lb.lam_r) == (2.0, 3.0) and la.leg_r == lb.leg_r == 0.0
     assert not [f.name for f in dataclasses.fields(la) if f.name != "lam_r" and getattr(la, f.name) != getattr(lb, f.name)]
     assert a.rewards == b.rewards and a.observations == b.observations
+
+
+
+def test_d156_teacher_task_adds_only_the_trailing_contact_input():
+    """D-156: rally run 16's task is run 14's with the privileged contact term appended last to the actor (the critic,
+    rewards and action terms unchanged apart from the ball term's teacher_contact flag)."""
+    import dataclasses
+    import picklebot_mj.tasks as T
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher()
+    ta, tb = list(a.observations["actor"].terms), list(b.observations["actor"].terms)
+    assert tb == ta + ["teacher_contact"]
+    assert a.observations["critic"].terms.keys() == b.observations["critic"].terms.keys() and a.rewards == b.rewards
+    assert a.actions["latent"] == b.actions["latent"]
+    ba, bb = a.actions["ball"], b.actions["ball"]
+    assert (ba.teacher_contact, bb.teacher_contact) == (False, True)
+    assert not [f.name for f in dataclasses.fields(ba) if f.name != "teacher_contact" and getattr(ba, f.name) != getattr(bb, f.name)]

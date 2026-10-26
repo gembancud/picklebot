@@ -389,6 +389,7 @@ class ResidualLatentAction(LatentJointPositionAction):
                     if k.startswith("mlp.") and k.endswith(".weight"))
         kw = dict(self.cfg.base_actor_cfg)
         kw["hidden_dims"] = tuple(n for _, n in ws[:-1])
+        obs_dim = self._base_in = sd["mlp.0.weight"].shape[1]  # D-156: trailing privileged inputs are not the base's
         base = MLPModel(TensorDict({"actor": torch.zeros(1, obs_dim)}, batch_size=[1]), {"actor": ["actor"]}, "actor",
                         self._base_dim, **kw).to(self.device)
         base.load_state_dict(sd, strict=True)
@@ -410,7 +411,7 @@ class ResidualLatentAction(LatentJointPositionAction):
         x = self._env_ref.obs_buf["actor"]
         if self.base is None:
             self._build_base(x.shape[1])
-        x = x.clone()
+        x = x[:, :self._base_in].clone()
         x[:, self._act_slice] = self.base_last
         with torch.no_grad():
             return self.base(TensorDict({"actor": x}, batch_size=[x.shape[0]])).clone()

@@ -425,3 +425,58 @@ Waiting for the user (D-145: no run 9 without the user).
 - (b) was judged too slow: left rose about 0.6 points per 1,000 iterations after the early check (experiment design, motion, architecture). (c) changes the same tax and risks style. (d) is more code than the evidence needs yet.
 - **Lines (majority on each):** early kill = run 14's early-lamr2 lines unchanged (left + back feeder contact up >= 2 points). Success = feeder-ball legal >= 83.9 % with low > 81.9 % (4/5), partner-ball legal >= 68.5 % (4/5), sides within 3 points, falls <= 4 %. Style is reported (motion's style kill line had one vote). Architecture's smoke falls line is applied.
 - **Pre-registered:** training time is a confound and is reported (RL). If run 15 fails to engage, lam_r stays at 2 and the panel chooses among run 14 continued (the control: RL, motion), the e4 teacher, and a stop (experiment design).
+
+
+## Round 38 - run 15 killed; run 16 = the e4 teacher (2026-10-26)
+
+**Brief:** run 15 (lam_r 2 -> 3) was killed at model_29700. Left + back feeder contact went 58.4 -> 54.9 % against a +2 line. Left legal went 45.5 -> 39.6 %. Partner-ball legal (69.7 -> 71.8 %) and P(5+) (17.8 -> 19.2 %) moved inside read noise. Under D-155, lam_r stays at 2, and the panel chose among run 14 continued, the e4 teacher and a stop.
+
+**Correction check (5/5): the kill was right.**
+- The drop is outside read noise. Run 14 read twice gave left legal 43.7 and 45.5 %.
+- **Why 3 sigma hurt:**
+  - the composite latent (base at 3 sigma plus the residual) can now sit up to 6 sigma from the prior mean, off the decoder's training support (architecture, RL);
+  - `lam_r_init.py`'s 2/3 scaling is exact only for unsaturated outputs, so the saturated left and back rows started away from the parent (architecture, motion, RL);
+  - the effective step size went up 1.5x (RL).
+- Motion and coach: the robot committed *less* to left and back balls. Peak speeds fell (left p90 2.38 -> 2.31 m/s), and misses still end about 0.85 m short. It leaned and reached instead of stepping.
+
+**Votes:**
+
+| Member | Vote |
+|---|---|
+| Experiment design | **d**: teacher with true contact point and time, 6,400 iterations; pre-registered STOP if the teacher's feeder-ball legal ends below 83.9 % |
+| Motion | **d**: same form; STOP if the teacher misses 85 % |
+| Coach | **d**: same form, then a DAgger student; STOP if the teacher misses 85 % |
+| RL | **b**: run 14 continued, 9,600 iterations, engagement check at 50 % |
+| Architecture | **b**: the same; withdrew its earlier (d) |
+
+- **Run 16 = (d), 3/5.**
+- **Why (b) lost:** run 14's left gain after its early check (about 0.6 points per 1,000 iterations) cannot close M1's 3.1-point feeder gap in any planned length, and a +2 line at 30 % would not test it fairly (experiment design, motion, coach).
+- **Correction to RL's and architecture's premise.** Both said the actor already sees the planner's stance spot, so missing information is not the limit. In code, the M1 read's task (`Picklebot-Latent-Court-Res-G1`) has `planner_mode = "off"`. In training, court feeds (80 %) get no planner spot either (D-116). So in the read that counts, the policy must read the ball by itself, and the teacher's premise stands.
+- **Headroom read** (reported, no selection; run 14's model_27798 on 4219801):
+
+  | Planner | Feeder legal | Partner legal | P(5+) |
+  |---|---|---|---|
+  | As trained (off) | 82.0 % | 70.5 % | 18.6 % |
+  | Clean spot | 75.9 % | 68.1 % | 15.8 % |
+
+  Turning on a clean stance spot that the policy only ever saw on drill-v2 feeds makes it worse: it walks to the spot. The existing channel is not a free test of information. The planner-off and direction-split reads were stopped as redundant (the task's planner is already off).
+
+**Form (D-156):**
+- Run 14's task plus a trailing 5-dimensional actor input on every live feed, planned from the ball's true state and spin when the feed starts or the partner's ball arrives. Not tied to the planner. The input:
+  - the contact point relative to the pelvis in the body frame;
+  - its height;
+  - the time to contact;
+  - an on flag.
+- The frozen base reads only its own 124 inputs.
+- The parent is run 14's model_27798 with five zero input columns (`scripts/expand_checkpoint.py`), so it starts exactly at the parent.
+- Training seed 94, 6,400 iterations.
+- Early kill at model_29700 on run 14's lines.
+
+**Teacher gate (pre-registered, read once at the endpoint):**
+- feeder-ball legal >= 85 % with a low >= 84 %;
+- partner-ball legal >= 68.5 %;
+- sides within 3 points, falls <= 4 %.
+
+**After the gate:**
+- **Pass:** the DAgger student is built (about 130-200 lines), and M1 is claimed only from the student, on fresh seeds.
+- **Fail:** no distillation. Motion and coach vote STOP below 85 %, and experiment design below 83.9 %.
