@@ -1308,3 +1308,15 @@ def test_d156_teacher_task_adds_only_the_trailing_contact_input():
     ba, bb = a.actions["ball"], b.actions["ball"]
     assert (ba.teacher_contact, bb.teacher_contact) == (False, True)
     assert not [f.name for f in dataclasses.fields(ba) if f.name != "teacher_contact" and getattr(ba, f.name) != getattr(bb, f.name)]
+
+
+
+def test_d157_teacher30_differs_only_in_the_input_gain():
+    """D-157: rally run 17's task is run 16's with the teacher input's scale 30 and nothing else."""
+    import picklebot_mj.tasks as T
+    a = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher()
+    b = T._latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher30()
+    ta, tb = a.observations["actor"].terms, b.observations["actor"].terms
+    assert list(ta) == list(tb) and (ta["teacher_contact"].scale, tb["teacher_contact"].scale) == (None, 30.0)
+    assert all(ta[k] == tb[k] for k in ta if k != "teacher_contact") and ta["teacher_contact"].func is tb["teacher_contact"].func
+    assert a.rewards == b.rewards and a.actions == b.actions and a.observations["critic"] == b.observations["critic"]

@@ -268,6 +268,20 @@ def early_lamr2(prefix: str) -> bool:
     return ok and g1 >= g0 + 0.02
 
 
+def early_teacher30(prefix: str) -> bool:
+    """Rally run 17 (D-157): run 14's early lines (early_lamr2) unchanged, plus the used line (round 39: experiment design,
+    architecture): the same checkpoint and seed with the teacher input zeroed (PICKLEBOT_TEACHER_GAIN=0) must lose at
+    least 3 points of left + back feeder-ball contact."""
+    ok = early_lamr2(prefix)
+    d1 = json.load(open(f"{prefix}-early-dir.json"))["directions"]
+    dz = json.load(open(f"{prefix}-early-dir-zero.json"))["directions"]
+    con = lambda d: sum(d[k]["contact"] * d[k]["feeds"] for k in ("left", "back")) / max(d["left"]["feeds"] + d["back"]["feeds"], 1)  # noqa: E731
+    g1, gz = con(d1), con(dz)
+    print(f"early: used line: left + back feeder-ball contact with the input {g1:.4f}, zeroed {gz:.4f} "
+          f"({100 * (g1 - gz):+.1f}; kill below +3.0)")
+    return ok and g1 >= gz + 0.03
+
+
 def teacher_gate(prefix: str, tag: str) -> bool:
     """D-156: the e4 teacher's gate to distillation (pre-registered, read once on the endpoint's M1 read): feeder-ball
     legal >= 0.85 with a court-bootstrap low >= 0.84, partner-ball legal >= 0.685, sides within 3 points, court falls
@@ -356,6 +370,8 @@ if __name__ == "__main__":
         sys.exit(0 if early_legres30(prefix) else 1)
     if mode in ("early-lamr2", "early-lamr3", "early-teacher"):  # D-155/D-156: run 14's early lines unchanged
         sys.exit(0 if early_lamr2(prefix) else 1)
+    if mode == "early-teacher30":
+        sys.exit(0 if early_teacher30(prefix) else 1)
     if mode == "teacher-gate":
         sys.exit(0 if teacher_gate(prefix, sys.argv[3]) else 1)
     if mode == "m1":

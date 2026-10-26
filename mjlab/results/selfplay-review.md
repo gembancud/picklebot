@@ -480,3 +480,43 @@ Waiting for the user (D-145: no run 9 without the user).
 **After the gate:**
 - **Pass:** the DAgger student is built (about 130-200 lines), and M1 is claimed only from the student, on fresh seeds.
 - **Fail:** no distillation. Motion and coach vote STOP below 85 %, and experiment design below 83.9 %.
+
+
+## Round 39 - run 16 killed, its teacher input unused; run 17 = the teacher with its input x30 (2026-10-27)
+
+**Brief:** run 16 (the e4 teacher) was killed at model_29700. Left + back feeder contact went 58.0 -> 56.3 % against a +2 line. The five teacher input columns' first-layer norms were 0.03-0.06, against a median of 3.65 for the original columns.
+
+**Correction check (5/5): "not used" is right, but the cause is not slow learning of new columns alone.**
+- **The learning rate sat at rsl_rl's adaptive floor (1e-5) throughout runs 14 and 16** (architecture, RL, experiment design, motion). KL is above its target even there, so there is no spare step size.
+- **Every column moved at random-walk size** (architecture, RL, coach). From 27798 to 29700 the old columns moved a median 0.05, the teacher columns 0.03-0.06. The prediction for a pure random walk at 1e-5 over 20 Adam steps per iteration is 0.014 / 0.045 / 0.062 at the three checkpoints, and that is what was measured. There was no consistent gradient on the new columns.
+- **The normalizer is effectively frozen** (count about 1.5e10). The teacher inputs reach the network raw and small (xy in metres / 3), so their effective weight is under 1/60, nearer 1/200.
+- **Run 16 at 30 % is in effect a read of (b)** (architecture, RL, experiment design): run 14 continued plus an input that did nothing. Left + back -1.8, feeder -0.5, partner +1.2. Each is within about 1 SE (about 1,700-1,900 left + back feeds per read).
+- **D-156's STOP lines were never reached** (experiment design). They were endpoint-gate lines, so e4 is untested, not refuted.
+- **Motion:** the input gave the contact point, not where to stand. The policy would also have to learn the stance offset and the forehand/backhand side.
+
+**Votes (t2, 5/5; the form split):**
+
+| Member | Form |
+|---|---|
+| Experiment design | input gain x30 on the teacher term, run 16's widened init, seed 95; used line: input zeroed loses >= 3 points of left + back contact |
+| RL | input gain 10/sigma per input; used line: gain 0 loses >= 2 points |
+| Architecture | per-column optimizer step multiplier x30 on the five columns (runner subclass); used line >= 3 points |
+| Motion | the true stance spot through the spot input on every live feed |
+| Coach | the same as motion; used line: spot on beats spot off by >= 2 points of feeder legal |
+
+- **No form had a majority:** gain 2, spot 2, step multiplier 1.
+- **Tie rule (least new code, fewest moving parts): the input gain**, at x30 (experiment design's number, and architecture's multiplier).
+  - It uses the observation term's built-in `scale` and adds about 15 lines.
+  - It keeps the exact parent start and is one change against run 16.
+- **Why the spot route lost:**
+  - it starts 6 points below the parent (headroom read);
+  - the frozen base also reads that input, so it is two changes;
+  - `recover_xy` feeds the recovery reward and the court-feed paths (architecture, RL, experiment design).
+- **Reported (RL, experiment design):** the slowly adapting normalizer lowers the effective gain over the run (to about 5-12 by the early check).
+
+**Lines:**
+- **Early kill at model_29700:**
+  - run 14's lines unchanged (left + back feeder contact up >= 2 points);
+  - plus the used line: the same checkpoint and seed with the input zeroed (`PICKLEBOT_TEACHER_GAIN=0`) must lose at least 3 points of left + back contact (experiment design and architecture at 3; RL at 2).
+- **Teacher gate unchanged** (D-156).
+- **Pre-registered:** experiment design, architecture and coach vote STOP if run 17 fails its usage line, its engagement line or its gate. No third teacher form.

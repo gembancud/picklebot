@@ -1010,18 +1010,20 @@ def _residualize(cfg, lam_r: float = 1.0, base: str | None = None):
     if float(os.environ.get("PICKLEBOT_LEG_R", "0")) > 0:  # D-152: evaluation tasks for leg-residual checkpoints
         _leg_residual(cfg, float(os.environ["PICKLEBOT_LEG_R"]))
     if os.environ.get("PICKLEBOT_TEACHER") == "1":  # D-156: evaluation tasks for teacher checkpoints
-        _teacher(cfg)
+        _teacher(cfg, float(os.environ.get("PICKLEBOT_TEACHER_GAIN", "1")))  # D-157: the gain the checkpoint trained with
     return cfg
 
 
-def _teacher(cfg):
+def _teacher(cfg, gain: float = 1.0):
     """D-156 e4 teacher: the true-state contact point and time (return_stand.teacher_contact_obs) as a trailing actor
-    input; the critic and the frozen base are unchanged."""
+    input; the critic and the frozen base are unchanged. D-157: gain multiplies the input (the term's scale); under Adam
+    that is a gain-times larger step for those five columns only, and the zero columns still start at the parent."""
     from mjlab.managers.observation_manager import ObservationTermCfg
     from picklebot_mj.tasks.return_stand import teacher_contact_obs
     if "teacher_contact" not in cfg.observations["actor"].terms:
         cfg.actions["ball"].teacher_contact = True
-        cfg.observations["actor"].terms["teacher_contact"] = ObservationTermCfg(func=teacher_contact_obs)
+        cfg.observations["actor"].terms["teacher_contact"] = ObservationTermCfg(
+            func=teacher_contact_obs, scale=None if gain == 1.0 else float(gain))
     return cfg
 
 
@@ -2207,4 +2209,24 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher(),
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher(True),
+                    rl_cfg=_s5e_rl_cfg())
+
+
+
+# Rally run 17 (D-157, panel round 39, 5/5 for a fair-start teacher; form by the tie rule): run 16's teacher with its
+# input multiplied by 30, the one change against run 16. Run 16's zero-start columns did not learn at the 1e-5 learning
+# rate floor (column moves at random-walk size); the gain gives those five columns a 30x larger step under Adam.
+TEACHER_GAIN = 30.0
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_TEACHER30 = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LamR2-Teacher30-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher30(play=False):
+    return _teacher(_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2(play), TEACHER_GAIN)
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_TEACHER30,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher30(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher30(True),
                     rl_cfg=_s5e_rl_cfg())

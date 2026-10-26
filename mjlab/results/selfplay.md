@@ -755,3 +755,11 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - So run 16 does not show whether the true contact point and time help. It shows that a zero-start privileged input, with run 14's optimizer settings, is not picked up within 30 % of a run.
 
 **Plainly:** the teacher did not learn to look at its new information, so it played like run 14. Panel round 39 decides what to do.
+
+## Rally run 17 - the e4 teacher with its input x30 (D-157, panel round 39, 5/5 for a fair-start teacher; form by the tie rule)
+
+- **Change:** run 16's teacher input multiplied by 30 (the observation term's scale), the one change against run 16. Under Adam, that is a 30x larger step for those five columns. Run 16's zero-start columns moved only at random-walk size at the 1e-5 learning-rate floor.
+- **Parent:** rally-16-teacher-init model_27798 (= run 14 exactly), with its optimizer; training seed 95; 6,400 iterations; 12,288 envs. Script `scripts/rally_run17.sh`, launched from a detached Windows process.
+- **Smoke:** fell_over 0.080 (run 14 smoke 0.106); the input is live at gain 30.
+- **Early kill at model_29700:** run 14's lines (left + back feeder contact up >= 2 points against a parent re-read), plus the used line: the same checkpoint and seed with the input zeroed must lose >= 3 points of left + back contact.
+- **Teacher gate:** D-156's, unchanged. Pre-registered STOP votes (experiment design, architecture, coach) if any line fails.

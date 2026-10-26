@@ -4095,3 +4095,23 @@ Run 15 (D-155, lam_r 3) was killed at its early check: left + back feeder contac
   - **Fail:** no distillation. The panel convenes; motion and coach vote STOP below 85 %, and experiment design below 83.9 %.
 - **Headroom read (reported):** run 14 with a clean planner spot turned on did worse (feeder-ball legal 82.0 -> 75.9 %): the policy walks to that spot. This is not a test of the teacher's input.
 - **Seeds:** 4219801-4219844 in the ledger. Run 15's endpoint seeds (4219720-4219744) are retired unread.
+
+
+## D-157 - Rally run 17: the e4 teacher with its input multiplied by 30 (panel round 39, 2026-10-27)
+
+Run 16 (D-156) was killed at its early check: left + back feeder contact fell 1.8 points. Its teacher input was never used. The learning rate sat at rsl_rl's adaptive floor (1e-5), so the five zero-start columns moved only at random-walk size (norm 0.03-0.06, against a median of 3.65 for the original columns). Run 16 was therefore in effect run 14 continued, and e4 is untested. Round 39 voted 5/5 for the teacher with a fair start. Its form split: input gain 2 (experiment design, RL), stance spot through the spot input 2 (motion, coach), per-column step multiplier 1 (architecture). The tie rule (least new code, fewest moving parts) gives the input gain.
+
+- **Change:** run 16's teacher input with its observation term scale at 30 (`TEACHER_GAIN`, task `...-Weak-Pace25-LamR2-Teacher30-G1`), the one change against run 16.
+  - Under Adam, this is a 30x larger step for those five columns only.
+  - The zero columns keep the exact parent start.
+  - Evaluation tasks take the gain through `PICKLEBOT_TEACHER_GAIN`; 0 zeroes the input.
+- **Parent:** run 16's `rally-16-teacher-init` model_27798, which equals run 14 exactly. With its optimizer, training seed 95, 6,400 iterations, 12,288 envs.
+- **Smoke:** 40 iterations at 1,024 envs (seed 87): mean fell_over 0.080 against run 14 smoke's 0.106 (stop line 0.159); paddle_contact 0.0438. The input is live at gain 30: on in 56 % of env-steps, time to contact falling by 0.60 per 0.020 s step (30 x 0.020; `teacher_obs_check.py`, 4219902). After 40 iterations the teacher columns' norms (0.012-0.014) match run 16's smoke (0.010-0.015). That is expected: Adam moves each weight by about the learning rate, and the gain acts through the 30x larger input.
+- **Early kill at model_29700** (`rally_check.py early-teacher30`, parent re-read on 4219911-4219915):
+  - run 14's early-lamr2 lines unchanged (left + back feeder-ball contact up >= 2 points);
+  - plus the **used line:** the same checkpoint and seed with the input zeroed must lose at least 3 points of left + back feeder-ball contact.
+- **Endpoint:** the M1 read on 4219942, read once; crossing 4219943 and direction split 4219944, reported. **Teacher gate:** D-156's, unchanged. Pass: the DAgger student. M1 is claimed only from the student.
+- **Pre-registered:** experiment design, architecture and coach vote STOP if run 17 fails the used line, the engagement line or the gate. There is no third teacher form.
+- **Reported:** the normalizer (count about 1.5e10) adapts slowly and lowers the effective gain over the run.
+- **Seeds:** 4219902-4219944 are in the ledger. Run 16's endpoint seeds (4219820-4219844) are retired unread.
+- **Launch:** a detached Windows process (`Start-Process wsl`). Run 16's first attempt died with the WSL session when it was launched from the app's shell.
