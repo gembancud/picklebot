@@ -782,3 +782,23 @@ The down-weighted families held: short 94.6 %, high 92.1 %, reach_forehand 94.4 
 - **Two teacher runs, the same outcome.** With the information available, zero-start and x30-gain columns are not picked up in 1,900 iterations at the 1e-5 learning-rate floor. The policy plays as run 14 does (partner, feeder and P(5+) within noise).
 
 **Plainly:** even with the ball information made 30 times louder, the robot did not start using it, so the teacher played like run 14. Pre-registered: experiment design, architecture and coach vote STOP. Panel round 40 decides.
+
+
+## KL check after the stop (D-158): why the learning rate sat at its floor (2026-10-27)
+
+The user asked why the learning rate was so low. Three 30-iteration probes from rally run 14 model_27798 on its own task (12,288 envs, its optimizer) recorded each action output's share of the KL (`picklebot_mj/rl/kl_probe.py`, `scripts/diag/kl_probe.sh`, `scripts/diag/kl_probe_summary.py`; results `results/kl-probe-*.jsonl` and `kl-probe-summary.json`; seeds 4219950-4219952, diagnostic only).
+
+| Probe | Learning rate | KL per update (median) | Output 30's share | KL without output 30 |
+|---|---|---|---|---|
+| a: native schedule | 1e-5 (floor) | 0.0198 | 95.3 % | 0.0011 |
+| b: meant 1e-4 (**invalid**, ran at 1e-5: the resume loads the optimizer's rate after the probe set it) | 1e-5 | 0.0170 | 95.0 % | 0.0010 |
+| b2: held at 1e-4 | 1e-4 | 0.0508 | 98.6 % | 0.0234 |
+
+- **One output carries the KL.** Output 30 (latent dim 30) has std 0.0020-0.0023; the other 34 sit at 0.15-0.20. Its mean shift counts (1/0.002)^2 = 250,000 times per unit, so it supplies 95-99 % of the KL. rsl_rl sums the KL over outputs and cuts the rate above 2 x desired_kl (0.02).
+- **Without it the schedule would have raised the rate.** At 1e-5 the other outputs give 0.0011, under the raise line (0.005). At 1e-4 they give 0.023, at the cut line. The rate would have settled near 1e-4, about 10 times higher than every run since rally run 2.
+- **When it started.** Output 30's std fell 0.218 -> 0.0035 during rally run 2 (iterations 3,400-5,600). All stds shrank in that run; output 30 shrank fastest. The rate first hit the floor at iteration 5,200 and stayed there through runs 3-17 (all checkpoints traced). Output 30's mean is ordinary (tanh 0.07-0.35 at the average input), so it is not saturated. Why its noise collapsed is not known yet.
+- **What this does not show.** A higher rate is not proof the plateau would move. That needs a run.
+
+**Plainly:** one of the 35 outputs lost almost all its exploration noise in rally run 2. From then on, every tiny change to it looked huge to the schedule, which held the learning rate at its minimum for the whole network for 15 runs. The other 34 outputs would have allowed a rate about 10 times higher.
+
+Literature reviews written for the user: `docs/research/lit-2026-10-27-continued-training.md`, `docs/research/lit-2026-10-27-racket-sports.md`.
