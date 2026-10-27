@@ -1134,6 +1134,21 @@
    ],
    "purpose": "KL check (diagnostic, no selection): 30 training iterations from rally run 14 model_27798 with per-output KL recorded; 4219950 native schedule, 4219951 learning rate meant to be held at 1e-4 (invalid: ran at 1e-5), 4219952 the 1e-4 probe rerun",
    "date": "2026-10-27"
+  },
+  {
+   "seeds": [
+    4219953,
+    4219954,
+    4219955,
+    4219956,
+    4219960,
+    4219961,
+    4219962,
+    4219963,
+    4219964
+   ],
+   "purpose": "learning-rate sweep after the KL check (scripts/lr_sweep.sh; diagnostic, no endpoint): smoke 4219953; arms 3e-5 / 1e-4 / 3e-4 training seeds 4219954-4219956; reads of each arm and the parent on v2 4219960, move 4219961, court 4219962, pairs 4219963, direction split 4219964",
+   "date": "2026-10-28"
   }
  ],
  "retired": {

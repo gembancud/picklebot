@@ -802,3 +802,29 @@ The user asked why the learning rate was so low. Three 30-iteration probes from 
 **Plainly:** one of the 35 outputs lost almost all its exploration noise in rally run 2. From then on, every tiny change to it looked huge to the schedule, which held the learning rate at its minimum for the whole network for 15 runs. The other 34 outputs would have allowed a rate about 10 times higher.
 
 Literature reviews written for the user: `docs/research/lit-2026-10-27-continued-training.md`, `docs/research/lit-2026-10-27-racket-sports.md`.
+
+
+## Learning-rate sweep after the KL check (2026-10-28)
+
+The user approved a restart of the optimizer side only ("lets do that then"). Parent: rally run 14 model_27798 with Adam's state emptied and output 30's std raised 0.0022 -> 0.1 (`scripts/fresh_init.py`; the other 34 untouched). Trainer: `picklebot_mj/rl/sched_ppo.py` (ScheduledPPO: std floor 0.1, linear warm-up over 50 updates to a constant peak, KL guard 0.05, no adaptive rule). Run 14's task and reward unchanged. Script `scripts/lr_sweep.sh`; smoke seed 4219953 (fell_over 0.108 vs run 14 smoke 0.106, ok); arms 400 iterations at 12,288 envs, seeds 4219954-4219956; reads on 4219960-4219964 (diagnostic only); `rally_check.py early-lamr2` per arm (`results/lrsweep-<arm>-check.txt`).
+
+Pre-registered choice: among arms holding the guard lines (partner legal >= max(50, parent - 3), feeder legal >= parent - 2, court falls Wilson low <= 4 % and point <= 7.4 %), the largest left + back feeder-contact gain; a full run only if that gain is >= 2 points.
+
+| | Parent (run 14) | 3e-5 | 1e-4 | 3e-4 |
+|---|---|---|---|---|
+| Left + back feeder contact | 56.4 % | 54.8 % (-1.5) | 53.2 % (-3.2) | 47.3 % (-9.1) |
+| Left legal / back legal | 43.4 / 49.7 % | 42.3 / 51.9 % | 38.8 / 46.9 % | 32.6 / 38.7 % |
+| Partner-ball legal | 70.4 % | 73.0 % | 75.1 % | 69.7 % |
+| Feeder-ball legal (guard >= 79.8 %) | 81.8 % | 81.7 % | 80.6 % | 76.7 % (fails) |
+| P(5+) | 18.5 % | 20.4 % | 22.3 % | 17.3 % |
+| Court falls per episode (point / low) | | 4.5 / 3.3 % | 5.2 / 3.8 % | 4.0 / 2.8 % |
+| Worst feeder-family contact change | | -3.4 (reach_deep) | -3.3 (reach_backhand) | -14.3 (cross_backhand) |
+| KL per update (late) / steps taken of 20 | | 0.005 / 20 | 0.012 / 20 | 0.36-0.70 / 1 |
+| Output 30's KL share (late) | 95-99 % before | 6-9 % | 6-10 % | 18-44 % |
+
+- **The KL fix worked.** At 3e-5 and 1e-4 every update took all 20 mini-batch steps and no output dominated the KL. 1e-4 sits where the KL check predicted the native schedule would have settled.
+- **3e-4 is unstable.** From about update 100 the KL is 0.4-0.7 after one step, so the guard stops every update after its first mini-batch; it lost ground on every measure.
+- **More learning moves the policy toward the pair rally, away from left and back.** Partner legal and P(5+) rise with the rate (to 75.1 % and 22.3 % at 1e-4), while left + back contact falls with it. The rally reward already favours the common balls; a higher rate follows it faster.
+- **Choice rule:** no arm gains left + back (all negative). By the pre-registered rule there is no full run; the result goes to the user.
+
+**Plainly:** fixing the learning rate made the robot learn again, and at 1e-4 it got better at the partner rally in 400 iterations (P(5+) 18.5 -> 22.3 %). But it did not get better at the left and back balls, which is what we needed it to fix; it got slightly worse. These are 400-iteration diagnostic reads, not endpoints.
