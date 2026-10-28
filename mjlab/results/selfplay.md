@@ -1038,3 +1038,31 @@ Run 19's feeder-ball loss appeared only in the pairs read, where each feeder bal
 - **Dtrain = +0.86 points** (SE of a difference about 0.8); replicate |T3 - T1| 0.16. **VERDICT (coded): NO TRAINING LOSS.** Run 19 did not forget feeder balls in the training distribution; its -3.6-point feeder loss exists only in the pairs read. Route (D-166): the training-side leave-one-out screen A-T (D-167).
 
 **Plainly:** in practice conditions the newer robot returns feeder balls as well as before (slightly better). The drop shows up only in the test conditions, so something about how the test differs from practice exposes it.
+
+
+## Training-side leave-one-out screen A-T (D-167, 2026-10-29) [train-diag]
+
+`scripts/diag/attribution_at.sh`: run 14's task from model_29000 with near-mean actions (std x 0.001), learning rate 0, 200 iterations at 1,024 envs, second half; each arm moves one setting to the pairs read's value; `results/at-*`, `results/at-summary.txt`.
+
+| Arm | Per-ball legal | Delta | Feeder legal |
+|---|---|---|---|
+| T0 baseline | 72.64 % | | 78.09 % |
+| T1 no drill-v2 balls | 70.71 % | -1.93 | 76.88 % |
+| T2 uniform family mix | 74.45 % | +1.81 | 80.81 % |
+| T3 refeed 0.5 s | 72.91 % | +0.27 | 78.50 % |
+| T4 fixed recovery spot | 74.85 % | +2.21 | 79.63 % |
+| T5 planner off | 71.40 % | -1.24 | 76.84 % |
+| T6 target A | 72.86 % | +0.22 | 77.98 % |
+| T7 ball noise off (sim-to-real) | 72.44 % | -0.20 | 77.06 % |
+| T8 proprioceptive noise off (sim-to-real) | 75.05 % | +2.41 | 79.48 % |
+| **TA all eight** | **81.65 %** | **+9.01** | **85.29 %** |
+| model_30200 at T0 (reported) | 75.59 % | | 78.31 % |
+| model_30200 at TA (reported) | **85.75 %** | | 85.86 % |
+
+- **Coded verdict: NONE ELIGIBLE** (no T1-T6 Delta >= 3.0). Largest single effects: proprioceptive noise off +2.4 (a sim-to-real commitment, not eligible), fixed recovery spot +2.2, uniform mix +1.8.
+- **Calibration passes under both readings** of the line: TA 0.8165 against the pre-registered 0.71 and against the intended "half the gap" value of about 0.748 here. **Flag:** the 0.71 line had been set from the drill-court screen's ~0.65 baseline; on run 14's task T0 is 0.726, so 0.71 would have passed trivially; it did not matter here.
+- **The settings interact:** the single Deltas sum to about +3.5, but all eight together give +9.0. The gap to the read is real and is explained by the configuration taken together, not by any one setting.
+- **In the read-like training configuration, model_30200 is better than model_29000** (per ball 85.8 vs 81.7 %, feeder 85.9 vs 85.3 %): the newer policy does not lose feeder balls there either.
+- The T5 override check printed VOID because YAML writes the value as `'off'` (quoted); the arm's params/env.yaml shows `planner_mode: 'off'`, so T5 is valid (a check bug, not an arm failure).
+
+**Plainly:** no single practice setting explains why the robot plays better in the test than in practice; together they explain all of it (and more). Run 19's robot is the better one in practice conditions made test-like, and it still loses feeder balls only in the test itself.

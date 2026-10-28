@@ -1,0 +1,21 @@
+T0        baseline               per-ball legal 0.7264 (Delta +0.00; balls 7456), feeder legal 0.7809
+T1        no drill-v2            per-ball legal 0.7071 (Delta -1.93; balls 7483), feeder legal 0.7688
+T2        uniform mix            per-ball legal 0.7445 (Delta +1.81; balls 7394), feeder legal 0.8081
+T3        refeed 0.5 s           per-ball legal 0.7291 (Delta +0.27; balls 6891), feeder legal 0.7850
+T4        fixed recovery         per-ball legal 0.7485 (Delta +2.21; balls 7438), feeder legal 0.7963
+T5        planner off            per-ball legal 0.7140 (Delta -1.24; balls 7676), feeder legal 0.7684
+T6        target A               per-ball legal 0.7286 (Delta +0.22; balls 7532), feeder legal 0.7798
+T7        ball noise off         per-ball legal 0.7244 (Delta -0.20; balls 7598), feeder legal 0.7706
+T8        proprio noise off      per-ball legal 0.7505 (Delta +2.41; balls 7588), feeder legal 0.7948
+TA        all                    per-ball legal 0.8165 (Delta +9.01; balls 6797), feeder legal 0.8529
+T0-30200  model_30200 baseline   per-ball legal 0.7559 (Delta +2.95; balls 7733), feeder legal 0.7831
+TA-30200  model_30200 all        per-ball legal 0.8575 (Delta +13.11; balls 6767), feeder legal 0.8586
+model_30200 - model_29000 feeder legal: baseline +0.22, all read settings +0.57 points (reported)
+VERDICT: NONE ELIGIBLE - no single setting moves per-ball legal by 3 points -> panel (STOP on the table)
+override check T1: ok
+override check T3: ok
+override check T4: ok
+override check T5: VOID (override not in params/env.yaml)
+override check T6: ok
+override check T7: ok
+override check T2: ok
