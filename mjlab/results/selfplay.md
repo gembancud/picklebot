@@ -991,3 +991,35 @@ Run 19's feeder-ball loss appeared only in the pairs read, where each feeder bal
 - **The noise is not the cause** (pre-registered: S1 <= 0.65 rejects C): with near-mean actions the policy still returns only 0.648 per ball on the training task, against about 80-90 % in the pairs read. **The training task itself is harder than the read** (drill-v2 balls, the noisy planner, a 0.2 s refeed and the court mix, per round 45's motion and coach).
 - **Longer episodes help but miss the line:** 120 s episodes cut reset ends from 709 to 211 and lift P(3+) to 22.6 %, below M's 30 %.
 - **Route (D-164): neither passes -> A, after launch-state logging** (D-165).
+
+
+## Launch-state measurement (D-165, 2026-10-29): A's premise fails
+
+`scripts/diag/launch_state.sh` (logging only; reads of run 18b model_29000 and run 19 model_30200 on seed 4220079 [read:protocol], and run 14's task in training at learning rate 0, training seed 110 [train-diag]; `results/launch-*`):
+
+| Feeder-ball legal by the previous rally's length | 0-1 shots | 2-4 shots | 5+ shots |
+|---|---|---|---|
+| model_29000 (n 9,212 / 3,358 / 3,865) | 78.5 % | 85.6 % | 82.3 % |
+| model_30200 (n 6,130 / 1,662 / 2,627) | 74.0 % | 84.7 % | 79.5 % |
+| Change | -4.6 | -0.9 | -2.8 |
+
+- **Pre-registered rule (D-165): not met.** Feeder balls after a 5+ rally are returned *better* than after a 0-1 rally (79.5 vs 74.0 % at model_30200), and the median launch displacement after a 5+ rally (<= 0.8 m) is no larger than after a 0-1 rally and below training's 90th percentile (> 1.2 m): training launches are already more displaced. So A ("move, then serve") is not supported; the panel reconvenes with the training-vs-read table.
+- **Run 19's feeder loss sits mostly after short rallies** (0-1 shots: -4.6 points), i.e. right after the previous feeder ball was missed or returned once.
+- **Known flaky test:** `test_court_feed_mix_shares_families_recovery_and_planner` ("two extremes in a row among v2 feeds") fails intermittently on the code from before the D-161..D-165 changes too (2 of 3 runs at commit ba9f6ee in the fix worktree, run with its artifacts linked to the main checkout); not caused by these changes.
+
+**Training vs read configuration [read:protocol]** (training: run 14's task's config; read: `Picklebot-Latent-Court-Res-G1` plus stage2_eval's pairs-read flags):
+
+| Setting | Training | Pairs read |
+|---|---|---|
+| Actions | sampled (std 0.1-0.2) | mean |
+| Observation corruption (ball noise / lag) | on | off (stage2_eval) |
+| Feeder balls | 80 % court feeds from COURT_MIX_WEAK (backhand, fast, reach_backhand, cross_backhand x2; low, drop, reach_deep x1.5) + 20 % drill-v2 balls | uniform over all families, no drill-v2 |
+| Stance-spot planner | noisy | off |
+| Target | random A/B | A |
+| Refeed delay | 0.2 s | 0.5 s |
+| Episode | 30 s, resets end the court's rally | 121 s |
+| Move / swing episodes | 0.35 / 0.05 (busy partners end rallies) | 0 / 0 |
+| Recovery spot | random | fixed |
+| Rewards | adds keep_alive, partner_return, rally_bonus, ball_out_over | (not used) |
+
+**Plainly:** the robot is not worse after long rallies; it is worse right after a short one, and it already practises from out-of-position starts more than the read shows. Training and the read differ in about ten ways at once, and the same policy returns about 65 % of balls in training against 80-90 % in the read even with the noise off. The next step is to find which of these differences matter.

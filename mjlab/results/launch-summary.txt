@@ -1,0 +1,4 @@
+training launches by previous rally length (0-1, 2-4, 5+): [5769, 437, 101]; training displacement 90th pct > 1.2 m, median <= 0.8 m
+read 29000: feeder legal by previous rally length (0-1, 2-4, 5+) [0.7851, 0.8556, 0.8228] (n [9212, 3358, 3865]); median displacement by bin ['<= 0.8', '<= 0.5', '<= 0.8']; speed median by bin ['<= 0.25', '<= 0.25', '<= 0.25']
+read 30200: feeder legal by previous rally length (0-1, 2-4, 5+) [0.7395, 0.8466, 0.7948] (n [6130, 1662, 2627]); median displacement by bin ['<= 0.8', '<= 0.5', '<= 0.8']; speed median by bin ['<= 0.5', '<= 0.25', '<= 0.25']
+rule: model_30200 feeder legal gap (0-1 minus 5+) -5.5 points (>= 5), 5+ median displacement <= 0.8 vs training 90th pct > 1.2 -> decide by hand from the bins
