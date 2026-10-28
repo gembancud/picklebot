@@ -14,6 +14,7 @@ export PYTHONWARNINGS=ignore
 export TORCH_ALLOW_TF32_CUBLAS_OVERRIDE=1  # TF32 matmuls (D-086)
 cd "$REPO/mjlab"
 echo "{\"run\": \"$RUN\", \"task\": \"$TASK\", \"envs\": \"${PICKLEBOT_ENVS:-4096}\", \"extra\": \"$*\", \"started\": \"$(date -Is)\", \"wall_cap_s\": ${PICKLEBOT_WALL_CAP:-7000}}" > "$OUT/$RUN.launch.json"
+env | grep "^PICKLEBOT_" | sort > "$OUT/$RUN.env"  # audit 2026-10-28: the run's PICKLEBOT_* settings (not in launch.json or agent.yaml)
 timeout "${PICKLEBOT_WALL_CAP:-7000}s" train "$TASK" --env.scene.num-envs "${PICKLEBOT_ENVS:-4096}" --agent.save-interval 100 --agent.logger tensorboard \
   --agent.run-name "$RUN" --log-root "$OUT/logs" "$@" > "$OUT/$RUN.log" 2>&1 < /dev/null
 CODE=$?

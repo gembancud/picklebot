@@ -282,6 +282,87 @@ def early_teacher30(prefix: str) -> bool:
     return ok and g1 >= gz + 0.03
 
 
+R14 = "results/rally-18b-parent-early"  # run 14 model_27798's read on 4219967-4219971: the D-160 cumulative reference
+CROSS_FH_29000 = "results/rally-18b-early-pairs.json"  # run 18b model_29000's read: the accepted cross_forehand regression
+
+
+def p5_open(p: dict) -> tuple[float, list[float]]:
+    """D-160: P(5+) counting a rally still running at the end of the read that already has 5 or more shots."""
+    if "open_len_hist" not in p:
+        raise KeyError("read has no open_len_hist (made before the audit fixes); re-read it")
+    h, oh = p["len_hist"], p["open_len_hist"]
+    k, n = sum(h[5:]) + sum(oh[5:]), sum(h) + sum(oh[5:])
+    return k / max(n, 1), wilson(k, n)
+
+
+def r19_guards(fam: dict, d: dict) -> bool:
+    """D-160's cumulative guards: no feeder family's contact more than 5 points below run 14 (cross_forehand: no more
+    than 3 below run 18b model_29000's read), left + back feeder contact no more than 5 below run 14."""
+    f14 = json.load(open(f"{R14}-pairs.json"))["per_family"]
+    f29 = json.load(open(CROSS_FH_29000))["per_family"]
+    ok = True
+    for k in f14:
+        if k not in fam:
+            continue
+        ref, slack, base = (f29[k]["contact"], 0.03, "model_29000") if k == "cross_forehand" else (f14[k]["contact"], 0.05, "run 14")
+        if fam[k]["contact"] < ref - slack:
+            print(f"guard: {k} contact {fam[k]['contact']:.4f} < {base} {ref:.4f} - {slack} (KILL)")
+            ok = False
+    worst = min(((fam[k]["contact"] - f14[k]["contact"], k) for k in f14 if k in fam and k != "cross_forehand"), default=(0.0, None))
+    print(f"guard: worst family contact vs run 14 {100 * worst[0]:+.1f} ({worst[1]}; kill below -5); cross_forehand "
+          f"{fam['cross_forehand']['contact']:.4f} vs model_29000 {f29['cross_forehand']['contact']:.4f} (kill below -3)")
+    d14 = json.load(open(f"{R14}-dir.json"))["directions"]
+    con = lambda x: sum(x[k]["contact"] * x[k]["feeds"] for k in ("left", "back")) / max(x["left"]["feeds"] + x["back"]["feeds"], 1)  # noqa: E731
+    g14, g1 = con(d14), con(d)
+    print(f"guard: left + back feeder contact {g1:.4f} vs run 14 {g14:.4f} ({100 * (g1 - g14):+.1f}; kill below -5)")
+    return ok and g1 >= g14 - 0.05
+
+
+def early_r19(prefix: str) -> bool:
+    """Rally run 19 (D-160, panel round 41: run 18b continued from model_29000; experiment design's lines, sized from
+    measured read noise): against the parent re-read on the same seeds, P(5+) (open rallies counted) up >= 1.0 point;
+    partner-ball legal >= parent - 1.5; feeder-ball legal >= parent - 1.0 and >= run 14 - 2; D-160's cumulative family
+    and left + back guards; run 18b's court / drill / move / falls lines unchanged."""
+    ok = early_ceiling(prefix, engage_check=False)  # partner / feeder legal at run 18b's lines, court, drill, move, falls
+    j0, j1 = json.load(open(f"{prefix}-parent-early-pairs.json")), json.load(open(f"{prefix}-early-pairs.json"))
+    q0, _ = p5_open(j0["pairs"])
+    q1, q1ci = p5_open(j1["pairs"])
+    own0, _ = boot_low(j0["pairs"]["court_counts"], 1, 0)
+    own1, _ = boot_low(j1["pairs"]["court_counts"], 1, 0)
+    fed0, _ = boot_low(j0["pairs"]["court_counts"], 3, 2)
+    fed1, _ = boot_low(j1["pairs"]["court_counts"], 3, 2)
+    fed14, _ = boot_low(json.load(open(f"{R14}-pairs.json"))["pairs"]["court_counts"], 3, 2)
+    print(f"early: P(5+) open {q0:.4f} -> {q1:.4f} {q1ci} ({100 * (q1 - q0):+.1f}; kill below +1.0); partner legal "
+          f"{own0:.4f} -> {own1:.4f} (kill below {own0 - 0.015:.4f}); feeder legal {fed0:.4f} -> {fed1:.4f} (kill below "
+          f"{max(fed0 - 0.01, fed14 - 0.02):.4f}: parent - 1, run 14 - 2)")
+    g = r19_guards(j1["per_family"], json.load(open(f"{prefix}-early-dir.json"))["directions"])
+    return ok and g and q1 >= q0 + 0.01 and own1 >= own0 - 0.015 and fed1 >= fed0 - 0.01 and fed1 >= fed14 - 0.02
+
+
+def r19_gate(prefix: str, tag: str) -> bool:
+    """Rally run 19's endpoint success (D-160, read once): P(5+) (open rallies counted) >= parent + 2.0 points with a
+    Wilson low above the parent's point; partner-ball legal >= parent - 1.5; feeder-ball legal >= run 14 - 2; sides
+    within 3 points; court falls <= 4 %; D-160's cumulative family and left + back guards on the endpoint reads."""
+    j, j0 = json.load(open(f"{prefix}-target.json")), json.load(open(f"{prefix}-parent-early-pairs.json"))
+    p = j["pairs"]
+    q0, _ = p5_open(j0["pairs"])
+    q1, q1ci = p5_open(p)
+    own0, _ = boot_low(j0["pairs"]["court_counts"], 1, 0)
+    own, _ = boot_low(p["court_counts"], 1, 0)
+    fed, _ = boot_low(p["court_counts"], 3, 2)
+    fed14, _ = boot_low(json.load(open(f"{R14}-pairs.json"))["pairs"]["court_counts"], 3, 2)
+    P = pair_stats(p)
+    gap = abs(P["sides"]["A"] - P["sides"]["B"])
+    falls = json.load(open(f"results/stage5f-{tag}-summary.json"))["falls_court"]
+    g = r19_guards(j["per_family"], json.load(open(f"{prefix}-endpoint-dir.json"))["directions"])
+    ok = (q1 >= q0 + 0.02 and q1ci[0] > q0 and own >= own0 - 0.015 and fed >= fed14 - 0.02 and gap <= 0.03
+          and falls <= 0.04 and g)
+    print(f"run 19 gate: P(5+) open {q1:.4f} {q1ci} (>= parent {q0:.4f} + 0.02, low above {q0:.4f}); partner legal {own:.4f} "
+          f"(>= {own0 - 0.015:.4f}); feeder legal {fed:.4f} (>= {fed14 - 0.02:.4f}); gap {100 * gap:.1f} (<= 3); falls "
+          f"{falls} (<= 0.04): {'PASS' if ok else 'not met'}")
+    return ok
+
+
 def early_sched(prefix: str) -> bool:
     """Rally run 18 (the optimizer restart after the KL check; the user approved judging on the rally numbers): run 12's
     early-legres guard lines without its reach_deep + fast engagement line, D-148's family-contact guard, left + back
@@ -351,7 +432,12 @@ def target(prefix: str, tag: str) -> bool:
     print(f"target (contact hand-off): rallies {P['rallies']}; P(5+) {P['p5']:.4f} {P['p5_ci']} (pass: >= 0.80, low >= 0.78); "
           f"P(4+) {P['p4']}; mean {P['mean']}; own-ball legal {P['own']:.4f} {P['own_ci']}; feeder-ball legal "
           f"{P['feeder']:.4f} {P['feeder_ci']}; sides {P['sides']} (gap {100 * gap:.1f} points, <= 3); court falls {falls} (<= 0.04)")
-    met = P["rallies"] >= 1000 and P["p5"] >= 0.80 and P["p5_ci"][0] >= 0.78 and gap <= 0.03 and falls <= 0.04
+    p5, ci = P["p5"], P["p5_ci"]
+    tp = json.load(open(f"{prefix}-target.json"))["pairs"]
+    if "open_len_hist" in tp:  # D-160: the primary P(5+) counts open rallies that already have 5 shots (old one above)
+        p5, ci = p5_open(tp)
+        print(f"target P(5+) with open rallies counted (D-160, primary): {p5:.4f} {ci}")
+    met = P["rallies"] >= 1000 and p5 >= 0.80 and ci[0] >= 0.78 and gap <= 0.03 and falls <= 0.04
     print("TARGET MET" if met else "target not met")
     return met
 
@@ -413,6 +499,10 @@ def _main() -> None:
         sys.exit(0 if early_lamr2(prefix) else 1)
     if mode == "early-teacher30":
         sys.exit(0 if early_teacher30(prefix) else 1)
+    if mode == "early-r19":
+        sys.exit(0 if early_r19(prefix) else 1)
+    if mode == "r19-gate":
+        sys.exit(0 if r19_gate(prefix, sys.argv[3]) else 1)
     if mode == "early-sched":
         sys.exit(0 if early_sched(prefix) else 1)
     if mode == "sched-gate":

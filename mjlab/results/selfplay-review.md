@@ -551,3 +551,24 @@ Waiting for the user (D-145: no run 9 without the user).
 | Retrain the motion controller (left/back and crossover steps under time pressure), then the rally ladder again | last by all; move arrival is already 96-99.7 % | 40-140 GPU-hours |
 
 - RL and experiment design would not offer the spot-route teacher: it is the same fine-tune at the learning-rate floor, and it starts 6 points down.
+
+
+## Round 41 - after the learning-rate fix: run 18b killed on one family; continue it (2026-10-28)
+
+Brief: the LR-floor finding (D-159), the restart, run 18b's early check (P(5+) 18.4 -> 25.8 %, partner 70.0 -> 77.4 %, feeder 82.3 -> 81.1 %, killed on cross_forehand contact -5.3), the audit and its fixes, and the feed-anchor check (real but small; the left weakness is mostly genuine).
+
+**Correction check (all five):** round 40's STOP followed procedure but its finding ("fine-tuning cannot grow a new pathway") was an artifact of the frozen learner; D-159 already withdraws it. Run 18b's kill was correct: cross_forehand -5.3 points is z -3.7 and survives a 17-family Bonferroni; the other 16 families are within |z| < 2.1. Coach and RL: the drift away from rare feeder balls was foreseeable from the sweep, and 18b had no plan for it beyond a kill line. Experiment design: sched-gate's reference (run 14's single endpoint read, 18.73 %) sat about 1 SD high; future gates use a parent re-read. Slips carried forward: training seeds back to 1-999; the critic and value loss go unmonitored.
+
+**Measured read noise (experiment design, six reads of run 14 on different seeds):** SD per read P(5+) 0.38 points, partner legal 0.34, feeder legal 0.24-0.31, left + back contact 1.31, court contact 1.24; same-seed parent re-reads give no pairing, so SD of a difference = sqrt(2) x SD per read. The -5 family line is 2.2-10 SDs per family (about 3-4 % false kills over 17 families): kept.
+
+**Votes:**
+
+| Member | Vote | Summary |
+|---|---|---|
+| RL | A | continue from model_29000; forgetting per unit of progress is the same at any rate, so a lower rate buys nothing; the data-side fix (heavier weak-family mix) is the pre-registered next step if feeder drift continues |
+| Motion | E then B | adopt the open-rally P(5+) and anchor 0.0 reads, then continue with the training anchor at 0.0; falls and arrival healthy, ready stance improved 0.60 -> 0.78 |
+| Coach | G | continue from model_29000 with cross_forehand's weight 1.0 -> 2.0 in the court mix (it is a rare ball, diluted by the weak mix that first took effect in 18b) |
+| Experiment design | A | continue; the family guard becomes cumulative against run 14; cross_forehand named as an accepted regression (no more than 3 further points); adopt the open-rally P(5+) now through a measurement D-entry |
+| Architecture | A | no new code; exact continuation with PICKLEBOT_LR_WARMUP=0 and the loaded Adam state; record PICKLEBOT_* settings per run |
+
+**Decision: A (3 of 5), rally run 19 (D-160).** Lines are experiment design's (sized from the measured noise). Rejected: F (STOP), since the learner moved more in 1,200 iterations than in runs 3-17 together; D (lower rate), the same trade slower; B and C, each the next single change once A has been read (C: pair reset; then the pace ceiling vs keep-alive, coach and RL).
