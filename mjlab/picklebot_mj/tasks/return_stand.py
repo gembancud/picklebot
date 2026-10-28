@@ -393,6 +393,8 @@ class BallPhysicsAction(ActionTerm):
         if getattr(cfg, "pair_mode", False):
             from picklebot_mj.pairs import PairCourts
             self.pairs = PairCourts(n, dev, getattr(cfg, "pair_handoff", "crossing"), getattr(cfg, "pair_rally_cap", 0))
+            if self.drill_scale is not None:  # D-163: rally lengths logged per court group (0 pair, 1 drill courts)
+                self.pairs.group = (self.drill_scale[: n // 2] > 0).long()
         if getattr(cfg, "replay_file", ""):
             self.replay = mirror_ball_states(torch.load(cfg.replay_file, map_location=dev).float())
             self.gen_replay_mix = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 161803)
@@ -1035,7 +1037,9 @@ class BallPhysicsAction(ActionTerm):
                     f.write(json.dumps({"step": int(self._env.common_step_counter), "feeder": int(self.pairs.n_started[0]),
                                         "handoffs": int(self.pairs.n_started[1]), "rallies": sum(h),
                                         "shots": sum(i * c for i, c in enumerate(h)),
-                                        "split": self._share_split.tolist()}) + "\n")
+                                        "split": self._share_split.tolist(),
+                                        "len_hist_group": self.pairs.len_hist_group.tolist(),
+                                        "end_reasons": self.pairs.end_reasons.tolist()}) + "\n")
             if getattr(self.cfg, "pair_count_volleys", False):
                 self.pairs.count_early(early, h0, live0)
             self._credit_partner(over, early, h0, live0)

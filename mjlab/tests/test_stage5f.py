@@ -320,6 +320,28 @@ def test_pair_courts_rally_cap_ends_after_the_capped_shot():
             assert sum(s["len_hist"]) == 0 and s["open_len_hist"][3] == 1  # still in play
 
 
+def test_pair_courts_group_histogram_and_end_reasons():
+    """D-163 (logging only): with a court group set, finished rallies land in that group's histogram, and each end is
+    counted by reason (0 not a legal return, 2 a reset); len_hist itself is unchanged."""
+    from picklebot_mj.pairs import PairCourts
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    pc = PairCourts(4, "cpu", handoff="contact")
+    pc.group = torch.tensor([0, 1])  # court 0 (envs 0, 2) pair, court 1 (envs 1, 3) drill
+    pc.on_reset(torch.arange(4))
+    fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1)[0] for _ in range(30)) if f.any()]
+    a, b = (2, 0) if fires[0][2] else (0, 2)
+    for hit in (a, b):  # two legal shots on court 0
+        pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(hit))
+        pc.step(F(hit), F(hit), Z, Z, 0.01, 0.1, contact=Z)
+    pc.step(F(a), Z, Z, Z, 0.01, 0.1, contact=Z)  # a misses b's ball: court 0's rally of 2 ends (reason 0)
+    pc.on_reset(torch.tensor([1]))  # a reset on court 1 ends its open rally of 0 (reason 2)
+    s = pc.summary()
+    assert pc.len_hist_group[0, 2] == 1 and pc.len_hist_group[1, 0] == 1
+    assert pc.end_reasons[0].tolist() == [1, 0, 0, 0] and pc.end_reasons[1].tolist() == [0, 0, 1, 0]
+    assert s["len_hist"][2] == 1 and s["len_hist"][0] == 1
+
+
 def test_paddle_for_inverts_the_impact_model():
     """D-118: the paddle state from paddle_for, put through sphere_impulse (spin zero), gives the commanded v_out."""
     from picklebot_mj.ball_sim import BallParams, sphere_impulse
