@@ -4133,3 +4133,23 @@ Run 17 (D-157, teacher input x30) was killed at its early check: left + back fee
   3. a bigger network from scratch (30-100 GPU-hours);
   4. retrain the motion controller (40-140 GPU-hours).
 - Nothing is pushed (the target is not met). Local commits only.
+
+
+## D-159 - The learning-rate floor found; optimizer restart; audit; rally run 18b (2026-10-28)
+
+After D-158 the user asked why the learning rate was so low and approved a KL check, two literature reviews, a learning-rate sweep, then a full run judged on the rally numbers, an audit of the framework, and a restarted loop toward the same target ("lets still loop towards the same rally goal please").
+
+- **Root cause (KL check, results/selfplay.md):** action output 30's std collapsed to about 0.002 in rally run 2 (others 0.15-0.20). rsl_rl sums the KL over outputs, so that one output supplied 95-99 % of it and held the adaptive rate at its 1e-5 floor from rally run 2 through run 17, for actor and critic alike.
+- **Consequence for past conclusions:** every finding since rally run 2 of the form "X does not help" or "fine-tuning cannot grow a new pathway" (including D-158's) was made with a nearly frozen learner. They are open questions again, not settled results. Round 28's reachability projection rests on the same runs.
+- **Fix:** scripts/fresh_init.py (Adam state emptied, std floor 0.1) and picklebot_mj/rl/sched_ppo.py (ScheduledPPO: warm-up, constant peak, optional 1 - sqrt cooldown, KL guard 0.05, std floor).
+- **Sweep (400 iterations per arm, diagnostic):** 3e-5 / 1e-4 / 3e-4. At 1e-4 P(5+) 18.5 -> 22.3 %, partner legal 70.4 -> 75.1 %; left + back feeder contact fell in every arm; 3e-4 unstable. By the pre-registered rule (left + back gain >= 2) no arm qualified; the user then approved option 1, a full run at 1e-4 judged on the rally numbers.
+- **Floor bug (audit, training loop C1):** the first ScheduledPPO used rsl_rl's forward std clamp, which passes zero gradient at the floor, so an output that reached 0.1 froze for good (output 30 had no gradient through the sweep). Fixed: the parameter is clamped after each optimizer step (commit decb45e). The sweep's numbers stand as read but were made with output 30 frozen at 0.1.
+- **Rally run 18** (scripts/rally_run18.sh) was stopped during its parent read, before training. **Rally run 18b** (scripts/rally_run18b.sh) is the same pre-registered design with the fixed floor: run 14's task, parent lrsweep-init/model_27798, 1e-4, 4,000 iterations, cooldown over the last 20 %; early kill at model_29000 (rally_check.py early-sched: P(5+) up >= 2 points plus run 14's guard lines, left + back no more than 5 below); endpoint sched-gate (P(5+) Wilson low above run 14's 18.73 %, partner >= run 14 - 3, feeder >= run 14 - 2, sides within 3, falls <= 4 %).
+- **Seed slip:** the KL probes, the sweep and runs 18/18b trained on development-block seeds (4219950-4219956, 4219965-4219966, 4219991-4219992) instead of training seeds 1-999. Each is logged in the ledger and none was reused for a read. Training seeds go back to 1-999 from the next run.
+- **Audit (docs/research/audit-2026-10-28-*.md), items verified so far:**
+  - feeds are anchored at ROBOT_START y = 0.35 while the robot recovers to y = 0: start-anchored feeds land 0.35 m to its left (a left bias in training and in every pairs, M1 and direction-split read); to be confirmed with an eval-only read;
+  - pairs.py drops rallies still running when a read ends, so P(5+) and P(3+) read low, more so near the target; changing the target read needs its own decision entry and applies to parent re-reads too;
+  - a pair-mode reset leaves a live ball (a training reward leak); volley-backs are not counted in the pair stats;
+  - the observation normalizer is effectively frozen (count about 1.45e10);
+  - several early-kill lines sat inside read-to-read noise (left + back SD about 1.3 points); future lines are sized from measured spread.
+- **Rule while run 18b runs:** no edits to files its reads or training import; new code goes in new files. Confirmed fixes go to the panel as separate runs, one change per run.
