@@ -389,7 +389,7 @@ def milestone(prefix: str, tag: str) -> bool:
     return met
 
 
-if __name__ == "__main__":
+def _main() -> None:
     mode, prefix = sys.argv[1], sys.argv[2]
     if mode == "early":
         sys.exit(0 if early(prefix) else 1)
@@ -421,4 +421,21 @@ if __name__ == "__main__":
         sys.exit(0 if teacher_gate(prefix, sys.argv[3]) else 1)
     if mode == "m1":
         sys.exit(0 if milestone(prefix, sys.argv[3]) else 1)
-    target(prefix, sys.argv[3])
+    if mode == "target":
+        sys.exit(0 if target(prefix, sys.argv[3]) else 1)
+    print(f"rally_check: unknown mode {mode!r}")  # audit 2026-10-28: unknown modes used to run target() and exit 0
+    sys.exit(3)
+
+
+if __name__ == "__main__":
+    # Exit codes: 0 pass / met, 1 kill / not met, 2 the check itself crashed (missing or malformed read: never read it
+    # as a kill), 3 unknown mode. Drivers from run 18b on act on exit 1 only.
+    try:
+        _main()
+    except SystemExit:
+        raise
+    except Exception as e:  # noqa: BLE001
+        import traceback
+        traceback.print_exc()
+        print(f"rally_check: CHECK CRASHED ({type(e).__name__}); not a verdict")
+        sys.exit(2)

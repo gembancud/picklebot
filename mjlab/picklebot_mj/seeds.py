@@ -30,7 +30,8 @@ class SeedBlocks:
 TRAIN_SEEDS = range(1, 1_000)  # rsl_rl / env seeds for training runs
 # Development evaluations (reusable, reported as such). Block 2 was opened for Stage 5F by D-111 (block 1 nearly used
 # up); its allocation is recorded in mjlab/results/seed-ledger.json.
-DEV_EVAL_SEEDS = SeedBlocks(range(4_200_000, 4_201_000), range(4_210_000, 4_220_000))
+DEV_EVAL_SEEDS = SeedBlocks(range(4_200_000, 4_201_000), range(4_210_000, 4_220_000),
+                            range(4_220_000, 4_230_000))  # D-159: block 3 (block 2 used up by rally run 18b)
 FINAL_SEEDS = range(9_200_000, 9_201_000)  # reserved; never used for training, selection or tuning
 
 

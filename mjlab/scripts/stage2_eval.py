@@ -87,6 +87,12 @@ def main():
     ap.add_argument("--pair-handoff", default=None, choices=["crossing", "contact"],
                     help="D-135: the pair hand-off (default: the task's; the rally target reads 'contact')")
     ap.add_argument("--pair-video-caption", default="")
+    ap.add_argument("--anchor-y", type=float, default=None,
+                    help="audit 2026-10-28 (F1): the start anchor's y for start-anchored feeds (default: the task's, "
+                         "ROBOT_START's 0.35; 0.0 aims from the recovery spot)")
+    ap.add_argument("--audit-fixes", action="store_true",
+                    help="audit 2026-10-28: pair-mode resets park the env, and volleyed-back returns count in the pair "
+                         "stats (task flags pair_reset_parks, pair_count_volleys)")
     ap.add_argument("--pairs", action="store_true",
                     help="self-play readiness R4 (D-116): two-robot courts from mirrored env pairs")
     ap.add_argument("--replay-file", default=None,
@@ -181,6 +187,10 @@ def main():
             cfg.actions["ball"].pair_handoff = args.pair_handoff
     if args.record_contacts:
         cfg.actions["ball"].record_contacts = True
+    if args.anchor_y is not None:
+        cfg.actions["ball"].start_anchor_y = args.anchor_y
+    if args.audit_fixes:
+        cfg.actions["ball"].pair_reset_parks = cfg.actions["ball"].pair_count_volleys = True
     cfg.observations["actor"].enable_corruption = False
     groups = {"all": list(STAGE4_FAMILIES), "reach": list(REACH_FAMILIES), "every": list(FAMILY_NAMES),
               "drill5b": list(STAGE4_FAMILIES) + list(REACH_FAMILIES)}  # the Stage 5B drill (14 families)
@@ -207,6 +217,9 @@ def main():
         cfg.viewer.width, cfg.viewer.height = 960, 540
         cfg.viewer.geom_group = (1, 1, 1, 1, 0, 0)
         cfg.viewer.max_extra_envs = 0
+    from picklebot_mj import eval_meta
+    meta = eval_meta.guard(args.checkpoint, cfg)
+    meta.update(anchor_y=getattr(cfg.actions["ball"], "start_anchor_y", None), audit_fixes=args.audit_fixes)
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda", render_mode="rgb_array" if (args.video or args.pair_video) else None)
     agent_cfg = load_rl_cfg(task)
     venv = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
@@ -300,7 +313,7 @@ def main():
     hits, rets, falls = int(term.ep["contact"]), int(term.ep["legal_return"]), int(term.ep["fall"])
     endings = {Fault(i).name: int(c) for i, c in enumerate(term.fault_counts.tolist()) if c}
     out = {
-        "checkpoint": args.checkpoint, "controller": os.environ.get("PICKLEBOT_CONTROLLER") or "task default", "seed": args.seed, "envs": args.envs, "sim_seconds": args.seconds,
+        "meta": meta, "checkpoint": args.checkpoint, "controller": os.environ.get("PICKLEBOT_CONTROLLER") or "task default", "seed": args.seed, "envs": args.envs, "sim_seconds": args.seconds,
         "episodes": episodes,
         "contact_rate": round(hits / max(episodes, 1), 4), "contact_ci95": wilson(hits, episodes),
         "legal_return_rate": round(rets / max(episodes, 1), 4), "legal_return_ci95": wilson(rets, episodes),
