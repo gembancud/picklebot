@@ -437,6 +437,7 @@ def main():
         out["replay"] = {"file": args.replay_file, "states": int(term.replay.shape[0])}
     if args.pairs:
         out["pairs"] = term.pairs.summary()
+        out["launch_state"] = term.launch_summary()  # D-165
     if args.pair_video:
         import imageio_ffmpeg
         import mediapy

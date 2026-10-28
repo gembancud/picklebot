@@ -975,3 +975,19 @@ Run 19's feeder-ball loss appeared only in the pairs read, where each feeder bal
 - So "make training rallies resemble the read" needs more than freeing the partner: in training the robot rarely gets past shot 2 at all.
 
 **Plainly:** even with no busy partner, practice rallies are short, because during training the robot plays with random noise added to its moves and misses about four shots in ten, and because either robot's practice episode ending stops the rally. The robot that is read (noise off) plays much better than the one that practises.
+
+
+## Round 45 training screen (D-164, 2026-10-29) [train-diag]
+
+`scripts/diag/screen45.sh`: run 21's drill-court task, 200 iterations at learning rate 0 (rollouts only) from run 18b model_29000, pair courts, second half; `results/screen45-*.jsonl`, `results/screen45-summary.txt`.
+
+| Arm | Shots per rally | Per-ball legal | P(3+) | P(5+) | Feeder share | Ends: not legal / reset |
+|---|---|---|---|---|---|---|
+| S0 std x1 (calibration) | 1.218 | 0.619 | 15.0 % | 5.1 % | 0.392 | 2,116 / 709 |
+| S1 std x 0.001 (about mean actions) | 1.357 | 0.648 | 17.4 % | 6.7 % | 0.374 | 2,016 / 717 |
+| S2 std x1, 120 s episodes | 1.681 | 0.648 | 22.6 % | 9.0 % | 0.334 | 2,237 / 211 |
+
+- **Calibration holds:** S0 reproduces run 21's check (1.19 shots per rally, 0.61 per ball).
+- **The noise is not the cause** (pre-registered: S1 <= 0.65 rejects C): with near-mean actions the policy still returns only 0.648 per ball on the training task, against about 80-90 % in the pairs read. **The training task itself is harder than the read** (drill-v2 balls, the noisy planner, a 0.2 s refeed and the court mix, per round 45's motion and coach).
+- **Longer episodes help but miss the line:** 120 s episodes cut reset ends from 709 to 211 and lift P(3+) to 22.6 %, below M's 30 %.
+- **Route (D-164): neither passes -> A, after launch-state logging** (D-165).

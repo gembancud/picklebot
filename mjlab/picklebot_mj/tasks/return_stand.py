@@ -59,6 +59,8 @@ START_BOX = {"x": (-0.7, 0.7), "y": (-1.55, 0.85), "yaw": (-0.3, 0.3)}
 FEED_Y_MAX = court.HALF_WIDTH - 0.15  # anchored feeds are clamped inside the sidelines
 # Recovery command (Stage 5): a court spot to reach between the hit and the next feed.
 RECOVERY_BOX = ((-6.2, -5.0), (-1.5, 1.5))  # training: sampled per feed (x range, y range)
+LAUNCH_D_EDGES = (0.1, 0.2, 0.3, 0.5, 0.8, 1.2)  # D-165: m from the recovery spot at a feeder-ball launch
+LAUNCH_V_EDGES = (0.25, 0.5, 1.0, 1.5, 2.0)  # m/s pelvis ground speed at launch
 RECOVERY_FIXED = (-5.6, 0.0)  # evaluation: baseline centre
 RECOVERY_STD = 0.5  # reward exp(-(d / std)^2)
 RECOVERY_BIN = 0.05  # error histogram bin width (m), 100 bins
@@ -325,6 +327,15 @@ class BallPhysicsAction(ActionTerm):
             self.drill_scale = torch.where(court < round(frac * (n // 2)), torch.full((n,), 1.0 / frac, device=dev),
                                            torch.zeros(n, device=dev))
         self._share_split = torch.zeros(2, 2, dtype=torch.long, device=dev)  # [pair, drill court] x [feeder, hand-off]
+        # D-165 (logging only): the receiver's state at each feeder-ball launch, by the court's previous rally length
+        # (0-1, 2-4, 5+ shots): distance from its recovery spot and ground speed histograms, and that feeder ball's
+        # outcome (feeds, legal returns); pair courts only when drill courts are on.
+        self._ls_d = torch.zeros(3, len(LAUNCH_D_EDGES) + 1, dtype=torch.long, device=dev)
+        self._ls_v = torch.zeros(3, len(LAUNCH_V_EDGES) + 1, dtype=torch.long, device=dev)
+        self._ls_out = torch.zeros(3, 2, dtype=torch.long, device=dev)
+        self._fbin = torch.zeros(n, dtype=torch.long, device=dev)
+        self._ls_de = torch.tensor(LAUNCH_D_EDGES, device=dev)
+        self._ls_ve = torch.tensor(LAUNCH_V_EDGES, device=dev)
         self.drill = None
         if cfg.move_prob > 0.0:
             from picklebot_mj.tasks.move_drill import MoveDrill
@@ -1029,6 +1040,7 @@ class BallPhysicsAction(ActionTerm):
                 dc = self.drill_scale > 0
                 self._share_split += torch.stack([torch.stack([(fire & ~dc).sum(), (recv & ~dc).sum()]),
                                                   torch.stack([(fire & dc).sum(), (recv & dc).sum()])])
+            self._launch_log(fire, over, h0, data)
             handed = mirror_ball_states(torch.cat([self.ball.pos, self.ball.vel, self.ball.spin], -1))[self.pairs.partner]
             early = self._credit_early(recv)
             if os.environ.get("PICKLEBOT_PAIR_LOG") and self._env.common_step_counter % int(os.environ.get("PICKLEBOT_PAIR_LOG_EVERY", "2400")) == 0:
@@ -1039,7 +1051,8 @@ class BallPhysicsAction(ActionTerm):
                                         "shots": sum(i * c for i, c in enumerate(h)),
                                         "split": self._share_split.tolist(),
                                         "len_hist_group": self.pairs.len_hist_group.tolist(),
-                                        "end_reasons": self.pairs.end_reasons.tolist()}) + "\n")
+                                        "end_reasons": self.pairs.end_reasons.tolist(),
+                                        "launch": self.launch_summary()}) + "\n")
             if getattr(self.cfg, "pair_count_volleys", False):
                 self.pairs.count_early(early, h0, live0)
             self._credit_partner(over, early, h0, live0)
@@ -1082,6 +1095,26 @@ class BallPhysicsAction(ActionTerm):
         origins = scene.env_origins[env_ids]
         scene["ball"].write_mocap_pose_to_sim(torch.cat([self.ball.pos[env_ids] + origins, ident], -1), env_ids=env_ids)
         scene["court"].write_mocap_pose_to_sim(torch.cat([origins, ident], -1), env_ids=env_ids)
+
+    def _launch_log(self, fire, over, h0, data) -> None:
+        """D-165: launch state and outcome of feeder balls (no host sync)."""
+        keep = torch.ones_like(fire) if self.drill_scale is None else self.drill_scale == 0
+        lb = self.pairs.last_len.repeat(2)
+        b = (lb >= 2).long() + (lb >= 5).long()
+        d = (self.pelvis_xy() - self.recover_xy).norm(dim=-1)
+        v = data.root_link_lin_vel_w[:, :2].norm(dim=-1)
+        f = (fire & keep).long()
+        nd, nv = self._ls_d.shape[1], self._ls_v.shape[1]
+        self._ls_d.view(-1).index_add_(0, b * nd + torch.bucketize(d, self._ls_de), f)
+        self._ls_v.view(-1).index_add_(0, b * nv + torch.bucketize(v, self._ls_ve), f)
+        self._fbin = torch.where(fire, b, self._fbin)
+        done = over & ~h0 & keep  # a feeder ball finished this step
+        self._ls_out.view(-1).index_add_(0, self._fbin * 2, done.long())
+        self._ls_out.view(-1).index_add_(0, self._fbin * 2 + 1, (done & self.return_done).long())
+
+    def launch_summary(self) -> dict:
+        return {"prev_len_bins": ["0-1", "2-4", "5+"], "d_edges": list(LAUNCH_D_EDGES), "v_edges": list(LAUNCH_V_EDGES),
+                "d_hist": self._ls_d.tolist(), "v_hist": self._ls_v.tolist(), "outcome_feeds_legal": self._ls_out.tolist()}
 
     def _credit_early(self, recv: torch.Tensor) -> torch.Tensor:
         """Pair mode: an env receives its partner's return while its own copy of the ball is still in flight (the

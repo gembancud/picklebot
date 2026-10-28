@@ -4205,3 +4205,11 @@ Run 21 did not start (D-163: pair-court 1.19 shots per rally against 1.64). Roun
   - S2 (seed 109): std x1, 120 s episodes (task ...-DrillCourts-Ep120-G1): B's lever (time-outs are about 94 % of resets).
 - **Pre-registered:** M = pair-court P(3+) of finished rallies >= 0.30 (baseline 14.4 %, read 48 %) and pair-court feeder share 0.15-0.45, second half. S1 per-ball legal >= 0.75: noise is the cause and C (an upper std cap with a KL <= 0.03 screen) becomes eligible; <= 0.65: C is rejected. **Route:** S2 passes M -> run B (run 21's design with 120 s episodes); else S1 >= 0.75 -> a C screen next; else -> A, after launch-state logging (the receiver's displacement and speed at feeder launch by the previous rally's length, coach and motion).
 - **Any run that follows:** parent run 18b model_29000 (run 19's model_30200 the matched arm), 1e-4, 4,000 iterations, early-r21 lines, endpoint r19-gate, M logged through the run.
+
+
+## D-165 - Screen result and the launch-state measurement (round 45's route, 2026-10-29)
+
+- **Screen (D-164) [train-diag]:** S0 1.22 shots per rally, 0.619 per ball (calibration holds); S1 near-mean actions 0.648 per ball (<= 0.65: C rejected, the noise is not the cause); S2 120 s episodes P(3+) 22.6 % (< 30 %: B fails M). The training task itself plays harder than the read.
+- **Route: A after launch-state logging.** Logging only (return_stand._launch_log, pairs.last_len): at each feeder launch the receiver's distance from its recovery spot and ground speed, by the previous rally's length (0-1, 2-4, 5+), and the ball's outcome; written to the training log and to stage2_eval's JSON ("launch_state").
+- **Measurement** (scripts/diag/launch_state.sh): pairs reads of run 18b model_29000 and run 19 model_30200 (seed 4220079), and run 14's task in training (200 iterations at learning rate 0, training seed 110).
+- **Pre-registered (coach, round 45):** A ("move, then serve": a feeder ball 0.2-0.5 s after the robot reaches its spot on half the move episodes) if model_30200's feeder legal after a 5+ rally is >= 5 points below after a 0-1 rally AND the median launch displacement after a 5+ rally is above training's 90th percentile. Otherwise the panel reconvenes with the training-vs-read configuration table.
