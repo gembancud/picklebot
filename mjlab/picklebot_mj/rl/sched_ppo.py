@@ -9,8 +9,12 @@ adaptive rule; select it with `--agent.algorithm.class-name picklebot_mj.rl.sche
   fraction of the run's updates.
 - **KL guard:** once a mini-batch's KL against the rollout policy exceeds PICKLEBOT_KL_GUARD, the remaining
   mini-batches of that update take no step (rate 0).
-- **Std floor:** the actor's std is clamped at PICKLEBOT_STD_MIN (rsl_rl's own `std_range`).
-- **Log:** one JSON line per update to PICKLEBOT_SCHED_LOG (rate, KL, guard trips, the largest per-output KL shares).
+- **Std floor:** the actor's std parameter is clamped at PICKLEBOT_STD_MIN after every optimizer step. (The first
+  version used rsl_rl's forward `std_range` clamp, which passes zero gradient at the floor: an output that reached it
+  could never rise again. Audit 2026-10-28, docs/research/audit-2026-10-28-training-loop.md C1. The LR sweep and run
+  18's smoke ran with that version; output 30 sat frozen at 0.1 in them.)
+- **Log:** one JSON line per update to PICKLEBOT_SCHED_LOG (rate, KL, guard trips, the largest per-output KL shares,
+  the smallest std and how many outputs sit at the floor).
 
 The adaptive branch still computes the KL (the guard needs it); it is handed `desired_kl`, which leaves the rate alone.
 """
@@ -36,10 +40,26 @@ class ScheduledPPO(PPO):
         self.final = float(env("PICKLEBOT_LR_FINAL", "1e-5"))
         self.guard = float(env("PICKLEBOT_KL_GUARD", "0.05"))
         self.log = env("PICKLEBOT_SCHED_LOG")
-        floor = float(env("PICKLEBOT_STD_MIN", "0.1"))
+        self.floor = float(env("PICKLEBOT_STD_MIN", "0.1"))
         dist = self._raw_actor.distribution
-        dist.std_range[0] = floor
-        dist.log_std_range[0] = math.log(floor)
+        step = self.optimizer.step
+
+        def floored_step(*a, **k):
+            out = step(*a, **k)
+            with torch.no_grad():
+                if dist.std_type == "scalar":
+                    dist.std_param.clamp_(min=self.floor)
+                else:
+                    dist.log_std_param.clamp_(min=math.log(self.floor))
+            return out
+
+        self.optimizer.step = floored_step
+        floored_step.__wrapped__ = step
+        with torch.no_grad():  # the parent may sit below the floor
+            if dist.std_type == "scalar":
+                dist.std_param.clamp_(min=self.floor)
+            else:
+                dist.log_std_param.clamp_(min=math.log(self.floor))
         self.schedule, self.updates, self._rows, self._lr, self._tripped = "adaptive", 0, [], 0.0, False
         inner = self.actor.get_kl_divergence
 
@@ -80,7 +100,8 @@ class ScheduledPPO(PPO):
                    "kl_max": max(r[0] for r in self._rows), "guard_tripped": self._tripped,
                    "steps_taken": sum(1 for r in self._rows if r[2]),
                    "top_share": {str(i): round(float(share[i]), 4) for i in top},
-                   "std_min": float(self._raw_actor.output_std[0].min())}
+                   "std_min": float(self._raw_actor.output_std[0].min()),
+                   "at_floor": int((self._raw_actor.output_std[0] <= self.floor * 1.001).sum())}
             with open(self.log, "a") as f:
                 f.write(json.dumps(row) + "\n")
         self.learning_rate = self._lr
