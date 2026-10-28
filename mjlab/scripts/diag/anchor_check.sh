@@ -3,10 +3,10 @@
 # the robot recovers to y = 0, so they land 0.35 m to its left. One variable: the anchor's y (task default 0.35 vs 0.0,
 # --anchor-y), same checkpoint, same seeds, old bookkeeping (no --audit-fixes). Reads: the pairs read (M1 protocol,
 # contact hand-off, 2,048 envs, 120 s, seed 4220000) and the direction split (seed 4220001), each at both anchors.
-# Usage: anchor_check.sh CHECKPOINT TAG   (from the fix worktree; PICKLEBOT_LAM_R as the checkpoint needs)
+# Usage: anchor_check.sh CHECKPOINT TAG   (PICKLEBOT_LAM_R as the checkpoint needs)
 # Diagnostic only: no selection. Reported: partner / feeder legal, P(5+) (old and with open rallies), per direction.
 set -uo pipefail
-cd /mnt/f/dev/picklebot-mjlab-fix/mjlab; source ~/envs/picklebot-mj/bin/activate; export PYTHONWARNINGS=ignore PYTHONPATH=$PWD
+cd /mnt/f/dev/picklebot-mjlab/mjlab; source ~/envs/picklebot-mj/bin/activate; export PYTHONWARNINGS=ignore PYTHONPATH=$PWD
 CK=$1; TAG=$2; R=/mnt/f/dev/picklebot-mjlab/mjlab/results/anchor-$TAG
 PA="--task Picklebot-Latent-Court-Res-G1 --move-prob 0.0 --swing-prob 0.0 --families every --target A --no-hint --rally --pairs --pair-handoff contact --envs 2048 --seconds 120 --seed 4220000"
 for y in default 0.0; do
