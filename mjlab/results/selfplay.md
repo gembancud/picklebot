@@ -900,3 +900,21 @@ Early check at model_30200 (rally_check.py early-r19):
 **Plainly:** the robot got much better at rallying with its partner (a third of rallies now reach 5 shots, partner returns 89 %), but because longer rallies mean fewer fresh feeder balls in practice, it is forgetting how to return them. The run was stopped on that, as pre-registered.
 
 **Correction (round 42, experiment design and architecture):** run 14's task chain sets `court_feed_prob` to PAIRS_CONTACT_COURT_FEED_PROB = 0.80 (D-137), not 0.678 as written above. The mechanism is unchanged: the value only splits feeder balls between court and drill-v2 families and does not hold the feeder ball's share of play.
+
+
+## Rally run 20 not started: the smoke's manipulation check refuted round 42's premise (2026-10-28)
+
+Run 20 (D-161, a training rally cap of 5 shots) stopped at its smoke: the training feeder share of balls started read 0.686, outside the pre-registered 0.20-0.35 (taken from the pairs reads). The run never trained. A diagnostic (`scripts/diag/train_share.sh`; 200 throwaway iterations at 1,024 envs from run 18b model_29000, training seeds 100 / 101, `results/train-share-cap{0,5}.jsonl`) measured the share in real training dynamics:
+
+| Window (env steps after resume) | No cap (run 14's task) | Cap 5 (run 20's task) |
+|---|---|---|
+| 1st quarter | 0.665 | 0.698 |
+| 2nd quarter | 0.669 | 0.687 |
+| 3rd quarter | 0.676 | 0.713 |
+| 4th quarter | 0.685 | 0.697 |
+
+- **In training, two of every three balls started are feeder balls, with or without the cap.** The training task runs move-to-spot episodes (move_prob 0.35) and ghost-ball swing episodes (swing_prob 0.05); a hand-off to a busy partner ends the rally (D-140), so most training rallies end at the first hand-off. The cap moves the share by about 2-3 points.
+- **Round 42's mechanism held for the reads, not for training.** The share that fell 25.9 -> 21.5 -> 13.3 % was measured in the pairs reads (move and swing off, 120 s rallies). Training never practised that distribution; its feeder share is about 0.67 and stable. Run 19's feeder-ball loss therefore needs another explanation; exposure is not it.
+- **Also exposed:** the pairs read (the target protocol) plays long uninterrupted rallies that training almost never produces, so the target is measured on a distribution the policy does not train on.
+
+**Plainly:** the fix we voted for would not have changed what the robot practises. In training, feeder balls are already two thirds of all balls, because the partner is often busy with a footwork drill and the rally stops. So the robot did not forget feeder balls for lack of practice; something else (likely the reward) is pulling it toward the partner rally. The panel reconvenes.

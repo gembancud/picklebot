@@ -1261,6 +1261,11 @@
    ],
    "purpose": "rally run 20 (scripts/rally_run20.sh; D-161, rally cap 5 in training from run 18b model_29000): reads of the parent and model_30200 on v2 4220029, move 4220030, court 4220031, pairs 4220032, direction split 4220033; endpoint h5f_clean_eval 4220034-4220049, target read 4220050 (read once), crossing 4220051, direction split 4220052. Training seed 98, smoke seed 99 (TRAIN_SEEDS).",
    "date": "2026-10-28"
+  },
+  {
+   "seeds": [],
+   "purpose": "rally run 20 NOT STARTED: its smoke (training seed 99) failed the feeder-share manipulation check (0.686 vs 0.20-0.35); its read seeds 4220029-4220052 are unread and stay reserved for run 20's design if it is relaunched, else retired. Diagnostic scripts/diag/train_share.sh used training seeds 100 and 101 (TRAIN_SEEDS, no read).",
+   "date": "2026-10-28"
   }
  ],
  "retired": {
