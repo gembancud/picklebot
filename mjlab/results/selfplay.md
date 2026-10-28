@@ -828,3 +828,27 @@ Pre-registered choice: among arms holding the guard lines (partner legal >= max(
 - **Choice rule:** no arm gains left + back (all negative). By the pre-registered rule there is no full run; the result goes to the user.
 
 **Plainly:** fixing the learning rate made the robot learn again, and at 1e-4 it got better at the partner rally in 400 iterations (P(5+) 18.5 -> 22.3 %). But it did not get better at the left and back balls, which is what we needed it to fix; it got slightly worse. These are 400-iteration diagnostic reads, not endpoints.
+
+
+## Rally run 18b: the fixed optimizer at 1e-4 (2026-10-28) - killed at the early check
+
+Run 18 (scripts/rally_run18.sh) was stopped during its parent read: the audit found that the first ScheduledPPO's std floor froze any output that reached it (rsl_rl's forward clamp passes zero gradient at the floor). Run 18b (scripts/rally_run18b.sh) is run 18's pre-registered design with the floor clamped after each optimizer step (commit decb45e): run 14's task, parent lrsweep-init/model_27798 (fresh Adam, output 30's std raised to 0.1), 1e-4 constant after a 50-update warm-up, cooldown planned over updates 3,200-4,000, KL guard 0.05; smoke seed 4219991, training seed 4219992, reads 4219967-4219971. Smoke: falls 0.117 (line 0.159), every std output had a gradient. Training: KL 0.011-0.014 per update, all 20 mini-batch steps every update, at most 2 outputs at the floor (they rise off it again).
+
+Early check at model_29000 (rally_check.py early-sched), parent = run 14 model_27798 re-read on the same seeds:
+
+| | Parent | model_29000 | Line |
+|---|---|---|---|
+| P(5+) (engagement) | 18.44 % | **25.84 %** [25.16, 26.53] (+7.4) | >= +2.0 (held) |
+| Partner-ball legal | 69.98 % | **77.36 %** (low 76.91) | >= 66.98 % (held) |
+| Feeder-ball legal | 82.26 % | 81.13 % (low 80.47) | >= 80.26 % (held) |
+| P(4+) | 23.6 % | 30.4 % | reported |
+| Court legal given contact / court contact / pair contact | 94.6 / 83.1 / 82.0 % | 93.0 / 82.0 / 86.4 % | within 3 points (held) |
+| Court main / drill v2 / lowest move arrival | 78.6 / 87.3 / 98.2 % | 76.3 / 87.2 / 99.1 % | within 5 points (held) |
+| Court falls per episode | | 2.99 % (low 2.0) | low <= 4 %, point <= 7.4 % (held) |
+| Left + back feeder-ball contact | 58.8 % | 57.2 % (-1.6) | >= -5 (held) |
+| Worst feeder-family contact change | | **-5.3 (cross_forehand)** | >= -5 (**failed**) |
+
+- **Killed on one line.** cross_forehand feeder-ball contact fell 5.3 points (1,089 -> 997 feeds; SE of the difference 1.4 points; its legal return -4.6). That is about 3.8 standard errors, so not read noise: the run traded some cross-forehand balls for the partner rally. Every other line held, most by a wide margin. The kill stands as pre-registered; the endpoint battery was skipped. Checkpoints model_29000-29200 are kept.
+- **The optimizer fix works.** In 1,200 iterations at 1e-4 the rally moved more than in rally runs 3-17 together: P(5+) +7.4 points, partner-ball legal +7.4 points, falls lower (3.0 %). Feeder-ball legal is flat (-1.1), so M1 (feeder 85 %) is no nearer.
+
+**Plainly:** with the learning rate fixed, the robot got much better at the two-robot rally in a third of a run (25.8 % of rallies reach 5 shots, up from 18.4 %). It was stopped by the rule that no single ball type may get more than 5 points worse: cross-court forehands got 5.3 points worse. The panel decides what comes next.
