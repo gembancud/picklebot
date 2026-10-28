@@ -143,6 +143,23 @@ class PairCourts:
         self.waiting &= ~fire
         return fire, receive
 
+    def count_early(self, early: torch.Tensor, h0: torch.Tensor, live0: torch.Tensor) -> None:
+        """Audit 2026-10-28 (pair_count_volleys): count returns volleyed back by the partner (the task's _credit_early,
+        after step) as legal returns: feeds, legal returns, own-ball / feeder split and the court's rally length. h0 and
+        live0 are the ball types and court liveness before this step's update."""
+        e = early & live0
+        s = self.side
+        cnt = lambda m: torch.stack([(m & (s == k)).sum() for k in (0, 1)])  # noqa: E731
+        z = torch.zeros(2, dtype=torch.long, device=e.device)
+        self.side_stats += torch.stack([cnt(e), cnt(e), z], -1)
+        own = e & h0
+        self.side_stats_own += torch.stack([cnt(own), cnt(own), z], -1)
+        fed = e & ~h0
+        per = torch.stack([own, own, fed, fed], -1)
+        self.court_counts.index_add_(0, torch.arange(self.n, device=e.device) % self.h, per.long())
+        ok = e.long()
+        self.rally_len += torch.where(self.court_dead, torch.zeros_like(self.rally_len), ok[: self.h] + ok[self.h:])
+
     def summary(self) -> dict:
         h = self.len_hist.tolist()
         n = sum(h)
@@ -153,7 +170,15 @@ class PairCourts:
         mean = round(sum(i * c for i, c in enumerate(h)) / n, 3) if n else None
         so = self.side_stats_own.tolist()
         side_own = {name: {"feeds": f, "legal": round(l / f, 4) if f else None} for name, (f, l, x) in zip(("A", "B"), so)}
-        return {"rallies": n, "p_len_ge_4": ge(4), "p_len_ge_5": ge(5), "p_len_ge_10": ge(10), "mean_len": mean,
+        # Audit 2026-10-28: rallies still running when the read ends never reach len_hist (only _end fills it), so long
+        # rallies are under-counted. Reported beside the old fields (unchanged): the open rallies' lengths, and P(k+)
+        # counting an open rally that already has k or more shots as a success (open rallies below k are left out).
+        op = (self.started & ~self.court_dead)
+        oh = torch.zeros(MAX_LEN + 1, dtype=torch.long, device=op.device).index_add_(
+            0, self.rally_len.clamp(max=MAX_LEN), op.long()).tolist()
+        ge_open = lambda k: round((sum(h[k:]) + sum(oh[k:])) / (n + sum(oh[k:])), 4) if n else None  # noqa: E731
+        return {"open_len_hist": oh, "p_len_ge_3_with_open": ge_open(3), "p_len_ge_5_with_open": ge_open(5),
+                "rallies": n, "p_len_ge_4": ge(4), "p_len_ge_5": ge(5), "p_len_ge_10": ge(10), "mean_len": mean,
                 "handoff": self.handoff, "sides": side, "started": {"feeder": int(self.n_started[0]),
                 "handoffs": int(self.n_started[1])}, "court_counts": self.court_counts.tolist(),
                 "sides_own_ball": side_own, "len_hist": h}

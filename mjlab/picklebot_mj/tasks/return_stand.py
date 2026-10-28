@@ -103,6 +103,18 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # Feed geometry reference: "start" = fixed ROBOT_START (Stage 2-4); "pelvis" = the robot's
     # current pelvis position (footwork tasks), read from qpos so it is valid right after a reset.
     feed_anchor: str = "start"
+    # Audit 2026-10-28 (F1): "start" anchors aim from ROBOT_START y = 0.35 while the robot recovers to y = 0
+    # (RECOVERY_FIXED), so start-anchored feeds land 0.35 m to its left. start_anchor_y overrides that y (0.0 matches the
+    # recovery spot); None keeps 0.35, so every existing task and read is unchanged.
+    start_anchor_y: float | None = None
+    # Audit 2026-10-28 (pair bookkeeping), both off by default so existing tasks and reads are unchanged:
+    # pair_reset_parks: a pair-mode reset really parks the env. Without it the reset's own feed is made live again
+    #   after the pair logic parked it (begin_from_feed and the flag clear run later), so each episode starts with a
+    #   ball the pair logic does not know about; returning it can be paid as an early legal return.
+    # pair_count_volleys: a return volleyed back by the partner (credited in _credit_early) is counted in the pair
+    #   stats (rally length, feeds and legal returns); before, pairs.step ran first and never saw it.
+    pair_reset_parks: bool = False
+    pair_count_volleys: bool = False
     # D-089: share of feeds aimed at the court (anchored at the start spot, as in the rally evaluation) instead of at
     # the pelvis, drawn per feed; 0 keeps every feed pelvis-anchored (feed_anchor "pelvis") as before.
     court_anchor_prob: float = 0.0
@@ -470,6 +482,12 @@ class BallPhysicsAction(ActionTerm):
             f[env_ids] = False
         if hasattr(self, "rally_streak"):
             self.rally_streak[env_ids] = 0
+        if self.pairs is not None and getattr(self.cfg, "pair_reset_parks", False):  # audit: keep the reset env parked
+            mk = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+            mk[env_ids] = True
+            self.rules.lost(mk)
+            self.tallied |= mk
+            self._prev_dead |= mk  # not a new fault
         if self.cfg.recovery:
             self.rec_t[env_ids] = -1.0
             self.rec_scored[env_ids] = False
@@ -629,12 +647,16 @@ class BallPhysicsAction(ActionTerm):
         ids = self.all_ids if env_ids is None else env_ids
         return d.data.qpos[ids][:, d.indexing.free_joint_q_adr[:2]] - self._env.scene.env_origins[ids, :2]
 
+    def _start_y(self) -> float:
+        y = getattr(self.cfg, "start_anchor_y", None)
+        return ROBOT_START[1] if y is None else float(y)
+
     def _anchor(self, env_ids):
         """(x, y) court-local reference for feed geometry, per env in env_ids."""
         if self.cfg.feed_anchor == "start":
             k = len(env_ids)
             sx, sy = (torch.full((k,), ROBOT_START[0], device=self.device),
-                      torch.full((k,), ROBOT_START[1], device=self.device))
+                      torch.full((k,), self._start_y(), device=self.device))
             if getattr(self.cfg, "court_feed_prob", 0.0) > 0.0:  # D-116: court feeds anchor as the court task does
                 q = self.pelvis_xy(env_ids)
                 pel = self.court_feed[env_ids] & ~self._court_anch[env_ids]
@@ -644,7 +666,7 @@ class BallPhysicsAction(ActionTerm):
         if getattr(self.cfg, "court_anchor_prob", 0.0) > 0.0:  # D-089: this feed's draw, made once at the feed's start
             m = self._court_anch[env_ids]
             return (torch.where(m, torch.full_like(q[:, 0], ROBOT_START[0]), q[:, 0]),
-                    torch.where(m, torch.full_like(q[:, 1], ROBOT_START[1]), q[:, 1]))
+                    torch.where(m, torch.full_like(q[:, 1], self._start_y()), q[:, 1]))
         return q[:, 0], q[:, 1]
 
     def _feed(self, env_ids):
@@ -985,6 +1007,8 @@ class BallPhysicsAction(ActionTerm):
                                          self.cfg.refeed_delay_s, contact=first, busy=busy)
             handed = mirror_ball_states(torch.cat([self.ball.pos, self.ball.vel, self.ball.spin], -1))[self.pairs.partner]
             early = self._credit_early(recv)
+            if getattr(self.cfg, "pair_count_volleys", False):
+                self.pairs.count_early(early, h0, live0)
             self._credit_partner(over, early, h0, live0)
             # D-150: a legal return (landed, or volleyed back early) of a feeder ball: h0 is the ball type before this
             # step's pair update, which marks the hitter's ball as handed when the partner volleys it back

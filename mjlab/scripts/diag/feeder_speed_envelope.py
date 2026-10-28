@@ -47,6 +47,8 @@ def main():
     ap.add_argument("--seconds", type=float, default=120.0)
     ap.add_argument("--json", default=None)
     ap.add_argument("--planner", choices=["task", "off", "clean", "noisy"], default="task")  # round 38 headroom read
+    ap.add_argument("--anchor-y", type=float, default=None)  # audit 2026-10-28 F1 (stage2_eval.py --anchor-y)
+    ap.add_argument("--audit-fixes", action="store_true")  # audit 2026-10-28 (stage2_eval.py --audit-fixes)
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "development seeds only"
     cfg = load_env_cfg(TASK)
@@ -64,6 +66,13 @@ def main():
     b.pair_mode, b.pair_handoff, b.ready_track = True, "contact", True
     cfg.observations["actor"].enable_corruption = False
     cfg.scene.num_envs, cfg.seed, b.seed = args.envs, args.seed, args.seed
+    if args.anchor_y is not None:
+        b.start_anchor_y = args.anchor_y
+    if args.audit_fixes:
+        b.pair_reset_parks = b.pair_count_volleys = True
+    from picklebot_mj import eval_meta
+    meta = eval_meta.guard(args.checkpoint, cfg)
+    meta.update(anchor_y=b.start_anchor_y, audit_fixes=args.audit_fixes)
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda")
     agent_cfg = load_rl_cfg(TASK)
     venv = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
@@ -133,7 +142,7 @@ def main():
             obs, _, _, _ = venv.step(policy(obs))
     r = torch.cat(recs).cpu()
     fed = r[r[:, 0] == 0]
-    out = {"checkpoint": args.checkpoint, "seed": args.seed, "envs": args.envs, "seconds": args.seconds,
+    out = {"meta": meta, "checkpoint": args.checkpoint, "seed": args.seed, "envs": args.envs, "seconds": args.seconds,
            "feeder_feeds": len(fed), "families": {}, "directions": {}}
     for i, name in enumerate(FAMILY_NAMES):
         f = fed[fed[:, 1] == i]
