@@ -938,3 +938,19 @@ Run 19's feeder-ball loss appeared only in the pairs read, where each feeder bal
 - With time to settle, run 19's model_30200 reaches P(5+) 39.2 % and partner legal 90.2 %.
 
 **Plainly:** most of the feeder-ball "forgetting" was the robot being caught off balance by a feeder ball half a second after a long rally, a situation it almost never trains on. Given three seconds, it returns them nearly as well as before.
+
+
+## Rally run 21 pre-launch check: STOP on the rally-length line (2026-10-28)
+
+`scripts/diag/train_share_b.sh` (200 throwaway iterations each from run 18b model_29000, training seeds 102 / 103; `results/train-share-b-*.jsonl`, summary `results/train-share-b-summary.txt`) [train-diag]:
+
+| | Run 14's task | Drill-court task (pair_drill_court_frac 0.5) |
+|---|---|---|
+| Feeder share, all courts | 0.680 | 0.482 |
+| Feeder share, pair courts | | **0.376** (2,710 feeder, 4,495 hand-offs) |
+| Feeder share, drill courts | | 0.931 (1,584 feeder, 118 hand-offs) |
+| Hand-offs per feeder ball | 0.47 (all courts) | **1.66** on pair courts, 0.07 on drill courts |
+| Mean training rally (shots per finished rally, all courts) | 0.82 | 1.09 |
+
+- Pre-registered (D-162): pair-court feeder share within 0.15-0.45 (**passed**, 0.376) and mean training rally length >= 2 x run 14's task's (**failed**: 1.09 vs 1.64, measured over all courts).
+- The failed line was computed over all courts. The drill courts now play almost no rallies (0.07 hand-offs per feeder ball), which pulls the all-court mean down; on the pair courts the change targets, hand-offs per feeder ball are 3.5 x the baseline's. Round 43's rule says manipulation checks are measured on the population the mechanism names, but reinterpreting a pre-registered line after the result is the panel's call, so run 21 did not start.
