@@ -1023,3 +1023,18 @@ Run 19's feeder-ball loss appeared only in the pairs read, where each feeder bal
 | Rewards | adds keep_alive, partner_return, rally_bonus, ball_out_over | (not used) |
 
 **Plainly:** the robot is not worse after long rallies; it is worse right after a short one, and it already practises from out-of-position starts more than the read shows. Training and the read differ in about ten ways at once, and the same policy returns about 65 % of balls in training against 80-90 % in the read even with the noise off. The next step is to find which of these differences matter.
+
+
+## Training-side erosion check (D-166, 2026-10-29): no feeder loss in training
+
+`scripts/diag/erosion_check.sh`: run 14's task, 200 iterations at learning rate 0 with sampled actions, second half; `results/erosion-*` [train-diag].
+
+| Arm | Feeder legal (n) | After a 0-1 rally |
+|---|---|---|
+| T1 run 18b model_29000 (seed 111) | 74.96 % (5,899) | 75.02 % |
+| T2 run 19 model_30200 (seed 112) | 75.82 % (5,649) | 75.55 % |
+| T3 model_29000 again (seed 113) | 75.13 % (5,797) | 75.41 % |
+
+- **Dtrain = +0.86 points** (SE of a difference about 0.8); replicate |T3 - T1| 0.16. **VERDICT (coded): NO TRAINING LOSS.** Run 19 did not forget feeder balls in the training distribution; its -3.6-point feeder loss exists only in the pairs read. Route (D-166): the training-side leave-one-out screen A-T (D-167).
+
+**Plainly:** in practice conditions the newer robot returns feeder balls as well as before (slightly better). The drop shows up only in the test conditions, so something about how the test differs from practice exposes it.

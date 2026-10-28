@@ -406,6 +406,8 @@ class BallPhysicsAction(ActionTerm):
             self.pairs = PairCourts(n, dev, getattr(cfg, "pair_handoff", "crossing"), getattr(cfg, "pair_rally_cap", 0))
             if self.drill_scale is not None:  # D-163: rally lengths logged per court group (0 pair, 1 drill courts)
                 self.pairs.group = (self.drill_scale[: n // 2] > 0).long()
+            else:  # D-167 (logging only): one group, so per-ball legal and rally ends are logged on every pair task
+                self.pairs.group = torch.zeros(n // 2, dtype=torch.long, device=dev)
         if getattr(cfg, "replay_file", ""):
             self.replay = mirror_ball_states(torch.load(cfg.replay_file, map_location=dev).float())
             self.gen_replay_mix = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 161803)
