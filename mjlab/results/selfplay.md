@@ -873,3 +873,28 @@ Start-anchored feeds aim from ROBOT_START y = 0.35 while the robot recovers to y
 - **The partner rally reads lower at y 0.0** (P(5+) -1.7), as expected for a policy trained on the 0.35 anchor; a read-time switch would not be fair to it.
 
 **Plainly:** the aiming bug made left balls look a little worse than they are, but fixing it is not the missing piece: balls to the robot's left are still returned less than half the time.
+
+
+## Rally run 19: run 18b continued from model_29000 (D-160, 2026-10-28) - killed at the early check
+
+scripts/rally_run19.sh: run 14's task, ScheduledPPO at 1e-4 with model_29000's Adam state, no warm-up, training seed 96, smoke seed 97 (falls 0.085, every output with a gradient). Parent model_29000 re-read on 4220002-4220006 (the interface guard verified lam_r 2 against 18b's params): partner 77.35 %, feeder 80.87 %, P(5+) 25.8 % (open rallies counted 27.2 %), reproducing 18b's own read. Training: KL 0.014 per update, all 20 steps every update, at most 2 outputs at the floor.
+
+Early check at model_30200 (rally_check.py early-r19):
+
+| | model_29000 | model_30200 | Line |
+|---|---|---|---|
+| P(5+), open rallies counted | 27.20 % | **33.19 %** [32.28, 34.11] | >= +1.0 (held, +6.0) |
+| Partner-ball legal | 77.35 % | **88.94 %** | >= 75.85 % (held) |
+| Feeder-ball legal | 80.87 % | 77.26 % | >= 80.26 % (**failed**) |
+| Families below run 14 - 5 points (contact) | | backhand -6.1, deep -5.5, low -6.5, topspin -5.9, reach_deep -12.1 | none (**failed**) |
+| cross_forehand contact | 86.75 % | 82.22 % | >= 81.95 % (held) |
+| Left + back feeder contact | | 52.5 % (run 14 58.8) | >= run 14 - 5 (**failed**, -6.3) |
+| Court contact / court main / drill v2 / move arrival | 83.5 / 77.4 / 86.4 / 99.1 % | 83.0 / 76.9 / 87.3 / 99.1 % | held |
+| Court falls per episode | | 3.88 % (low 2.73) | held |
+| Share of returns above 11 m/s | 11.9 % | 5.7 % | reported |
+
+- **The rally improved fast; the feeder balls eroded broadly.** Almost every feeder family lost 1-7 points of legal return (fast 71.7 -> 61.9, cross_backhand 65.4 -> 58.6, reach_deep 36.9 -> 30.4). It is not one family: it is the whole feeder ball.
+- **The mechanism: the feeder ball's share of play falls as the rally gets longer.** Feeder balls started / all balls started in the pairs reads: run 14 25.9 %, model_29000 21.5 %, model_30200 **13.3 %**. In pair-mode training a feeder ball only starts a rally, so the better the partner rally, the fewer feeder balls the policy sees, and the more it drifts toward partner balls: a self-reinforcing loop. PAIRS_COURT_FEED_PROB (0.678) was set in Stage 5H when hand-offs were 41 % of feeds; nothing holds the feeder share as rallies lengthen.
+- The robot now returns softer, easier balls for the partner (share above 11 m/s halved), which helps the rally.
+
+**Plainly:** the robot got much better at rallying with its partner (a third of rallies now reach 5 shots, partner returns 89 %), but because longer rallies mean fewer fresh feeder balls in practice, it is forgetting how to return them. The run was stopped on that, as pre-registered.
