@@ -4194,3 +4194,14 @@ Run 21's pre-launch check (D-162) passed the pair-court feeder share (0.376) and
 - **Option 1 rejected as a post-hoc loosening:** the brief's "3.5 x" compared hand-offs per feeder ball, a different metric (in run 14's task a legal return to a busy partner is a shot but not a hand-off; shots per hand-off 1.74 vs 1.01), not shots per finished rally. The 3.5 x is withdrawn.
 - **Pre-registered now, before the measurement:** the metric stays legal shots per finished rally; the population is the pair courts (drill_scale 0), from a per-court-group rally-length histogram (logging only, `PairCourts.group` / `len_hist_group`); the line stays >= 1.64 (2 x run 14's task's all-court 0.82); the pair-court feeder share stays within 0.15-0.45. Drill arm only, training seed 106, 200 throwaway iterations from run 18b model_29000.
 - **On a pass:** run 21 launches as designed (D-162). **On a fail:** run 21 does not start and the panel reconvenes under option 3 (a redesign); predictions recorded: RL about 1.39, architecture 1.23-1.39 (both fail). RL's pre-registered fail candidate: a short randomized training refeed delay on pair courts (aim at the start state directly); architecture's: first measure in training why pair-court rallies end (miss, out, fall, reset).
+
+
+## D-164 - Round 45: a training screen before any redesign run (2026-10-28)
+
+Run 21 did not start (D-163: pair-court 1.19 shots per rally against 1.64). Round 45 voted 5/5 to measure in training first.
+- **Screen** (`scripts/diag/screen45.sh`; run 21's drill-court task from run 18b model_29000; 200 iterations at 1,024 envs, learning rate 0, rollouts only; per-court-group log) [train-diag]:
+  - S0 (training seed 107): std x1, 30 s episodes: calibration, must reproduce run 21's check (about 1.19 shots per rally, 0.61 per shot).
+  - S1 (seed 108): std x 0.001 (about mean actions; scripts/std_scale_init.py, PICKLEBOT_STD_MIN 1e-6): noise attribution.
+  - S2 (seed 109): std x1, 120 s episodes (task ...-DrillCourts-Ep120-G1): B's lever (time-outs are about 94 % of resets).
+- **Pre-registered:** M = pair-court P(3+) of finished rallies >= 0.30 (baseline 14.4 %, read 48 %) and pair-court feeder share 0.15-0.45, second half. S1 per-ball legal >= 0.75: noise is the cause and C (an upper std cap with a KL <= 0.03 screen) becomes eligible; <= 0.65: C is rejected. **Route:** S2 passes M -> run B (run 21's design with 120 s episodes); else S1 >= 0.75 -> a C screen next; else -> A, after launch-state logging (the receiver's displacement and speed at feeder launch by the previous rally's length, coach and motion).
+- **Any run that follows:** parent run 18b model_29000 (run 19's model_30200 the matched arm), 1e-4, 4,000 iterations, early-r21 lines, endpoint r19-gate, M logged through the run.

@@ -2281,3 +2281,24 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_drillcourts(True),
                     rl_cfg=_s5e_rl_cfg())
+
+
+# Panel round 45 screen S2 (D-164, diagnostic task, training only): rally run 21's drill-court task with 120 s
+# episodes, so a time-out rarely cuts a pair-court rally (time-outs are about 94 % of resets in training, round 45
+# motion). Not a run task unless the screen's route selects it.
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_DRILLCOURTS_EP120 = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LamR2-DrillCourts-Ep120-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_drillcourts_ep120(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_drillcourts(play)
+    if not play:
+        cfg.episode_length_s = 120.0
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_DRILLCOURTS_EP120,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_drillcourts_ep120(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_drillcourts_ep120(True),
+                    rl_cfg=_s5e_rl_cfg())
