@@ -621,3 +621,22 @@ Brief: run 20 (D-161, rally cap 5) never trained: its smoke's manipulation check
 **Correction check:** D-165's rule was built badly (sign left to a human, coarse bins as "medians", training's random recovery spot vs the read's fixed one) and tested the wrong contrast: the loss to explain is between checkpoints (motion, coach: in the 0-1 bin, model_30200's launches are more often displaced > 1.2 m, 25.3 -> 29.7 %, and moving > 0.25 m/s, 47 -> 54 %; the log has no outcome-by-displacement cross-tab). Round 45's "C rejected" passed by 0.002 (inside one SE): borderline, though noise explains only about 3 points. The brief's "0.65 vs 0.80-0.90" mixed per-side and per-ball rates (architecture: model_29000's read is about 0.77 per ball) and pooled ball types: training feeder legal is 73.8 % after 0-1 rallies against the read's 78.5 %, and the feed mix explains about 3 points of that (RL, CPU reweighting); the training-vs-read gap sits mostly in partner balls. RL: P(5+) cannot exceed feeder legal, so the target needs feeder about 94 %; every lever must state its ceiling against the target. Process: rules coded with sign and threshold and printing PASS / FAIL; feeder and partner legal logged separately in training; measure the quantity the next decision uses on the training population; at most one more diagnostic before a run or STOP (experiment design).
 
 **Votes:** motion and coach A (read-side attribution); architecture A-T (a training-side leave-one-out screen, rejecting read-side A under round 43's rule); experiment design and RL E (a training-side checkpoint contrast: does model_29000 -> model_30200 lose feeder balls in training?). **No majority on one option; tie rule (least new code) -> E** (no new code), experiment design's form with a noise replicate (D-166).
+
+
+## Round 47 - the leave-one-out screen finds no eligible setting; the panel votes STOP (4/1) (2026-10-29)
+
+Brief: D-167's screen [train-diag]: no single read setting moves training per-ball legal by >= 3 points (proprioceptive noise off +2.4, fixed recovery +2.2, uniform mix +1.8); all eight together +9.0; model_30200 in that configuration 0.858 per ball, feeder 85.9 %. Pre-registered route: none eligible -> this panel with STOP on the table.
+
+**Correction check (all five):** D-167 was executed as pre-registered and its verdict stands. Flaws, none decisive: the 0.71 calibration line could not fail (set from the drill-court baseline; future lines from the arm's own T0); the coded override check skipped T8 and TA and printed VOID for T5 (a YAML-quoting regex bug); members verified every arm's params/env.yaml by hand: all valid. One seed per arm, no replicate (SE of a Delta about 0.7-1.0 points). **The write-up overstated the result:** "the configuration explains all of the gap" holds per ball only; on feeder balls the read-like training configuration is *easier* than the read (model_29000 85.3 vs 80.9 %, model_30200 85.9 vs 77.3 %), so run 19's read feeder loss lives in the differences the screen left at training values (no move / swing episodes, 121 s episodes, post-rally starts, base task). The 85.9 % is a [train-diag] figure in an easier configuration, not evidence that M1 is near. D-166's "no training loss" holds for the distribution training has; training never produces the read's post-rally feeder ball.
+
+**Votes:**
+
+| Member | Vote | Reason |
+|---|---|---|
+| Coach | STOP | a match-only restart weakness that practice cannot rehearse; even a full fix (about +3.6 feeder points) leaves M1 short; the weakness is a footwork skill |
+| Motion | STOP | left / back feeder balls (21 % of feeder balls) are returned about 44 %; feeder legal caps near 88 % even with every forward / right ball returned; the controller does not step left / back |
+| Experiment design | STOP | B fails the round-43 rule (no training-measured premise; eight changes; two drop sim-to-real commitments); estimated M1 on this line 15-25 %, target under 5 % |
+| RL | STOP | no feeder loss in any distribution we train on, so a gradient has nothing to fix; M1 under 20 %, target not plausible on this line |
+| Architecture | B | train the pair courts in the read's configuration (DrillCourts-Ep120 task with A-T's O1-O6, noise kept), from model_29000, with a coded pre-launch premise (per-ball >= 0.678) and STOP on any fail; about 9.5 GPU-h |
+
+**Decision: STOP (4/1).** The loop goes back to the user (D-168).
