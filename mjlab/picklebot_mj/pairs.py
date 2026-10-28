@@ -20,7 +20,7 @@ MAX_LEN = 64
 
 
 class PairCourts:
-    def __init__(self, n: int, device, handoff: str = "crossing"):
+    def __init__(self, n: int, device, handoff: str = "crossing", rally_cap: int = 0):
         assert n % 2 == 0, "pair mode needs an even number of envs"
         assert handoff in ("crossing", "contact"), handoff
         # D-135: "crossing" (D-116) hands a return to the partner when it crosses the net, so the receiver first sees it
@@ -47,6 +47,13 @@ class PairCourts:
         # legal], and all feeds started (feeder balls, hand-offs, faulted hand-offs included) for the court share
         self.court_counts = torch.zeros(self.h, 4, dtype=torch.long, device=device)
         self.n_started = torch.zeros(2, dtype=torch.long, device=device)  # feeder balls, hand-offs
+        # D-161 (training only; 0 = off, as in every read): a court's rally ends once its rally_cap-th shot is finished.
+        # Shots are counted at the hitter's trigger (contact or crossing), so a volley cannot slip past the cap; the
+        # capped shot is not handed over, it lands and is judged as usual, and a feeder ball starts the next rally.
+        # It holds the feeder ball's share of play at >= 1 / rally_cap however long the policy can rally.
+        self.rally_cap = int(rally_cap)
+        self.shots = torch.zeros(self.h, dtype=torch.long, device=device)
+        self.final = torch.zeros(n, dtype=torch.bool, device=device)
 
     def court(self, mask: torch.Tensor) -> torch.Tensor:
         """Per-env mask -> per-court mask (either env)."""
@@ -69,12 +76,14 @@ class PairCourts:
             self.court_counts.index_add_(0, torch.arange(self.n, device=f.device) % self.h, per.long())
         self._end(m)
         self.parked |= m
+        self.final &= ~m
 
     def _end(self, env_mask: torch.Tensor) -> None:
         c = self.court(env_mask) & ~self.court_dead
         idx = self.rally_len.clamp(max=MAX_LEN)
         self.len_hist.index_add_(0, idx, (c & self.started).long())  # the initial reset is not a rally
         self.rally_len = torch.where(c, torch.zeros_like(self.rally_len), self.rally_len)
+        self.shots = torch.where(c, torch.zeros_like(self.shots), self.shots)
         self.rally_idx = self.rally_idx + c.long()
         self.court_dead |= c
 
@@ -111,9 +120,17 @@ class PairCourts:
         self._end(over & ~legal)
         if busy is not None:  # D-140: a legal return to a busy partner ends the rally (nobody can play it)
             self._end(over & legal & busy[self.partner])
+        if self.rally_cap > 0:  # D-161: the capped shot has finished (legal or not): the rally ends
+            self._end(done & self.final)
+            self.final &= ~done
         self.parked |= done  # a finished feed leaves no ball in play in this env
         trigger = contact if (self.handoff == "contact" and contact is not None) else crossing
         receive = trigger[self.partner] & ~self.court_dead.repeat(2)
+        if self.rally_cap > 0:  # D-161: count this step's shots; the rally_cap-th is not handed over
+            t = trigger & ~self.court_dead.repeat(2)
+            self.shots = self.shots + t[: self.h].long() + t[self.h:].long()
+            self.final |= t & (self.shots >= self.rally_cap).repeat(2)
+            receive = receive & ~self.final[self.partner]
         if busy is not None:
             receive = receive & ~busy
         self.parked &= ~receive

@@ -17,6 +17,8 @@ actions, balance rewards, fall termination) with a zero velocity command.
 from __future__ import annotations
 
 import dataclasses
+import json
+import os
 from dataclasses import dataclass, field
 
 import mujoco
@@ -115,6 +117,10 @@ class BallPhysicsActionCfg(ActionTermCfg):
     #   stats (rally length, feeds and legal returns); before, pairs.step ran first and never saw it.
     pair_reset_parks: bool = False
     pair_count_volleys: bool = False
+    # D-161 (training only): end a pair-mode rally once its pair_rally_cap-th shot is finished (0 = off; every read
+    # leaves it off). PICKLEBOT_PAIR_LOG: append the cumulative feeder-ball / hand-off counts every
+    # PICKLEBOT_PAIR_LOG_EVERY (default 2,400) env steps (a host sync each time).
+    pair_rally_cap: int = 0
     # D-089: share of feeds aimed at the court (anchored at the start spot, as in the rally evaluation) instead of at
     # the pelvis, drawn per feed; 0 keeps every feed pelvis-anchored (feed_anchor "pelvis") as before.
     court_anchor_prob: float = 0.0
@@ -374,7 +380,7 @@ class BallPhysicsAction(ActionTerm):
         self._handoff = torch.zeros(n, dtype=torch.bool, device=dev)
         if getattr(cfg, "pair_mode", False):
             from picklebot_mj.pairs import PairCourts
-            self.pairs = PairCourts(n, dev, getattr(cfg, "pair_handoff", "crossing"))
+            self.pairs = PairCourts(n, dev, getattr(cfg, "pair_handoff", "crossing"), getattr(cfg, "pair_rally_cap", 0))
         if getattr(cfg, "replay_file", ""):
             self.replay = mirror_ball_states(torch.load(cfg.replay_file, map_location=dev).float())
             self.gen_replay_mix = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 161803)
@@ -1007,6 +1013,10 @@ class BallPhysicsAction(ActionTerm):
                                          self.cfg.refeed_delay_s, contact=first, busy=busy)
             handed = mirror_ball_states(torch.cat([self.ball.pos, self.ball.vel, self.ball.spin], -1))[self.pairs.partner]
             early = self._credit_early(recv)
+            if os.environ.get("PICKLEBOT_PAIR_LOG") and self._env.common_step_counter % int(os.environ.get("PICKLEBOT_PAIR_LOG_EVERY", "2400")) == 0:
+                with open(os.environ["PICKLEBOT_PAIR_LOG"], "a") as f:
+                    f.write(json.dumps({"step": int(self._env.common_step_counter), "feeder": int(self.pairs.n_started[0]),
+                                        "handoffs": int(self.pairs.n_started[1])}) + "\n")
             if getattr(self.cfg, "pair_count_volleys", False):
                 self.pairs.count_early(early, h0, live0)
             self._credit_partner(over, early, h0, live0)

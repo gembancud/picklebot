@@ -898,3 +898,5 @@ Early check at model_30200 (rally_check.py early-r19):
 - The robot now returns softer, easier balls for the partner (share above 11 m/s halved), which helps the rally.
 
 **Plainly:** the robot got much better at rallying with its partner (a third of rallies now reach 5 shots, partner returns 89 %), but because longer rallies mean fewer fresh feeder balls in practice, it is forgetting how to return them. The run was stopped on that, as pre-registered.
+
+**Correction (round 42, experiment design and architecture):** run 14's task chain sets `court_feed_prob` to PAIRS_CONTACT_COURT_FEED_PROB = 0.80 (D-137), not 0.678 as written above. The mechanism is unchanged: the value only splits feeder balls between court and drill-v2 families and does not hold the feeder ball's share of play.

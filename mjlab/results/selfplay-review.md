@@ -572,3 +572,27 @@ Brief: the LR-floor finding (D-159), the restart, run 18b's early check (P(5+) 1
 | Architecture | A | no new code; exact continuation with PICKLEBOT_LR_WARMUP=0 and the loaded Adam state; record PICKLEBOT_* settings per run |
 
 **Decision: A (3 of 5), rally run 19 (D-160).** Lines are experiment design's (sized from the measured noise). Rejected: F (STOP), since the learner moved more in 1,200 iterations than in runs 3-17 together; D (lower rate), the same trade slower; B and C, each the next single change once A has been read (C: pair reset; then the pace ceiling vs keep-alive, coach and RL).
+
+
+## Round 42 - run 19 killed on feeder-ball erosion; hold the feeder ball's share of play (2026-10-28)
+
+Brief: run 19 (round 41's continuation) at model_30200: P(5+) open 27.2 -> 33.2 %, partner 77.4 -> 88.9 %, feeder 80.9 -> 77.3 % (killed), five families below run 14 - 5, left + back -6.3; the feeder ball's share of balls started fell 25.9 % (run 14) -> 21.5 % (model_29000) -> 13.3 % (model_30200).
+
+**Correction check:** round 41's decision and implementation were right; the error was its fallback (RL, coach and motion withdraw their round 41 levers): a within-feeder family mix cannot restore a share that halved. The drift was already visible in run 18b's own parent read and nobody computed it; the feeder share is now reported in every pairs read and logged in training. court_feed_prob in run 14's task is 0.80 (D-137), not 0.678 (selfplay.md corrected).
+
+**New measurements (members, CPU reads of the result JSONs):**
+- Coach / experiment design: the rally is lost at its start, not in its average. Ends by ball at model_30200: feeder ball 25 %, the first partner ball (the return of a feeder-ball return) 31-33 %, then 16-19 %, 11-14 %, 7-9 %. Pooled partner legal (88.9 %) hides a 67 % first partner ball; P(5+) ~ feeder x 0.69 x 0.84 x 0.89 x 0.93.
+- RL: 51 % of all balls at model_30200 are beyond shot 6 (run 14: 16 %); a cap at N shots puts the share at 27-31 % across the three policies for N 6-8.
+- Motion: feeder-ball falls rose 0.90 -> 1.44 % per feeder ball (z ~ 4; partner-ball falls 0.32 -> 0.21 %). The left loss is a late start, not lost locomotion (move arrival 99.7 %, foot speed and recovery error unchanged); in the feeder-only reads (court, drill v2) the skill held.
+
+**Votes:**
+
+| Member | Vote | Form, N |
+|---|---|---|
+| RL | A | rally cap, N = 8 shots |
+| Motion | A | 15 % of courts feeder-only (no hand-off) |
+| Coach | A | rally cap, N = 6 shots |
+| Experiment design | A | rally cap, N = 5 shots |
+| Architecture | A | hand-off cap 4 (= 5 shots) |
+
+**Decision: A, 5/5; a rally cap, 4/5; N = 5 (experiment design and architecture; no majority on N, so the tie rule: least new code (equal), then experiment design).** Parent run 18b model_29000 (all five), so run 19's model_30200 is the matched no-cap arm. Early-r19 and r19-gate unchanged. Reported beside them: feeder share (training and read), feeder-ball falls per ball, shot-position end rates, feeder n with its SE. Rejected: B (within-feeder mix; it adds no feeder balls), C (lower rate: the same trade slower), D (pair reset, pace ceiling: not the mechanism), F (STOP). Next single changes if the share holds: B (the within-feeder mix) or the first-hand-off ball (coach); a tighter cap if feeder still drifts.

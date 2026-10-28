@@ -296,6 +296,30 @@ def test_pair_courts_one_ball_per_court_and_rally_counts():
     assert len(fires) == 1 and bool(fires[0][b]) and not fires[0][a]  # the other side gets the next feeder ball
 
 
+def test_pair_courts_rally_cap_ends_after_the_capped_shot():
+    """D-161: with rally_cap 3 (contact hand-off) the third shot is not handed over; it lands, the rally of 3 legal
+    shots ends, and a feeder ball restarts the court. With the cap off the same sequence keeps the rally going."""
+    from picklebot_mj.pairs import PairCourts
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    for cap in (3, 0):
+        pc = PairCourts(4, "cpu", handoff="contact", rally_cap=cap)
+        pc.on_reset(torch.arange(4))
+        fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1)[0] for _ in range(30)) if f.any()]
+        a, b = (2, 0) if fires[0][2] else (0, 2)
+        for k, (hit, other) in enumerate([(a, b), (b, a), (a, b)], start=1):
+            fire, recv = pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(hit))  # the hitter's legal contact
+            assert bool(recv[other]) == (cap == 0 or k < cap), (cap, k)
+            pc.step(F(hit), F(hit), Z, Z, 0.01, 0.1, contact=Z)  # its own copy lands legally
+        s = pc.summary()
+        if cap:
+            assert s["len_hist"][3] == 1 and s["open_len_hist"][3] == 0
+            fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1)[0] for _ in range(30)) if f.any()]
+            assert len(fires) == 1 and fires[0].sum() == 1  # court 0 restarts with a feeder ball
+        else:
+            assert sum(s["len_hist"]) == 0 and s["open_len_hist"][3] == 1  # still in play
+
+
 def test_paddle_for_inverts_the_impact_model():
     """D-118: the paddle state from paddle_for, put through sphere_impulse (spin zero), gives the commanded v_out."""
     from picklebot_mj.ball_sim import BallParams, sphere_impulse

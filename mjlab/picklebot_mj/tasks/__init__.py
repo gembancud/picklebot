@@ -2230,3 +2230,28 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_teacher30(True),
                     rl_cfg=_s5e_rl_cfg())
+
+
+# Rally run 20 (D-161, panel round 42, 5/5 for holding the feeder ball's share of play; form and N by majority and the
+# tie rule: a rally cap of 5 shots, experiment design's value): rally run 14's task with pair_rally_cap 5 in training.
+# In pair-mode training a feeder ball only starts a rally, so the better the partner rally the fewer feeder balls the
+# policy practised (feeder share of balls started: run 14 25.9 %, run 18b model_29000 21.5 %, run 19 model_30200
+# 13.3 %), and run 19 lost feeder-ball legal 3.6 points. The cap ends a rally once its 5th shot (the target length) is
+# finished, so the feeder share stays >= 1/5. The play config (videos) and every evaluation task leave the cap off.
+PAIR_RALLY_CAP = 5
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_CAP5 = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LamR2-Cap5-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_cap5(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2(play)
+    if not play:
+        cfg.actions["ball"].pair_rally_cap = PAIR_RALLY_CAP
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_CAP5,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_cap5(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_cap5(True),
+                    rl_cfg=_s5e_rl_cfg())

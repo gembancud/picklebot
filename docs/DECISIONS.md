@@ -4165,3 +4165,15 @@ Round 41 (mjlab/results/selfplay-review.md) voted A, 3 of 5 (RL, experiment desi
 - **Early kill at model_30200** (rally_check.py early-r19), against model_29000 re-read: P(5+) up >= 1.0 point; partner-ball legal >= parent - 1.5; feeder-ball legal >= parent - 1.0 and >= run 14 - 2; the guards above; run 18b's court / drill / move / falls lines. A crashed check (exit 2) is not a kill.
 - **Endpoint success** (rally_check.py r19-gate, read once): P(5+) >= parent + 2 points with a Wilson low above the parent's point; partner >= parent - 1.5; feeder >= run 14 - 2; sides within 3 points; court falls <= 4 %; the guards. M1 and the target are read and reported.
 - **Pre-registered next steps:** if feeder drift continues while P(5+) rises, the next single change is the data-side fix (a heavier feeder / weak-family mix); then the pair-reset fix; then the pace ceiling vs keep-alive conflict.
+
+
+## D-161 - Rally run 20: a training rally cap of 5 shots holds the feeder ball's share of play (panel round 42, 2026-10-28)
+
+Run 19 (D-160) was killed at model_30200 on feeder-ball legal (77.3 %, line 80.26 %), five family guards and left + back, while P(5+) open rose to 33.2 % and partner legal to 88.9 %. The mechanism: in pair-mode training a feeder ball only starts a rally, so its share of balls started fell 25.9 % (run 14) -> 21.5 % (model_29000) -> 13.3 % (model_30200) as rallies lengthened. Round 42 (mjlab/results/selfplay-review.md) voted 5/5 to hold that share.
+
+- **Run 20** (scripts/rally_run20.sh, task ...-Pace25-LamR2-Cap5-G1): run 19's design with one change, `pair_rally_cap = 5` in training (picklebot_mj/pairs.py): shots are counted at the hitter's trigger, the 5th is not handed over, it lands and is judged, and a feeder ball starts the next rally. The feeder share is then >= 1/5 for any policy. Play config and every read task leave it off; the read protocol is unchanged.
+- **Parent:** run 18b model_29000, the same rate, Adam state, length and early-check iteration as run 19, so run 19's model_30200 is the matched no-cap arm. Training seed 98 (TRAIN_SEEDS), read seeds 4220029-4220052.
+- **Manipulation check (not a kill):** the training feeder share of balls started in the smoke's second half within 0.20-0.35, else the run does not start; the share is logged for the whole run.
+- **Lines:** early-r19 and r19-gate unchanged (D-160), including the cumulative guards. Reported: run 19's model_30200 read beside run 20's, feeder share in training and in the read, feeder-ball falls per ball (parent 1.44 %), shot-position end rates, feeder n and its SE.
+- **Corrections recorded:** the within-feeder mix that D-160 pre-registered as the next step is deferred, not done; court_feed_prob in run 14's task is 0.80 (D-137), not 0.678.
+- **Pre-registered next steps:** if the share holds and feeder holds, the within-feeder mix (B) or the first-hand-off ball (the rally's weakest ball); if feeder still drifts, a tighter cap.
