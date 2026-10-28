@@ -852,3 +852,24 @@ Early check at model_29000 (rally_check.py early-sched), parent = run 14 model_2
 - **The optimizer fix works.** In 1,200 iterations at 1e-4 the rally moved more than in rally runs 3-17 together: P(5+) +7.4 points, partner-ball legal +7.4 points, falls lower (3.0 %). Feeder-ball legal is flat (-1.1), so M1 (feeder 85 %) is no nearer.
 
 **Plainly:** with the learning rate fixed, the robot got much better at the two-robot rally in a third of a run (25.8 % of rallies reach 5 shots, up from 18.4 %). It was stopped by the rule that no single ball type may get more than 5 points worse: cross-court forehands got 5.3 points worse. The panel decides what comes next.
+
+
+## Feed-anchor check (audit F1, 2026-10-28; diagnostic)
+
+Start-anchored feeds aim from ROBOT_START y = 0.35 while the robot recovers to y = 0. Rally run 14 model_27798 read at the task's anchor (y 0.35) and at y 0.0 (`--anchor-y 0.0`), same seeds (pairs 4220000, direction split 4220001), old bookkeeping; `scripts/diag/anchor_check.sh`, results `results/anchor-r14-y{default,0.0}-{pairs,dir}.json`.
+
+| | y 0.35 (as trained and read so far) | y 0.0 |
+|---|---|---|
+| Partner-ball legal | 69.9 % | 67.8 % |
+| Feeder-ball legal | 82.2 % | 82.7 % |
+| P(5+) (open rallies counted) | 17.9 % (18.8 %) | 16.2 % (17.0 %) |
+| Left: feeds, contact, legal | 1,160, 52.4 %, 42.8 % | 946, 56.0 %, 45.8 % |
+| Back: feeds, contact, legal | 532, 66.0 %, 49.4 % | 606, 68.8 %, 53.0 % |
+| Right: feeds, legal | 2,589, 87.6 % | 3,729, 86.3 % |
+| Feeder families that move most | | backhand 80.7 -> 87.1, reach_backhand 78.3 -> 82.2, deep 87.3 -> 90.7; wide_forehand 88.9 -> 86.2, reach_forehand 92.5 -> 90.5 |
+
+- **The bias is real but small for the totals.** Aiming from the true recovery spot moves about 200 feeds from "needs a left move" to "needs a right move" and lifts the backhand families, but feeder-ball legal changes by only +0.5 points.
+- **The left weakness is mostly genuine.** Balls that still need a left move are returned 45.8 % of the time (42.8 % before); fast and low balls do not change.
+- **The partner rally reads lower at y 0.0** (P(5+) -1.7), as expected for a policy trained on the 0.35 anchor; a read-time switch would not be fair to it.
+
+**Plainly:** the aiming bug made left balls look a little worse than they are, but fixing it is not the missing piece: balls to the robot's left are still returned less than half the time.
