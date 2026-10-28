@@ -121,6 +121,11 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # leaves it off). PICKLEBOT_PAIR_LOG: append the cumulative feeder-ball / hand-off counts every
     # PICKLEBOT_PAIR_LOG_EVERY (default 2,400) env steps (a host sync each time).
     pair_rally_cap: int = 0
+    # D-162 (training only; 0 = off): in pair mode, move-to-spot and ghost-ball swing episodes happen only on the first
+    # pair_drill_court_frac of courts (both envs), at move_prob / frac and swing_prob / frac, so the overall amount of
+    # each is unchanged; the other courts never have a busy robot and play live rallies, as the pairs read does. With
+    # the default the random draws are exactly as before.
+    pair_drill_court_frac: float = 0.0
     # D-089: share of feeds aimed at the court (anchored at the start spot, as in the rally evaluation) instead of at
     # the pelvis, drawn per feed; 0 keeps every feed pelvis-anchored (feed_anchor "pelvis") as before.
     court_anchor_prob: float = 0.0
@@ -313,6 +318,13 @@ class BallPhysicsAction(ActionTerm):
             from picklebot_mj.ready import ReadyTracker
             feet = [int(i) for i in self._entity.find_bodies(("left_ankle_roll_link", "right_ankle_roll_link"))[0]]
             self.ready = ReadyTracker(n, dev, float(env.cfg.sim.mujoco.timestep), feet)
+        self.drill_scale = None  # D-162: per-env multiplier on move_prob and swing_prob (None: the scalars as before)
+        frac = float(getattr(cfg, "pair_drill_court_frac", 0.0))
+        if frac > 0.0 and getattr(cfg, "pair_mode", False):
+            court = torch.arange(n, device=dev) % (n // 2)
+            self.drill_scale = torch.where(court < round(frac * (n // 2)), torch.full((n,), 1.0 / frac, device=dev),
+                                           torch.zeros(n, device=dev))
+        self._share_split = torch.zeros(2, 2, dtype=torch.long, device=dev)  # [pair, drill court] x [feeder, hand-off]
         self.drill = None
         if cfg.move_prob > 0.0:
             from picklebot_mj.tasks.move_drill import MoveDrill
@@ -1011,12 +1023,19 @@ class BallPhysicsAction(ActionTerm):
                     busy = busy | self.shadow.swing_ep  # swing at a ghost ball (round 26: it stalled the court)
             fire, recv = self.pairs.step(over, self.return_done, torch.zeros_like(over), crossing, dt,
                                          self.cfg.refeed_delay_s, contact=first, busy=busy)
+            if self.drill_scale is not None:  # D-162: feeder balls and hand-offs started, pair vs drill courts
+                dc = self.drill_scale > 0
+                self._share_split += torch.stack([torch.stack([(fire & ~dc).sum(), (recv & ~dc).sum()]),
+                                                  torch.stack([(fire & dc).sum(), (recv & dc).sum()])])
             handed = mirror_ball_states(torch.cat([self.ball.pos, self.ball.vel, self.ball.spin], -1))[self.pairs.partner]
             early = self._credit_early(recv)
             if os.environ.get("PICKLEBOT_PAIR_LOG") and self._env.common_step_counter % int(os.environ.get("PICKLEBOT_PAIR_LOG_EVERY", "2400")) == 0:
                 with open(os.environ["PICKLEBOT_PAIR_LOG"], "a") as f:
+                    h = self.pairs.len_hist.tolist()
                     f.write(json.dumps({"step": int(self._env.common_step_counter), "feeder": int(self.pairs.n_started[0]),
-                                        "handoffs": int(self.pairs.n_started[1])}) + "\n")
+                                        "handoffs": int(self.pairs.n_started[1]), "rallies": sum(h),
+                                        "shots": sum(i * c for i, c in enumerate(h)),
+                                        "split": self._share_split.tolist()}) + "\n")
             if getattr(self.cfg, "pair_count_volleys", False):
                 self.pairs.count_early(early, h0, live0)
             self._credit_partner(over, early, h0, live0)

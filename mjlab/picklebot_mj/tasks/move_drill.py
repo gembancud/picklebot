@@ -77,7 +77,9 @@ class MoveDrill:
         """Choose the episode type and, for move episodes, park the ball and issue the first spot."""
         t = self.t
         k = len(env_ids)
-        mv = torch.rand(k, generator=self.gen, device=self.dev) < self.move_prob
+        sc = getattr(t, "drill_scale", None)  # D-162: move episodes on drill courts only (None: everywhere, as before)
+        p = self.move_prob if sc is None else (self.move_prob * sc[env_ids]).clamp(max=1.0)
+        mv = torch.rand(k, generator=self.gen, device=self.dev) < p
         self.move_ep[env_ids] = mv
         mask = torch.zeros(self.n, dtype=torch.bool, device=self.dev)
         mask[env_ids] = mv

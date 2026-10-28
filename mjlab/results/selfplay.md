@@ -918,3 +918,23 @@ Run 20 (D-161, a training rally cap of 5 shots) stopped at its smoke: the traini
 - **Also exposed:** the pairs read (the target protocol) plays long uninterrupted rallies that training almost never produces, so the target is measured on a distribution the policy does not train on.
 
 **Plainly:** the fix we voted for would not have changed what the robot practises. In training, feeder balls are already two thirds of all balls, because the partner is often busy with a footwork drill and the rally stops. So the robot did not forget feeder balls for lack of practice; something else (likely the reward) is pulling it toward the partner rally. The panel reconvenes.
+
+
+## Refeed-delay diagnostic (panel round 43, 2026-10-28; diagnostic only)
+
+Run 19's feeder-ball loss appeared only in the pairs read, where each feeder ball comes 0.5 s after a rally ends. `scripts/diag/refeed_delay.sh` read run 18b model_29000 and run 19 model_30200 in run 19's pairs read with the feeder ball delayed 3.0 s (`--refeed-delay 3.0`), seed 4220053 for both; results `results/refeed3-{29000,30200}-pairs.json`.
+
+| At 3 s | model_29000 | model_30200 | Difference (0.5 s read) |
+|---|---|---|---|
+| Feeder-ball legal | 83.72 % (low 82.97) | 82.60 % (low 81.69) | **-1.12** (-3.61) |
+| Feeder-ball contact | 82.67 % | 79.55 % | -3.1 |
+| Feeder-ball falls per ball | 1.17 % | 1.41 % | +0.24 |
+| Partner-ball legal | 77.90 % | 90.19 % | +12.3 |
+| P(5+), open rallies counted | 28.83 % | **39.16 %** | +10.3 |
+| Feeder share of balls started | 0.206 | 0.115 | |
+
+- **About 70 % of run 19's feeder-ball loss is the start state.** Given 3 s to settle, the gap falls from 3.6 to 1.1 points. A real but smaller loss remains, mostly in contact (-3.1).
+- **Pre-registered rule (experiment design):** L3 = 1.12, between 1.0 and 2.5, so "mixed: B": the next run removes busy partners from half the pair courts so training produces the read's post-rally feeder balls.
+- With time to settle, run 19's model_30200 reaches P(5+) 39.2 % and partner legal 90.2 %.
+
+**Plainly:** most of the feeder-ball "forgetting" was the robot being caught off balance by a feeder ball half a second after a long rally, a situation it almost never trains on. Given three seconds, it returns them nearly as well as before.

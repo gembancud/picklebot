@@ -137,7 +137,12 @@ class ShadowSwing:
     # --- episode / feed hooks ---------------------------------------------------------
     def assign(self, env_ids: torch.Tensor, move_prob: float) -> None:
         """Choose swing episodes among env_ids (before the feed; move episodes override later)."""
-        p = self.swing_prob / max(1e-6, 1.0 - move_prob)
+        sc = getattr(self.t, "drill_scale", None)  # D-162: per-env move / swing chances (None: the scalars, as before)
+        if sc is None:
+            p = self.swing_prob / max(1e-6, 1.0 - move_prob)
+        else:
+            m = (move_prob * sc[env_ids]).clamp(max=1.0)
+            p = self.swing_prob * sc[env_ids] / (1.0 - m).clamp(min=1e-6)
         self.swing_ep[env_ids] = torch.rand(len(env_ids), generator=self.gen, device=self.dev) < p
         self._clear(env_ids)
 

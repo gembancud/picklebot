@@ -339,6 +339,19 @@ def early_r19(prefix: str) -> bool:
     return ok and g and q1 >= q0 + 0.01 and own1 >= own0 - 0.015 and fed1 >= fed0 - 0.01 and fed1 >= fed14 - 0.02
 
 
+def early_r21(prefix: str) -> bool:
+    """Rally run 21 (D-162): early-r19's lines unchanged, plus experiment design's parallel line: feeder-ball legal in
+    the pairs read with the feeder ball delayed 3 s (PREFIX-{parent-early,early}-pairs3.json) >= parent - 1.0."""
+    ok = early_r19(prefix)
+    p0 = json.load(open(f"{prefix}-parent-early-pairs3.json"))["pairs"]
+    p1 = json.load(open(f"{prefix}-early-pairs3.json"))["pairs"]
+    f0, _ = boot_low(p0["court_counts"], 3, 2)
+    f1, _ = boot_low(p1["court_counts"], 3, 2)
+    print(f"early: feeder-ball legal at a 3 s refeed delay {f0:.4f} -> {f1:.4f} (kill below {f0 - 0.01:.4f}); P(5+) open "
+          f"{p5_open(p0)[0]:.4f} -> {p5_open(p1)[0]:.4f} (reported)")
+    return ok and f1 >= f0 - 0.01
+
+
 def r19_gate(prefix: str, tag: str) -> bool:
     """Rally run 19's endpoint success (D-160, read once): P(5+) (open rallies counted) >= parent + 2.0 points with a
     Wilson low above the parent's point; partner-ball legal >= parent - 1.5; feeder-ball legal >= run 14 - 2; sides
@@ -499,6 +512,8 @@ def _main() -> None:
         sys.exit(0 if early_lamr2(prefix) else 1)
     if mode == "early-teacher30":
         sys.exit(0 if early_teacher30(prefix) else 1)
+    if mode == "early-r21":
+        sys.exit(0 if early_r21(prefix) else 1)
     if mode == "early-r19":
         sys.exit(0 if early_r19(prefix) else 1)
     if mode == "r19-gate":

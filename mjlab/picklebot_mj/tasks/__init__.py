@@ -2255,3 +2255,29 @@ register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP
                     runner_cls=CriticWarmupHoldLrRunner,
                     play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_cap5(True),
                     rl_cfg=_s5e_rl_cfg())
+
+
+# Rally run 21 (D-162, panel round 43, 5/5 C then branch B by experiment design's pre-registered rule): rally run 14's
+# task with move-to-spot and ghost-ball swing episodes confined to half of the pair courts (pair_drill_court_frac 0.5:
+# move 0.70 and swing 0.10 there, none on the other half), so the overall amount of each is unchanged. The other half
+# never has a busy robot and plays live rallies, as the pairs read does. The refeed-delay read (results/refeed3-*.json)
+# showed run 19's feeder-ball loss mostly closes when the feeder ball waits 3 s (3.61 -> 1.12 points): a start-state
+# loss after live rallies, which training rarely produced (a hand-off to a busy partner ends its rally). Play config and
+# every read task leave it off.
+PAIR_DRILL_COURT_FRAC = 0.5
+TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_DRILLCOURTS = \
+    "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LamR2-DrillCourts-G1"
+
+
+def _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_drillcourts(play=False):
+    cfg = _latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2(play)
+    if not play:
+        cfg.actions["ball"].pair_drill_court_frac = PAIR_DRILL_COURT_FRAC
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_DRILLCOURTS,
+                    env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_drillcourts(),
+                    runner_cls=CriticWarmupHoldLrRunner,
+                    play_env_cfg=_latent_court_v2_res_clean_mix_ka_pairs_coop_moves_weak_pace25_lamr2_drillcourts(True),
+                    rl_cfg=_s5e_rl_cfg())

@@ -1266,6 +1266,44 @@
    "seeds": [],
    "purpose": "rally run 20 NOT STARTED: its smoke (training seed 99) failed the feeder-share manipulation check (0.686 vs 0.20-0.35); its read seeds 4220029-4220052 are unread and stay reserved for run 20's design if it is relaunched, else retired. Diagnostic scripts/diag/train_share.sh used training seeds 100 and 101 (TRAIN_SEEDS, no read).",
    "date": "2026-10-28"
+  },
+  {
+   "seeds": [
+    4220053
+   ],
+   "purpose": "refeed-delay diagnostic (scripts/diag/refeed_delay.sh; panel round 43, D-162; diagnostic only): pairs read of run 18b model_29000 and run 19 model_30200 with --refeed-delay 3.0",
+   "date": "2026-10-28"
+  },
+  {
+   "seeds": [
+    4220054,
+    4220055,
+    4220056,
+    4220057,
+    4220058,
+    4220059,
+    4220060,
+    4220061,
+    4220062,
+    4220063,
+    4220064,
+    4220065,
+    4220066,
+    4220067,
+    4220068,
+    4220069,
+    4220070,
+    4220071,
+    4220072,
+    4220073,
+    4220074,
+    4220075,
+    4220076,
+    4220077,
+    4220078
+   ],
+   "purpose": "rally run 21 (scripts/rally_run21.sh; D-162, drill episodes on half the pair courts, from run 18b model_29000): reads of the parent and model_30200 on v2 4220054, move 4220055, court 4220056, pairs 4220057, direction split 4220058, pairs with a 3 s refeed delay 4220059; endpoint h5f_clean_eval 4220060-4220075, target read 4220076 (read once), crossing 4220077, direction split 4220078. Training seed 104, smoke seed 105; pre-launch check scripts/diag/train_share_b.sh training seeds 102 / 103 (TRAIN_SEEDS). Run 20's reserved seeds 4220029-4220052 retired unread (D-162).",
+   "date": "2026-10-28"
   }
  ],
  "retired": {
