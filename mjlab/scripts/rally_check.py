@@ -282,6 +282,47 @@ def early_teacher30(prefix: str) -> bool:
     return ok and g1 >= gz + 0.03
 
 
+def early_sched(prefix: str) -> bool:
+    """Rally run 18 (the optimizer restart after the KL check; the user approved judging on the rally numbers): run 12's
+    early-legres guard lines without its reach_deep + fast engagement line, D-148's family-contact guard, left + back
+    feeder-ball contact no more than 5 points below the parent, and the engagement line: P(5+) in the pairs read up on
+    the parent by at least 2 points (the 1e-4 sweep arm gained 3.8 in 400 iterations)."""
+    ok = early_ceiling(prefix, engage_check=False)
+    f0 = json.load(open(f"{prefix}-parent-early-pairs.json"))["per_family"]
+    f1 = json.load(open(f"{prefix}-early-pairs.json"))["per_family"]
+    worst = min(((f1[k]["contact"] - f0[k]["contact"], k) for k in f0 if k in f1), default=(0.0, None))
+    d0 = json.load(open(f"{prefix}-parent-early-dir.json"))["directions"]
+    d1 = json.load(open(f"{prefix}-early-dir.json"))["directions"]
+    con = lambda d: sum(d[k]["contact"] * d[k]["feeds"] for k in ("left", "back")) / max(d["left"]["feeds"] + d["back"]["feeds"], 1)  # noqa: E731
+    g0, g1 = con(d0), con(d1)
+    P0 = pair_stats(json.load(open(f"{prefix}-parent-early-pairs.json"))["pairs"])
+    P1 = pair_stats(json.load(open(f"{prefix}-early-pairs.json"))["pairs"])
+    print(f"early: worst feeder-family contact change {100 * worst[0]:+.1f} points ({worst[1]}; kill below -5)")
+    print(f"early: left + back feeder-ball contact {g0:.4f} -> {g1:.4f} ({100 * (g1 - g0):+.1f}; kill below -5)")
+    print(f"early: engagement: P(5+) {P0['p5']:.4f} -> {P1['p5']:.4f} {P1['p5_ci']} ({100 * (P1['p5'] - P0['p5']):+.1f}; "
+          f"kill below +2.0)")
+    return ok and worst[0] >= -0.05 and g1 >= g0 - 0.05 and P1["p5"] >= P0["p5"] + 0.02
+
+
+def sched_gate(prefix: str, tag: str) -> bool:
+    """Rally run 18's endpoint success (pre-registered, read once): P(5+) Wilson low above rally run 14's endpoint P(5+)
+    (results/rally-14-target.json), partner-ball legal >= run 14 - 3 points, feeder-ball legal >= run 14 - 2 points,
+    sides within 3 points, court falls <= 4 %. M1 and the target are read as usual."""
+    p, q = json.load(open(f"{prefix}-target.json"))["pairs"], json.load(open("results/rally-14-target.json"))["pairs"]
+    P, Q = pair_stats(p), pair_stats(q)
+    own, _ = boot_low(p["court_counts"], 1, 0)
+    fed, _ = boot_low(p["court_counts"], 3, 2)
+    own14, _ = boot_low(q["court_counts"], 1, 0)
+    fed14, _ = boot_low(q["court_counts"], 3, 2)
+    falls = json.load(open(f"results/stage5f-{tag}-summary.json"))["falls_court"]
+    gap = abs(P["sides"]["A"] - P["sides"]["B"])
+    ok = P["p5_ci"][0] > Q["p5"] and own >= own14 - 0.03 and fed >= fed14 - 0.02 and gap <= 0.03 and falls <= 0.04
+    print(f"run 18 gate: P(5+) {P['p5']:.4f} {P['p5_ci']} (low above run 14's {Q['p5']:.4f}); partner-ball legal {own:.4f} "
+          f"(>= {own14 - 0.03:.4f}); feeder-ball legal {fed:.4f} (>= {fed14 - 0.02:.4f}); gap {100 * gap:.1f} (<= 3); falls "
+          f"{falls} (<= 0.04): {'PASS' if ok else 'not met'}")
+    return ok
+
+
 def teacher_gate(prefix: str, tag: str) -> bool:
     """D-156: the e4 teacher's gate to distillation (pre-registered, read once on the endpoint's M1 read): feeder-ball
     legal >= 0.85 with a court-bootstrap low >= 0.84, partner-ball legal >= 0.685, sides within 3 points, court falls
@@ -372,6 +413,10 @@ if __name__ == "__main__":
         sys.exit(0 if early_lamr2(prefix) else 1)
     if mode == "early-teacher30":
         sys.exit(0 if early_teacher30(prefix) else 1)
+    if mode == "early-sched":
+        sys.exit(0 if early_sched(prefix) else 1)
+    if mode == "sched-gate":
+        sys.exit(0 if sched_gate(prefix, sys.argv[3]) else 1)
     if mode == "teacher-gate":
         sys.exit(0 if teacher_gate(prefix, sys.argv[3]) else 1)
     if mode == "m1":
