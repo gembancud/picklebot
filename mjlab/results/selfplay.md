@@ -954,3 +954,24 @@ Run 19's feeder-ball loss appeared only in the pairs read, where each feeder bal
 
 - Pre-registered (D-162): pair-court feeder share within 0.15-0.45 (**passed**, 0.376) and mean training rally length >= 2 x run 14's task's (**failed**: 1.09 vs 1.64, measured over all courts).
 - The failed line was computed over all courts. The drill courts now play almost no rallies (0.07 hand-offs per feeder ball), which pulls the all-court mean down; on the pair courts the change targets, hand-offs per feeder ball are 3.5 x the baseline's. Round 43's rule says manipulation checks are measured on the population the mechanism names, but reinterpreting a pre-registered line after the result is the panel's call, so run 21 did not start.
+
+
+## Rally run 21 pre-launch check re-measured on the pair courts: STOP (D-163, 2026-10-28)
+
+`scripts/diag/train_share_b2.sh` (drill-court task, 200 throwaway iterations from run 18b model_29000, training seed 106; per-court-group rally histogram and end reasons, logging only; `results/train-share-b2-drill.jsonl`, `results/train-share-b2-summary.txt`) [train-diag], second half:
+
+| | Pair courts | Drill courts |
+|---|---|---|
+| Finished rallies / legal shots | 2,899 / 3,449 | 1,468 / 1,015 |
+| Shots per finished rally (line >= 1.64) | **1.19** (**failed**) | 0.69 |
+| Training P(3+) / P(5+) | 14.4 % / 4.7 % | 0.9 % / 0.3 % |
+| Feeder share of balls started (line 0.15-0.45) | 0.394 (passed) | 0.925 |
+| Rally ends: not a legal return / busy partner / reset / cap | 2,170 / 0 / 729 / 0 | 322 / 907 / 239 / 0 |
+
+- **Run 21 does not start** (D-163's pre-registered fail branch); the panel reconvenes under option 3. RL predicted about 1.39 and architecture 1.23-1.39: both called the fail.
+- **Two training/read gaps the reads never showed:**
+  1. **The stochastic training policy returns about 61 % of shots** (3,449 legal shots against 2,170 rally-ending misses on the pair courts), against roughly 80-90 % per shot for the deterministic policy in the reads; training P(5+) is 4.7 % where the read's is 27 %. Exploration noise, not busy partners, keeps training rallies short.
+  2. **A quarter of pair-court rallies end on a reset** (729 of 2,899): each robot's 30 s episode clock runs on its own and either robot's reset ends the court's rally, so a court's rally is cut about every 15 s.
+- So "make training rallies resemble the read" needs more than freeing the partner: in training the robot rarely gets past shot 2 at all.
+
+**Plainly:** even with no busy partner, practice rallies are short, because during training the robot plays with random noise added to its moves and misses about four shots in ten, and because either robot's practice episode ending stops the rally. The robot that is read (noise off) plays much better than the one that practises.
