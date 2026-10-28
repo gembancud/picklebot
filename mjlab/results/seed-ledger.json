@@ -1193,6 +1193,14 @@
    ],
    "purpose": "rally run 18b (scripts/rally_run18b.sh; run 18 relaunched with the std-floor fix): smoke 4219991, training 4219992. Run 18 was stopped during its parent read before training (audit C1): its smoke used 4219965; 4219966 (training) never ran; its read seeds 4219967-4219990 carry over to run 18b unchanged (only the parent's v2 read had started on 4219967, partial, discarded).",
    "date": "2026-10-28"
+  },
+  {
+   "seeds": [
+    4220000,
+    4220001
+   ],
+   "purpose": "feed-anchor check (scripts/diag/anchor_check.sh; audit F1, D-159; diagnostic, no selection): pairs read 4220000 and direction split 4220001, each at the default anchor (y 0.35) and y 0.0, same checkpoint",
+   "date": "2026-10-28"
   }
  ],
  "retired": {
