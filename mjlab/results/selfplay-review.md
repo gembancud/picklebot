@@ -640,3 +640,32 @@ Brief: D-167's screen [train-diag]: no single read setting moves training per-ba
 | Architecture | B | train the pair courts in the read's configuration (DrillCourts-Ep120 task with A-T's O1-O6, noise kept), from model_29000, with a coded pre-launch premise (per-ball >= 0.678) and STOP on any fail; about 9.5 GPU-h |
 
 **Decision: STOP (4/1).** The loop goes back to the user (D-168).
+
+## Round 48 (2026-10-30): after run 23's kill and the agility screen
+
+**Correction check. All five agree on these points.**
+- **The agility drill cannot be met as built.** Arrival needs 0.3 s held within 0.25 m at < 0.2 m/s, and that hold uses up the whole 0.3 s base of the deadline (0.3 s + d / v_req). The drill's command also brakes from 0.83 m out. A perfect follower is about 0.55 s late at every v_req, so DA is about 0 by construction. Rule 1 (D0 >= 10) could never fire, and ROUTE 1 ("reading") is the rule's default branch, not evidence.
+- **Two agent claims withdrawn.** The "speed ceiling of about 1.5 m/s" does not hold: drill peaks are shaped by the braking command. The 2.66 m/s figure (D-151) is a p99 pelvis transient, not a sustained speed.
+- **Not reading late.** On left and back balls the robot starts earlier and moves faster. With time, it reaches drill spots as fast in every direction (A0 untimed mean 2.66-2.91 s by sector) [train-diag].
+- **D-171's +8.7 points were a change of launch mix** (RL, architecture). Within the 0-1 bin (feeder balls after a 0-1 shot rally), C0 is 71.6 % and C3 is 70.5 % [train-diag]. The gain came from C3's new 2-4 bin (88.5 %): feeder balls launched after a cap-ended rally. Feeder premises must be compared within a launch bin from now on.
+- **Most of the 86 vs 71 gap is launch mix** [train-log vs read:protocol]:
+
+  | | training | read |
+  |---|---|---|
+  | 0-1 bin feeder legal | 73.0 % | 65.4 % |
+  | 2-4 bin feeder legal | 92.0 % | 78.9 % |
+  | share of feeder balls in the 0-1 bin | 36 % | 66 % |
+
+  Reweighting training's bins to the read's mix gives about 79-80 %. About 8 points remain within bins.
+- **One unscreened code difference** (architecture, verified). Training runs court_feed_prob 1.0 with court_feed_anchor_prob 0.75, so 25 % of feeder balls are aimed from the robot's current pelvis. The read aims every feed from the fixed start spot. A displaced robot gets a ball that comes to it in training, but must travel to it in the read. No A-T arm or run override touched this.
+
+**Votes.**
+- RL: F, launch-state-matched feeder training (a displaced recovery spot after the cap ends a rally).
+- Motion: E, the read's task through the training tally plus a config diff.
+- Coach: B, a learning-rate-0 screen of ready positions.
+- Experiment design: F, void rule 1, fix the drill with a coded positive control, re-run A0 / A / F with validity gates; E queued next.
+- Architecture: E, a learning-rate-0 diagnostic with court_feed_anchor_prob 1.0, metric = 0-1-bin feeder legal.
+
+**Decision.** No 3-of-5 majority. E has two votes plus experiment design's queued E. By the tie rule, the least new code wins: architecture's E, overrides only. D-172 below. The drill fix (experiment design) is next in line for the footwork question. Ready position (B) would be judged against the read's recovery spot, a protocol item that is the user's call.
+
+**Honest distance (all five).** P(5+) is 0.39 against 0.80. Balls 0 and 1 must each fail about 8 % or less; today they fail 0.31 and 0.26. Perfect left / back balls would cap feeder legal near 0.89. Estimates: M1 (feeder 85 %) is plausible-to-unlikely, about 25 %; the 80 % target is under 10 % on this controller without motion-level work.

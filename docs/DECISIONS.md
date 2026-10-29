@@ -4281,3 +4281,31 @@ Rallies that reach the third ball almost never end. The feeder ball (ball 0) and
   The pre-registered rule needed >= +2.0 points of feeder legal: the result was +8.7, so PASS.
 - **Rally run 23** (scripts/rally_run23.sh, run rally-23-cap3) is run 22b's design plus one change, pair_rally_cap 3 (override, checked in params/env.yaml at the smoke). Parent run 22b model_30200; 4,000 iterations at 1e-4 with a cooldown. The early check at model_31400 uses early-r21 unchanged, including D-160's cumulative guards against run 14. The endpoint lines are r19-gate, m1 and target. Seeds are in the ledger (dev 4220105-4220129; training 135-138).
 - **Risk, stated in advance.** Training never shows a pair court a 4th shot, so long-rally play could fade. The partner-legal line (parent - 1.5) and the P(5+) line (parent + 1.0) catch that at the early check.
+
+
+## D-172 - Panel round 48: the agility rule is void; locate the feeder gap with a feed-anchor diagnostic (2026-10-30)
+
+After run 23's kill and the agility screen, the panel (round 48, mjlab/results/selfplay-review.md) found:
+- **The agility drill's deadline cannot be met by construction.** The 0.3 s arrival hold uses up the deadline's 0.3 s base, and the command brakes from 0.83 m out. So agility rule 1 is VOID by an instrument defect: no threshold is changed, and the route it printed ("reading") is not taken. The agent's "speed ceiling of about 1.5 m/s" caveat is withdrawn.
+- **D-171's +8.7 points were a change of launch mix,** not a feeder-skill gain. Within the 0-1 launch bin the two arms were 71.6 vs 70.5 % [train-diag]. From now on, every feeder premise is measured within launch bins.
+- **Most of the training-vs-read feeder gap (86 vs 71) is launch mix.** About 66 % of read feeder balls follow a 0-1 rally, against 36 % in training.
+- **One unscreened code difference** explains a within-bin gap: training aims 25 % of feeder balls from the robot's pelvis (court_feed_anchor_prob 0.75), while the read aims every feed from the start spot.
+
+**Decision.** There was no majority. E had two votes plus experiment design's queued E, and the tie rule picks the least new code: architecture's E. scripts/diag/anchor48.sh runs these arms, all overrides only, at learning rate 0, 200 iterations and 4,096 envs, with no cap:
+- X0: run 23 model_31400 as trained;
+- X1: X0 with court_feed_anchor_prob 1.0;
+- X2: X1 with near-mean actions (reported);
+- Y0 and Y1: the same as X0 and X1 from run 22b model_30200 (reported).
+
+The metric is feeder legal in the 0-1 launch bin.
+
+**Coded rule.**
+- **ANCHOR** if X0 - X1 >= 3.0 points and |X1 - 65.4 %| <= 3.0. The next run is one change, court_feed_anchor_prob 1.0, from run 22b model_30200, with per-bin premises.
+- **MOTOR** otherwise. The next step is the agility drill fix with a coded positive control and validity gates (experiment design's F), then D / C.
+- **VOID** if the override is missing from params/env.yaml.
+
+**Not taken now.**
+- Ready position (B): it is judged against the read's recovery spot, a protocol item and the user's call.
+- Launch-state-matched training (RL's F): it stays a candidate after the anchor question is settled.
+
+Training seeds 139-143.
