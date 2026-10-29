@@ -1082,3 +1082,23 @@ Run 19's feeder-ball loss appeared only in the pairs read, where each feeder bal
 Training now produces read-like rallies (P(3+) close to round 45's M line of 30 %, P(5+) about three times higher). Run 22 launched (smoke, parent re-read, then 4,000 iterations).
 
 Phase 2 plan written (`docs/research/footwork-route-2026-10-29.md`): fast left / back stepping (> 1 m/s) has never been trained or measured on the rally stack; the first step is an agility screen (about 2 GPU-h) with a coded route to time-pressured left / back move drills (E) or a faster walking teacher kickstart (C).
+
+## Run 22 smoke stop and run 22b (D-170, 2026-10-29)
+
+Run 22 never started. Its smoke stopped on mean logged fell_over 0.288 against the 0.159 line, while the gradient and config checks passed. That logged value is not a fall rate. It is the mean per-step count of envs that fell, averaged only over steps that had a reset. Episodes of 120 s reset about 4x more rarely than 30 s ones, so the number inflates: every 120 s log reads 0.23-0.29 and every 30 s log reads 0.07-0.12.
+
+Per unit time (scripts/diag/falls_by_length.py, Poisson correction, cross-checked to about 1 episode per env per episode length), smoke falls per 1,000 env-seconds:
+
+| log | episode | logged fell_over | falls / 1,000 env-s |
+|---|---|---|---|
+| run 14 smoke | 30 s | 0.106 | 2.77 |
+| run 18b smoke | 30 s | 0.117 | 2.86 |
+| run 19 smoke | 30 s | 0.085 | 2.12 |
+| run 20 smoke | 30 s | 0.118 | 3.13 |
+| screen45-S0 | 30 s | 0.105 | 2.74 |
+| A-T T0 / TA | 30 s | 0.085 / 0.074 | 2.06 / 1.78 |
+| screen45-S2 | 120 s | 0.266 | 2.16 |
+| prelaunch22 | 120 s | 0.232 | 2.21 |
+| **run 22 smoke** | 120 s | 0.288 | **2.12** |
+
+Run 22's smoke falls less often per unit time than run 14's smoke. The new smoke line has the same meaning, 1.5 x run 14's smoke: <= 4.157 falls per 1,000 env-seconds. **Run 22b** (scripts/rally_run22b.sh) is run 22 unchanged apart from that line and its new names. It launched 15:43.
