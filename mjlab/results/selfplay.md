@@ -1143,3 +1143,31 @@ scripts/diag/prelaunch23.sh ran two arms from run 22b model_30200, 300 iteration
 | C3 cap 3 | **0.8110** | 0.440 | 0.8107 | 0.232 | 0.232 | 2.16 |
 
 The rule needed cap 3 minus no cap >= +2.0 points of feeder legal; the result was +8.7. The override check was ok. **Rally run 23** (scripts/rally_run23.sh, rally-23-cap3) launched about 21:05: run 22b plus pair_rally_cap 3, parent model_30200, early check model_31400 (early-r21), endpoint r19-gate / m1 / target.
+
+## Rally run 23: killed at the early check (2026-10-30)
+
+Run 23 (run 22b plus pair_rally_cap 3, parent run 22b model_30200) was killed at model_31400 by early-r21 [read:protocol].
+
+| line | parent model_30200 (re-read) | model_31400 | kill line |
+|---|---|---|---|
+| P(5+) open | 0.3740 | 0.3907 [0.379, 0.403] | pass (+1.7 >= +1.0) |
+| partner-ball legal | 0.9890 | 0.9557 | KILL (< 0.9740) |
+| feeder-ball legal | 0.6436 | 0.7118 | KILL (< 0.8026) |
+| feeder legal at 3 s refeed | 0.7888 | 0.7707 | KILL (< 0.7788) |
+| P(5+) open at 3 s refeed | 0.5736 | 0.4659 | reported |
+| court falls / episode | | 0.0842 (low 0.0667) | KILL |
+| family guards (feeder contact vs run 14 - 5) | | 13 of 15 fail (reach_deep 0.36, cross_backhand 0.49, fast 0.60, low 0.65) | KILL |
+| left + back feeder contact | 0.5878 (run 14) | 0.4519 | KILL (-13.6) |
+
+**Failure by ball** (read; ball 0 is the feeder ball):
+
+| | ball 0 | ball 1 | ball 2 | ball 3 | ball 4 |
+|---|---|---|---|---|---|
+| parent model_30200 | 0.372 | 0.299 | 0.104 | 0.037 | 0.012 |
+| model_31400 | 0.306 | 0.259 | 0.130 | 0.078 | 0.041 |
+
+The cap did what it was meant to do for the opening balls. It also cost long-rally play (the risk stated in D-171) without bringing feeder legal near 80 %.
+
+**Reading.** Training feeder legal (~0.86 [train-log]) and the read (0.71) count the same event (`return_done` on a feeder ball). The gap matches D-167's (run 19 model_30200: 85.9 % in a read-like training configuration against 77.3 % in the read). Its source is still unknown.
+
+What the read does show is that the feeder ball is lost on contact, not on the return. Family contact is far below run 14 (easy_forehand 0.77 vs 0.89, reach_deep 0.36 vs 0.53). Left + back contact is 0.45, and court falls are up (0.084 per episode). The rally between robots is close to solved (98.9 % at model_30200). The machine-fed ball, with its spread of families and directions, is now the whole problem, and it is a reach / footwork problem. **Next: phase 2.** First the GPU tests, then the agility screen (scripts/diag/agility_screen.sh, plan docs/research/footwork-route-2026-10-29.md).
