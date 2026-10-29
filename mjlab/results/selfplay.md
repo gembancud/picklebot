@@ -1066,3 +1066,19 @@ Run 19's feeder-ball loss appeared only in the pairs read, where each feeder bal
 - The T5 override check printed VOID because YAML writes the value as `'off'` (quoted); the arm's params/env.yaml shows `planner_mode: 'off'`, so T5 is valid (a check bug, not an arm failure).
 
 **Plainly:** no single practice setting explains why the robot plays better in the test than in practice; together they explain all of it (and more). Run 19's robot is the better one in practice conditions made test-like, and it still loses feeder balls only in the test itself.
+
+
+## Rally run 22 pre-launch check: PASS (D-169, 2026-10-29) [train-diag]
+
+`scripts/diag/prelaunch22.sh`: run 22's exact task and overrides (run 21's drill-court task with 120 s episodes plus A-T's O1-O6: no drill-v2 balls, uniform family mix, refeed 0.5 s, fixed recovery, planner off, target A; sim-to-real noise kept on) at std x1, learning rate 0, 200 iterations from run 18b model_29000, training seed 127; pair courts, second half.
+
+| Pair courts | Run 21's task (round 45 S0) | Run 22's task | Line |
+|---|---|---|---|
+| Per-ball legal | 0.619 | **0.708** | >= 0.678 (**passed**) |
+| Shots per rally | 1.22 | 2.19 | |
+| P(3+) / P(5+) | 15.0 / 5.1 % | 28.6 / 14.4 % | |
+| Feeder share | 0.392 | 0.288 | 0.15-0.45 (passed) |
+
+Training now produces read-like rallies (P(3+) close to round 45's M line of 30 %, P(5+) about three times higher). Run 22 launched (smoke, parent re-read, then 4,000 iterations).
+
+Phase 2 plan written (`docs/research/footwork-route-2026-10-29.md`): fast left / back stepping (> 1 m/s) has never been trained or measured on the rally stack; the first step is an agility screen (about 2 GPU-h) with a coded route to time-pressured left / back move drills (E) or a faster walking teacher kickstart (C).
