@@ -1102,3 +1102,33 @@ Per unit time (scripts/diag/falls_by_length.py, Poisson correction, cross-checke
 | **run 22 smoke** | 120 s | 0.288 | **2.12** |
 
 Run 22's smoke falls less often per unit time than run 14's smoke. The new smoke line has the same meaning, 1.5 x run 14's smoke: <= 4.157 falls per 1,000 env-seconds. **Run 22b** (scripts/rally_run22b.sh) is run 22 unchanged apart from that line and its new names. It launched 15:43.
+
+## Rally run 22b: killed at the early check (2026-10-29)
+
+Run 22b (read-like pair courts, parent run 18b model_29000) was killed at model_30200 by early-r21.
+
+| line | parent model_29000 | model_30200 | kill line |
+|---|---|---|---|
+| P(5+) open [read:protocol] | 0.2645 | **0.3896** [0.372, 0.407] | > +1.0 |
+| partner-ball legal | 0.7687 | **0.9893** | > 0.7537 |
+| feeder-ball legal | 0.8026 | **0.6558** | KILL (< 0.8026) |
+| feeder legal at 3 s refeed | 0.8491 | 0.7778 | KILL (< 0.8391) |
+| P(5+) open at 3 s refeed | 0.2936 | 0.5484 | reported |
+| court falls / episode | | 0.0556 (low 0.0415) | KILL (low > 0.04) |
+| family guards (feeder contact) | | all 15 families below run 14 - 5 (reach_deep 0.18 vs 0.53) | KILL |
+| left + back feeder contact | 0.5878 (run 14) | 0.4959 | KILL (-9.2) |
+
+**Where rallies end.** Below is the failure rate of ball k given that the rally reached it (ball 0 is the feeder ball; open rallies count as having survived):
+
+| | ball 0 | ball 1 | ball 2 | ball 3 | ball 4 |
+|---|---|---|---|---|---|
+| read, parent | 0.217 | 0.371 | 0.231 | 0.161 | 0.150 |
+| read, model_30200 | 0.357 | 0.300 | 0.091 | 0.032 | 0.015 |
+| training, iterations 0-60 [train-log] | 0.259 | 0.381 | 0.294 | 0.247 | 0.232 |
+| training, iterations 1,250-1,310 [train-log] | 0.325 | 0.317 | 0.181 | 0.113 | 0.091 |
+
+Rallies that reach the third ball now almost never end: about 1,000 of 2,048 courts were still in their first rally when the 120 s read ended. The 98.9 % partner-ball legal is mostly those balls. The two opening balls decide nearly every rally.
+
+**Mechanism, measured in training [train-log].** As rallies lengthened, the feeder ball's share of pair-court balls fell from 0.290 to 0.150. Over the same window, training feeder legal fell from 0.796 to 0.731. Run 19's erosion appeared only in the read (D-166). Here it shows up in training, because the training rallies now look like the read's.
+
+**Next (D-171):** a cap at 3 shots per training rally, to keep the opening balls' share of practice. It is checked first in training (scripts/diag/prelaunch23.sh): two 300-iteration arms from model_30200, with no cap and with cap 3. Rule: cap 3 feeder legal must beat no cap by >= 2.0 points, with feeder share >= 0.29 and falls <= 4.157 per 1,000 env-seconds.
