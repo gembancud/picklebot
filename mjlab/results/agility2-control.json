@@ -1,0 +1,413 @@
+{
+ "tasks": {
+  "Picklebot-Agility-Deadline2-LamR2-G1": {
+   "settings": {
+    "arrival_mode": "first_entry",
+    "dist_range": [
+     1.0,
+     3.0
+    ],
+    "v_req_range": [
+     1.2,
+     2.0
+    ],
+    "heading_free_m": 1.0,
+    "physics_dt": 0.005,
+    "decimation": 4
+   },
+   "positive": {
+    "arrival_mode": "first_entry",
+    "tau_s": 0.2,
+    "physics_dt": 0.005,
+    "decimation": 4,
+    "check": "DA >= 0.90 in every sector",
+    "pass": true,
+    "sectors": [
+     {
+      "name": "forward",
+      "resolved": 1804,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-left",
+      "resolved": 1865,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "left",
+      "resolved": 1843,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-left",
+      "resolved": 1798,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "back",
+      "resolved": 1862,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-right",
+      "resolved": 1825,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "right",
+      "resolved": 1849,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-right",
+      "resolved": 1828,
+      "da": 1.0,
+      "untimed": 1.0
+     }
+    ],
+    "da_min": 1.0,
+    "da_max": 1.0
+   },
+   "hold_reference": {
+    "arrival_mode": "hold",
+    "tau_s": 0.2,
+    "physics_dt": 0.005,
+    "decimation": 4,
+    "check": "DA < 0.10 in every sector (reproduces the defect)",
+    "pass": true,
+    "sectors": [
+     {
+      "name": "forward",
+      "resolved": 1804,
+      "da": 0.015521064301552107,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-left",
+      "resolved": 1865,
+      "da": 0.028954423592493297,
+      "untimed": 1.0
+     },
+     {
+      "name": "left",
+      "resolved": 1843,
+      "da": 0.015192620727075421,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-left",
+      "resolved": 1798,
+      "da": 0.021690767519466074,
+      "untimed": 1.0
+     },
+     {
+      "name": "back",
+      "resolved": 1862,
+      "da": 0.018796992481203006,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-right",
+      "resolved": 1825,
+      "da": 0.019726027397260273,
+      "untimed": 1.0
+     },
+     {
+      "name": "right",
+      "resolved": 1849,
+      "da": 0.018929150892374257,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-right",
+      "resolved": 1828,
+      "da": 0.02188183807439825,
+      "untimed": 1.0
+     }
+    ],
+    "da_min": 0.015192620727075421,
+    "da_max": 0.028954423592493297
+   }
+  },
+  "Picklebot-Agility-Deadline2-LamR3-G1": {
+   "settings": {
+    "arrival_mode": "first_entry",
+    "dist_range": [
+     1.0,
+     3.0
+    ],
+    "v_req_range": [
+     1.2,
+     2.0
+    ],
+    "heading_free_m": 1.0,
+    "physics_dt": 0.005,
+    "decimation": 4
+   },
+   "positive": {
+    "arrival_mode": "first_entry",
+    "tau_s": 0.2,
+    "physics_dt": 0.005,
+    "decimation": 4,
+    "check": "DA >= 0.90 in every sector",
+    "pass": true,
+    "sectors": [
+     {
+      "name": "forward",
+      "resolved": 1804,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-left",
+      "resolved": 1865,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "left",
+      "resolved": 1843,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-left",
+      "resolved": 1798,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "back",
+      "resolved": 1862,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-right",
+      "resolved": 1825,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "right",
+      "resolved": 1849,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-right",
+      "resolved": 1828,
+      "da": 1.0,
+      "untimed": 1.0
+     }
+    ],
+    "da_min": 1.0,
+    "da_max": 1.0
+   },
+   "hold_reference": {
+    "arrival_mode": "hold",
+    "tau_s": 0.2,
+    "physics_dt": 0.005,
+    "decimation": 4,
+    "check": "DA < 0.10 in every sector (reproduces the defect)",
+    "pass": true,
+    "sectors": [
+     {
+      "name": "forward",
+      "resolved": 1804,
+      "da": 0.015521064301552107,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-left",
+      "resolved": 1865,
+      "da": 0.028954423592493297,
+      "untimed": 1.0
+     },
+     {
+      "name": "left",
+      "resolved": 1843,
+      "da": 0.015192620727075421,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-left",
+      "resolved": 1798,
+      "da": 0.021690767519466074,
+      "untimed": 1.0
+     },
+     {
+      "name": "back",
+      "resolved": 1862,
+      "da": 0.018796992481203006,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-right",
+      "resolved": 1825,
+      "da": 0.019726027397260273,
+      "untimed": 1.0
+     },
+     {
+      "name": "right",
+      "resolved": 1849,
+      "da": 0.018929150892374257,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-right",
+      "resolved": 1828,
+      "da": 0.02188183807439825,
+      "untimed": 1.0
+     }
+    ],
+    "da_min": 0.015192620727075421,
+    "da_max": 0.028954423592493297
+   }
+  },
+  "Picklebot-Agility-Deadline2-Teacher-Move-G1": {
+   "settings": {
+    "arrival_mode": "first_entry",
+    "dist_range": [
+     1.0,
+     3.0
+    ],
+    "v_req_range": [
+     1.2,
+     2.0
+    ],
+    "heading_free_m": 1.0,
+    "physics_dt": 0.005,
+    "decimation": 4
+   },
+   "positive": {
+    "arrival_mode": "first_entry",
+    "tau_s": 0.2,
+    "physics_dt": 0.005,
+    "decimation": 4,
+    "check": "DA >= 0.90 in every sector",
+    "pass": true,
+    "sectors": [
+     {
+      "name": "forward",
+      "resolved": 1804,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-left",
+      "resolved": 1865,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "left",
+      "resolved": 1843,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-left",
+      "resolved": 1798,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "back",
+      "resolved": 1862,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-right",
+      "resolved": 1825,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "right",
+      "resolved": 1849,
+      "da": 1.0,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-right",
+      "resolved": 1828,
+      "da": 1.0,
+      "untimed": 1.0
+     }
+    ],
+    "da_min": 1.0,
+    "da_max": 1.0
+   },
+   "hold_reference": {
+    "arrival_mode": "hold",
+    "tau_s": 0.2,
+    "physics_dt": 0.005,
+    "decimation": 4,
+    "check": "DA < 0.10 in every sector (reproduces the defect)",
+    "pass": true,
+    "sectors": [
+     {
+      "name": "forward",
+      "resolved": 1804,
+      "da": 0.015521064301552107,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-left",
+      "resolved": 1865,
+      "da": 0.028954423592493297,
+      "untimed": 1.0
+     },
+     {
+      "name": "left",
+      "resolved": 1843,
+      "da": 0.015192620727075421,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-left",
+      "resolved": 1798,
+      "da": 0.021690767519466074,
+      "untimed": 1.0
+     },
+     {
+      "name": "back",
+      "resolved": 1862,
+      "da": 0.018796992481203006,
+      "untimed": 1.0
+     },
+     {
+      "name": "back-right",
+      "resolved": 1825,
+      "da": 0.019726027397260273,
+      "untimed": 1.0
+     },
+     {
+      "name": "right",
+      "resolved": 1849,
+      "da": 0.018929150892374257,
+      "untimed": 1.0
+     },
+     {
+      "name": "forward-right",
+      "resolved": 1828,
+      "da": 0.02188183807439825,
+      "untimed": 1.0
+     }
+    ],
+    "da_min": 0.015192620727075421,
+    "da_max": 0.028954423592493297
+   }
+  }
+ },
+ "pass": true
+}

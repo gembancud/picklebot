@@ -137,3 +137,16 @@ def first_entry(cfg):
 _register(TASK_AGILITY2_RES, SRC_RES, lambda c: first_entry(deadline_task(c)))
 _register(TASK_AGILITY2_RES_L3, SRC_RES, lambda c: first_entry(_lam_r(deadline_task(c), _tasks.LAM_R_3)))
 _register(TASK_AGILITY2_TEACHER, SRC_TEACHER, lambda c: first_entry(deadline_task(c)))
+
+TASK_AGILITY_BALL_S2 = "Picklebot-Agility-DirTally-Stance2-LamR2-G1"
+STANCE2_MAX_SPEED = 2.0
+
+
+def stance_cap(cfg, max_speed: float = STANCE2_MAX_SPEED):
+    """D-174: stance_progress pays pelvis speed toward the hitting stance up to max_speed (default 1.0 m/s)."""
+    r = cfg.rewards["stance_progress"]
+    cfg.rewards["stance_progress"] = dataclasses.replace(r, params={**r.params, "max_speed": max_speed})
+    return cfg
+
+
+_register(TASK_AGILITY_BALL_S2, SRC_RES, lambda c: stance_cap(to_agility_ball(c, direction_tally=True)))

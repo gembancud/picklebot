@@ -332,6 +332,49 @@ def test_deadline2_tasks_differ_only_in_the_arrival_mode():
     assert "latent" not in load_env_cfg(ag.TASK_AGILITY2_TEACHER).actions
 
 
+def test_stance2_task_differs_only_in_the_stance_progress_cap():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
+
+    import picklebot_mj.tasks.agility as ag
+    for play in (False, True):
+        o, n = load_env_cfg(ag.TASK_AGILITY_BALL, play=play), load_env_cfg(ag.TASK_AGILITY_BALL_S2, play=play)
+        assert o.rewards["stance_progress"].params.get("max_speed", 1.0) == 1.0
+        assert n.rewards["stance_progress"].params["max_speed"] == ag.STANCE2_MAX_SPEED == 2.0
+        assert _ball_diff(o.actions["ball"], n.actions["ball"]) == []
+        assert list(o.rewards) == list(n.rewards)
+        for k in o.rewards:
+            assert o.rewards[k].func is n.rewards[k].func and o.rewards[k].weight == n.rewards[k].weight
+            if k != "stance_progress":
+                assert o.rewards[k].params == n.rewards[k].params, k
+        for k in o.actions:
+            if k != "ball":
+                assert o.actions[k] == n.actions[k], k
+        assert o.episode_length_s == n.episode_length_s
+    assert load_rl_cfg(ag.TASK_AGILITY_BALL) == load_rl_cfg(ag.TASK_AGILITY_BALL_S2)
+    assert load_runner_cls(ag.TASK_AGILITY_BALL) is load_runner_cls(ag.TASK_AGILITY_BALL_S2)
+
+
+def test_stance_progress_cap_clamps_at_max_speed():
+    from types import SimpleNamespace as NS
+
+    from picklebot_mj.tasks.return_stand import stance_progress
+    n = 3
+    t = NS(stance_xy=torch.tensor([[2.0, 0.0]] * n), hit_done=torch.zeros(n, dtype=torch.bool),
+           hit_hint_on=torch.zeros(n, dtype=torch.bool), rules=NS(dead=torch.zeros(n, dtype=torch.bool)),
+           drill=None, shadow=None, pelvis_xy=lambda: torch.zeros(n, 2),
+           _entity=NS(data=NS(root_link_lin_vel_w=torch.tensor([[0.5, 0, 0], [1.5, 0, 0], [3.0, 0, 0]]))))
+    env = NS(action_manager=NS(get_term=lambda name: t))
+    import picklebot_mj.tasks.return_stand as rs
+    orig = rs._term
+    rs._term = lambda e: t
+    try:
+        assert torch.allclose(stance_progress(env), torch.tensor([0.5, 1.0, 1.0]))
+        assert torch.allclose(stance_progress(env, max_speed=2.0), torch.tensor([0.5, 1.5, 2.0]))
+    finally:
+        rs._term = orig
+
+
 def test_entry_point_does_not_import_the_agility_modules():
     code = ("import sys, mjlab.tasks; print(any(m in sys.modules for m in ('picklebot_mj.tasks.agility', "
             "'picklebot_mj.agility_control')), 'picklebot_mj.tasks' in sys.modules)")

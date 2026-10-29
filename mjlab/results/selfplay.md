@@ -1213,3 +1213,24 @@ scripts/diag/anchor48.sh: run 23's task with no cap, learning rate 0, 200 iterat
 **Rule.** X0 - X1 = +2.94 points (needs >= +3.0). |X1 - 65.4| = 6.46 points (needs <= 3.0). The override check is ok. **VERDICT: MOTOR.**
 
 The pelvis-anchored feeds account for about 1.5-3 points; most of the 0-1-bin gap to the read (about 6.5 points) remains. Near-mean actions are not the cause either. Per D-172 the next step is the agility drill fix. It is built: first-entry deadline arrival, a CPU positive control that a lag-0.2 s point mass passes at 100 % in every sector (the old hold rule gives 1.5-2.9 %), validity gates and new task ids Deadline2. It runs as the second screen (scripts/diag/agility_screen2.sh, training seeds 144-147).
+
+## Second agility screen (D-173): VOID; next the stance-cap diagnostic (D-174, 2026-10-30)
+
+scripts/diag/agility_screen2.sh ran on the fixed drill: first-entry arrival, positive control 100 % in every sector. Deadline arrival (DA) [train-diag / train-log]:
+
+| arm | DA left + back | DA forward + right | untimed left + back | untimed forward + right | lowest-sector untimed |
+|---|---|---|---|---|---|
+| A0 (P, learning rate 0) | 1.5 % | 1.5 % | 99.2 % | 99.5 % | 98.8 % |
+| A (P, 400 iterations at 1e-4) | 4.5 % | 3.2 % | 99.5 % | 98.7 % | 98.3 % |
+| F (flat walking teacher) | 6.6 % | 3.5 % | 36.8 % | 42.5 % | 21.7 % |
+
+The A0 gate (10 % <= DA(FR) <= 90 %) fails at 1.46 %, so the gated rule gives **VOID: no route**.
+
+What the screen does show is uniform slowness. A lagged point mass that follows the drill command meets 100 %. The rally policy peaks at about 1.05-1.25 m/s (p50) in every direction and meets about 1.5 %, and the deadline bonus moves it only about 3 points in 400 iterations. That matches the training setup: stepping faster than 1 m/s has never been rewarded. stance_progress is clamped at max_speed 1.0 m/s, and the move drill tracks <= 1 m/s.
+
+**Next (D-174): the stance-cap diagnostic.** scripts/diag/stance49.sh changes one thing, stance_progress max_speed 1.0 -> 2.0, in a new task id (Picklebot-Agility-DirTally-Stance2-LamR2-G1, tested). Arms K0 / K2 run from model_29000 at 1e-4 for 400 iterations, with the feeder-ball direction tally over the last quarter. PASS needs all of:
+- left + back legal +3.0 points;
+- forward + right legal >= -2.0 points;
+- falls <= 4.157 per 1,000 env-seconds.
+
+A PASS puts the cap into the next rally run; a FAIL points to the motion-controller route.

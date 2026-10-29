@@ -4328,3 +4328,20 @@ Following D-172's MOTOR route, the agility drill is fixed as specified in panel 
 - **Validity gate on F:** censored share <= 10 %. Otherwise the routes that need F are void.
 
 The route thresholds are unchanged. The second screen is scripts/diag/agility_screen2.sh, with the same parents and arms, training seeds 144-147 and output prefix results/agility2. Its gated coded route decides the footwork step.
+
+
+## D-174 - Second agility screen VOID; the stance_progress speed cap as the footwork lever (2026-10-30)
+
+The second agility screen ran on the fixed drill (D-173), with the positive control at 100 % in every sector. It printed VOID: A0's DA(FR) was 1.46 % against the >= 10 % gate. So the coded rule gives no route, and the next step is the agent's call under D-169. No threshold is changed.
+- **Reading.** The policy is uniformly slow, not weak in one direction: peak speed p50 about 1.05-1.25 m/s in every sector, DA about 1.5 % against the point mass's 100 %. Faster stepping has never been rewarded: stance_progress clamps pelvis speed toward the hitting stance at max_speed 1.0 m/s, and the move drill commands <= 1 m/s.
+- **One change, tested in training first** (scripts/diag/stance49.sh). The change is stance_progress max_speed 1.0 -> 2.0, in a new task id Picklebot-Agility-DirTally-Stance2-LamR2-G1. A test checks it differs from the BALL arm's task only in that parameter. Arms:
+  - K0: the BALL task;
+  - K2: the Stance2 task.
+
+  Both start from run 18b model_29000 and train 400 iterations at 1e-4 on 4,096 envs, with training seeds 148 / 149. They are measured over the last quarter with the feeder-ball direction tally.
+- **Coded rule.** PASS if all three hold:
+  - K2 left + back feeder legal - K0 >= +3.0 points;
+  - K2 forward + right >= K0 - 2.0 points;
+  - K2 falls <= 4.157 per 1,000 env-seconds.
+
+  The config check must confirm max_speed 2.0 in K2's params/env.yaml. A PASS puts the cap into the next rally run, with its own pre-registered lines. A FAIL means the cap is not the lever, and the next step is the motion-controller route.

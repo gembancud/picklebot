@@ -1,0 +1,50 @@
+A0 [train-diag] window 0.500-1.000 of 698640 env steps: sector            issued resolved  DA %  untimed %  falls %  peak p50/p90 m/s  sat %  censored
+  0 forward           4622     4212   0.9      99.6      0.0    1.05/ 1.25        0.0      421
+  1 forward-left      4741     4305   1.9      98.8      0.1    1.05/ 1.35        0.0      404
+  2 left              4622     4142   0.9      99.0      0.0    1.25/ 1.45        0.0      446
+  3 back-left         4659     4271   2.7      99.5      0.1    1.25/ 1.45        0.0      404
+  4 back              4725     4296   1.0      99.3      0.0    1.15/ 1.45        0.0      414
+  5 back-right        4527     4161   2.5      99.4      0.1    1.15/ 1.35        0.0      387
+  6 right             4624     4250   0.9      99.4      0.0    1.25/ 1.45        0.0      390
+  7 forward-right     4589     4192   2.6      99.4      0.0    1.15/ 1.35        0.0      414
+  LB (2,3,4): DA   1.5  untimed  99.2  falls   0.0  sat   0.0
+  FR (0,6,7): DA   1.5  untimed  99.5  falls   0.0  sat   0.0
+  lowest untimed arrival over sectors:  98.8
+
+A [train-log] window 0.875-1.000 of 705840 env steps: sector            issued resolved  DA %  untimed %  falls %  peak p50/p90 m/s  sat %  censored
+  0 forward           4675     4267   2.2      96.3      0.0    1.05/ 1.25        0.0      451
+  1 forward-left      4740     4268   3.9      98.9      0.0    1.15/ 1.35        0.0      426
+  2 left              4504     4090   2.4      99.3      0.0    1.25/ 1.45        0.0      414
+  3 back-left         4721     4273   5.4      99.6      0.0    1.25/ 1.45        0.0      372
+  4 back              4593     4229   5.2      99.5      0.1    1.25/ 1.55        0.0      401
+  5 back-right        4500     4122   7.3      99.2      0.0    1.25/ 1.45        0.0      413
+  6 right             4559     4223   4.1      99.3      0.0    1.35/ 1.55        0.0      378
+  7 forward-right     4619     4164   4.4      97.9      0.0    1.15/ 1.35        0.0      420
+  LB (2,3,4): DA   4.4  untimed  99.5  falls   0.0  sat   0.0
+  FR (0,6,7): DA   3.6  untimed  97.8  falls   0.0  sat   0.0
+  lowest untimed arrival over sectors:  96.3
+  A first 1/8: DA(LB)   2.0  DA(FR)   1.8
+
+F [train-log] window 0.875-1.000 of 391200 env steps: sector            issued resolved  DA %  untimed %  falls %  peak p50/p90 m/s  sat %  censored
+  0 forward           5844     4219   1.5      46.1      0.8    1.25/ 1.55        0.0     1644
+  1 forward-left      5364     3829   2.1      47.5      0.4    1.25/ 1.45        0.0     1552
+  2 left              4317     2827   4.1      50.3      0.5    1.35/ 1.45        0.0     1540
+  3 back-left         3307     1890   9.7      38.2      0.6    1.25/ 1.55        0.0     1403
+  4 back              2885     1459   6.1      21.7      1.2    1.15/ 1.45        0.0     1408
+  5 back-right        3300     1843   7.4      28.9      0.9    1.15/ 1.45        0.0     1436
+  6 right             4482     2846   4.8      41.7      0.7    1.35/ 1.55        0.0     1610
+  7 forward-right     5452     3843   4.2      39.7      0.8    1.35/ 1.65        0.0     1602
+  LB (2,3,4): DA   6.6  untimed  36.8  falls   0.8  sat   0.0
+  FR (0,6,7): DA   3.5  untimed  42.5  falls   0.7  sat   0.0
+  lowest untimed arrival over sectors:  21.7
+  F first 1/8: DA(LB)   1.9  DA(FR)   1.9
+
+B: not run
+BALL: not run
+
+Pre-registered rule (section 6) behind the D-172 validity gates:
+  gate A0: DA(FR): +1.46 pt >= +10.00 pt -> FAIL
+  gate A0: DA(FR): +1.46 pt <= +90.00 pt -> PASS
+  gate A0: lowest sector untimed arrival: +0.99 >= +0.90 -> PASS
+VOID: A0 outside validity gates
+route: void  (B triggered: False)
