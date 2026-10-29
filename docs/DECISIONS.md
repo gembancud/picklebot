@@ -4345,3 +4345,27 @@ The second agility screen ran on the fixed drill (D-173), with the positive cont
   - K2 falls <= 4.157 per 1,000 env-seconds.
 
   The config check must confirm max_speed 2.0 in K2's params/env.yaml. A PASS puts the cap into the next rally run, with its own pre-registered lines. A FAIL means the cap is not the lever, and the next step is the motion-controller route.
+
+
+## D-175 - Panel round 49: stance diagnostic VOID (stale target); a supervised speed ladder locates the speed limit (2026-10-30)
+
+**Corrections from panel round 49 (mjlab/results/selfplay-review.md):**
+- **stance49 is VOID, not FAIL.** In planner mode, stance_xy is never set for court feeds (return_stand.py:829), so stance_progress paid speed toward a stale spot on the feeder balls it scored. The stance result is not relabelled; this entry records the defect.
+- **Arm F of the second agility screen is VOID** by its own gate: censored share 28-49 % against <= 10 %.
+- **D-173's MOTOR reads as NOT-ANCHOR.**
+- **The residual range is not binding:** saturation is about 0 everywhere.
+
+**Decision (five of five chose A; three of five chose this form).** A supervised speed ladder, evaluation only. On-disk 100STYLE retargets (style100-g1 Neutral_SW / BW / FW, plus Neutral_SR) are time-scaled to reference speeds of about 1.5 / 2.0 / 2.5 m/s, by csv_to_npz_local.py --input-fps. Each is tracked two ways:
+- by the H0 teacher (tracking_eval.py);
+- through the latent-07 encoder (tracking_eval.py --latent).
+
+latent_barrier_check.py coverage is run at lam 2 and lam 5. Results are binned by direction and speed, with achieved pelvis speed. No training is run and nothing is downloaded.
+
+**Coded rule.** The metric is success on left / back windows at a reference speed >= 2.0 m/s.
+- **VOID** if either checkpoint scores < 95 % at x1.
+- **SELECTION** if latent-07 encoder success >= 90 % and lam-5 coverage >= 80 %. The decoder can express it and PPO does not select it. Next is route C: a fast teacher with F's censoring fixed, then a residual kickstart.
+- **DECODER** if latent-07 < 70 % while H0 >= 90 %. Next is a decoder-only re-distil (B / D-lite).
+- **BODY?** if H0 < 70 %. This does not prove the body cannot; the default is E (ball 1 and within-reach work).
+- **Otherwise** the result is reported and E follows.
+
+**Queued separately:** the stale stance target on court feeds is a live candidate defect in the training reward. It is to be fixed and tested with an A/A control arm before any rally run.

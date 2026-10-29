@@ -669,3 +669,28 @@ Brief: D-167's screen [train-diag]: no single read setting moves training per-ba
 **Decision.** No 3-of-5 majority. E has two votes plus experiment design's queued E. By the tie rule, the least new code wins: architecture's E, overrides only. D-172 below. The drill fix (experiment design) is next in line for the footwork question. Ready position (B) would be judged against the read's recovery spot, a protocol item that is the user's call.
 
 **Honest distance (all five).** P(5+) is 0.39 against 0.80. Balls 0 and 1 must each fail about 8 % or less; today they fail 0.31 and 0.26. Perfect left / back balls would cap feeder legal near 0.89. Estimates: M1 (feeder 85 %) is plausible-to-unlikely, about 25 %; the 80 % target is under 10 % on this controller without motion-level work.
+
+## Round 49 (2026-10-30): where the speed limit sits
+
+**Correction check.**
+- **The stance-cap diagnostic is VOID by an instrument defect** (experiment design; verified in code). With the planner on, `stance_xy` is written only when a planned spot is due. Court feeds get no plan (return_stand.py:829). On the feeder balls stance49 scored, stance_progress therefore pointed at a stale spot: the last planned spot, or (0, 0). D-142 had found the same bug. So the test cannot say whether paying for speed helps. It also means the term has rewarded running toward a stale spot on court feeds throughout training. (RL, motion and architecture read the test as a valid FAIL; the code shows the defect.)
+- **Arm F of the second screen is VOID by its own D-173 gate** (architecture). Its censored share is 28-49 % against <= 10 %. So "the flat teacher only reaches 37-43 %" is withdrawn as evidence that the body cannot.
+- **D-173's MOTOR is better called NOT-ANCHOR** (RL): it only rules out the anchor.
+- **Exploration collapsed in agility2 arm A** (RL). The latent std was 0.146 in the parent; after A, 29 of 32 dims sit at the 0.1 floor, because the deadline bonus almost never fired. A's +3 points cannot show that the residual cannot go faster.
+
+**Agreed facts.**
+- **The residual range is not binding.** Saturation is 0.0 % in A0 and A, and about 0 on the BALL and K0 left / back approaches [train-diag / train-log]. Route C (a wider range) has no premise.
+- **The controller has no hard cap at about 1.5 m/s.** cross_backhand hits peak at 2.2 m/s [read:protocol].
+- **RES_BASE cannot be driven by a velocity command**: it sees a spot. Every velocity path runs through a PPO policy, so PPO failures cannot locate the limit (D-080 / D-082).
+
+**Votes: all five A, a locating diagnostic.** Three forms were proposed:
+- **A supervised speed ladder** (RL, architecture, coach): time-scaled on-disk 100STYLE clips tracked by H0 and through the latent-07 encoder, plus barrier coverage. About 0.3-0.5 GPU-h, no download.
+- **Zero-residual base and lam_r 3 arms** (experiment design).
+- **lam_r 0 and latent_prior-weight-0 arms** (motion).
+
+The majority (3) chose the speed ladder. D-175 below.
+
+**Honest distance (all five).**
+- **Without a controller or footwork change:** feeder legal tops out at about 0.75-0.80; P(5+) about 0.45-0.55; M1 about 10-20 %.
+- **With left / back at about 70-80 %:** feeder legal about 0.83-0.87, P(5+) about 0.6-0.75.
+- **The 0.80 target** needs ball 0 and ball 1 to fail about 7-8 % or less each. That is under 15 % likely even with the fix.
