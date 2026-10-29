@@ -191,6 +191,51 @@ def route(a0: dict, a: dict | None, f: dict | None, b: dict | None = None) -> di
     return {"lines": lines, "route": "lower-band", "b_triggered": b_trig, "d0": d0}
 
 
+# Validity gates (D-172, the second screen; opt-in through route_gated: route() above is unchanged). The rule's thresholds
+# (D0_MIN, GAIN_MIN, GAP_FRAC, F_MARGIN, B_SAT_MIN) are not changed.
+A0_DA_FR_MIN, A0_DA_FR_MAX = 10.0, 90.0  # points: A0's DA(FR) must leave room to see a deficit and a gain
+A0_UNTIMED_MIN = 0.90  # A0's untimed arrival, in every sector
+F_CENSORED_MAX = 0.10  # F's censored share (censored / issued, sectors pooled)
+ROUTES_NEEDING_F = ("pending-B", "b", "C", "lower-band")  # route() keys reached only through F's rule 3/4 line
+
+
+def a0_gate(a0: dict) -> tuple[bool, list[str]]:
+    """A0 is VALID only if 10 <= DA(FR) <= 90 points and untimed arrival >= 90 % in every sector."""
+    fr = _pt(a0["da_FR"])
+    ok1, l1 = _line("gate A0: DA(FR)", fr, ">=", A0_DA_FR_MIN)
+    ok2, l2 = _line("gate A0: DA(FR)", fr, "<=", A0_DA_FR_MAX)
+    un = [x["untimed"] for x in a0["sectors"]]
+    lo = None if not un or any(x is None for x in un) else min(un)
+    ok3, l3 = _line("gate A0: lowest sector untimed arrival", lo, ">=", A0_UNTIMED_MIN, unit="")
+    return ok1 and ok2 and ok3, [l1, l2, l3]
+
+
+def f_gate(f: dict) -> tuple[bool, str]:
+    """F is VALID only if its censored share (censored / issued, all sectors) is <= 10 %."""
+    issued = sum(x["issued"] for x in f["sectors"])
+    share = (sum(x["censored"] for x in f["sectors"]) / issued) if issued else None
+    return _line("gate F: censored share (censored / issued)", share, "<=", F_CENSORED_MAX, unit="")
+
+
+def route_gated(a0: dict, a: dict | None, f: dict | None, b: dict | None = None) -> dict:
+    """route() behind the D-172 validity gates. A0 outside its gates: VOID, no route. F outside its gate: any route that
+    needs F is VOID (F invalid); routes that do not need F (reading, E, pending A / F) are routed as before."""
+    a0_ok, lines = a0_gate(a0)
+    if not a0_ok:
+        return {"lines": lines + ["VOID: A0 outside validity gates"], "route": "void", "b_triggered": False, "d0": None,
+                "a0_valid": False, "f_valid": None}
+    f_ok = None
+    if f is not None:
+        f_ok, lf = f_gate(f)
+        lines.append(lf)
+    r = route(a0, a, f, b)
+    out = {**r, "lines": lines + r["lines"], "a0_valid": True, "f_valid": f_ok}
+    if f_ok is False and r["route"] in ROUTES_NEEDING_F:
+        out.update(lines=out["lines"] + [f"VOID (F invalid): route {r['route']!r} needs F, and F is outside its "
+                                         "validity gate"], route="void-F", b_triggered=False)
+    return out
+
+
 def ball_side(c: dict) -> dict:
     """Ball-side logging (feeder balls in training): legal, contact, onset latency and saturation by direction, and the
     route E ball-side line (left + back legal <= 55 %, forward + right >= 80 %)."""

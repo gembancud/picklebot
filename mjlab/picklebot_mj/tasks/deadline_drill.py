@@ -13,6 +13,13 @@ DeadlineMoveDrill (a MoveDrill): time-pressured, direction-labelled move-to-spot
   only for arrivals before the deadline. The spot then stays live until MoveDrill's untimed limit
   (1.5 s + 1.25 s/m), so untimed arrival is measured in the same episodes (deadline_ends_spot=True: the spot ends at
   the deadline instead).
+- arrival_mode="first_entry" (D-172, the second screen; the default "hold" is the behaviour above): a spot is a
+  deadline arrival (the `deadline` counter and the move_arrival bonus) the first time the pelvis is within
+  ARRIVE_RADIUS (0.25 m) of it at elapsed <= deadline, with no speed or hold condition. The bonus is paid at that entry
+  (and not again at the later held arrival); the counter is booked when the spot resolves (held arrival, untimed
+  time-out or fall), so censored spots stay out of numerator and denominator alike. Untimed arrival stays MoveDrill's
+  (held), and the spot still ends only at a held arrival or its limit. The command law is unchanged: it passes the
+  coded positive control (picklebot_mj/agility_control.py) in this mode.
 - Counted per sector (masked tensor math, no host syncs): issued, arrivals (any time), arrivals before the deadline,
   untimed time-outs, falls (episode ended by fell_over during the spot), censored spots (episode time limit), the
   spot's peak pelvis ground speed (sum and histogram), and, on residual executors, the residual saturation share
@@ -38,6 +45,7 @@ from picklebot_mj.tasks.latent_reach import _to_heading, _yaw_frame
 DIST_RANGE = (1.0, 3.0)
 V_REQ_RANGE = (1.2, 2.0)
 DEADLINE_BASE_S = 0.3
+ARRIVAL_MODES = ("hold", "first_entry")
 HEADING_FREE_M = 1.0
 SAT_TANH, SAT_DIMS = 0.95, 4
 SPEED_BIN, SPEED_BINS = 0.1, 50  # peak speed histogram, m/s (last bin: >= 4.9 m/s)
@@ -61,9 +69,13 @@ def residual_saturated(env) -> torch.Tensor | None:
 
 class DeadlineMoveDrill(md.MoveDrill):
     def __init__(self, term, move_prob: float, seed: int, sector_weights=None, dist_range=DIST_RANGE,
-                 v_req_range=V_REQ_RANGE, deadline_ends_spot: bool = False, heading_free_m: float = HEADING_FREE_M):
+                 v_req_range=V_REQ_RANGE, deadline_ends_spot: bool = False, heading_free_m: float = HEADING_FREE_M,
+                 arrival_mode: str = "hold"):
         super().__init__(term, move_prob, seed, sector_weights)
         n, dev = self.n, self.dev
+        assert arrival_mode in ARRIVAL_MODES, arrival_mode
+        self.arrival_mode = arrival_mode
+        self.entered = torch.zeros(n, dtype=torch.bool, device=dev)  # first_entry: this spot entered in time
         self.dist_range = (float(dist_range[0]), float(dist_range[1]))
         self.v_range = (float(v_req_range[0]), float(v_req_range[1]))
         assert 0 < self.dist_range[0] <= self.dist_range[1] and 0 < self.v_range[0] <= self.v_range[1]
@@ -88,6 +100,8 @@ class DeadlineMoveDrill(md.MoveDrill):
             sec = self.sector[env_ids]
             self.stats["fell"].index_add_(0, sec, (was & fell).long())
             self.stats["censored"].index_add_(0, sec, (was & ~fell).long())
+            if self.arrival_mode == "first_entry":  # a fall resolves the spot: book its in-time entry
+                self.stats["deadline"].index_add_(0, sec, (was & fell & self.entered[env_ids]).long())
         super().reset(env_ids)
 
     def _new_spot(self, mask: torch.Tensor) -> None:
@@ -121,6 +135,7 @@ class DeadlineMoveDrill(md.MoveDrill):
         self.elapsed = torch.where(mask, torch.zeros_like(self.elapsed), self.elapsed)
         self.hold = torch.where(mask, torch.zeros_like(self.hold), self.hold)
         self.peak = torch.where(mask, torch.zeros_like(self.peak), self.peak)
+        self.entered = self.entered & ~mask
         self.stats["issued"].index_add_(0, self.sector, mask.long())
 
     # ------------------------------------------------------------------------------
@@ -138,10 +153,16 @@ class DeadlineMoveDrill(md.MoveDrill):
         self.hold = torch.where(inside, self.hold + dt, torch.zeros_like(self.hold))
         self.elapsed = self.elapsed + dt * mv.float()
         arrived = mv & (self.hold >= md.ARRIVE_HOLD_S)
-        in_time = arrived & (self.elapsed <= self.deadline + 1e-6)
         timed_out = mv & ~arrived & (self.elapsed >= self.limit)
         done = arrived | timed_out
-        self.arrive_now |= in_time  # move_arrival pays only before the deadline
+        if self.arrival_mode == "hold":
+            in_time = arrived & (self.elapsed <= self.deadline + 1e-6)
+            self.arrive_now |= in_time  # move_arrival pays only before the deadline
+        else:  # first_entry: the first entry within ARRIVE_RADIUS before the deadline (no speed or hold condition)
+            first = mv & ~self.entered & (d < md.ARRIVE_RADIUS) & (self.elapsed <= self.deadline + 1e-6)
+            self.entered = self.entered | first
+            self.arrive_now |= first  # move_arrival pays once, at the in-time entry
+            in_time = done & self.entered  # booked when the spot resolves
         sec = self.sector
         s = self.stats
         s["arrived"].index_add_(0, sec, arrived.long())

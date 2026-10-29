@@ -4309,3 +4309,22 @@ The metric is feeder legal in the 0-1 launch bin.
 - Launch-state-matched training (RL's F): it stays a candidate after the anchor question is settled.
 
 Training seeds 139-143.
+
+
+## D-173 - Feed-anchor diagnostic: MOTOR; the second agility screen with a fixed drill (2026-10-30)
+
+scripts/diag/anchor48.sh (D-172) was measured in the 0-1 launch bin [train-diag]:
+- X0, run 23 model_31400 as trained: 0.748.
+- X1, every feed start-anchored: 0.719.
+- X2, near-mean actions: 0.747.
+- The read [read:protocol]: 0.654.
+
+The coded rule needed X0 - X1 >= 3.0 and |X1 - 65.4| <= 3.0. The result was +2.94 and 6.46, so MOTOR. The anchor explains only about 3 of the roughly 9 points, and the rest of the training-vs-read gap is still unlocated.
+
+Following D-172's MOTOR route, the agility drill is fixed as specified in panel round 48 (experiment design):
+- **First-entry deadline arrival**, opt-in as arrival_mode "first_entry" on the new task ids Picklebot-Agility-Deadline2-*. The old tasks are unchanged.
+- **A coded CPU positive control** (picklebot_mj/agility_control.py): a point mass that follows the drill's own command through a 0.2 s lag must reach DA >= 90 % in every sector. It measured 100 %; the old hold rule gives 1.5-2.9 %.
+- **Validity gates on A0:** 10 % <= DA(FR) <= 90 %, and untimed arrival >= 90 % in every sector. Otherwise VOID, with no route.
+- **Validity gate on F:** censored share <= 10 %. Otherwise the routes that need F are void.
+
+The route thresholds are unchanged. The second screen is scripts/diag/agility_screen2.sh, with the same parents and arms, training seeds 144-147 and output prefix results/agility2. Its gated coded route decides the footwork step.

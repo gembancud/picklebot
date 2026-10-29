@@ -1196,3 +1196,20 @@ scripts/diag/agility_screen.sh main ran with seeds 130-133 (results/agility-summ
 **Coded route:** rule 1, D0 = DA(FR) - DA(LB) = +0.06 points against the >= 10 needed: FAIL, so ROUTE 1 ("reading": f2, the e4 re-test, then f1).
 
 **Caveat (agent's reading, not a route line).** Rule 1 sits on a floor. DA is about 0-2 % in every direction for every arm, so D0 cannot show a deficit whatever the cause: the required speed band is above the controller's top speed in all directions. The ball-side numbers also argue against late reading. On left and back balls the robot starts moving earlier (onset 0.27-0.29 s against 0.37-0.43 s) and moves faster (1.5-1.6 against 1.2-1.4 m/s), yet makes contact only 56-59 % of the time. The data fit a speed ceiling of about 1.5 m/s combined with the longer travel to left and back balls. Panel round 48 is convened on this.
+
+## Feed-anchor diagnostic (D-172): MOTOR (2026-10-30)
+
+scripts/diag/anchor48.sh: run 23's task with no cap, learning rate 0, 200 iterations, 4,096 envs, second half [train-diag]. Feeder legal by launch bin (0-1 / 2-4 / 5+ shots in the previous rally):
+
+| arm | 0-1 | 2-4 | 5+ | pooled |
+|---|---|---|---|---|
+| X0 run 23 model_31400 | 0.7479 | 0.7882 | 0.7731 | 0.7634 |
+| X1 + court_feed_anchor_prob 1.0 | 0.7186 | 0.7756 | 0.7677 | 0.7438 |
+| X2 X1, near-mean actions | 0.7465 | 0.7743 | 0.7512 | 0.7531 |
+| Y0 run 22b model_30200 | 0.7230 | 0.7281 | 0.7225 | 0.7237 |
+| Y1 + anchor 1.0 | 0.7092 | 0.7227 | 0.6910 | 0.7060 |
+| read, run 23 model_31400 [read:protocol] | 0.654 | 0.789 | 0.804 | 0.712 |
+
+**Rule.** X0 - X1 = +2.94 points (needs >= +3.0). |X1 - 65.4| = 6.46 points (needs <= 3.0). The override check is ok. **VERDICT: MOTOR.**
+
+The pelvis-anchored feeds account for about 1.5-3 points; most of the 0-1-bin gap to the read (about 6.5 points) remains. Near-mean actions are not the cause either. Per D-172 the next step is the agility drill fix. It is built: first-entry deadline arrival, a CPU positive control that a lag-0.2 s point mass passes at 100 % in every sector (the old hold rule gives 1.5-2.9 %), validity gates and new task ids Deadline2. It runs as the second screen (scripts/diag/agility_screen2.sh, training seeds 144-147).

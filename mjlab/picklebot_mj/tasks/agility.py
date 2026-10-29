@@ -9,6 +9,10 @@ Tasks (each built from a deep copy of an existing registered task; only the ball
 - TASK_AGILITY_RES_L3: the same at lam_r 3. Arm B (only if triggered).
 - TASK_AGILITY_TEACHER: the flat walking teacher's own task (Picklebot-Teacher-Move-G1) with the deadline drill. Arm F.
 - TASK_AGILITY_BALL: rally run 14's task unchanged plus the feeder-ball direction tally (logging only). Ball-side arm.
+Second screen (D-172; scripts/diag/agility_screen2.sh): the same three deadline tasks with one change, the drill's
+first-entry deadline arrival (deadline_arrival_mode "first_entry"; command law unchanged, it passes the coded positive
+control picklebot_mj/agility_control.py):
+- TASK_AGILITY2_RES (arms A0, A), TASK_AGILITY2_RES_L3 (arm B), TASK_AGILITY2_TEACHER (arm F).
 
 Logging: PICKLEBOT_AGILITY_LOG=path appends the cumulative counters every PICKLEBOT_AGILITY_LOG_EVERY env steps
 (default 240 = 10 iterations at 24 steps per env; one host sync each time), as PICKLEBOT_PAIR_LOG does.
@@ -34,6 +38,9 @@ TASK_AGILITY_RES = "Picklebot-Agility-Deadline-LamR2-G1"
 TASK_AGILITY_RES_L3 = "Picklebot-Agility-Deadline-LamR3-G1"
 TASK_AGILITY_TEACHER = "Picklebot-Agility-Deadline-Teacher-Move-G1"
 TASK_AGILITY_BALL = "Picklebot-Agility-DirTally-LamR2-G1"
+TASK_AGILITY2_RES = "Picklebot-Agility-Deadline2-LamR2-G1"
+TASK_AGILITY2_RES_L3 = "Picklebot-Agility-Deadline2-LamR3-G1"
+TASK_AGILITY2_TEACHER = "Picklebot-Agility-Deadline2-Teacher-Move-G1"
 LOG_EVERY = 240
 
 
@@ -44,6 +51,7 @@ class AgilityBallActionCfg(BallPhysicsActionCfg):
     deadline_v_req: tuple = dd.V_REQ_RANGE
     deadline_ends_spot: bool = False  # True: a spot ends at its deadline (as MoveDrill's limit); False: untimed limit
     heading_free_m: float = dd.HEADING_FREE_M
+    deadline_arrival_mode: str = "hold"  # "first_entry": deadline arrival = first entry within 0.25 m (D-172)
     direction_tally: bool = False  # feeder-ball outcomes by direction (pair mode)
 
     def build(self, env) -> "AgilityBallAction":
@@ -60,7 +68,8 @@ class AgilityBallAction(BallPhysicsAction):
             self.drill = dd.DeadlineMoveDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights,
                                               dist_range=cfg.deadline_dist, v_req_range=cfg.deadline_v_req,
                                               deadline_ends_spot=cfg.deadline_ends_spot,
-                                              heading_free_m=cfg.heading_free_m)
+                                              heading_free_m=cfg.heading_free_m,
+                                              arrival_mode=cfg.deadline_arrival_mode)
         self.dir_tally = dd.DirectionTally(self, env) if cfg.direction_tally else None
         self._log_path = os.environ.get("PICKLEBOT_AGILITY_LOG")
         self._log_every = int(os.environ.get("PICKLEBOT_AGILITY_LOG_EVERY", str(LOG_EVERY)))
@@ -116,3 +125,15 @@ _register(TASK_AGILITY_RES, SRC_RES, deadline_task)
 _register(TASK_AGILITY_RES_L3, SRC_RES, lambda c: _lam_r(deadline_task(c), _tasks.LAM_R_3))
 _register(TASK_AGILITY_TEACHER, SRC_TEACHER, deadline_task)
 _register(TASK_AGILITY_BALL, SRC_RES, lambda c: to_agility_ball(c, direction_tally=True))
+
+
+def first_entry(cfg):
+    """D-172: the deadline drill with first-entry deadline arrival (the only change from the first screen's task)."""
+    assert cfg.actions["ball"].deadline_drill
+    cfg.actions["ball"].deadline_arrival_mode = "first_entry"
+    return cfg
+
+
+_register(TASK_AGILITY2_RES, SRC_RES, lambda c: first_entry(deadline_task(c)))
+_register(TASK_AGILITY2_RES_L3, SRC_RES, lambda c: first_entry(_lam_r(deadline_task(c), _tasks.LAM_R_3)))
+_register(TASK_AGILITY2_TEACHER, SRC_TEACHER, lambda c: first_entry(deadline_task(c)))

@@ -6,7 +6,12 @@ threshold. Source tags: A0 and the ball-side arm [train-diag], A / F / B [train-
 Windows: A0 (learning rate 0) and the ball-side arm use the second half of their logged steps; A, F and B use their
 last 1/8 (about iterations 350-400 of 400) as "at 400", and their first 1/8 is printed for reference.
 
-Usage: python scripts/diag/agility_summary.py [--prefix results/agility] [--json results/agility-summary.json]
+--gates (D-172, the second screen, scripts/diag/agility_screen2.sh): the rule is applied behind the validity gates
+(agility_rule.route_gated): A0 outside 10 <= DA(FR) <= 90 or below 90 % untimed arrival in any sector prints
+"VOID: A0 outside validity gates" and no route; F with a censored share above 10 % voids any route that needs F.
+Without the flag the output is the first screen's, unchanged.
+
+Usage: python scripts/diag/agility_summary.py [--prefix results/agility] [--json results/agility-summary.json] [--gates]
 """
 
 from __future__ import annotations
@@ -54,6 +59,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--prefix", default="results/agility")
     ap.add_argument("--json", default="results/agility-summary.json")
+    ap.add_argument("--gates", action="store_true", help="apply the D-172 validity gates (second screen)")
     args = ap.parse_args()
     out = {"arms": {}}
     arms = {}
@@ -91,9 +97,12 @@ def main():
     if "A0" not in arms:
         print("ROUTE: none (A0 not run)")
         return
-    r = ar.route(arms["A0"], arms.get("A"), arms.get("F"), arms.get("B"))
+    rule = ar.route_gated if args.gates else ar.route
+    r = rule(arms["A0"], arms.get("A"), arms.get("F"), arms.get("B"))
     out["route"] = r
-    print("Pre-registered rule (section 6):")
+    if args.gates:
+        out["gates"] = True
+    print("Pre-registered rule (section 6)" + (" behind the D-172 validity gates:" if args.gates else ":"))
     print("\n".join(r["lines"]))
     print(f"route: {r['route']}  (B triggered: {r['b_triggered']})")
     if args.json:
