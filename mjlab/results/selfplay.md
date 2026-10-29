@@ -1132,3 +1132,14 @@ Rallies that reach the third ball now almost never end: about 1,000 of 2,048 cou
 **Mechanism, measured in training [train-log].** As rallies lengthened, the feeder ball's share of pair-court balls fell from 0.290 to 0.150. Over the same window, training feeder legal fell from 0.796 to 0.731. Run 19's erosion appeared only in the read (D-166). Here it shows up in training, because the training rallies now look like the read's.
 
 **Next (D-171):** a cap at 3 shots per training rally, to keep the opening balls' share of practice. It is checked first in training (scripts/diag/prelaunch23.sh): two 300-iteration arms from model_30200, with no cap and with cap 3. Rule: cap 3 feeder legal must beat no cap by >= 2.0 points, with feeder share >= 0.29 and falls <= 4.157 per 1,000 env-seconds.
+
+## Run 23 pre-launch check: PASS (D-171, 2026-10-29)
+
+scripts/diag/prelaunch23.sh ran two arms from run 22b model_30200, 300 iterations each at 1e-4 and 4,096 envs, measured over the second half on pair courts [train-diag]:
+
+| arm | feeder legal | feeder share | per-ball | ball 0 failure | ball 1 failure | falls / 1,000 env-s |
+|---|---|---|---|---|---|---|
+| C0 no cap | 0.7244 | 0.165 | 0.8656 | 0.330 | 0.324 | 2.10 |
+| C3 cap 3 | **0.8110** | 0.440 | 0.8107 | 0.232 | 0.232 | 2.16 |
+
+The rule needed cap 3 minus no cap >= +2.0 points of feeder legal; the result was +8.7. The override check was ok. **Rally run 23** (scripts/rally_run23.sh, rally-23-cap3) launched about 21:05: run 22b plus pair_rally_cap 3, parent model_30200, early check model_31400 (early-r21), endpoint r19-gate / m1 / target.

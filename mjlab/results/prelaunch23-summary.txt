@@ -1,0 +1,5 @@
+C0: feeder legal 0.7244, feeder share 0.165, per-ball 0.8656, failure ball 0 0.330, ball 1 0.324, falls / 1,000 env-s 2.097, rallies 7416, end reasons [6051, 0, 1365, 0]
+C3: feeder legal 0.8110, feeder share 0.440, per-ball 0.8107, failure ball 0 0.232, ball 1 0.232, falls / 1,000 env-s 2.158, rallies 15239, end reasons [6563, 0, 1304, 7372]
+rule: C3 - C0 feeder legal +8.66 (needs >= +2.0); C3 share 0.440 (needs >= 0.29); C3 falls 2.158 (needs <= 4.157)
+override check C3 pair_rally_cap 3: ok
+VERDICT: PASS: ok

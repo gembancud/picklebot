@@ -4258,3 +4258,26 @@ Run 22's smoke stopped on mean logged `Episode_Termination/fell_over` 0.288 > 0.
   - 120 s episodes do not fall more per unit time. Run 22's smoke is below run 14's.
 - **New line, same meaning, not loosened:** smoke falls per 1,000 env-seconds <= 4.157 (1.5 x run 14's 2.771). For 30 s smokes it is the old 0.159 line, rescaled by the same factor. Endpoint court falls (<= 4 %) are read-side and unchanged. Every other smoke check is unchanged: gradients, and the config with actor noise on.
 - **Run 22b** (scripts/rally_run22b.sh) is run 22 with a new run name and output prefix (results/rally-22b) and the new falls line. Nothing else changes: task, overrides, parent run 18b model_29000, seeds, early-r21 kill, r19-gate / m1 / target endpoint.
+
+
+## D-171 - Run 22b killed; rally run 23 caps training rallies at 3 shots (2026-10-29)
+
+Run 22b was killed at model_30200 by early-r21 [read:protocol]. Open-rally P(5+) rose 0.265 -> 0.390, the best so far (0.548 at a 3 s refeed), and partner-ball legal rose 0.769 -> 0.989. Five lines failed:
+- feeder-ball legal fell 0.803 -> 0.656;
+- feeder legal at the 3 s refeed fell 0.849 -> 0.778;
+- every family guard failed;
+- left + back contact fell 9.2 points;
+- the court-falls low bound was 0.0415.
+
+Rallies that reach the third ball almost never end. The feeder ball (ball 0) and the first robot-to-robot ball (ball 1) fail about a third of the time each and decide nearly every rally.
+- **Mechanism, measured in training [train-log].** As rallies lengthened, the feeder ball's share of pair-court balls fell 0.290 -> 0.150, and training feeder legal fell 0.796 -> 0.731 over the same window.
+- **Pre-launch check (scripts/diag/prelaunch23.sh) [train-diag].** Two arms from model_30200, 300 iterations each at 1e-4:
+
+  | arm | feeder legal | share | ball 0 / ball 1 failure | falls per 1,000 env-s |
+  |---|---|---|---|---|
+  | pair_rally_cap 3 | 0.811 | 0.440 | 0.232 / 0.232 | 2.16 |
+  | no cap | 0.724 | 0.165 | 0.330 / 0.324 | 2.10 |
+
+  The pre-registered rule needed >= +2.0 points of feeder legal: the result was +8.7, so PASS.
+- **Rally run 23** (scripts/rally_run23.sh, run rally-23-cap3) is run 22b's design plus one change, pair_rally_cap 3 (override, checked in params/env.yaml at the smoke). Parent run 22b model_30200; 4,000 iterations at 1e-4 with a cooldown. The early check at model_31400 uses early-r21 unchanged, including D-160's cumulative guards against run 14. The endpoint lines are r19-gate, m1 and target. Seeds are in the ledger (dev 4220105-4220129; training 135-138).
+- **Risk, stated in advance.** Training never shows a pair court a 4th shot, so long-rally play could fade. The partner-legal line (parent - 1.5) and the P(5+) line (parent + 1.0) catch that at the early check.
