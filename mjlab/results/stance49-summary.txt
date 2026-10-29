@@ -1,0 +1,13 @@
+K0: left + back legal 0.3838, forward + right legal 0.8514, falls / 1,000 env-s 2.526
+   forward  feeds   8928 legal 0.877 contact 0.933 onset p50 0.43 peak mean 1.37 m/s
+   left     feeds   4034 legal 0.402 contact 0.548 onset p50 0.27 peak mean 1.59 m/s
+   back     feeds   1971 legal 0.348 contact 0.546 onset p50 0.29 peak mean 1.55 m/s
+   right    feeds   8866 legal 0.825 contact 0.887 onset p50 0.37 peak mean 1.22 m/s
+K2: left + back legal 0.3570, forward + right legal 0.8469, falls / 1,000 env-s 2.852
+   forward  feeds   9453 legal 0.854 contact 0.916 onset p50 0.41 peak mean 1.37 m/s
+   left     feeds   3883 legal 0.368 contact 0.505 onset p50 0.27 peak mean 1.65 m/s
+   back     feeds   2229 legal 0.337 contact 0.586 onset p50 0.31 peak mean 1.57 m/s
+   right    feeds   8354 legal 0.839 contact 0.901 onset p50 0.37 peak mean 1.26 m/s
+rule: K2 - K0 left + back legal -2.68 (needs >= +3.0); forward + right -0.45 (needs >= -2.0); K2 falls 2.852 (needs <= 4.157)
+config check K2 stance_progress max_speed 2.0: ok
+VERDICT: FAIL

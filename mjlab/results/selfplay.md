@@ -1234,3 +1234,22 @@ What the screen does show is uniform slowness. A lagged point mass that follows 
 - falls <= 4.157 per 1,000 env-seconds.
 
 A PASS puts the cap into the next rally run; a FAIL points to the motion-controller route.
+
+## Stance-cap diagnostic (D-174): FAIL (2026-10-30)
+
+scripts/diag/stance49.sh: run 14's task with the feeder-ball direction tally, from run 18b model_29000, 400 iterations at 1e-4, last quarter [train-log].
+
+| arm | left + back legal | forward + right legal | left legal / contact / peak | back legal / contact / peak | falls / 1,000 env-s |
+|---|---|---|---|---|---|
+| K0 stance max_speed 1.0 | 0.3838 | 0.8514 | 0.402 / 0.548 / 1.59 m/s | 0.348 / 0.546 / 1.55 m/s | 2.53 |
+| K2 stance max_speed 2.0 | 0.3570 | 0.8469 | 0.368 / 0.505 / 1.65 m/s | 0.337 / 0.586 / 1.57 m/s | 2.85 |
+
+**Rule.**
+- K2 - K0 left + back: -2.68 points (needs >= +3.0).
+- Forward + right: -0.45 points (needs >= -2.0).
+- Falls: 2.85 (needs <= 4.157).
+- The config check is ok.
+
+**VERDICT: FAIL.**
+
+Paying for stance approach up to 2 m/s does not make the policy faster: peak speed toward left balls moves 1.59 -> 1.65 m/s, and left / back returns get slightly worse. Per D-174 the stance cap is not the lever, and the next step is the motion-controller route. Panel round 49 is convened to design it and to locate where the speed limit sits: the frozen base latent controller, or the residual policy on top of it.
