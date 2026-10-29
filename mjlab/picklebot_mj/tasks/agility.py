@@ -1,0 +1,118 @@
+"""Agility screen tasks (docs/research/footwork-route-2026-10-29.md section 6). Registered when this module is imported;
+picklebot_mj/tasks/__init__.py (the `mjlab.tasks` entry point) does NOT import it, so nothing here reaches other runs.
+`train` cannot see these tasks on its own: launch them through scripts/diag/agility_train.py (imports this module,
+then calls mjlab's train entry point) or scripts/diag/agility_train_run.sh.
+
+Tasks (each built from a deep copy of an existing registered task; only the ball term and the yaw reward change):
+- TASK_AGILITY_RES: rally run 14's task (P = run 18b model_29000 trained on it), lam_r 2 residual, move-only
+  (move_prob 1.0, swing_prob 0) with the deadline drill. Arms A0 and A.
+- TASK_AGILITY_RES_L3: the same at lam_r 3. Arm B (only if triggered).
+- TASK_AGILITY_TEACHER: the flat walking teacher's own task (Picklebot-Teacher-Move-G1) with the deadline drill. Arm F.
+- TASK_AGILITY_BALL: rally run 14's task unchanged plus the feeder-ball direction tally (logging only). Ball-side arm.
+
+Logging: PICKLEBOT_AGILITY_LOG=path appends the cumulative counters every PICKLEBOT_AGILITY_LOG_EVERY env steps
+(default 240 = 10 iterations at 24 steps per env; one host sync each time), as PICKLEBOT_PAIR_LOG does.
+"""
+
+from __future__ import annotations
+
+import dataclasses
+import json
+import os
+from dataclasses import dataclass
+
+import picklebot_mj.tasks as _tasks  # registers the existing tasks (no-op if already imported)
+from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls, register_mjlab_task
+
+from picklebot_mj.tasks import deadline_drill as dd
+from picklebot_mj.tasks.return_stand import BallPhysicsAction, BallPhysicsActionCfg
+
+SRC_RES = _tasks.TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2  # run 14's task
+SRC_TEACHER = _tasks.TASK_TEACHER_MOVE
+
+TASK_AGILITY_RES = "Picklebot-Agility-Deadline-LamR2-G1"
+TASK_AGILITY_RES_L3 = "Picklebot-Agility-Deadline-LamR3-G1"
+TASK_AGILITY_TEACHER = "Picklebot-Agility-Deadline-Teacher-Move-G1"
+TASK_AGILITY_BALL = "Picklebot-Agility-DirTally-LamR2-G1"
+LOG_EVERY = 240
+
+
+@dataclass(kw_only=True)
+class AgilityBallActionCfg(BallPhysicsActionCfg):
+    deadline_drill: bool = False  # replace MoveDrill by DeadlineMoveDrill (needs move_prob > 0)
+    deadline_dist: tuple = dd.DIST_RANGE
+    deadline_v_req: tuple = dd.V_REQ_RANGE
+    deadline_ends_spot: bool = False  # True: a spot ends at its deadline (as MoveDrill's limit); False: untimed limit
+    heading_free_m: float = dd.HEADING_FREE_M
+    direction_tally: bool = False  # feeder-ball outcomes by direction (pair mode)
+
+    def build(self, env) -> "AgilityBallAction":
+        return AgilityBallAction(self, env)
+
+
+class AgilityBallAction(BallPhysicsAction):
+    cfg: AgilityBallActionCfg
+
+    def __init__(self, cfg: AgilityBallActionCfg, env):
+        super().__init__(cfg, env)
+        if cfg.deadline_drill:
+            assert self.drill is not None, "the deadline drill needs move_prob > 0"
+            self.drill = dd.DeadlineMoveDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights,
+                                              dist_range=cfg.deadline_dist, v_req_range=cfg.deadline_v_req,
+                                              deadline_ends_spot=cfg.deadline_ends_spot,
+                                              heading_free_m=cfg.heading_free_m)
+        self.dir_tally = dd.DirectionTally(self, env) if cfg.direction_tally else None
+        self._log_path = os.environ.get("PICKLEBOT_AGILITY_LOG")
+        self._log_every = int(os.environ.get("PICKLEBOT_AGILITY_LOG_EVERY", str(LOG_EVERY)))
+        self._log_last = -1
+
+    def apply_actions(self) -> None:
+        super().apply_actions()
+        if not self._log_path:
+            return
+        step = int(self._env.common_step_counter)  # host-side int: no sync
+        if step % self._log_every or step == self._log_last:
+            return
+        self._log_last = step
+        row = {"step": step}
+        if isinstance(self.drill, dd.DeadlineMoveDrill):
+            row["move"] = self.drill.counters()
+        if self.dir_tally is not None:
+            row["dir"] = self.dir_tally.counters()
+        with open(self._log_path, "a") as f:
+            f.write(json.dumps(row) + "\n")
+
+
+def to_agility_ball(cfg, **flags):
+    """Swap the env cfg's ball term for an AgilityBallActionCfg with the same field values plus flags."""
+    b = cfg.actions["ball"]
+    vals = {f.name: getattr(b, f.name) for f in dataclasses.fields(b) if f.init}
+    vals.update(flags)
+    cfg.actions["ball"] = AgilityBallActionCfg(**vals)
+    return cfg
+
+
+def deadline_task(cfg):
+    """Move-only deadline drill (move_prob 1.0, swing_prob 0) on any move-drill task; free-heading yaw reward."""
+    to_agility_ball(cfg, deadline_drill=True)
+    b = cfg.actions["ball"]
+    b.move_prob, b.swing_prob, b.move_sector_weights, b.adaptive_curriculum = 1.0, 0.0, None, False
+    assert "move_track_yaw" in cfg.rewards, "not a move-drill task"
+    cfg.rewards["move_track_yaw"] = dataclasses.replace(cfg.rewards["move_track_yaw"], func=dd.agility_track_yaw)
+    return cfg
+
+
+def _lam_r(cfg, lam_r: float):
+    cfg.actions["latent"] = dataclasses.replace(cfg.actions["latent"], lam_r=lam_r)
+    return cfg
+
+
+def _register(task_id: str, src: str, build):
+    register_mjlab_task(task_id=task_id, env_cfg=build(load_env_cfg(src)), play_env_cfg=build(load_env_cfg(src, play=True)),
+                        rl_cfg=load_rl_cfg(src), runner_cls=load_runner_cls(src))
+
+
+_register(TASK_AGILITY_RES, SRC_RES, deadline_task)
+_register(TASK_AGILITY_RES_L3, SRC_RES, lambda c: _lam_r(deadline_task(c), _tasks.LAM_R_3))
+_register(TASK_AGILITY_TEACHER, SRC_TEACHER, deadline_task)
+_register(TASK_AGILITY_BALL, SRC_RES, lambda c: to_agility_ball(c, direction_tally=True))
