@@ -1,0 +1,56 @@
+A0 [train-diag] window 0.500-1.000 of 698640 env steps: sector            issued resolved  DA %  untimed %  falls %  peak p50/p90 m/s  sat %  censored
+  0 forward           4587     4209   0.4      99.3      0.0    1.05/ 1.25        0.0      403
+  1 forward-left      4819     4415   1.0      99.3      0.0    1.05/ 1.35        0.0      428
+  2 left              4633     4257   0.3      98.9      0.0    1.25/ 1.45        0.0      416
+  3 back-left         4617     4234   0.9      99.2      0.1    1.25/ 1.45        0.0      412
+  4 back              4599     4136   0.4      99.5      0.0    1.15/ 1.45        0.0      408
+  5 back-right        4621     4243   0.8      99.2      0.0    1.15/ 1.35        0.0      382
+  6 right             4605     4143   0.3      98.8      0.0    1.25/ 1.45        0.0      390
+  7 forward-right     4634     4222   1.0      99.4      0.0    1.15/ 1.35        0.0      417
+  LB (2,3,4): DA   0.5  untimed  99.2  falls   0.1  sat   0.0
+  FR (0,6,7): DA   0.6  untimed  99.2  falls   0.0  sat   0.0
+  lowest untimed arrival over sectors:  98.8
+
+A [train-log] window 0.875-1.000 of 705840 env steps: sector            issued resolved  DA %  untimed %  falls %  peak p50/p90 m/s  sat %  censored
+  0 forward           4643     4272   1.2      98.1      0.0    1.05/ 1.25        0.0      429
+  1 forward-left      4763     4380   1.8      99.3      0.0    1.15/ 1.35        0.0      404
+  2 left              4638     4212   0.7      99.3      0.0    1.25/ 1.45        0.0      423
+  3 back-left         4620     4199   2.0      99.5      0.1    1.25/ 1.45        0.0      388
+  4 back              4633     4255   1.1      99.6      0.0    1.25/ 1.55        0.0      399
+  5 back-right        4701     4336   1.5      99.2      0.0    1.25/ 1.45        0.0      378
+  6 right             4537     4111   0.5      99.0      0.0    1.25/ 1.55        0.0      428
+  7 forward-right     4721     4223   1.9      98.7      0.0    1.15/ 1.35        0.0      419
+  LB (2,3,4): DA   1.3  untimed  99.5  falls   0.0  sat   0.0
+  FR (0,6,7): DA   1.2  untimed  98.6  falls   0.0  sat   0.0
+  lowest untimed arrival over sectors:  98.1
+  A first 1/8: DA(LB)   0.5  DA(FR)   0.5
+
+F [train-log] window 0.875-1.000 of 391200 env steps: sector            issued resolved  DA %  untimed %  falls %  peak p50/p90 m/s  sat %  censored
+  0 forward           5736     4105   0.0      37.9      1.0    1.25/ 1.45        0.0     1647
+  1 forward-left      5537     3801   0.1      38.9      0.7    1.25/ 1.45        0.0     1670
+  2 left              4263     2827   0.1      40.5      0.5    1.25/ 1.45        0.0     1480
+  3 back-left         3334     1858   0.4      24.9      0.8    1.25/ 1.45        0.0     1469
+  4 back              2925     1488   0.1      15.1      0.9    1.15/ 1.35        0.0     1411
+  5 back-right        3201     1732   0.3      22.4      0.4    1.15/ 1.45        0.0     1443
+  6 right             4251     2785   0.1      30.6      0.4    1.35/ 1.55        0.0     1534
+  7 forward-right     5397     3858   0.0      32.3      1.0    1.35/ 1.65        0.0     1536
+  LB (2,3,4): DA   0.2  untimed  26.8  falls   0.7  sat   0.0
+  FR (0,6,7): DA   0.0  untimed  33.6  falls   0.8  sat   0.0
+  lowest untimed arrival over sectors:  15.1
+  F first 1/8: DA(LB)   0.9  DA(FR)   0.4
+
+B: not run
+BALL [train-diag] feeder balls by direction (second half):
+  forward  feeds   2160  legal  88.4  contact  94.3  onset p50/p90  0.43/ 0.67 s  never  19.8  sat   0.0  peak mean  1.38 m/s
+  left     feeds    934  legal  44.5  contact  56.2  onset p50/p90  0.27/ 0.51 s  never   5.4  sat   0.0  peak mean  1.63 m/s
+  back     feeds    497  legal  38.2  contact  58.6  onset p50/p90  0.29/ 0.61 s  never  11.3  sat   0.0  peak mean  1.53 m/s
+  right    feeds   2167  legal  84.8  contact  90.5  onset p50/p90  0.37/ 0.73 s  never  31.3  sat   0.0  peak mean  1.20 m/s
+  ball-side: train left + back feeder legal: +42.35 pt <= +55.00 pt -> PASS
+  ball-side: train forward + right feeder legal: +86.62 pt >= +80.00 pt -> PASS
+  route E ball-side premise: PASS
+  (b) premise: left + back approach saturation share: +0.00 >= +0.25 -> FAIL  (max(2 x forward + right 0.000, 0.25); reported, not a route line)
+
+Pre-registered rule (section 6):
+  rule 1: D0 = DA(FR) - DA(LB) at A0: +0.06 pt >= +10.00 pt -> FAIL
+ROUTE 1: D0 < 10: no direction-specific motor deficit under time pressure. Footwork routes (a)-(e) rejected; next the reading route (f2, the e4 re-test), then (f1).
+route: reading  (B triggered: False)

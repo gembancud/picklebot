@@ -1171,3 +1171,28 @@ The cap did what it was meant to do for the opening balls. It also cost long-ral
 **Reading.** Training feeder legal (~0.86 [train-log]) and the read (0.71) count the same event (`return_done` on a feeder ball). The gap matches D-167's (run 19 model_30200: 85.9 % in a read-like training configuration against 77.3 % in the read). Its source is still unknown.
 
 What the read does show is that the feeder ball is lost on contact, not on the return. Family contact is far below run 14 (easy_forehand 0.77 vs 0.89, reach_deep 0.36 vs 0.53). Left + back contact is 0.45, and court falls are up (0.084 per episode). The rally between robots is close to solved (98.9 % at model_30200). The machine-fed ball, with its spread of families and directions, is now the whole problem, and it is a reach / footwork problem. **Next: phase 2.** First the GPU tests, then the agility screen (scripts/diag/agility_screen.sh, plan docs/research/footwork-route-2026-10-29.md).
+
+## Agility screen (phase 2, 2026-10-30)
+
+scripts/diag/agility_screen.sh main ran with seeds 130-133 (results/agility-summary.txt). Drill: move-only, spots 1-3 m away in 8 sectors, required speed U(1.2, 2.0) m/s, deadline 0.3 s + d / v_req.
+
+**Deadline drill** [train-diag / train-log]. DA = arrivals before the deadline, untimed = arrivals within MoveDrill's limit.
+
+| arm | DA left + back | DA forward + right | untimed left + back | untimed forward + right | peak speed p50 / p90 |
+|---|---|---|---|---|---|
+| A0 (P = run 18b model_29000, learning rate 0) | 0.5 % | 0.6 % | 99.2 % | 99.2 % | 1.05-1.25 / 1.25-1.45 m/s |
+| A (P, 400 iterations at 1e-4) | 1.0 % | 1.3 % | 99.5 % | 98.8 % | 1.05-1.25 / 1.25-1.55 m/s |
+| F (flat walking teacher, 400 iterations) | 0.2 % | 0.0 % | 26.8 % | 33.6 % | 1.15-1.35 / 1.35-1.65 m/s |
+
+**Feeder balls by direction** (BALL: run 14's task, model_29000, learning rate 0) [train-diag]:
+
+| direction | feeds | legal | contact | onset p50 / p90 | peak speed |
+|---|---|---|---|---|---|
+| forward | 2,160 | 88.4 % | 94.3 % | 0.43 / 0.67 s | 1.38 m/s |
+| left | 934 | 44.5 % | 56.2 % | 0.27 / 0.51 s | 1.63 m/s |
+| back | 497 | 38.2 % | 58.6 % | 0.29 / 0.61 s | 1.53 m/s |
+| right | 2,167 | 84.8 % | 90.5 % | 0.37 / 0.73 s | 1.20 m/s |
+
+**Coded route:** rule 1, D0 = DA(FR) - DA(LB) = +0.06 points against the >= 10 needed: FAIL, so ROUTE 1 ("reading": f2, the e4 re-test, then f1).
+
+**Caveat (agent's reading, not a route line).** Rule 1 sits on a floor. DA is about 0-2 % in every direction for every arm, so D0 cannot show a deficit whatever the cause: the required speed band is above the controller's top speed in all directions. The ball-side numbers also argue against late reading. On left and back balls the robot starts moving earlier (onset 0.27-0.29 s against 0.37-0.43 s) and moves faster (1.5-1.6 against 1.2-1.4 m/s), yet makes contact only 56-59 % of the time. The data fit a speed ceiling of about 1.5 m/s combined with the longer travel to left and back balls. Panel round 48 is convened on this.
