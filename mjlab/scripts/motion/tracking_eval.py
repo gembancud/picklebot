@@ -12,6 +12,10 @@ With --per-stroke (D-048), the units are single-stroke segments (picklebot_mj.ta
 instead of whole clips: each env starts on the reference at a segment's first frame and succeeds by reaching its
 last frame without a termination; per-stroke-type numbers average over segments.
 
+Travel (D-184, panel round 53): per episode the pelvis's net ground displacement, robot and reference, from the window
+start to 1.0 s and to the window end (or the termination), plus the mean horizontal speed of each ankle_roll_link while
+it is below STANCE_Z (stance slip), and the env's lowest sampled foot friction. Written per env under "per_env".
+
 Usage (picklebot-mj venv):
     python scripts/motion/tracking_eval.py --checkpoint PATH [--task Picklebot-Tracking-Tennis-G1] [--repeats 4]
         [--seed 4200300] [--per-stroke] [--json OUT]
@@ -41,6 +45,8 @@ FALL_Z = 0.5  # torso_link height (m)
 # A fall must be unintended: the reference torso is still above FALL_Z + REF_MARGIN when the robot's drops below FALL_Z.
 # (LAFAN1 walk3 clips crawl and lie down; the raw measure counted the robot following them as falls. 2026-10-09.)
 REF_MARGIN = 0.1
+STANCE_Z = 0.036 + 0.02  # ankle_roll_link height (m): standing height (amass_g1_import.STAND_ANKLE_Z) + 0.02
+DISP_EARLY_STEPS = 50  # 1.0 s at 50 Hz
 
 
 def scene_body_names(cfg):
@@ -140,6 +146,24 @@ def main():
     ref_torso = list(cmd.cfg.body_names).index("torso_link")
     ref_pelvis = list(cmd.cfg.body_names).index("pelvis")
     robot_data = env.scene["robot"].data
+    # D-184 travel instrument
+    p0r = robot_data.root_link_pos_w[:, :2].clone()
+    p0m = cmd.body_pos_w[:, ref_pelvis, :2].clone()
+    disp = {k: torch.zeros(n, device="cuda") for k in ("r1", "m1", "rE", "mE")}
+    ankles = [list(env.scene["robot"].body_names).index(b) for b in ("left_ankle_roll_link", "right_ankle_roll_link")]
+    slip_sum, slip_n = torch.zeros(n, device="cuda"), torch.zeros(n, device="cuda")
+    step_k = 0
+    try:
+        import re
+        import mujoco
+        mjm = env.sim.mj_model
+        gids = [g for g in range(mjm.ngeom)
+                if re.search(r"(^|/)(left|right)_foot[1-7]_collision$", mujoco.mj_id2name(mjm, mujoco.mjtObj.mjOBJ_GEOM, g) or "")]
+        fr = env.sim.model.geom_friction
+        friction = (fr[:, gids, 0].min(dim=-1).values if fr.dim() == 3 else fr[gids, 0].min().expand(n)).float()
+    except Exception as e:  # noqa: BLE001 (reported, not fatal)
+        print("foot friction unavailable:", e)
+        friction = torch.full((n,), float("nan"), device="cuda")
     cause = ["" for _ in range(n)]
     sums = defaultdict(lambda: torch.zeros(n, device="cuda"))
     frames = torch.zeros(n, device="cuda")
@@ -152,6 +176,19 @@ def main():
         # D-175 speed ladder: horizontal pelvis speed, robot vs reference, before the step (no auto-reset state).
         sums["pelvis_speed"] += torch.where(~done, robot_data.root_link_lin_vel_w[:, :2].norm(dim=-1), 0.0)
         sums["ref_pelvis_speed"] += torch.where(~done, cmd.body_lin_vel_w[:, ref_pelvis, :2].norm(dim=-1), 0.0)
+        dr = (robot_data.root_link_pos_w[:, :2] - p0r).norm(dim=-1)
+        dm = (cmd.body_pos_w[:, ref_pelvis, :2] - p0m).norm(dim=-1)
+        if step_k == DISP_EARLY_STEPS:
+            disp["r1"] = torch.where(~done, dr, torch.full_like(dr, float("nan")))
+            disp["m1"] = torch.where(~done, dm, torch.full_like(dm, float("nan")))
+        disp["rE"] = torch.where(~done, dr, disp["rE"])  # last live value: window end or the step before termination
+        disp["mE"] = torch.where(~done, dm, disp["mE"])
+        az = robot_data.body_link_pos_w[:, ankles, 2]
+        av = robot_data.body_link_lin_vel_w[:, ankles, :2].norm(dim=-1)
+        st = (az < STANCE_Z) & (~done).unsqueeze(-1)
+        slip_sum += (av * st).sum(-1)
+        slip_n += st.sum(-1)
+        step_k += 1
         with torch.no_grad():
             obs, _, dones, _ = wrapped.step(policy(obs))
         ref.robot_body_pos_w, ref.robot_body_quat_w = cmd.robot_body_pos_w, cmd.robot_body_quat_w
@@ -183,6 +220,11 @@ def main():
                          "fall": float(fell[sel].float().mean()), "fall_raw": float(fell_raw[sel].float().mean()),
                          **{k: float((v[sel] / f).mean()) for k, v in sums.items()},
                          "causes": sorted({cause[i] for i in torch.where(sel)[0].tolist() if cause[i]})})
+    per_env = [{"unit": int(unit[i]), "clip": names[units[int(unit[i])][0]],
+                "disp_robot_1s": float(disp["r1"][i]), "disp_ref_1s": float(disp["m1"][i]),
+                "disp_robot": float(disp["rE"][i]), "disp_ref": float(disp["mE"][i]),
+                "stance_slip_mps": float(slip_sum[i] / slip_n[i].clamp(min=1)), "foot_friction": float(friction[i]),
+                "success": bool(success[i])} for i in range(n)]
     f = frames.clamp(min=1)
     summary = {"checkpoint": args.checkpoint, "seed": args.seed, "cmd_delay_ms": args.cmd_delay_ms, "episodes": n,
                "clips": n_clips,
@@ -191,6 +233,7 @@ def main():
                "fall_rate_raw": float(fell_raw.float().mean()),
                **{k: float((v / f).mean()) for k, v in sums.items()},
                "units_all_success": int(sum(p["success"] == 1.0 for p in per_clip)),
+               "per_env": per_env,
                "termination_causes": dict(sorted(defaultdict(int, {c: cause.count(c) for c in set(cause) if c})
                                                  .items(), key=lambda x: -x[1]))}
     by_stroke = defaultdict(list)

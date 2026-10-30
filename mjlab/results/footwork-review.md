@@ -72,3 +72,28 @@ A, by majority (4 of 5):
 ### Decision
 
 D-182.
+
+## Round 53 (2026-10-31): DECODER-OK is blind to travel
+
+**Inputs:** results/footwork-round53-brief.md.
+
+**Correction checks.** All five agree that D-183's premise metric ("success") was wrong. Its z-only anchor termination cannot see ground travel; D-176 had already said so. The printed verdicts stand, but they do not answer the question.
+
+**Is the 0.54 ratio real?** All five say very likely:
+- global MPKPE agrees with the speed gap, and it is a position quantity;
+- the reference velocities are correct;
+- the fps chain is correct;
+- the same ratio appears in the D-175 ladder;
+- H0's objective explains it: re-anchoring to the robot, an anchor kernel of std 0.3 and a lenient velocity kernel.
+
+**Votes:** 5 of 5 for (c), the decisive check first. Then:
+
+| Reviewer | After the check | Thresholds |
+|---|---|---|
+| Coach | (a) if ARTEFACT, (b) if a gap | 0.85 / 0.70 |
+| Experiment design | 0.95 / 0.90 lines, a TR instrument check, and the LAFAN control reported | 0.95 / 0.90 |
+| RL | route (b), data-only or an objective change depending on the LAFAN control | 0.85 / 0.70 |
+| Motion | the displacement ratio, a slip-by-friction CONTACT line, and an objective change in (b) | 0.85 |
+| Architecture | the displacement ratio at 1 s and at the end; (b) with a full-3D anchor termination | 0.9 / 0.8 |
+
+**Decision (D-184):** the panel median, 0.90 / 0.80, with experiment design's instrument check, motion's CONTACT line and RL's LAFAN control for the sub-route.

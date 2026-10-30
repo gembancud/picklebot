@@ -4660,3 +4660,44 @@ The claim is limited to mean actions. fw1c's stochastic MIXED stands for any PPO
   - the frozen amass_footwork_npz.sh direction rule's pass share.
 
 The panel then picks step 2's route from these verdicts.
+
+
+## D-184 - Step 2 premise: DECODER-OK / H0-OK as printed, but the premise metric was blind to travel; a travel check first (2026-10-31)
+
+**fw2p** (D-183; results/fw2p-summary.txt). The verdicts stand as printed: **DECODER-OK / H0-OK**.
+- Clips: 128 recorded with mean actions (seed 171), 117 accepted by amass_g1_import unchanged. The 11 rejects were all for skate.
+- Fast content: fast_lateral_back_s 716 s before acceptance, 671 s after. The direction rule passes 117 of 117.
+- Tracking success on FAST windows: H0 0.991, latent-07 0.994.
+
+**Crash and rerun.** The first tracking_eval on seed 4220214 crashed on clip-name mapping before writing any output. The fix made after footwork_step2_premise.sh was frozen only maps the `fwfast_` prefix to `footwork_fast`; there is no scoring change. tracking_eval.py sha256 was 46779c30 (0d47dbf) before the fix and 4b52368b (c41ea27) after. The same seed was rerun, with no result seen in between. Ledger: 4220214 had one crashed attempt without output, then one scored run.
+
+**The premise was mis-specified** (panel round 53, mjlab/results/footwork-review.md, 5 of 5).
+- "Success" is survival under a z-only anchor (bad_anchor_pos_z_only, 0.25 m) and relative end-effector terms. It cannot see ground travel; D-176 had already said "success ignores speed". The consequence "route D not needed" is **suspended, not relabelled**, and is not cited as evidence for route (a). This was the panel's pre-registration error, not an execution error.
+- **A reported quantity contradicts it.** The trackers travel at about 0.52-0.55 of reference pelvis speed: H0 0.53 / 0.99 m/s, latent-07 0.54 / 0.99. Global MPKPE is about 0.83-0.96 m, against 0.05 m root-relative.
+  - Experiment design, motion and architecture cross-checked: the global position error is what the speed gap predicts (0.92x at the median; per-window correlation 0.67 / 0.52).
+  - Reference velocities match finite differences of positions (0.999).
+  - The fps chain is correct.
+  - The same ratio appears in the D-175 speed ladder.
+- **The likely cause is in H0's objective** (s5c-03b env.yaml; mjlab commands.py):
+  - the reference is re-anchored to the robot in xy and yaw every step, so the pose terms pay nothing for travel;
+  - motion_global_root_pos (std 0.3, weight 0.5) stops paying beyond about 0.6 m of lag;
+  - body linear velocity (std 1.0) still pays about 0.8 at half speed;
+  - nothing terminates on xy drift.
+- **Implication (all five):** the rally policy acts through the H1 decoder, so it may inherit a travel ceiling of about 0.55x. That fits the left / back misses at about 1.1-1.5 m/s against the body's BODY-OK of about 2 m/s.
+
+**Decision: (c), the decisive check first** (scripts/diag/footwork_travel_check.sh, sha256 5515d0e0; rule picklebot_mj/travel_rule.py, sha256 2e8b8f55; frozen before it runs).
+- **Instrument:** tracking_eval.py (sha256 18c472a3) adds a per-env travel instrument. It records net pelvis displacement, robot and reference, at 1 s and at the window end; stance slip of the ankles below 0.056 m; and the env's lowest foot friction. It was smoke-tested on the speed ladder (dev seed 4220219, reported only): displacement ratio 0.506 against speed ratio 0.474.
+- **Reads:**
+  - T1: H0 on footwork-fast, seed 4220217.
+  - T2: latent-07 on footwork-fast, seed 4220217, paired with T1.
+  - T3: H0 on its own tennis-lafan3, LAFAN1 windows as the control, seed 4220218.
+- **Routing** (thresholds are the panel median of the five proposals; 0.90 is D-183's own "expresses" floor; D = median robot / reference displacement over FAST envs):
+  - **INSTRUMENT:** |TR - median speed ratio| > 0.05 -> report, re-ask the panel.
+  - **CONTACT:** D_H0 < 0.80 and slip > 0.15 and D_H0 >= 0.90 in the friction >= 0.6 envs -> fix contact first.
+  - **TRAVEL-OK:** D_H0 and D_lat >= 0.90 -> route (a).
+  - **DECODER-GAP:** D_H0 >= 0.90 and D_lat < 0.80 -> decoder-only re-distil.
+  - **TRAVEL-GAP:** D_H0 < 0.80 -> route D. Sub-route: **COVERAGE** if D_lafan >= 0.90 (add footwork-fast, objective unchanged); else **OBJECTIVE** (the objective must reward travel). Candidates for round 54:
+    - global root position std 0.3 -> 1.0 (RL, motion);
+    - a full-3D anchor termination at 0.5 m (architecture).
+  - **MIXED:** otherwise -> re-ask the panel.
+- **From now on:** any "the prior expresses X footwork" gate carries a ground-travel line, not success alone.
