@@ -4460,3 +4460,49 @@ Two implementation bugs in the name filter were fixed after the first runs, with
 - That points again at selection or control (D-080 / D-082) rather than reference content.
 
 The raw data and CSVs are never committed. Only the scripts, the HF listing and summary statistics are.
+
+
+## D-179 - Footwork phase, step 1: a footwork specialist built for speed (2026-10-31)
+
+After the README showcase the agent recommended a footwork phase in three steps:
+1. a footwork specialist (a flat teacher built for speed);
+2. putting its footwork into the motion layer (H0 / H1);
+3. rebuilding the rally player on top.
+
+The user approved: "yes go, start step 1. do the loop actually so you dont keep waiting on me for the decision when its the panels job to hillclimb". The D-169 loop resumes on the footwork phase. The panel directs between steps, and the target is unchanged.
+
+**Why the walking teacher cannot run (two reward defects, found reading the code after bodyspeed54's VOID).**
+1. **move_track_lin_vel** scores the internal command with exp(-|v_cmd - v|^2 / 0.5^2). At a 2.5 m/s command and 1.0 m/s the reward is exp(-9), about 1e-4, so there is no gradient toward the faster speed. bodyspeed54 raised the cap and kept this kernel.
+2. **`pose`** (mjlab variable_posture, weight 1.0) picks its standing / walking / running tolerance from the twist command. The picklebot tasks hold that command at zero (the move command is internal, D-041), so every step of every move episode has been scored with the standing tolerance.
+
+Both fit the uniform ~1.05-1.35 m/s peaks in every agility and body-speed arm (D-174 to D-177). The VOID verdicts stand as recorded.
+
+**The specialist** (tasks/footwork_specialist.py; new files; observations unchanged, so model_15900 warm-starts it):
+- **The walking teacher's task**, with FootworkDrill, a first-entry deadline drill:
+  - spots 1-5 m away in the 8 sectors, inside the Fast25 box (court + runoff);
+  - deadline 0.3 s + d / v_req, with v_req ~ U(1.2, 2.2) m/s; the arrival bonus pays only in time;
+  - internal command toward the spot at min(2.5, 3 d) m/s, braking radius 0.83 m;
+  - heading free beyond 1 m (turn-and-run and crossovers allowed), facing the net inside it.
+- **fw_track_lin_vel:** the same kernel with std = 0.5 max(1, |v_cmd|).
+- **fw_posture:** variable_posture with the regime read from the drill's command. Same stds and thresholds.
+- **Episodes** last 20 s.
+- **Instrument:** the best 1-s mean speed toward the spot, booked per sector with bodyspeed_rule's keys.
+
+**Arms** (scripts/diag/footwork_fw1.sh): from teacher-move-01 model_15900, 1,500 iterations, 4,096 envs, ScheduledPPO 3e-4 (warm-up 50, KL guard 0.05, std floor 0.05).
+- **S** (training seed 159): the specialist.
+- **SA** (seed 160): S plus the AMP style reward (picklebot_mj/style.py, weight 0.5, wrists excluded). The expert set is LAFAN1, mirrored LAFAN1 and amass-footwork.npz: 69 AMASS-G1 clips, 9.0 min. The selection rule is frozen in scripts/motion/amass_footwork_npz.sh: moving >= 30 % of frames, >= 50 % of moving frames lateral or backward. The clip list is in results/amass-footwork-clips.json.
+- **Measure:** each arm's last checkpoint is read at learning rate 0 on Picklebot-Footwork-Measure-G1 (spots 3-5 m), 100 iterations, 4,096 envs, stochastic actions, seeds 161 / 162.
+
+**Coded rule** (picklebot_mj/footwork_rule.py): bodyspeed_rule.route per arm, unchanged:
+- **VOID** if forward < 1.8 m/s, censored > 10 % or an override missing;
+- **BODY-OK** if left, back and right >= 1.8 m/s, untimed arrival >= 90 % in every sector, and falls <= 4.157 per 1,000 env-s;
+- **BODY-LIMIT** if back < 1.3 and (left or right) < 1.3;
+- **MIXED** otherwise.
+
+The arm carried forward is chosen by rank, then min(left, back, right) sustained speed, with ties within 0.1 m/s going to SA.
+
+**Next, by the panel.**
+- BODY-OK: step 2's premise. Record the carried-forward teacher's clips and score them through latent-07's encoder (route D's smallest experiment, footwork-route doc section 5d), then the H0 / H1 rebuild with footwork weighting.
+- MIXED or BODY-LIMIT: the panel picks the next specialist change. Candidates are the iteration budget, the command cap and the style weight. A BODY-LIMIT answers the body question, and the panel re-scopes the footwork target.
+
+No dev or final seeds are used.
