@@ -111,6 +111,7 @@ def main():
     ap.add_argument("--sim2real-only", choices=["obs", "act", "noise"], default=None,
                     help="Stage 5E diagnostics only: keep just one sim-to-real effect")
     ap.add_argument("--json", default=None)
+    ap.add_argument("--sector", type=int, default=None, help="D-183 videos: move-drill spots in this sector (0-7)")
     ap.add_argument("--keep-corruption", action="store_true",
                     help="D-182 diagnostic: keep the task's observation corruption (noise) on in this evaluation")
     args = ap.parse_args()
@@ -131,6 +132,8 @@ def main():
     if args.swing_families:
         cfg.actions["ball"].swing_mix = FeedMix({f: 1.0 for f in args.swing_families.split(",")})
     cfg.actions["ball"].move_sector_weights = None  # evaluation samples spot directions uniformly
+    if args.sector is not None:  # D-183 review videos: spots almost always in one sector (MoveDrill needs w > 0)
+        cfg.actions["ball"].move_sector_weights = tuple(1.0 if i == args.sector else 1e-4 for i in range(8))
     cfg.actions["ball"].adaptive_curriculum = False  # and never adapts the feed or sector mix
     cfg.actions["ball"].reach_curriculum = False  # reach families are always evaluated at full range
     cfg.actions["ball"].lp_curriculum = False  # and every family at its full range (D-066)

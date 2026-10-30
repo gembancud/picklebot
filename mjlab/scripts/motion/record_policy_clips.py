@@ -21,6 +21,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 import mjlab.tasks  # noqa: F401
+import picklebot_mj.tasks.footwork_specialist  # noqa: F401  (D-183: the footwork specialist tasks)
 import numpy as np
 import torch
 from mjlab.envs import ManagerBasedRlEnv

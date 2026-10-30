@@ -4622,3 +4622,41 @@ The stochastic read therefore measures tolerance to training noise, not the teac
 - **Not run:** RL's entropy_coef 0.001 is not a run of its own. It becomes the setting of any later PPO fine-tune from this teacher.
 
 Seeds 4220210-4220213 are ledgered, and 4220210 / 4220211 are never reused. Future drivers give reads their own tags (never a training tag).
+
+
+## D-183 - Step 1 confirmed: BODY-OK under mean actions; heading gate says step 2's clips (2026-10-31)
+
+**Frozen confirmation** (D-182; scripts/diag/footwork_fw1d_confirm.sh; results/fw1d-summary.txt): fw1b-S model_16600, mean actions, Measure60, dev seed 4220212.
+
+| | forward | left | back | right |
+|---|---|---|---|---|
+| sustained (m/s) | 1.95 | 2.00 | 2.10 | 1.92 |
+
+- untimed arrival 0.990 or higher in every sector;
+- falls 0.358 per 1,000 env-s, censored 0.077;
+- config check clean.
+- The coded verdict is **BODY-OK**, so **STEP1 = BODY-OK(mean-action)**.
+
+The claim is limited to mean actions. fw1c's stochastic MIXED stands for any PPO fine-tune from this checkpoint.
+
+**Read CN** (reported; observation corruption on; seed 4220213): BODY-OK, untimed arrival 0.979 or higher, falls 0.537. So the stochastic read's held-arrival failure came from action noise (std 0.51), not from observation noise.
+
+**Heading gate** (coach, pre-registered in D-182): 0.000 of back, back-left and back-right moves were more than 90 degrees from facing the net at mid-move. About 4,400-4,600 moves per sector were counted; no move exceeded 70 degrees, and backward moves were mostly within 0-30 degrees. The robot backpedals facing the net; it does not turn and run. The verdict is **STEP-2-CLIPS**, and the heading limit is not needed now.
+
+**Step 2's premise checks** (scripts/diag/footwork_step2_premise.sh, sha256 b09d3d38052dc1a1916c31389397800ed51d9c11a7608b5c5ddb87c41a882bf7, frozen before it runs; evaluation only):
+- **Videos:** mean actions, sector 4 (back) and sector 2 (left), dev seeds 4220215 / 4220216. stage2_eval gains --sector.
+- **Clips:** record_policy_clips.py with mean actions on the Settle task (spots 1-5 m), 128 envs x 30 s, segments of 6 s or more, fallen segments dropped, training seed 171. The recorder now imports the footwork tasks.
+- **Acceptance:** amass_g1_import.py unchanged.
+- **Encoder path:** accepted clips go into footwork-fast.npz (clip_source 1; new eval-only task Picklebot-Tracking-FootworkFast-G1). tracking_eval.py --per-stroke, 4-s windows, 4 repeats, for H0 (s5c-03b model_63300) and latent-07, paired on dev seed 4220214.
+
+**Frozen rule.** FAST windows are those whose reference pelvis speed is >= 1.0 m/s (the old walking teacher's median was 0.72, D-081).
+- **latent-07:** FAST success >= 0.95 is **DECODER-OK** (route D not needed; the gap is the prior's selection). < 0.90 is **DECODER-GAP** (route D's premise). Otherwise **MIXED**.
+- **H0:** FAST success >= 0.95 is **H0-OK**; otherwise **H0-GAP** (fine-tune H0 first).
+- **Reported:**
+  - overall success;
+  - clips kept and accepted;
+  - reject reasons;
+  - fast_lateral_back_s before and after acceptance (STRIPPED if after < 0.5 x before);
+  - the frozen amass_footwork_npz.sh direction rule's pass share.
+
+The panel then picks step 2's route from these verdicts.

@@ -1309,6 +1309,20 @@ register_mjlab_task(task_id=TASK_TRACKING_SPEED_LADDER, env_cfg=_tracking_speed_
                     play_env_cfg=_tracking_speed_ladder(True), rl_cfg=_tracking_huge_rl_cfg(),
                     runner_cls=MotionTrackingOnPolicyRunner)
 
+# D-183 (footwork phase step 2 premise): the footwork specialist's own mean-action clips (fw1b-S model_16600, recorded and
+# accepted by scripts/diag/footwork_step2_premise.sh; all clip_source 1), for tracking_eval.py --per-stroke. Evaluation only.
+TASK_TRACKING_FOOTWORK_FAST = "Picklebot-Tracking-FootworkFast-G1"
+FOOTWORK_FAST_MOTION = str(_MOTION_DIR.parent / "footwork-fast" / "footwork-fast.npz")
+
+
+def _tracking_footwork_fast(play=False):
+    return paddle_tracking_env_cfg(FOOTWORK_FAST_MOTION, play=play)
+
+
+register_mjlab_task(task_id=TASK_TRACKING_FOOTWORK_FAST, env_cfg=_tracking_footwork_fast(),
+                    play_env_cfg=_tracking_footwork_fast(True), rl_cfg=_tracking_huge_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)
+
 
 # Stage 5E runs 2+ (D-102): residual PPO on drill v2 (sim-to-real on) around the consolidated base of run 1
 # (s5e-01-consolidate, its checkpoint at the stop). PICKLEBOT_V2_BASE overrides the base for checks only.
