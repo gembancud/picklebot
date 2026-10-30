@@ -1298,3 +1298,32 @@ scripts/diag/courtstance50.sh: run 14's task with the feeder-ball direction tall
 **Rule.** KF - mean(K0) on left + back was +2.88 points. It needed both >= +3.0 and >= 2 x A/A drift (2 x 2.48 = 4.96). Forward + right was +0.01 (needs >= -2.0); falls 2.78 (needs <= 4.157). The config check is ok. **VERDICT: FAIL.**
 
 The direction is positive: earlier onset (0.25 vs 0.27 s) and peak speed +0.07-0.10 m/s. But the size sits inside the A/A drift, and the A/A drift itself is 2.5 points over 400 iterations. That drift is worth recording for every later 400-iteration screen. Per D-176, the flag is not carried into a rally run. Route E continues with ball 1, the first robot-to-robot ball, which fails 0.26-0.30 in the read against 0.01-0.04 for balls 3-5.
+
+## Ball-index tally (D-177): OTHER (2026-10-30)
+
+scripts/diag/ballidx51.sh ran the new opt-in BallIndexTally (picklebot_mj/tasks/ball_index.py; task Picklebot-Agility-BallIdx-ReadCfg-LamR2-G1). It started from run 22b model_30200 with read-like overrides and no cap, at learning rate 0 for 200 iterations on 4,096 envs, training seed 153, second half, pair courts [train-diag].
+
+| ball k | balls | legal | contact | legal given contact | speed p50 / p90 | receiver distance p50 / p90 | left + back share | left + back / forward + right failure |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 3,342 | 0.685 | 0.783 | 0.875 | 9.52 / 10.64 m/s | 1.36 / 2.68 m | 0.381 | 0.463 / 0.223 |
+| 2 | 2,266 | 0.836 | 0.902 | 0.927 | 9.37 / 10.35 | 1.34 / 2.50 | 0.230 | 0.233 / 0.143 |
+| 3+ | 21,343 | 0.932 | 0.968 | 0.963 | 9.40 / 10.26 | 1.04 / 1.94 | 0.250 | 0.110 / 0.053 |
+
+Failure by receiver distance to the predicted interception:
+
+| distance | k = 1 | k >= 3 |
+|---|---|---|
+| 0.5 m | 0.05 | 0.01 |
+| 1.0 m | 0.15 | 0.03 |
+| 2.0 m | 0.54 | 0.25 |
+
+**Coded rule.** Each route needs both its lines; none fired.
+- PACE: speed p50 9.52 >= 10.40 FAIL; tercile 0.395 >= 0.465 FAIL.
+- REACH: distance p50 1.36 >= 1.54 FAIL; tercile 0.647 >= 0.189 pass.
+- DIRECTION: left + back share 0.381 >= 0.499 FAIL; 0.463 >= 0.447 pass.
+
+**VERDICT: OTHER.**
+
+**Reading.** Ball 1 does not arrive faster. It arrives a little wider (+0.32 m at p50) and more often left or back. But at the same distance the receiver fails 3-5x more than on later balls, and it fails mostly on contact (0.78 vs 0.97). That points at the receiver's state at ball 1 (it has stood through the partner's feeder ball) or at a shot property the tally does not measure (spin, height, bounce depth). Next is a second tally on those variables.
+
+**Housekeeping.** A full CPU test run showed about 53 failures in older test files (test_feeds, test_swing_hint, test_style, test_task_return_stand). They predate today: for example, scripts/tune_feed.py's fake term lacks `replay`, which return_stand reads since 2026-10-21. This is flagged as a separate task.

@@ -13,6 +13,8 @@ Second screen (D-172; scripts/diag/agility_screen2.sh): the same three deadline 
 first-entry deadline arrival (deadline_arrival_mode "first_entry"; command law unchanged, it passes the coded positive
 control picklebot_mj/agility_control.py):
 - TASK_AGILITY2_RES (arms A0, A), TASK_AGILITY2_RES_L3 (arm B), TASK_AGILITY2_TEACHER (arm F).
+Ball-index diagnostic (scripts/diag/ballidx51.sh): TASK_AGILITY_BALLIDX, rally run 22b's training task plus the handed-ball
+tally (tasks/ball_index.py; PICKLEBOT_BALLIDX_LOG=path, every PICKLEBOT_BALLIDX_LOG_EVERY env steps, default 240).
 
 Logging: PICKLEBOT_AGILITY_LOG=path appends the cumulative counters every PICKLEBOT_AGILITY_LOG_EVERY env steps
 (default 240 = 10 iterations at 24 steps per env; one host sync each time), as PICKLEBOT_PAIR_LOG does.
@@ -53,6 +55,7 @@ class AgilityBallActionCfg(BallPhysicsActionCfg):
     heading_free_m: float = dd.HEADING_FREE_M
     deadline_arrival_mode: str = "hold"  # "first_entry": deadline arrival = first entry within 0.25 m (D-172)
     direction_tally: bool = False  # feeder-ball outcomes by direction (pair mode)
+    ball_index_tally: bool = False  # handed-ball outcomes by rally index, speed, direction, distance (pair mode)
 
     def build(self, env) -> "AgilityBallAction":
         return AgilityBallAction(self, env)
@@ -71,12 +74,32 @@ class AgilityBallAction(BallPhysicsAction):
                                               heading_free_m=cfg.heading_free_m,
                                               arrival_mode=cfg.deadline_arrival_mode)
         self.dir_tally = dd.DirectionTally(self, env) if cfg.direction_tally else None
+        self.ballidx = None
+        if cfg.ball_index_tally:
+            from picklebot_mj.tasks.ball_index import BallIndexTally
+            self.ballidx = BallIndexTally(self, env)
         self._log_path = os.environ.get("PICKLEBOT_AGILITY_LOG")
         self._log_every = int(os.environ.get("PICKLEBOT_AGILITY_LOG_EVERY", str(LOG_EVERY)))
         self._log_last = -1
+        self._bi_path = os.environ.get("PICKLEBOT_BALLIDX_LOG") if self.ballidx is not None else None
+        self._bi_every = int(os.environ.get("PICKLEBOT_BALLIDX_LOG_EVERY", str(LOG_EVERY)))
+        self._bi_last = -1
+
+    def _ballidx_log(self) -> None:
+        """PICKLEBOT_BALLIDX_LOG: the ball-index tally's cumulative counters every PICKLEBOT_BALLIDX_LOG_EVERY env steps
+        (one host sync each time)."""
+        step = int(self._env.common_step_counter)  # host-side int: no sync
+        if step % self._bi_every or step == self._bi_last:
+            return
+        self._bi_last = step
+        from picklebot_mj.tasks.ball_index import META
+        with open(self._bi_path, "a") as f:
+            f.write(json.dumps({"step": step, "ballidx": self.ballidx.counters(), "ballidx_meta": META}) + "\n")
 
     def apply_actions(self) -> None:
         super().apply_actions()
+        if self._bi_path:
+            self._ballidx_log()
         if not self._log_path:
             return
         step = int(self._env.common_step_counter)  # host-side int: no sync
@@ -153,3 +176,10 @@ _register(TASK_AGILITY_BALL_S2, SRC_RES, lambda c: stance_cap(to_agility_ball(c,
 
 TASK_AGILITY_BALL_CFS = "Picklebot-Agility-DirTally-CourtStance-LamR2-G1"  # D-176: court feeds' own stance target
 _register(TASK_AGILITY_BALL_CFS, SRC_RES, lambda c: to_agility_ball(c, direction_tally=True, court_feed_stance=True))
+
+# Ball-index diagnostic (scripts/diag/ballidx51.sh): rally run 22b's training task (drill courts, 120 s episodes) with the
+# handed-ball tally on (tasks/ball_index.py; logging only, PICKLEBOT_BALLIDX_LOG). The read-like overrides are passed on
+# the command line, as run 22b's are.
+SRC_22B = _tasks.TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_DRILLCOURTS_EP120
+TASK_AGILITY_BALLIDX = "Picklebot-Agility-BallIdx-ReadCfg-LamR2-G1"
+_register(TASK_AGILITY_BALLIDX, SRC_22B, lambda c: to_agility_ball(c, ball_index_tally=True))
