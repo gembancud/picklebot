@@ -694,3 +694,31 @@ The majority (3) chose the speed ladder. D-175 below.
 - **Without a controller or footwork change:** feeder legal tops out at about 0.75-0.80; P(5+) about 0.45-0.55; M1 about 10-20 %.
 - **With left / back at about 70-80 %:** feeder legal about 0.83-0.87, P(5+) about 0.6-0.75.
 - **The 0.80 target** needs ball 0 and ball 1 to fail about 7-8 % or less each. That is under 15 % likely even with the fix.
+
+## Round 50 (2026-10-30): after four within-reach screens failed
+
+**Correction check (agreed).**
+- **The 400-iteration screens cannot detect the effects tested.** Seed-to-seed training drift dominates the binomial error: per-arm sigma is about 1.7-2.2 points against a binomial 0.6-0.8. The minimum detectable effect at 80 % power is about 5-7 points. Monte Carlo puts the power of the coded rule (>= +3.0 and >= 2 x |A/A|) for a true +3 at about 0.29-0.35. So the FAILs mean "nothing as large as about 5-7 points", not "no effect". Longer screens add drift; only replicate seeds shrink sigma (3+3 arms give an MDE of about 3.3-4.4 points).
+- **idlerec53 had no manipulation check.**
+  - Its spot_progress episode reward is the same as the controls' (0.165 vs 0.167 / 0.172).
+  - The control arms already pay the pull whenever the robot's last ball had contact.
+  - The split tally was off.
+
+  It is a non-test, not a refutation.
+- **court_feed_stance had a scope defect** (architecture). In pair mode the flag also retargeted robot-to-robot hand-offs, toward a vy-blind spot. Fixed to launcher feeds only (D-177), with a test.
+- **Route rules that combine a gap with a tercile spread must also require that the two agree in sign** (ballidx52's STATE fired on a variable pointing the wrong way).
+- **The speed ladder does not test the body.** Its successes ran at 35-65 % of the reference speed; it is not relabelled.
+
+**The real constraint (all five).** It is left / back footwork speed: feeder balls in those directions are 27 % of feeds at 0.34-0.38 legal. P(5+) is about s0 x s1 x s2 x s3 x s4, about 0.66 x 0.72 x 0.85 x 0.97 x 0.97 = 0.39. Reaching 0.80 needs s0 and s1 at about 0.93-0.96 each. Estimates:
+- 0.80 on this controller: under 5 % (all five);
+- M1: about 10-15 %;
+- within-reach ceiling: about 0.45-0.55.
+
+**Votes.**
+- Motion (F): body-speed test, the walking teacher with its command cap raised to 2.5 m/s.
+- Experiment design (D): H0 fine-tune on time-scaled clips.
+- RL (F): stock G1 velocity task at 2.0-2.5 m/s.
+- Coach (E): report now, plus a ball-1 inheritance tally.
+- Architecture (E): report now, plus a 3+3-seed re-screen of the fixed court_feed_stance.
+
+**Decision.** Three of five want a body-capability test first. By the tie rule on form (least new code), that is motion's walking-teacher test. The two E votes are honoured afterwards: whatever the body test says, the agent reports to the user next, with the download question.

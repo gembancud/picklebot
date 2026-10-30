@@ -4395,3 +4395,23 @@ latent_barrier_check.py coverage is run at lam 2 and lam 5. Results are binned b
 - the config check finds court_feed_stance: true.
 
 A PASS puts court_feed_stance into the next rally run; a FAIL sends E on to ball-1 work. Training seeds 150-152.
+
+
+## D-177 - Panel round 50: the screens were underpowered; a body-speed test, then report to the user (2026-10-30)
+
+Four within-reach screens failed: the stance cap, court_feed_stance (+2.88), the anchor, and idle recovery (+0.79 on ball 1). Panel round 50 (mjlab/results/selfplay-review.md) found the following.
+- **The screens were underpowered.** At 400 iterations from a converged parent, seed-to-seed drift gives an MDE of about 5-7 points, and the power for a true +3 effect is about 0.3. The FAILs are recorded as "nothing as large as about 5-7 points". From now on, any shaping screen uses at least 3+3 seeds and carries a dose / manipulation line.
+- **idlerec53 delivered no measurable dose.** It is a non-test.
+- **court_feed_stance also retargeted hand-offs.** It is fixed to launcher feeds only, with a test.
+- **Route rules must check sign agreement.**
+- **The real constraint is left / back footwork speed.** All five put 0.80 under 5 % on this controller and the within-reach ceiling at about 0.45-0.55.
+
+**Decision.** Three of five voted for a body-capability test first. The least-code form is motion's: scripts/diag/bodyspeed54.sh fine-tunes the flat walking teacher (teacher-move-01 model_15900) on a new task id. The only changes are the move-drill command cap 1.0 -> 2.5 m/s, with the braking radius kept, and a wider spot range if needed. It runs 1,500 iterations at 4,096 envs, training seed 158. The read is sustained pelvis speed per sector.
+
+**Coded rule.**
+- **VOID** if any of these: forward < 1.8 m/s (positive control); censored share > 10 %; an override is missing.
+- **BODY-OK** if back, left and right are all >= 1.8 m/s, untimed arrival >= 90 % in every sector, and falls <= 4.157 per 1,000 env-seconds.
+- **BODY-LIMIT** if back < 1.3 m/s and (left or right) < 1.3 m/s.
+- **MIXED** otherwise.
+
+Whatever the verdict, the agent then reports to the user (the two E votes) with the best policies, these findings and the decision only the user can take. That decision is whether to download faster locomotion data (side-shuffle, backpedal, running) for a new motion prior, or to rescope / accept the ceiling.
