@@ -138,6 +138,8 @@ def main():
     done = torch.zeros(n, dtype=torch.bool, device="cuda")
     success, fell, fell_raw = torch.zeros_like(done), torch.zeros_like(done), torch.zeros_like(done)
     ref_torso = list(cmd.cfg.body_names).index("torso_link")
+    ref_pelvis = list(cmd.cfg.body_names).index("pelvis")
+    robot_data = env.scene["robot"].data
     cause = ["" for _ in range(n)]
     sums = defaultdict(lambda: torch.zeros(n, device="cuda"))
     frames = torch.zeros(n, device="cuda")
@@ -147,6 +149,9 @@ def main():
                               body_pos_relative_w=cmd.body_pos_relative_w.clone(),
                               body_quat_relative_w=cmd.body_quat_relative_w.clone(), joint_vel=cmd.joint_vel.clone())
         at_end = cmd.time_steps >= end  # the step that would wrap into a new clip: count as completed
+        # D-175 speed ladder: horizontal pelvis speed, robot vs reference, before the step (no auto-reset state).
+        sums["pelvis_speed"] += torch.where(~done, robot_data.root_link_lin_vel_w[:, :2].norm(dim=-1), 0.0)
+        sums["ref_pelvis_speed"] += torch.where(~done, cmd.body_lin_vel_w[:, ref_pelvis, :2].norm(dim=-1), 0.0)
         with torch.no_grad():
             obs, _, dones, _ = wrapped.step(policy(obs))
         ref.robot_body_pos_w, ref.robot_body_quat_w = cmd.robot_body_pos_w, cmd.robot_body_quat_w
@@ -173,6 +178,7 @@ def main():
         sel = (unit == k)
         f = frames[sel].clamp(min=1)
         per_clip.append({"clip": names[units[k][0]], "start_s": round(units[k][1] / 50.0, 2),
+                         "start": int(units[k][1]), "end": int(units[k][2]),
                          "success": float(success[sel].float().mean()),
                          "fall": float(fell[sel].float().mean()), "fall_raw": float(fell_raw[sel].float().mean()),
                          **{k: float((v[sel] / f).mean()) for k, v in sums.items()},

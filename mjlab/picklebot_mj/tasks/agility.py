@@ -150,3 +150,6 @@ def stance_cap(cfg, max_speed: float = STANCE2_MAX_SPEED):
 
 
 _register(TASK_AGILITY_BALL_S2, SRC_RES, lambda c: stance_cap(to_agility_ball(c, direction_tally=True)))
+
+TASK_AGILITY_BALL_CFS = "Picklebot-Agility-DirTally-CourtStance-LamR2-G1"  # D-176: court feeds' own stance target
+_register(TASK_AGILITY_BALL_CFS, SRC_RES, lambda c: to_agility_ball(c, direction_tally=True, court_feed_stance=True))

@@ -202,6 +202,10 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # planner spot. Everything else (no hint, ball noise, refeed timing, rewards) stays drill v2.
     court_feed_prob: float = 0.0
     court_feed_anchor_prob: float = 0.75
+    # D-176: with the planner on, court feeds get no planner spot (D-116), so stance_progress paid speed toward a stale
+    # stance_xy on them. True: each court feed's stance_xy is its own stance spot (privileged reward target only; the
+    # spot input and observations are unchanged). False keeps the old behaviour.
+    court_feed_stance: bool = False
     # Self-play readiness R2 (D-116): record the post-contact ball state (pos, vel, spin) of every legal return
     # (evaluation only; read with returns_recorded()), or replay recorded returns, mirrored to the far side, as every
     # feed. Replayed balls start in the rally phase (a return may be volleyed or taken after its bounce).
@@ -1078,6 +1082,12 @@ class BallPhysicsAction(ActionTerm):
             self.ball = BallState(torch.where(m, handed[:, :3], self.ball.pos), torch.where(m, handed[:, 3:6], self.ball.vel),
                                   torch.where(m, handed[:, 6:9], self.ball.spin))
             self._handoff = torch.zeros_like(recv)
+        if getattr(self.cfg, "court_feed_stance", False) and getattr(self, "plan_on", False):
+            # D-176: court feeds get no planner spot (D-116), so stance_progress pointed at a stale stance_xy on them.
+            # Their stance target is set from the ball actually in play (after a hand-off's ball is installed).
+            from picklebot_mj.tasks.shadow_swing import stance_spot
+            cf = (fire & self.court_feed).unsqueeze(-1)
+            self.stance_xy = torch.where(cf, stance_spot(self, self.cfg.hint_v2), self.stance_xy)
         if self.shadow is not None:
             self.shadow.after_refeed(fire)
         if self.drill is not None:

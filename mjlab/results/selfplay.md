@@ -1253,3 +1253,34 @@ scripts/diag/stance49.sh: run 14's task with the feeder-ball direction tally, fr
 **VERDICT: FAIL.**
 
 Paying for stance approach up to 2 m/s does not make the policy faster: peak speed toward left balls moves 1.59 -> 1.65 m/s, and left / back returns get slightly worse. Per D-174 the stance cap is not the lever, and the next step is the motion-controller route. Panel round 49 is convened to design it and to locate where the speed limit sits: the frozen base latent controller, or the residual policy on top of it.
+
+## Speed ladder (D-175): BODY? on thin evidence (2026-10-30)
+
+The speed ladder is an evaluation only (scripts/diag/speed_ladder.sh, scripts/motion/speed_ladder.py; results/speed-ladder-summary.txt; dev seed 4220130; about 0.1 GPU-h). It uses the accepted 100STYLE retargets Neutral_FW / BW / SW, with SW mirrored, time-scaled x1 to x5. Each is tracked by H0 (s5c-03b-h0mirror/model_63300) and through the latent-07 encoder, with barrier coverage at lam 2 and lam 5. Windows are 4 s, 388 in total.
+
+| direction | reference speed bin | windows | reference m/s | achieved (H0) m/s | H0 success | latent-07 success | coverage lam 5 |
+|---|---|---|---|---|---|---|---|
+| back | <= 1.0 | 57 | 0.66 | 0.25 | 100 % | 100 % | 85 % |
+| back | 1.0-1.5 | 24 | 1.23 | 0.37 | 99 % | 97 % | 80 % |
+| back | 1.5-2.0 | 10 | 1.68 | 0.69 | 68 % | 80 % | 76 % |
+| back | >= 2.0 | 10 | 2.41 | 1.21 | 48 % | 50 % | 64 % |
+| left | <= 1.0 | 54 | 0.55 | 0.23 | 100 % | 100 % | 75 % |
+| left | 1.5-2.0 | 6 | 1.74 | 1.19 | 83 % | 83 % | 53 % |
+| forward | >= 2.0 | 14 | 2.74 | 1.60 | 38 % | 21 % | 53 % |
+
+**Coded rule** (left / back windows at reference speed >= 2.0 m/s; only 10 windows, all backward walks at x4-x5):
+- VOID: not met.
+- SELECTION: not met (latent 50 % < 90 %).
+- DECODER: not met (H0 47.5 % is not >= 90 %).
+- BODY?: met (H0 < 70 %).
+
+The rejected Neutral_SR clips are included in a sensitivity line only, which also gives BODY?.
+
+**Caveats.**
+- Success ignores speed: even at x1 the robot moves at 40-60 % of the reference speed.
+- Time-warping multiplies the stepping cadence 4-5x.
+- No left clip reaches 2 m/s.
+
+H0 and the encoder fail together, which points away from the decoder. By the coded route, BODY? sends the loop to E: work within the controller's reach. The first lever within reach is the stale stance target on court feeds (D-176).
+
+**Housekeeping.** results/agility-summary.json (the first screen's) had been overwritten by a stdout-only peek: agility_summary.py defaulted --json to that file. The committed version is restored, and the default is now None (write only when asked).

@@ -4369,3 +4369,29 @@ latent_barrier_check.py coverage is run at lam 2 and lam 5. Results are binned b
 - **Otherwise** the result is reported and E follows.
 
 **Queued separately:** the stale stance target on court feeds is a live candidate defect in the training reward. It is to be fixed and tested with an A/A control arm before any rally run.
+
+
+## D-176 - Speed ladder BODY?; route E starts with the stale stance target on court feeds (2026-10-30)
+
+**Speed ladder (D-175).** On left / back windows at reference speeds >= 2.0 m/s:
+- H0 47.5 %, latent-07 encoder 50 %, lam-5 coverage 64 %. The coded VERDICT is BODY?.
+- It rests on 10 windows, all backward walks at x4-x5, so cadence is also multiplied. Success ignores speed.
+- H0 and the encoder fail together, so the decoder is not the limit.
+- By the coded route the loop goes to E, work within reach, and no controller retrain is started. A new motion prior with faster data would need a download, which is the user's call.
+
+**First E lever: the stale stance target.** With the planner on, court feeds get no planner spot (D-116). So stance_progress has paid pelvis speed toward a stale stance_xy on every court feed, which means on the pair courts' feeder balls throughout training.
+- **The change:** a new cfg flag court_feed_stance (default False keeps the old behaviour). With it, each court feed's stance_xy is its own stance_spot. It is a privileged reward target only; observations are unchanged.
+- **Test task:** Picklebot-Agility-DirTally-CourtStance-LamR2-G1. A CPU config test and a GPU test check that stance_xy moves to each new court feed's own stance spot with the flag, and stays stale without it.
+
+**Diagnostic** (scripts/diag/courtstance50.sh): from run 18b model_29000, 400 iterations at 1e-4, 4,096 envs, last quarter. Arms:
+- K0a and K0b: the BALL task twice, as an A/A control for drift;
+- KF: the CourtStance task.
+
+**PASS** needs all of:
+- KF left + back legal - mean(K0) >= +3.0 points;
+- that gain >= 2 x |K0a - K0b|;
+- forward + right >= mean(K0) - 2.0 points;
+- falls <= 4.157 per 1,000 env-seconds;
+- the config check finds court_feed_stance: true.
+
+A PASS puts court_feed_stance into the next rally run; a FAIL sends E on to ball-1 work. Training seeds 150-152.

@@ -1294,6 +1294,22 @@ register_mjlab_task(task_id=TASK_TRACKING_TENNIS_STYLE100, env_cfg=_tracking_ten
                     runner_cls=MotionTrackingOnPolicyRunner)
 
 
+# Panel round 49 (D-175): the supervised speed ladder. Time-scaled 100STYLE clips (scripts/motion/speed_ladder.py,
+# built by scripts/diag/speed_ladder.sh), all source 1, for tracking_eval.py / latent_barrier_check.py --per-stroke.
+# Evaluation only.
+TASK_TRACKING_SPEED_LADDER = "Picklebot-Tracking-SpeedLadder-G1"
+SPEED_LADDER_MOTION = str(_MOTION_DIR.parent / "speed-ladder" / "speed-ladder.npz")
+
+
+def _tracking_speed_ladder(play=False):
+    return paddle_tracking_env_cfg(SPEED_LADDER_MOTION, play=play)
+
+
+register_mjlab_task(task_id=TASK_TRACKING_SPEED_LADDER, env_cfg=_tracking_speed_ladder(),
+                    play_env_cfg=_tracking_speed_ladder(True), rl_cfg=_tracking_huge_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)
+
+
 # Stage 5E runs 2+ (D-102): residual PPO on drill v2 (sim-to-real on) around the consolidated base of run 1
 # (s5e-01-consolidate, its checkpoint at the stop). PICKLEBOT_V2_BASE overrides the base for checks only.
 def _s5e_base() -> str:

@@ -58,7 +58,7 @@ def load(prefix: str, tag: str):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--prefix", default="results/agility")
-    ap.add_argument("--json", default="results/agility-summary.json")
+    ap.add_argument("--json", default=None)  # write only when asked (a bare run once overwrote the first screen's summary)
     ap.add_argument("--gates", action="store_true", help="apply the D-172 validity gates (second screen)")
     args = ap.parse_args()
     out = {"arms": {}}

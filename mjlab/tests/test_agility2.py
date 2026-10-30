@@ -375,6 +375,57 @@ def test_stance_progress_cap_clamps_at_max_speed():
         rs._term = orig
 
 
+def test_court_stance_task_differs_only_in_court_feed_stance():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks.agility as ag
+    for play in (False, True):
+        o, n = load_env_cfg(ag.TASK_AGILITY_BALL, play=play), load_env_cfg(ag.TASK_AGILITY_BALL_CFS, play=play)
+        assert o.actions["ball"].court_feed_stance is False and n.actions["ball"].court_feed_stance is True
+        assert _ball_diff(o.actions["ball"], n.actions["ball"]) == ["court_feed_stance"]
+        for k in o.rewards:
+            assert o.rewards[k].params == n.rewards[k].params, k
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+def test_court_feed_stance_sets_each_court_feeds_own_target():
+    """D-176: without the flag a court feed leaves stance_xy stale (planner mode gives court feeds no spot); with it,
+    every new court feed's stance_xy is its own stance spot."""
+    sys.path.insert(0, os.path.dirname(__file__))
+    from test_drill_v2 import LATENT, _env
+    if not LATENT.exists():
+        pytest.skip("needs the H1 latent controller")
+    from picklebot_mj.tasks.shadow_swing import stance_spot
+    task = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LamR2-G1"
+    moved = {}
+    for flag in (False, True):
+        env = _env(task, n=256, court_feed_stance=flag)
+        t = env.action_manager.get_term("ball")
+        assert t.cfg.court_feed_stance is flag
+        act =torch.zeros(env.num_envs, env.action_manager.total_action_dim, device=env.device)
+        n_new = n_moved = n_match = 0
+        prev_fam, prev_cf, prev_st = t.family.clone(), t.court_feed.clone(), t.stance_xy.clone()
+        with torch.inference_mode():
+            for step in range(300):
+                env.step(act)
+                new = ((t.family != prev_fam) | (t.court_feed != prev_cf)) & t.court_feed
+                if step > 0 and new.any():
+                    d = (t.stance_xy[new] - prev_st[new]).norm(dim=-1)
+                    n_new += int(new.sum()); n_moved += int((d > 1e-4).sum())
+                    if flag:
+                        ref = stance_spot(t, t.cfg.hint_v2)[new]
+                        # x only: y picks the forehand / backhand side from the pelvis, which has moved one step later
+                        n_match += int(((t.stance_xy[new][:, 0] - ref[:, 0]).abs() < 0.15).sum())
+                prev_fam, prev_cf, prev_st = t.family.clone(), t.court_feed.clone(), t.stance_xy.clone()
+        env.close()
+        assert n_new > 50, n_new
+        moved[flag] = n_moved / n_new
+        if flag:
+            assert n_match / n_new > 0.8, n_match / n_new
+    assert moved[False] < 0.2 and moved[True] > 0.8, moved
+
+
 def test_entry_point_does_not_import_the_agility_modules():
     code = ("import sys, mjlab.tasks; print(any(m in sys.modules for m in ('picklebot_mj.tasks.agility', "
             "'picklebot_mj.agility_control')), 'picklebot_mj.tasks' in sys.modules)")

@@ -151,7 +151,7 @@ def main():
             mp, lsp = lat.prior_dist(obs["actor"])
             dmax = ((mq - mp).abs() / lsp.exp()).amax(-1)
             live0 = ~done
-            for k_, thr in (("in1", 1.0), ("in2", 2.0), ("in3", 3.0)):
+            for k_, thr in (("in1", 1.0), ("in2", 2.0), ("in3", 3.0), ("in5", 5.0)):  # in5: D-175 speed ladder
                 sums[k_] += torch.where(live0, (dmax < thr).float(), 0.0)
             DM.append(torch.where(live0, dmax, torch.nan).cpu())
             obs, _, dones, _ = wrapped.step(policy(obs))
@@ -179,6 +179,7 @@ def main():
         sel = (unit == k)
         f = frames[sel].clamp(min=1)
         per_clip.append({"clip": names[units[k][0]], "start_s": round(units[k][1] / 50.0, 2),
+                         "start": int(units[k][1]), "end": int(units[k][2]),
                          "success": float(success[sel].float().mean()),
                          "fall": float(fell[sel].float().mean()), "fall_raw": float(fell_raw[sel].float().mean()),
                          **{k: float((v[sel] / f).mean()) for k, v in sums.items()},
@@ -197,6 +198,9 @@ def main():
         if p["clip"].startswith("footwork_"):  # walking-teacher footwork clips (D-081)
             by_stroke["footwork"].append(p)
             continue
+        if p["clip"].startswith("Neutral_"):  # 100STYLE footwork (D-101, D-175): Neutral_SW_train_x2 -> style100_SW
+            by_stroke["style100_" + p["clip"].split("_")[1]].append(p)
+            continue
         tag = p["clip"].split("_", 1)[1]
         if tag.startswith("subject"):  # LAFAN1 clip: walk1_subject1 -> lafan_walk; mirrored (D-077) -> lafanmirror_walk
             pre = "lafanmirror_" if p["clip"].endswith("_mirror") else "lafan_"
@@ -214,11 +218,12 @@ def main():
     summary["by_stroke"] = {s: {"units": len(g), "success": float(np.mean([p["success"] for p in g])),
                                 "fall": float(np.mean([p["fall"] for p in g])),
                                 "mpkpe": float(np.mean([p["mpkpe"] for p in g])),
-                                **{q: float(np.nanmean([p[q] for p in g])) for q in ("in1", "in2", "in3", "dmax_med", "dmax_p90")}}
+                                **{q: float(np.nanmean([p[q] for p in g])) for q in ("in1", "in2", "in3", "in5", "dmax_med", "dmax_p90")}}
                             for s, g in by_stroke.items()}
     pooled = defaultdict(list)  # success pooled by source: tennis strokes, LAFAN1, mirrored LAFAN1, footwork
     for k, g in by_stroke.items():
         src = ("lafan_mirror" if k.startswith("lafanmirror_") else "lafan" if k.startswith("lafan_")
+               else "style100" if k.startswith("style100_")
                else "footwork" if k == "footwork" else "tennis")
         pooled[src].extend(p["success"] for p in g)
     summary["by_source"] = {k: float(np.mean(v)) for k, v in pooled.items()}
