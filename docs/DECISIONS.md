@@ -4506,3 +4506,29 @@ The arm carried forward is chosen by rank, then min(left, back, right) sustained
 - MIXED or BODY-LIMIT: the panel picks the next specialist change. Candidates are the iteration budget, the command cap and the style weight. A BODY-LIMIT answers the body question, and the panel re-scopes the footwork target.
 
 No dev or final seeds are used.
+
+
+## D-180 - fw1 diverged on the learning rate; fw1b relaunches with the parent's adaptive schedule (2026-10-31)
+
+Both fw1 arms were stopped.
+- **Arm S** hit NaN observations at iteration 130 (rsl_rl check_nan, exit 1). Its measure read ran on the collapsed checkpoint and is not used.
+- **Arm SA** was killed by the agent at iteration 459. Training untimed arrival had fallen from 94 % to 1-7 % in every sector, and falls were rising.
+
+No verdict is drawn from fw1. It is VOID by an optimisation failure, and nothing in the rule or the task is changed.
+
+**Diagnosis** (results/fw1-{S,SA}-sched.jsonl). Per-update KL against the rollout policy, during ScheduledPPO's warm-up:
+- 0.005-0.011 at rates 0.6-3e-5;
+- 1.9-2.1 after a single mini-batch step at 1.26e-4;
+- 2-40 at 3e-4.
+
+So the 0.05 guard tripped on every update after the first mini-batch.
+
+The policy then degraded into a fall loop: mean episode length went 911 -> 56 steps, and mean reward went negative, so ending episodes early paid. The flat walking teacher was trained with rsl_rl's adaptive schedule (desired KL 0.01), which holds its rate near 1e-5 to 3e-5. A fixed 1e-4 to 3e-4 is far above what this network tolerates. The same mechanism plausibly explains bodyspeed54 (fixed 1e-4: entropy 2.9 -> 11.2 and arrival collapse); its VOID stands as recorded.
+
+**One change (scripts/diag/footwork_fw1b.sh):** train both arms with the parent's own algorithm.
+- stock rsl_rl PPO, adaptive schedule, desired KL 0.01, floor 1e-5;
+- initial rate 1e-5.
+
+Everything else is fw1's, including tasks, arms, iterations, measure read and coded rule. Output names are fw1b-*, and training seeds are 163 (S), 164 (SA), 165 / 166 (measures).
+
+**Kill line** (instability, coded before launch): training untimed arrival below 50 %, pooled over any 100-iteration window after iteration 200, makes the arm VOID-unstable.
