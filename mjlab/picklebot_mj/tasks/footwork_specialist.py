@@ -25,6 +25,11 @@ Drill3-Style-NoWrist) against LAFAN1 (original + mirrored) and the AMASS-G1 late
 (artifacts/motion/tracking/amass-footwork.npz; selection in scripts/motion/amass_footwork_npz.sh).
 Measure task (TASK_FW_MEASURE): the specialist task with spots 3-5 m away (long enough for a 1-s sustained window at
 speed), read at learning rate 0.
+D-181 (panel round 51): fw1b-S ran through spots (first entry paid the bonus; nothing paid stopping). TASK_FW_SETTLE pays
+move_arrival at the held arrival (MoveDrill's 0.25 m / 0.2 m/s / 0.3 s) of a spot whose first entry was before the
+deadline, once; TASK_FW_MEASURE60 is the measure task with 60-s episodes (at 20 s even a perfect policy censors ~12-14 %
+of 3-5 m spots, against the rule's 10 %). Instrument fix (all tasks): the sustained speed counts only full 1-s windows
+(spots resolved sooner are counted as `short`, with no speed); new counters settled, settle_time_sum, overshoot_sum.
 """
 
 from __future__ import annotations
@@ -46,6 +51,10 @@ from picklebot_mj.tasks import move_drill as md
 TASK_FW = "Picklebot-Footwork-Specialist-G1"
 TASK_FW_STYLE = "Picklebot-Footwork-Specialist-Style-G1"
 TASK_FW_MEASURE = "Picklebot-Footwork-Measure-G1"
+TASK_FW_SETTLE = "Picklebot-Footwork-Specialist-Settle-G1"  # D-181: pay "settled"
+TASK_FW_MEASURE60 = "Picklebot-Footwork-Measure60-G1"  # D-181: 60-s episodes, pay "settled" (read at rate 0)
+PAY_MODES = ("entry", "settled")
+MEASURE_EPISODE_S = 60.0
 CMD_CAP = 2.5  # m/s
 V_REQ = (1.2, 2.2)  # deadline speed, m/s
 DIST = (1.0, 5.0)
@@ -62,10 +71,13 @@ STYLE_FILES = ("lafan-g1.npz", "lafan-g1-mirror.npz", "amass-footwork.npz")
 
 class FootworkDrill(dd.DeadlineMoveDrill):
     def __init__(self, term, move_prob: float, seed: int, sector_weights=None, dist_range=DIST, v_req_range=V_REQ,
-                 heading_free_m: float = dd.HEADING_FREE_M, cmd_cap: float = CMD_CAP, spot_box=SPOT_BOX):
+                 heading_free_m: float = dd.HEADING_FREE_M, cmd_cap: float = CMD_CAP, spot_box=SPOT_BOX,
+                 pay: str = "entry"):
         super().__init__(term, move_prob, seed, sector_weights, dist_range=dist_range, v_req_range=v_req_range,
                          heading_free_m=heading_free_m, arrival_mode="first_entry")
         n, dev = self.n, self.dev
+        assert pay in PAY_MODES, pay
+        self.pay = pay
         self.cap = float(cmd_cap)
         self.gain = md.CMD_GAIN * self.cap / md.CMD_MAX_SPEED
         self._lo = torch.tensor([spot_box[0][0], spot_box[1][0]], dtype=torch.float32, device=dev)
@@ -81,6 +93,13 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.stats["booked"] = torch.zeros(md.N_SECTORS, dtype=torch.long, device=dev)
         self.best_hist = torch.zeros(md.N_SECTORS, SPEED_BINS, dtype=torch.long, device=dev)
         self.best_sum = torch.zeros(md.N_SECTORS, device=dev)
+        for k in ("short", "settled"):  # short: resolved before a full 1-s window (no speed booked)
+            self.stats[k] = torch.zeros(md.N_SECTORS, dtype=torch.long, device=dev)
+        self.settle_time_sum = torch.zeros(md.N_SECTORS, device=dev)  # first entry -> held arrival, settled spots
+        self.overshoot_sum = torch.zeros(md.N_SECTORS, device=dev)  # largest distance from the spot after entry
+        self.entry_t = torch.zeros(n, device=dev)
+        self.post_max = torch.zeros(n, device=dev)
+        self._settled = torch.zeros(n, dtype=torch.bool, device=dev)
         self._ar = torch.arange(n, device=dev)
         self._calls = 0
 
@@ -89,9 +108,19 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         super().reset(env_ids)
 
     def _new_spot(self, mask: torch.Tensor) -> None:
-        """Book the resolved spot's sustained speed, then DeadlineMoveDrill._new_spot; the instrument restarts."""
-        b = mask & self.live & self.move_ep
+        """Book the resolved spot (sustained speed if it ran a full 1-s window; settled = held arrival after an in-time
+        first entry), then DeadlineMoveDrill._new_spot; the instrument restarts. Called before the drill clears
+        `entered`, `hold` and `elapsed`; on the reset path `live` is already False, so nothing is booked or paid."""
+        res = mask & self.live & self.move_ep
         sec = self.sector
+        settled = res & self.entered & (self.hold >= md.ARRIVE_HOLD_S)
+        self._settled = self._settled | settled
+        self.stats["settled"].index_add_(0, sec, settled.long())
+        self.settle_time_sum.index_add_(0, sec, (self.elapsed - self.entry_t) * settled.float())
+        self.overshoot_sum.index_add_(0, sec, self.post_max * settled.float())
+        full = self.cnt >= self.K
+        b = res & full
+        self.stats["short"].index_add_(0, sec, (res & ~full).long())
         self.stats["booked"].index_add_(0, sec, b.long())
         best = self.best.clamp(min=0.0).nan_to_num(0.0)
         k = (best / SPEED_BIN).clamp(0, SPEED_BINS - 1).long()
@@ -103,12 +132,17 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.wsum = torch.where(mask, torch.zeros_like(self.wsum), self.wsum)
         self.cnt = torch.where(mask, torch.zeros_like(self.cnt), self.cnt)
         self.best = torch.where(mask, torch.full_like(self.best, -1e3), self.best)
+        self.post_max = torch.where(mask, torch.zeros_like(self.post_max), self.post_max)
         self.live = self.live | (mask & self.move_ep)
 
     def update(self, dt: float) -> None:
-        """Once per control step: the 1-s running mean of pelvis ground velocity toward the spot; then the drill."""
+        """Once per control step: the 1-s running mean of pelvis ground velocity toward the spot (best kept only over
+        full windows); then the drill. pay "settled": the bonus (arrive_now) is the held arrival of a spot first
+        entered before its deadline, instead of the first entry."""
+        t = self.t
+        d = (t.recover_xy - t.pelvis_xy()).norm(dim=-1)
+        self.post_max = torch.where(self.entered & self.live, torch.maximum(self.post_max, d), self.post_max)
         if self._calls % self.decimation == 0:
-            t = self.t
             mv = self.move_ep & self.live
             v = t._entity.data.root_link_lin_vel_w[:, :2]
             to = t.recover_xy - t.pelvis_xy()
@@ -118,10 +152,17 @@ class FootworkDrill(dd.DeadlineMoveDrill):
             self.buf[self._ar, pos] = torch.where(mv, vt, old)
             self.wsum = self.wsum + torch.where(mv, vt - old, torch.zeros_like(vt))
             self.cnt = self.cnt + mv.long()
-            mean = self.wsum / self.cnt.clamp(min=1, max=self.K).float()
-            self.best = torch.where(mv, torch.maximum(self.best, mean), self.best)
+            mean = self.wsum / self.K
+            self.best = torch.where(mv & (self.cnt >= self.K), torch.maximum(self.best, mean), self.best)
         self._calls += 1
+        was = self.entered.clone()
+        keep = self.arrive_now.clone()  # read-and-clear by move_arrival once per control step
+        self._settled = torch.zeros_like(self._settled)
         super().update(dt)
+        new = self.entered & ~was
+        self.entry_t = torch.where(new, self.elapsed, self.entry_t)
+        if self.pay == "settled":
+            self.arrive_now = keep | self._settled
 
     def command(self):
         """DeadlineMoveDrill's law with a fixed cap CMD_CAP (not v_req): the policy cannot see v_req, so the command
@@ -142,6 +183,8 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         out = super().counters()
         out["best_hist"] = self.best_hist.tolist()
         out["best_sum"] = [round(x, 4) for x in self.best_sum.tolist()]
+        out["settle_time_sum"] = [round(x, 4) for x in self.settle_time_sum.tolist()]
+        out["overshoot_sum"] = [round(x, 4) for x in self.overshoot_sum.tolist()]
         return out
 
 
@@ -150,6 +193,7 @@ class FootworkDrill(dd.DeadlineMoveDrill):
 class FootworkBallActionCfg(ag.AgilityBallActionCfg):
     footwork_drill: bool = True
     footwork_dist: tuple = DIST
+    footwork_pay: str = "entry"  # "settled" (D-181): the bonus pays the held arrival of an in-time first entry
 
     def build(self, env) -> "FootworkBallAction":
         return FootworkBallAction(self, env)
@@ -163,7 +207,7 @@ class FootworkBallAction(ag.AgilityBallAction):
         if cfg.footwork_drill:
             self.drill = FootworkDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights,
                                        dist_range=cfg.footwork_dist, v_req_range=cfg.deadline_v_req,
-                                       heading_free_m=cfg.heading_free_m)
+                                       heading_free_m=cfg.heading_free_m, pay=cfg.footwork_pay)
 
 
 def fw_track_lin_vel(env, std: float = TRACK_STD) -> torch.Tensor:
@@ -198,19 +242,19 @@ class fw_posture(vr.variable_posture):
         return torch.exp(-torch.mean(err / std ** 2, dim=1))
 
 
-def footwork_task(cfg, dist=DIST):
+def footwork_task(cfg, dist=DIST, pay="entry", episode_s=EPISODE_S):
     """The walking teacher's task -> the footwork specialist (module docstring)."""
     ag.deadline_task(cfg)  # move-only deadline drill, free-heading yaw reward
     b = cfg.actions["ball"]
     vals = {f.name: getattr(b, f.name) for f in dataclasses.fields(b) if f.init}
     vals.update(deadline_arrival_mode="first_entry", deadline_v_req=V_REQ, deadline_dist=dist, footwork_dist=dist,
-                move_spot_box=SPOT_BOX)
+                move_spot_box=SPOT_BOX, footwork_pay=pay)
     cfg.actions["ball"] = FootworkBallActionCfg(**vals)
     r = cfg.rewards
     assert r["move_track_lin_vel"].func is md.move_track_lin_vel and r["pose"].func is vr.variable_posture
     r["move_track_lin_vel"] = dataclasses.replace(r["move_track_lin_vel"], func=fw_track_lin_vel)
     r["pose"] = dataclasses.replace(r["pose"], func=fw_posture)
-    cfg.episode_length_s = max(cfg.episode_length_s, EPISODE_S)
+    cfg.episode_length_s = max(cfg.episode_length_s, episode_s)
     return cfg
 
 
@@ -231,5 +275,7 @@ def _register(task_id: str, build):
 
 _register(TASK_FW, footwork_task)
 _register(TASK_FW_MEASURE, lambda c: footwork_task(c, dist=MEASURE_DIST))
+_register(TASK_FW_SETTLE, lambda c: footwork_task(c, pay="settled"))
+_register(TASK_FW_MEASURE60, lambda c: footwork_task(c, dist=MEASURE_DIST, pay="settled", episode_s=MEASURE_EPISODE_S))
 if all((_MOTION_DIR / f).exists() for f in STYLE_FILES):  # the AMP arm needs the expert npz files (git-ignored data)
     _register(TASK_FW_STYLE, lambda c: with_style(footwork_task(c)))

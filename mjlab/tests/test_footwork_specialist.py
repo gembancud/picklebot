@@ -129,3 +129,111 @@ def test_tasks_differ_from_the_walking_teacher_only_where_documented():
     if fs.TASK_FW_STYLE in list_tasks():
         s, a = load_env_cfg(fs.TASK_FW_STYLE), load_env_cfg(fs.TASK_FW)
         assert sorted(set(s.rewards) - set(a.rewards)) == ["style"] and s.rewards["style"].weight == 0.5
+
+
+# ------------------------------------------------------------------------------------------ D-181: pay "settled"
+def _settle_case(pay, deadline, speed=0.0, steps=80):
+    """Two envs placed 0.1 m from their spot (inside ARRIVE_RADIUS); returns (drill, bonus pays per env), reading and
+    clearing arrive_now once per control step as move_arrival does."""
+    t, dr = _drill(2, pay=pay)
+    t.recover_xy = torch.tensor([[-6.3, 0.0]] * 2)
+    dr.deadline[:] = torch.tensor(deadline)
+    dr.limit[:] = 100.0
+    dr.elapsed[:], dr.hold[:], dr.entered[:] = 0.0, 0.0, False
+    t._entity.data.root_link_lin_vel_b[:, 0] = speed
+    t._entity.data.root_link_lin_vel_w[:, 0] = speed
+    pays = torch.zeros(2, dtype=torch.long)
+    for i in range(steps):
+        dr.update(0.005)
+        if i % 4 == 3:
+            pays += dr.arrive_now.long()
+            dr.arrive_now[:] = False
+    return dr, pays
+
+
+def test_settled_pays_once_only_for_an_in_time_entry_then_hold():
+    dr, pays = _settle_case("settled", [10.0, 0.0])  # env 0 enters in time, env 1 after its deadline
+    c = dr.counters()
+    assert pays.tolist() == [1, 0]
+    assert sum(c["settled"]) == 1 and sum(c["arrived"]) == 2 and sum(c["deadline"]) == 1
+    assert sum(c["short"]) == 2 and sum(c["booked"]) == 0  # resolved after 15 control steps < a full 1-s window
+    assert 0.25 < sum(c["settle_time_sum"]) < 0.4 and abs(sum(c["overshoot_sum"]) - 0.1) < 1e-3
+
+
+def test_run_through_pays_in_entry_mode_but_not_in_settled_mode():
+    _, pe = _settle_case("entry", [10.0, 10.0], speed=2.0, steps=8)
+    dr, ps = _settle_case("settled", [10.0, 10.0], speed=2.0, steps=8)
+    assert pe.tolist() == [1, 1] and ps.tolist() == [0, 0]
+    assert sum(dr.counters()["settled"]) == 0 and dr.entered.all()
+
+
+def test_settled_bonus_survives_until_read_and_reset_pays_nothing():
+    t, dr = _drill(2, pay="settled")
+    t.recover_xy = torch.tensor([[-6.3, 0.0]] * 2)
+    dr.deadline[:], dr.limit[:] = 10.0, 100.0
+    dr.elapsed[:], dr.hold[:], dr.entered[:] = 0.0, 0.0, False
+    fired = None
+    for i in range(80):
+        dr.update(0.005)
+        if dr.arrive_now.any() and fired is None:
+            fired = i
+    assert fired is not None and dr.arrive_now.all()  # never cleared here: still set many physics steps later
+    t2, d2 = _drill(1, pay="settled")
+    t2.recover_xy = torch.tensor([[-6.3, 0.0]])
+    d2.deadline[:], d2.limit[:] = 10.0, 100.0
+    d2.elapsed[:], d2.hold[:], d2.entered[:] = 0.0, 0.0, False
+    for _ in range(40):  # 0.2 s of hold, not yet an arrival
+        d2.update(0.005)
+    d2.arrive_now[:] = False
+    d2.reset(torch.tensor([0]))
+    assert not d2.arrive_now.any() and sum(d2.counters()["settled"]) == 0
+
+
+def test_partial_window_books_no_speed():
+    n = 2
+    t, dr = _drill(n)
+    t.recover_xy = torch.tensor([[-2.4, 0.0]] * n)
+    t._entity.data.root_link_lin_vel_w[:, 0] = 2.0
+    for _ in range(4 * 10):  # 10 control steps (0.2 s) at 2 m/s, then the spot times out
+        dr.update(0.005)
+    assert (dr.best < 0).all()
+    dr.limit[:] = 0.0
+    dr.update(0.005)
+    c = dr.counters()
+    assert sum(c["short"]) == n and sum(c["booked"]) == 0 and sum(map(sum, c["best_hist"])) == 0
+
+
+def test_settle_and_measure60_tasks():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks.footwork_specialist as fs
+    a, s, m = load_env_cfg(fs.TASK_FW), load_env_cfg(fs.TASK_FW_SETTLE), load_env_cfg(fs.TASK_FW_MEASURE60)
+    ab, sb, mb = a.actions["ball"], s.actions["ball"], m.actions["ball"]
+    diff = [f.name for f in dataclasses.fields(ab) if getattr(ab, f.name) != getattr(sb, f.name)]
+    assert diff == ["footwork_pay"] and sb.footwork_pay == "settled" and ab.footwork_pay == "entry"
+    assert s.episode_length_s == a.episode_length_s == 20.0 and m.episode_length_s == 60.0
+    assert mb.footwork_dist == (3.0, 5.0) and mb.footwork_pay == "settled"
+    for k in a.rewards:
+        assert a.rewards[k].func is s.rewards[k].func is m.rewards[k].func and a.rewards[k].weight == s.rewards[k].weight
+
+
+def _rows(arrival, speed, its=400):
+    rows = []
+    for k in range(0, its + 1, 10):
+        n = k  # spots resolved per sector so far
+        c = {"arrived": [round(n * arrival)] * 8, "timed_out": [n - round(n * arrival)] * 8, "fell": [0] * 8,
+             "best_hist": [[0] * 50 for _ in range(8)]}
+        for i in range(8):
+            c["best_hist"][i][int(round(speed / 0.1))] = n
+        rows.append({"step": k * 24, "move": c})
+    return rows
+
+
+def test_watch_window_lines():
+    from picklebot_mj import footwork_watch as fw
+    assert fw.window_lines(_rows(0.4, 2.0, its=290)) is None  # no full window starting at >= 200 yet
+    assert fw.window_lines(_rows(0.4, 2.0))["kill"] == "KILL-no-settle"
+    assert fw.window_lines(_rows(0.8, 1.1))["kill"] == "KILL-speed-traded"
+    w = fw.window_lines(_rows(0.8, 2.0))
+    assert w["kill"] is None and abs(w["untimed_arrival"] - 0.8) < 0.02 and w["from_it"] == 300 and w["to_it"] == 400

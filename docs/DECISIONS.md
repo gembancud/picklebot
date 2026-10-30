@@ -4532,3 +4532,45 @@ The policy then degraded into a fall loop: mean episode length went 911 -> 56 st
 Everything else is fw1's, including tasks, arms, iterations, measure read and coded rule. Output names are fw1b-*, and training seeds are 163 (S), 164 (SA), 165 / 166 (measures).
 
 **Kill line** (instability, coded before launch): training untimed arrival below 50 %, pooled over any 100-iteration window after iteration 200, makes the arm VOID-unstable.
+
+
+## D-181 - Panel round 51: pay the settled in-time arrival, continue from fw1b-S; the measure read gets 60-s episodes (2026-10-31)
+
+**fw1b-S** is VOID on the D-180 kill line: training untimed arrival < 50 % pooled over a 100-iteration window after iteration 200. The agent stopped it at iteration 726 (model_16600).
+- **The cause is not instability.** KL stayed in range and speed was rising. It is a reward defect: first_entry pays the bonus at entry, and nothing pays stopping.
+- **Arm SA was not run.** It has the same defect, so the agent stopped the driver.
+- No verdict is drawn.
+- **Correction (RL):** the line was a script comment and was checked by hand. Enforced, it would have fired at about iteration 300 (pooled 0.425 over 200-300).
+- **Lesson:** a kill line names a symptom, not a cause.
+
+**Diagnostic read of model_16600** (results/fw1b-S-diag-measure.txt; seed 167; diagnostic only):
+
+| | forward | left | back | right |
+|---|---|---|---|---|
+| sustained (m/s) | 1.85 | 1.92 | 2.10 | 1.92 |
+
+- Falls 3.27 per 1,000 env-s.
+- Untimed arrival 0.33-0.41, censored share 0.25.
+- Experiment design counted censored and fallen spots as 0 m/s: L / B / R p50 stay in the 1.8 bin.
+- It is evidence about speed toward a spot, not about gait. Heading is free, so back faster than forward suggests turn-and-run (coach, motion).
+
+**Panel round 51** (mjlab/results/footwork-review.md): A 4 (coach, motion, experiment design, architecture), B 1 (RL). Decision:
+1. **One change:** task Picklebot-Footwork-Specialist-Settle-G1, FootworkDrill pay "settled". move_arrival pays once, at MoveDrill's held arrival (0.25 m, 0.2 m/s, 0.3 s), only if the spot's first entry was before its deadline. Everything else is the specialist's task.
+2. **Parent and training:** fw1b-S model_16600 with its optimizer, fw1b's algorithm (adaptive, desired KL 0.01, initial 1e-5), 1,500 iterations, 4,096 envs, training seed 168. The lineage is model_15900 -> fw1b-S (726 iterations) -> fw1c-A. Experiment design preferred 774 iterations, for 1,500 in total; motion's and architecture's 1,500 is taken.
+3. **Instrument fixes, before launch.** Thresholds are unchanged:
+   - **Sustained speed** counts only full 1-s windows. The old code booked partial windows, so a spot issued at speed could book carried-over speed (architecture). Spots resolved sooner are counted as `short`.
+   - **New counters:** settled, settle time, overshoot.
+   - **Measure read** on Picklebot-Footwork-Measure60-G1: 60-s episodes, 300 iterations. The censored-share gate (10 %) assumed bodyspeed54's 60-s episodes (8.1 %). At D-179's 20 s, even a perfect policy censors about 12-14 % of 3-5 m spots, so VOID(b) could not pass. This is the false D-179 premise; the gate itself is unchanged.
+   - **Baseline:** model_16600 is re-read on the fixed instrument (B0, seed 170). Arm A's read is seed 169.
+4. **Kill lines**, enforced by picklebot_mj/footwork_watch.py:
+   - **VOID-unstable:** falls > 8.314 per 1,000 env-s (2 x 4.157) over the last 100 iterations after iteration 100.
+   - **KILL-no-settle:** untimed arrival < 50 % over a 100-iteration window starting at iteration >= 200. This keeps D-180's line; motion's and architecture's majority kept it, against experiment design's dose line.
+   - **KILL-speed-traded:** min(L, B, R) sustained p50 < 1.3 m/s over the same window. This is reported as a result.
+5. **Endpoint:** bodyspeed_rule unchanged on A's read.
+6. **The style arm (SA) is deferred.** Stage 5B's AMP lost to pose and ready_stance, which are still in the task.
+7. **Before step 2**, if A reaches BODY-OK:
+   - a mean-action video of the four cardinal sectors;
+   - clips recorded with mean actions through amass_g1_import's frozen acceptance checks;
+   - heading at mid-move for the back sector (turn-and-run vs backpedal).
+
+   **Queued for the run after A:** coach's heading limit (at most 90 degrees from the net). RL's fallback if action std keeps climbing is entropy_coef 0.01 -> 0.001.
