@@ -198,6 +198,9 @@ def main():
         if p["clip"].startswith("footwork_"):  # walking-teacher footwork clips (D-081)
             by_stroke["footwork"].append(p)
             continue
+        if p["clip"].startswith("fwfast_"):  # the footwork specialist's clips (D-183)
+            by_stroke["footwork_fast"].append(p)
+            continue
         if p["clip"].startswith("Neutral_"):  # 100STYLE footwork (D-101): Neutral_FW_train -> style100_FW
             by_stroke["style100_" + p["clip"].split("_")[1]].append(p)
             continue
@@ -217,7 +220,7 @@ def main():
     for k, g in by_stroke.items():
         src = ("lafan_mirror" if k.startswith("lafanmirror_") else "lafan" if k.startswith("lafan_")
                else "style100" if k.startswith("style100_")
-               else "footwork" if k == "footwork" else "tennis")
+               else "footwork" if k in ("footwork", "footwork_fast") else "tennis")
         pooled[src].extend(p["success"] for p in g)
     summary["by_source"] = {k: float(np.mean(v)) for k, v in pooled.items()}
     print(json.dumps({k: v for k, v in summary.items()}, indent=1))
