@@ -4415,3 +4415,48 @@ Four within-reach screens failed: the stance cap, court_feed_stance (+2.88), the
 - **MIXED** otherwise.
 
 Whatever the verdict, the agent then reports to the user (the two E votes) with the best policies, these findings and the decision only the user can take. That decision is whether to download faster locomotion data (side-shuffle, backpedal, running) for a new motion prior, or to rescope / accept the ceiling.
+
+
+## D-178 - The user approves a faster-movement download; the AMASS-G1 footwork subset (2026-10-30)
+
+After the D-177 report the user asked for a rally video first, then "lets get a faster movement dataset please". On being shown the AMASS licence (non-commercial scientific research only; no redistribution in whole or in part), the user confirmed the project is non-commercial research and accepted the terms ("yes").
+
+**Download.** scripts/motion/fetch_amass_g1.py fetched 854 files (221 MB) from huggingface.co/datasets/fleaven/Retargeted_AMASS_for_robotics, pinned to commit 275c4c4a (public, not gated). The listing is mjlab/results/amass-g1-hf-listing.json, and the per-file sha256 values are in the raw directory's manifest.json.
+- **Contents:** all of ACCAD, Transitions_mocap and SFU; KIT backward / turn clips; Eyes_Japan dodge / backward / shuffle clips.
+- **Location:** the raw data stays in the git-ignored mjlab/artifacts/motion/amass-g1-raw, which is data only and nothing in it is executed.
+- **Format:** G1 joint space at the source rate, with a relative root height.
+
+**Import.** scripts/motion/amass_g1_import.py resamples to 30 fps, grounds the clips with tennis_retarget.ground_shift's rule on the paddle G1 capsule model, and writes CSVs to mjlab/artifacts/motion/amass-g1. The acceptance rule is in the script docstring, frozen before conversion:
+- excluded clip names;
+- at least 1.0 s long;
+- no joint at its limit in more than 25 % of frames;
+- skate median <= 0.15 m/s;
+- grounded in >= 95 % of frames.
+
+Two implementation bugs in the name filter were fixed after the first runs, with no threshold changed:
+- it matched "pose" in every file's "_poses_" suffix;
+- it matched "sit" inside "Transitions".
+
+**Result:** 551 of 851 clips accepted, 3,712 s. The rejects were:
+
+| reason | clips |
+|---|---|
+| name | 170 |
+| joint limit | 84 |
+| not grounded | 176 |
+| skate | 112 |
+| error | 1 |
+
+**Finding: the subset adds little fast lateral / back travel.** Sustained travel was measured as runs of 0.5 s or longer, at pelvis-frame speed with a 0.2 s smoothing, in seconds:
+
+| set | left >= 1.5 m/s | back >= 1.5 m/s | right >= 1.5 m/s | back >= 2.0 m/s |
+|---|---|---|---|---|
+| AMASS subset (accepted) | 0.0 | 8.0 | 0.0 | 3.3 |
+| LAFAN1 (already in H0) | 45.5 | 43.2 | 23.6 | 18.2 |
+
+- The fast clips (ACCAD backward runs, quick sidesteps and retreats) mostly fail skate, joint-limit (ankle roll) or grounding checks.
+- AMASS's quick sidesteps are about 1.4 m/s at p95.
+- So "the prior lacks fast left / back data" is not supported as stated. LAFAN1 already has about 4-5x more of it than this download adds.
+- That points again at selection or control (D-080 / D-082) rather than reference content.
+
+The raw data and CSVs are never committed. Only the scripts, the HF listing and summary statistics are.
