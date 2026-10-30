@@ -305,3 +305,25 @@ _register(TASK_FW_SETTLE, lambda c: footwork_task(c, pay="settled"))
 _register(TASK_FW_MEASURE60, lambda c: footwork_task(c, dist=MEASURE_DIST, pay="settled", episode_s=MEASURE_EPISODE_S))
 if all((_MOTION_DIR / f).exists() for f in STYLE_FILES):  # the AMP arm needs the expert npz files (git-ignored data)
     _register(TASK_FW_STYLE, lambda c: with_style(footwork_task(c)))
+
+
+# D-185 bridge (panel round 54): the current rally composite (lam_r 2 residual around RES_BASE; run 14's task, as the
+# agility screen's arms A0 / A) read on the Measure60 drill: does the composite inherit the prior's travel cap? Only the
+# ball term changes (move-only FootworkDrill, spots 3-5 m, 60-s episodes, pay "settled"); rewards are untouched (read only).
+TASK_FW_RALLY_MEASURE = "Picklebot-Footwork-Measure60-RallyLamR2-G1"
+
+
+def rally_measure(cfg):
+    ag.deadline_task(cfg)
+    b = cfg.actions["ball"]
+    vals = {f.name: getattr(b, f.name) for f in dataclasses.fields(b) if f.init}
+    vals.update(deadline_arrival_mode="first_entry", deadline_v_req=V_REQ, deadline_dist=MEASURE_DIST,
+                footwork_dist=MEASURE_DIST, move_spot_box=SPOT_BOX, footwork_pay="settled")
+    cfg.actions["ball"] = FootworkBallActionCfg(**vals)
+    cfg.episode_length_s = max(cfg.episode_length_s, MEASURE_EPISODE_S)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_FW_RALLY_MEASURE, env_cfg=rally_measure(load_env_cfg(ag.SRC_RES)),
+                    play_env_cfg=rally_measure(load_env_cfg(ag.SRC_RES, play=True)), rl_cfg=load_rl_cfg(ag.SRC_RES),
+                    runner_cls=load_runner_cls(ag.SRC_RES))

@@ -4701,3 +4701,77 @@ The panel then picks step 2's route from these verdicts.
     - a full-3D anchor termination at 0.5 m (architecture).
   - **MIXED:** otherwise -> re-ask the panel.
 - **From now on:** any "the prior expresses X footwork" gate carries a ground-travel line, not success alone.
+
+
+## D-184b - Travel check result: TRAVEL-GAP / OBJECTIVE (2026-10-31)
+
+Frozen read (scripts/diag/footwork_travel_check.sh; results/fw2t-summary.txt). The instrument check passed on T1, T2 and the T3 control.
+
+| read | D | D at 1 s | TR [95 % CI] |
+|---|---|---|---|
+| H0 on footwork-fast FAST | 0.495 | 0.675 | 0.511 [0.495, 0.527] |
+| latent-07 on footwork-fast FAST | 0.569 | 0.633 | 0.572 |
+| H0 on its own LAFAN1 FAST windows (control) | 0.736 | 0.826 | 0.718 |
+
+- It is not contact: D in the friction >= 0.6 envs is 0.500.
+- Stance slip is about 0.25 m/s at every friction.
+- Verdict **TRAVEL-GAP / OBJECTIVE**: route D, and the objective must reward travel.
+
+
+## D-185 - Panel round 54: O1 (anchor-position std 1.0) + footwork-fast in H0; a rally-composite bridge first (2026-10-31)
+
+**Round 54** (mjlab/results/footwork-review.md):
+
+| question | votes | decision |
+|---|---|---|
+| objective change | 5 of 5 | **O1**: motion_global_root_pos std 0.3 -> 1.0, weight 0.5 unchanged. Rejected: O2 (full-3D termination: ends most FAST windows at about 1 s, and changes the success and DAgger terminations); O3 (the velocity kernel averages over the stroke hands); a slip penalty (new code, punishes stroke pivots; queued in case O1 catches up by skating). |
+| data | 3 of 5 (coach, experiment design, architecture; RL and motion: hold out) | **add footwork-fast** (the target skill). The LAFAN1 travel line, on unchanged data, isolates the objective's effect. |
+| budget | median of 2,000-10,000 | **3,000 iterations** |
+| bridge | 3 of 5 (coach, RL, motion; experiment design and architecture: in parallel) | **run it first**, sequentially, since nothing else runs on the GPU |
+
+Sampling shares: tennis 0.5, LAFAN1 0.125, mirrored LAFAN1 0.125, footwork 0.25.
+
+**Corrections.**
+- **The stroke-retention guard for H0 is 3 points** per stroke type, the mean of two dev seeds (D-079: run 5 was rejected for a serve loss of 4.5 points). The round-54 brief's "5 points" was a loosening and is withdrawn.
+- **s5c-03b did not complete its 5,000 iterations.** It stopped on the 7,000-s wall cap (exit 124) after 2,783. The new run sets its wall cap from iterations x 2.6 s.
+- **Merge trap:** merge_motions.py rewrites clip_source per input file. So the merge uses the originals (tennis-v5, lafan-g1-v2, lafan-g1-mirror, footwork-fast-src0), and asserts that the first 549,350 frames equal tennis-lafan3.
+
+**Bridge** (scripts/diag/footwork_bridge.sh; frozen). Rally run 22b model_30200 on Picklebot-Footwork-Measure60-RallyLamR2-G1:
+- run 14's task with a move-only FootworkDrill, spots 3-5 m, 60-s episodes, rewards untouched;
+- mean actions, 1,024 envs, 120 s, dev seed 4220225;
+- R = the mean over left and back of the composite's sustained p50 / the specialist's (fw1d-C).
+- **CAP-INHERITED** if R <= 0.65 -> the chain proceeds. **NO-CAP** if R >= 0.85 -> re-ask the panel before the H0 run. Otherwise **MIXED** -> reported, and the chain proceeds.
+
+Smoke: 16 envs on 4220226, sustained 1.1-1.45 m/s (reported). The smoke also exposed that footwork_eval's config check crashed on a task without `pose`; it now reports missing reward terms.
+
+**H0 fine-tune h0-fw-01** (to be built after the bridge; lines frozen here):
+- **Task:** a new id derived from Picklebot-Tracking-TennisLafan3-Huge-G1. One objective change (O1) plus the footwork-fast data at the shares above.
+- **Training:** parent s5c-03b model_63300, stock PPO at a fixed 1e-5 (as the parent), 4,096 envs, 3,000 iterations, training seed 172. The fixed endpoint is the last checkpoint at +3,000, with no selection.
+- **Reads** are paired with model_63300 on the same seeds, at mean actions, with tracking_eval --per-stroke and the travel instrument.
+  - **Kill at +900:**
+    - D_fw (footwork-fast FAST) < 0.70;
+    - D_lafan (LAFAN1 FAST) < 0.80;
+    - footwork-fast FAST success < 0.90;
+    - any stroke type > 10 points below the parent;
+    - stance slip S_fw > S_parent + 0.05;
+    - falls > 2 x parent.
+    - INSTRUMENT if |TR - median speed ratio| > 0.05 on any read.
+  - **Endpoint H0F-PASS** needs all of:
+    - D_fw >= 0.90, D_lafan >= 0.90 and D_fw <= 1.10;
+    - footwork-fast FAST success >= 0.95;
+    - tennis root-relative MPKPE <= parent + 0.010;
+    - each stroke type >= parent - 3 points (mean of two seeds);
+    - LAFAN1 and mirrored-LAFAN1 success >= parent - 3 points;
+    - S_fw <= S_parent + 0.03;
+    - tennis-window |robot - reference displacement| p50 <= 0.18 m;
+    - tennis end-effector error <= parent + 0.01;
+    - instrument OK.
+
+    **H0F-RETENTION** if the travel lines pass and a retention line fails (no H1 re-distil; re-ask the panel). **H0F-FAIL** if D_lafan < 0.90 (O2 next, as its own run).
+- **After a PASS:**
+  - the H1 re-distil, initialised from latent-07;
+  - then architecture's zero-shot bridge: H1' swapped under RES_BASE + 22b via PICKLEBOT_CONTROLLER, evaluation only. It is run before any RES_BASE rebuild.
+- **Seeds:**
+  - dev: 4220220 (fw, kill), 4220221 (tennis-lafan3, kill), 4220222 (fw, endpoint), 4220223 / 4220224 (tennis-lafan3, endpoint), 4220225 (bridge), 4220226 (bridge smoke);
+  - 4220227-4220229 spare, released unread if unused;
+  - training: 172 (H0), 173 (smoke).

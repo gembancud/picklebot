@@ -35,10 +35,9 @@ def config_missing(task: str, move_prob: str | None) -> list[str]:
         miss.append("footwork_dist")
     if getattr(b, "footwork_pay", None) != "settled":
         miss.append("footwork_pay")
-    if cfg.rewards["move_track_lin_vel"].func is not fs.fw_track_lin_vel:
-        miss.append("move_track_lin_vel.func")
-    if cfg.rewards["pose"].func is not fs.fw_posture:
-        miss.append("pose.func")
+    for k, f in (("move_track_lin_vel", fs.fw_track_lin_vel), ("pose", fs.fw_posture)):  # absent in rally tasks: reported
+        if k not in cfg.rewards or cfg.rewards[k].func is not f:
+            miss.append(f"{k}.func")
     if move_prob is None or float(move_prob) != 1.0:
         miss.append("move_prob")
     return miss

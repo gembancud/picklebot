@@ -97,3 +97,26 @@ D-182.
 | Architecture | the displacement ratio at 1 s and at the end; (b) with a full-3D anchor termination | 0.9 / 0.8 |
 
 **Decision (D-184):** the panel median, 0.90 / 0.80, with experiment design's instrument check, motion's CONTACT line and RL's LAFAN control for the sub-route.
+
+## Round 54 (2026-10-31): route D's H0 fine-tune
+
+**Inputs:** results/footwork-round54-brief.md, with the travel check at TRAVEL-GAP / OBJECTIVE.
+
+**Correction checks**
+- D-184 stands (all five).
+- Experiment design: the brief's 5-point stroke guard was a loosening; H0's is 3 points (D-079).
+- Architecture: s5c-03b stopped on the wall cap at 2,783 iterations; the merge_motions clip_source trap.
+- Motion: the stance-slip measure is not the import's skate measure. Robot slip is about 4x the tennis reference (a gait habit).
+- RL: the actor sees the lag only through ±0.25 m noise.
+
+**Votes**
+
+| reviewer | objective | data | iterations | bridge |
+|---|---|---|---|---|
+| RL | O1 | hold out | 3,000 | first (≤ 1.2 m/s p95 = cap) |
+| Motion | O1 | hold out | 5,000 | first |
+| Coach | O1 | add | about 2,000 | first |
+| Experiment design | O1 | add (freeze the share) | 10,000 | in parallel (ratio to the specialist ≤ 0.65 / ≥ 0.85) |
+| Architecture | O1 (O2 fallback) | add, tennis 0.5 | 3,000 | 22b fast-move read now; a zero-shot H1′ swap later |
+
+**Decision:** D-185.
