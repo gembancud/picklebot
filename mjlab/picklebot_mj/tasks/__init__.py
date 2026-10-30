@@ -875,6 +875,28 @@ register_mjlab_task(task_id=TASK_TRACKING_TENNIS_LAFAN3_HUGE, env_cfg=_tracking_
                     runner_cls=MotionTrackingOnPolicyRunner)
 
 
+# D-185 (footwork phase step 2, route D): H0 fine-tune h0-fw-01. tennis-lafan3 + the footwork specialist's accepted
+# clips (scripts/motion/build_tennis_lafan3_ff.sh), sampled 0.5 / 0.125 / 0.125 / 0.25 by source, and ONE objective
+# change (O1): motion_global_root_pos std 0.3 -> 1.0 (weight 0.5), so the anchor-position reward still pays at 0.6-2 m
+# of lag (the travel check, D-184b: H0 covers 0.50 of footwork-fast and 0.74 of LAFAN1 ground travel).
+TASK_TRACKING_TL3FF_ROOT1_HUGE = "Picklebot-Tracking-TennisLafan3FF-Root1-Huge-G1"
+TENNIS_LAFAN3_FF_MOTION = str(_MOTION_DIR / "tennis-lafan3-ff.npz")
+TENNIS_LAFAN3_FF_SHARES = (0.5, 0.125, 0.125, 0.25)
+ROOT_POS_STD_O1 = 1.0
+
+
+def _tracking_tl3ff_root1(play=False):
+    cfg = paddle_tracking_env_cfg(TENNIS_LAFAN3_FF_MOTION, play=play)
+    cfg.commands["motion"].source_shares = TENNIS_LAFAN3_FF_SHARES
+    cfg.rewards["motion_global_root_pos"].params["std"] = ROOT_POS_STD_O1
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_TRACKING_TL3FF_ROOT1_HUGE, env_cfg=_tracking_tl3ff_root1(),
+                    play_env_cfg=_tracking_tl3ff_root1(True), rl_cfg=_tracking_huge_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)
+
+
 # Stage 5C (D-081): the H0 teacher's motion set gains the walking teacher's own footwork (Picklebot-Teacher-Move-G1,
 # model_15900, recorded by scripts/motion/record_policy_clips.py: 128 x 30 s of move-to-spot episodes in uniform
 # directions, about equal forward / left / right / back stepping). Sources: tennis-v5, LAFAN1, mirrored LAFAN1,
