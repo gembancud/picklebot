@@ -187,6 +187,13 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         out["overshoot_sum"] = [round(x, 4) for x in self.overshoot_sum.tolist()]
         return out
 
+    def summary(self) -> dict:
+        """For scripts/stage2_eval.py (via scripts/diag/footwork_eval.py): DeadlineMoveDrill's summary plus the
+        cumulative counters, which bodyspeed_rule reads."""
+        out = super().summary()
+        out["footwork"] = self.counters()
+        return out
+
 
 # ----------------------------------------------------------------------------------------
 @dataclass(kw_only=True)
