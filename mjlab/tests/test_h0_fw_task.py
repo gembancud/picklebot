@@ -23,7 +23,16 @@ def test_one_objective_change_and_no_leak():
     assert cb.motion_file.endswith("tennis-lafan3-ff.npz") and ca.motion_file.endswith("tennis-lafan3.npz")
     assert load_rl_cfg(t.TASK_TRACKING_TL3FF_ROOT1_HUGE) == load_rl_cfg(t.TASK_TRACKING_TENNIS_LAFAN3_HUGE)
     for task in list_tasks():
-        if task.startswith("Picklebot-Tracking-") and task != t.TASK_TRACKING_TL3FF_ROOT1_HUGE:
+        if task.startswith("Picklebot-Tracking-") and task not in (t.TASK_TRACKING_TL3FF_ROOT1_HUGE, t.TASK_TRACKING_TL3FF_ROOT1W2_HUGE):
             c = load_env_cfg(task)
             if "motion_global_root_pos" in c.rewards:
                 assert c.rewards["motion_global_root_pos"].params["std"] == 0.3, task
+
+
+def test_w2_task_differs_from_w1_only_in_the_weight():
+    a, b = load_env_cfg(t.TASK_TRACKING_TL3FF_ROOT1_HUGE), load_env_cfg(t.TASK_TRACKING_TL3FF_ROOT1W2_HUGE)
+    diff = sorted(k for k in a.rewards if a.rewards[k].params != b.rewards[k].params or a.rewards[k].weight != b.rewards[k].weight)
+    assert diff == ["motion_global_root_pos"] and b.rewards["motion_global_root_pos"].weight == 2.0
+    assert a.rewards["motion_global_root_pos"].weight == 0.5 and b.rewards["motion_global_root_pos"].params["std"] == 1.0
+    assert a.commands["motion"].source_shares == b.commands["motion"].source_shares
+    assert load_env_cfg(t.TASK_TRACKING_TENNIS_LAFAN3_HUGE).rewards["motion_global_root_pos"].weight == 0.5

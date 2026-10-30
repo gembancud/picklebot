@@ -13,6 +13,9 @@ Endpoint (fw one pair, tl two pairs; stroke and LAFAN success as the mean of the
   H0F-FAIL if D_lafan < 0.90 (the objective change did not work: O2 next, as its own run);
   H0F-RETENTION if the travel lines (D_fw >= 0.90, D_lafan >= 0.90, D_fw <= 1.10) pass and another line fails;
   H0F-PARTIAL otherwise (D_lafan passes, D_fw does not): re-ask the panel.
+h0-fw-02 (D-186, panel round 55) calls the same functions with stricter options: kill(d_lafan_min=0.82,
+  lafan_succ_drop=0.05) adds the anti-lunge line (LAFAN1 and mirrored-LAFAN1 success >= parent - 0.05); endpoint(ho=...)
+  adds the held-out footwork gate (D_fwHO >= 0.90 and <= 1.10 on clips never trained on), counted with the travel lines.
 """
 
 from __future__ import annotations
@@ -56,7 +59,8 @@ def lafan_success(d: dict) -> dict:
     return {k: d["by_source"].get(k) for k in ("lafan", "lafan_mirror")}
 
 
-def kill(fw_c: dict, fw_p: dict, tl_c: dict, tl_p: dict) -> tuple[str, list[str]]:
+def kill(fw_c: dict, fw_p: dict, tl_c: dict, tl_p: dict, d_lafan_min: float = KILL_D_LAFAN,
+         lafan_succ_drop: float | None = None) -> tuple[str, list[str]]:
     a, ap, l, lp = tr.read_stats(fw_c), tr.read_stats(fw_p), lafan_stats(tl_c), lafan_stats(tl_p)
     lines = []
     if not all(s.get("instrument_ok") for s in (a, ap, l, lp)):
@@ -65,21 +69,26 @@ def kill(fw_c: dict, fw_p: dict, tl_c: dict, tl_p: dict) -> tuple[str, list[str]
     worst = min(sc[s] - sp[s] for s in sc)
     fall_c = max(fw_c["fall_rate"], tl_c["fall_rate"])
     fall_p = max(fw_p["fall_rate"], tl_p["fall_rate"], 0.005)
-    checks = [("D_fw", a["D"], a["D"] >= KILL_D_FW), ("D_lafan", l["D"], l["D"] >= KILL_D_LAFAN),
+    checks = [("D_fw", a["D"], a["D"] >= KILL_D_FW), ("D_lafan", l["D"], l["D"] >= d_lafan_min),
               ("fw FAST success", fast_success(fw_c), fast_success(fw_c) >= KILL_FAST_SUCC),
               ("worst stroke - parent", worst, worst >= -KILL_STROKE),
               ("S_fw - S_parent", a["S"] - ap["S"], a["S"] - ap["S"] <= KILL_SLIP),
               ("falls / parent", fall_c / fall_p, fall_c <= KILL_FALLS * fall_p)]
+    if lafan_succ_drop is not None:
+        for k in ("lafan", "lafan_mirror"):
+            dv = lafan_success(tl_c)[k] - lafan_success(tl_p)[k]
+            checks.append((f"{k} success - parent", dv, dv >= -lafan_succ_drop))
     for name, v, ok in checks:
         lines.append(f"{name} {v:.3f} -> {'ok' if ok else 'KILL'}")
     return ("CONTINUE" if all(ok for _, _, ok in checks) else "KILL"), lines
 
 
-def endpoint(fw_c: dict, fw_p: dict, tl_c: list[dict], tl_p: list[dict]) -> tuple[str, list[str]]:
+def endpoint(fw_c: dict, fw_p: dict, tl_c: list[dict], tl_p: list[dict], ho: dict | None = None) -> tuple[str, list[str]]:
     a, ap = tr.read_stats(fw_c), tr.read_stats(fw_p)
+    h = tr.read_stats(ho) if ho is not None else None
     lc = [lafan_stats(d) for d in tl_c]
     lp = [lafan_stats(d) for d in tl_p]
-    if not all(s.get("instrument_ok") for s in [a, ap] + lc + lp):
+    if not all(s.get("instrument_ok") for s in [a, ap] + lc + lp + ([h] if h else [])):
         return "INSTRUMENT", ["instrument check failed on a travel read"]
     d_lafan = float(np.mean([s["D"] for s in lc]))
     sc = {s: np.mean([strokes(d)[s] for d in tl_c]) for s in STROKES}
@@ -93,6 +102,8 @@ def endpoint(fw_c: dict, fw_p: dict, tl_c: list[dict], tl_p: list[dict]) -> tupl
     disp = np.mean([t["disp_err_p50"] for t in tc])
     travel = [("D_fw >= 0.90", a["D"], a["D"] >= OK), ("D_lafan >= 0.90", d_lafan, d_lafan >= OK),
               ("D_fw <= 1.10", a["D"], a["D"] <= D_MAX)]
+    if h is not None:
+        travel += [("D_fwHO >= 0.90", h["D"], h["D"] >= OK), ("D_fwHO <= 1.10", h["D"], h["D"] <= D_MAX)]
     other = [("fw FAST success", fast_success(fw_c), fast_success(fw_c) >= FAST_SUCC),
              ("tennis r_mpkpe - parent", rm_c - rm_p, rm_c - rm_p <= RMPKPE),
              *[(f"stroke {s} - parent", sc[s] - sp[s], sc[s] - sp[s] >= -STROKE) for s in STROKES],

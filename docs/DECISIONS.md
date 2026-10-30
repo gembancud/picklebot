@@ -4775,3 +4775,53 @@ Smoke: 16 envs on 4220226, sustained 1.1-1.45 m/s (reported). The smoke also exp
   - dev: 4220220 (fw, kill), 4220221 (tennis-lafan3, kill), 4220222 (fw, endpoint), 4220223 / 4220224 (tennis-lafan3, endpoint), 4220225 (bridge), 4220226 (bridge smoke);
   - 4220227-4220229 spare, released unread if unused;
   - training: 172 (H0), 173 (smoke).
+
+
+## D-186 - Bridge CAP-INHERITED; h0-fw-01 killed at +900; panel round 55: O1 weight 0.5 -> 2.0 (h0-fw-02) (2026-10-31)
+
+**Bridge** (D-185, frozen; results/fw2b-summary.txt): **CAP-INHERITED**, R = 0.636.
+- Rally run 22b's composite sustains 1.16-1.45 m/s in every sector against the specialist's 1.88-2.10.
+- Left 0.581 and back 0.691 of the specialist.
+- Route D's chain proceeds.
+
+**h0-fw-01 KILL at +900** (results/h0fw01-kill.txt; checkpoint 2026-10-31_06-12-41_h0-fw-01/model_64199, the 900th update; the script comment "to model_64200" is a naming slip). The KILL is valid. Paired reads on 4220220 / 4220221:
+
+| line | child | parent | result |
+|---|---|---|---|
+| D_lafan (LAFAN1 FAST) | **0.781** | 0.741 | **KILL** at 0.80 |
+| D_fw (footwork-fast FAST) | 0.808 | 0.496 | ok |
+| footwork-fast FAST success | 1.000 | | ok |
+| worst stroke - parent | -1.1 points | | ok |
+
+- The LAFAN1 TR intervals are 0.749-0.777 (child) and 0.705-0.732 (parent).
+- **Correction:** the round-55 brief gave the parent as 0.736, which was D-184b's figure on another seed. Paired, the gain is +0.040.
+- **Calibration:** the 0.80 line was not calibrated against a measured rate. Linear extrapolation (0.741 + 0.040 x 3.33 = 0.87 < 0.90) agrees with the kill.
+- **Confound (motion, architecture):** TL3FF halves LAFAN1 exposure (0.125 + 0.125, against the parent's 0.25 + 0.25).
+- D_fw is in-sample (footwork-fast was trained on), so it is not evidence that the prior expresses footwork.
+
+**Diagnostics** (reported; scripts/diag/h0fw_breakdown.py; round 55):
+- LAFAN1 rose in every family, by 0.02-0.16.
+- The lag is not slip (D is the same at every friction), not turning or stop-start, and not a slow start: D is 0.86 at 1 s and falls to 0.78 by the window end.
+- It is worst at 1.0-1.5 m/s straight cruising (0.74), which is footwork-fast's own speed band. At 3 m/s and above it is 0.85.
+- Training error_anchor_pos was still falling, by about 0.015 per 100 iterations.
+- O1 at weight 0.5 pulls with only about 70 % of the parent's gradient at the current lag of about 0.45 m (RL).
+- **Pre-existing, reported:** the adaptive sampler collapses onto one serve bin (top-1 probability 0.47, as in the parent). It is worth a separate fix.
+
+**Panel round 55** (mjlab/results/footwork-review.md):
+- **Change:** (a) motion_global_root_pos weight 0.5 -> 2.0, std 1.0 kept, 4 of 5. Architecture voted (b) O2 from model_64199.
+  - D-185's "O2 next" applied after an endpoint H0F-FAIL. It is overridden here: O1 moved every family the right way but too slowly, and O2 from model_63300 would end about 84 % of footwork-fast windows.
+- **Parent:** model_63300, 3 of 5 (motion and architecture wanted model_64199). This keeps attribution clean against h0-fw-01.
+- **Endpoint:** the LAFAN1 line stays, 5 of 5. It is the only travel read on unchanged data. No premise changed, so no loosening.
+
+**h0-fw-02** (scripts/diag/h0_fw02.sh, sha256 9dcb76c1; rule picklebot_mj/h0fw_rule.py, sha256 83a5cc70; frozen):
+- **Task:** Picklebot-Tracking-TennisLafan3FF-Root1W2-Huge-G1, h0-fw-01's task with the one change. Smoke: std 1.0, weight 2.0, shares 0.5 / 0.125 / 0.125 / 0.25.
+- **Training:** fixed 1e-5, 4,096 envs, 3,000 iterations in two segments. Training seeds 174 (smoke 175).
+- **Kill at +900**, paired with model_63300 on 4220230 (fw) / 4220231 (tl):
+  - D-185's lines, with D_lafan raised to **0.82** (the panel median of 0.80 / 0.80 / 0.82 / 0.83 / 0.83);
+  - plus motion's anti-lunge line: LAFAN1 and mirrored-LAFAN1 success >= parent - 0.05.
+- **Endpoint:** D-185's H0F lines, plus experiment design's held-out gate.
+  - The gate is D_fwHO >= 0.90 and <= 1.10 on new footwork-fast clips: training seed 176, accepted by amass_g1_import unchanged, never trained on. Their clip-list and npz sha256 are frozen in results/h0fw02-ho-sha256.txt before training.
+  - The gate counts with the travel lines. It tightens and loosens nothing.
+  - Reads: 4220222 (fw), 4220223 / 4220224 (tl), 4220232 (fwHO, child).
+  - H0F-FAIL re-asks the panel, which must then say whether O1 at any weight is the wrong lever.
+- **Not adopted** (single reviewers): RL's +300 training-log line and its 5-point stroke kill; experiment design's +0.060 dose line (covered by 0.82).

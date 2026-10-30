@@ -120,3 +120,24 @@ D-182.
 | Architecture | O1 (O2 fallback) | add, tennis 0.5 | 3,000 | 22b fast-move read now; a zero-shot H1′ swap later |
 
 **Decision:** D-185.
+
+## Round 55 (2026-10-31): h0-fw-01 killed at +900
+
+**Correction checks** (all five): the kill is valid, and model_64199 is the 900th update.
+- Experiment design and RL: the parent's D_lafan is 0.741, not 0.736.
+- Motion and architecture: LAFAN1 exposure was halved.
+- Architecture: the sampler collapses onto one serve bin (pre-existing).
+
+**Votes**
+
+| reviewer | change | parent | other |
+|---|---|---|---|
+| Coach | (a) weight 2.0 | 63300 | D-185 lines unchanged |
+| Experiment design | (a) | 63300 | + a held-out footwork gate, + a dose line |
+| Motion | (a) | 64199 | kill at D_lafan 0.83, an anti-lunge line |
+| RL | (a) | 63300 | D_lafan 0.82, a +300 log line, a 5-point stroke kill |
+| Architecture | (b) O2 at 0.5 m | 64199 | — |
+
+The LAFAN1 endpoint is kept, 5 of 5.
+
+**Decision:** D-186.

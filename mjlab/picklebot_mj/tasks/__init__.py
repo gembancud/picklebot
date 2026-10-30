@@ -896,6 +896,22 @@ register_mjlab_task(task_id=TASK_TRACKING_TL3FF_ROOT1_HUGE, env_cfg=_tracking_tl
                     play_env_cfg=_tracking_tl3ff_root1(True), rl_cfg=_tracking_huge_rl_cfg(),
                     runner_cls=MotionTrackingOnPolicyRunner)
 
+# D-186 (panel round 55, 4 of 5): h0-fw-02 = h0-fw-01's task with ONE change, motion_global_root_pos weight 0.5 -> 2.0
+# (std 1.0 kept): O1 moved every LAFAN1 family the right way but too slowly (+0.040 in 900 iterations).
+TASK_TRACKING_TL3FF_ROOT1W2_HUGE = "Picklebot-Tracking-TennisLafan3FF-Root1W2-Huge-G1"
+ROOT_POS_WEIGHT_W2 = 2.0
+
+
+def _tracking_tl3ff_root1w2(play=False):
+    cfg = _tracking_tl3ff_root1(play)
+    cfg.rewards["motion_global_root_pos"].weight = ROOT_POS_WEIGHT_W2
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_TRACKING_TL3FF_ROOT1W2_HUGE, env_cfg=_tracking_tl3ff_root1w2(),
+                    play_env_cfg=_tracking_tl3ff_root1w2(True), rl_cfg=_tracking_huge_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)
+
 
 # Stage 5C (D-081): the H0 teacher's motion set gains the walking teacher's own footwork (Picklebot-Teacher-Move-G1,
 # model_15900, recorded by scripts/motion/record_policy_clips.py: 128 x 30 s of move-to-spot episodes in uniform
@@ -1335,10 +1351,22 @@ register_mjlab_task(task_id=TASK_TRACKING_SPEED_LADDER, env_cfg=_tracking_speed_
 # accepted by scripts/diag/footwork_step2_premise.sh; all clip_source 1), for tracking_eval.py --per-stroke. Evaluation only.
 TASK_TRACKING_FOOTWORK_FAST = "Picklebot-Tracking-FootworkFast-G1"
 FOOTWORK_FAST_MOTION = str(_MOTION_DIR.parent / "footwork-fast" / "footwork-fast.npz")
+# D-186: held-out specialist clips (training seed 176, never in any training set), the h0-fw-02 endpoint's fwHO gate.
+TASK_TRACKING_FOOTWORK_FAST_HO = "Picklebot-Tracking-FootworkFastHO-G1"
+FOOTWORK_FAST_HO_MOTION = str(_MOTION_DIR.parent / "footwork-fast-ho" / "footwork-fast.npz")
 
 
 def _tracking_footwork_fast(play=False):
     return paddle_tracking_env_cfg(FOOTWORK_FAST_MOTION, play=play)
+
+
+def _tracking_footwork_fast_ho(play=False):
+    return paddle_tracking_env_cfg(FOOTWORK_FAST_HO_MOTION, play=play)
+
+
+register_mjlab_task(task_id=TASK_TRACKING_FOOTWORK_FAST_HO, env_cfg=_tracking_footwork_fast_ho(),
+                    play_env_cfg=_tracking_footwork_fast_ho(True), rl_cfg=_tracking_huge_rl_cfg(),
+                    runner_cls=MotionTrackingOnPolicyRunner)
 
 
 register_mjlab_task(task_id=TASK_TRACKING_FOOTWORK_FAST, env_cfg=_tracking_footwork_fast(),
