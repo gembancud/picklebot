@@ -16,6 +16,7 @@ control picklebot_mj/agility_control.py):
 Ball-index diagnostic (scripts/diag/ballidx51.sh): TASK_AGILITY_BALLIDX, rally run 22b's training task plus the handed-ball
 tally (tasks/ball_index.py; PICKLEBOT_BALLIDX_LOG=path, every PICKLEBOT_BALLIDX_LOG_EVERY env steps, default 240).
 TASK_AGILITY_BALLIDX_SPLIT (scripts/diag/ballidx52.sh): the same with the split variables (ball_index_split).
+TASK_AGILITY_BALLIDX_IDLEREC (D-177, scripts/diag/idlerec53.sh): the ballidx task plus pair_idle_recovery.
 
 Logging: PICKLEBOT_AGILITY_LOG=path appends the cumulative counters every PICKLEBOT_AGILITY_LOG_EVERY env steps
 (default 240 = 10 iterations at 24 steps per env; one host sync each time), as PICKLEBOT_PAIR_LOG does.
@@ -58,6 +59,7 @@ class AgilityBallActionCfg(BallPhysicsActionCfg):
     direction_tally: bool = False  # feeder-ball outcomes by direction (pair mode)
     ball_index_tally: bool = False  # handed-ball outcomes by rally index, speed, direction, distance (pair mode)
     ball_index_split: bool = False  # + shot-quality and receiver-state variables by k and distance (needs the tally)
+    pair_idle_recovery: bool = False  # D-177: spot_progress also while this env has no ball in play (pairs.parked)
 
     def build(self, env) -> "AgilityBallAction":
         return AgilityBallAction(self, env)
@@ -189,3 +191,8 @@ _register(TASK_AGILITY_BALLIDX, SRC_22B, lambda c: to_agility_ball(c, ball_index
 # ballidx52 (scripts/diag/ballidx52.sh): the same plus the split variables (receiver state vs shot quality; logging only)
 TASK_AGILITY_BALLIDX_SPLIT = "Picklebot-Agility-BallIdx-Split-ReadCfg-LamR2-G1"
 _register(TASK_AGILITY_BALLIDX_SPLIT, SRC_22B, lambda c: to_agility_ball(c, ball_index_tally=True, ball_index_split=True))
+# D-177 idle recovery (scripts/diag/idlerec53.sh): the ballidx task plus pair_idle_recovery: spot_progress (same function,
+# weight and max_speed) is also active while the env has no ball of its own in play (pairs.parked), toward recover_xy.
+TASK_AGILITY_BALLIDX_IDLEREC = "Picklebot-Agility-BallIdx-IdleRec-ReadCfg-LamR2-G1"
+_register(TASK_AGILITY_BALLIDX_IDLEREC, SRC_22B,
+          lambda c: to_agility_ball(c, ball_index_tally=True, pair_idle_recovery=True))

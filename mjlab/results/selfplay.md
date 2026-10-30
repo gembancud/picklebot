@@ -1346,3 +1346,29 @@ The split tally (task Picklebot-Agility-BallIdx-Split-ReadCfg-LamR2-G1, seed 154
 **Coded rule.** STATE, fired by pelvis speed alone (p50 gap -0.225 against <= -0.20; worst tercile 0.271 >= 2 x best 0.172). No shot variable fired. Near-misses: recovery distance (+0.30 m against +0.40) and bounce depth.
 
 **Caveat (agent's reading).** The firing variable points the wrong way inside k = 1: the fastest receivers fail most. The rule checks only the gap and the tercile spread, not that the two agree. The coherent reading is recovery distance. While the partner plays the feeder ball, the idle robot stands about 0.6 m off its recovery spot, nearly still. When ball 1 comes, it must scramble, and failure rises with that distance. The next lever is readiness: shaping the idle robot back to its recovery spot during the partner's feeder ball (D-177).
+
+## Idle-recovery screen (idlerec53): FAIL (2026-10-30)
+
+**How the idle partner is handled today** (code read):
+- While its partner plays the feeder ball, the env is parked.
+- recovery_reward and spot_progress, the only pulls toward recover_xy, are gated on `hit_done` from its own last ball. So after a reset, or a ball missed without contact, nothing pulls it back.
+- stance_progress is off while it is idle.
+
+**The change.** pair_idle_recovery (opt-in) makes spot_progress active while parked. Task: Picklebot-Agility-BallIdx-IdleRec-ReadCfg-LamR2-G1. The GPU test passes.
+
+**The screen.** Run from run 22b model_30200, read-like overrides, 400 iterations at 1e-4, last quarter, pair courts [train-log]:
+
+| arm | k = 1 legal | k = 2 legal | k >= 3 legal | feeder legal all / 0-1 bin | falls / 1,000 env-s |
+|---|---|---|---|---|---|
+| K0a (155) | 0.6445 | 0.8113 | 0.9103 | 0.6970 / 0.6888 | 2.02 |
+| K0b (156) | 0.6631 | 0.8263 | 0.9204 | 0.7090 / 0.7005 | 1.93 |
+| KI (157) | 0.6617 | 0.8173 | 0.9182 | 0.7081 / 0.7058 | 2.13 |
+
+**Rule.**
+- k = 1: +0.79 points against the needed +3.0, and against 2 x A/A (1.86) = 3.72.
+- k >= 3: +0.29.
+- Feeder: +0.51.
+- Falls: 2.13.
+- Config check: ok.
+
+**VERDICT: FAIL.** Pulling the idle robot back to its spot does not lift ball 1 within 400 iterations. That is four within-reach levers in a row inside the A/A noise: stance cap, court-feed stance, the anchor and idle recovery. Panel round 50 next.

@@ -1313,6 +1313,10 @@ def spot_progress(env, max_speed: float = 1.0) -> torch.Tensor:
     v = t._entity.data.root_link_lin_vel_w[:, :2]
     prog = (v * (to / dist)).sum(-1).clamp(-max_speed, max_speed) * (dist.squeeze(-1) > 0.1).float()
     active = t.hit_done | t.hit_hint_on
+    if getattr(t.cfg, "pair_idle_recovery", False) and getattr(t, "pairs", None) is not None:
+        # D-177 (opt-in, only on tasks/agility.py's IdleRec task): an env with no ball of its own in play (parked:
+        # waiting while its partner plays, e.g. the feeder ball, or for the court's restart) is also paid toward recover_xy
+        active = active | t.pairs.parked
     if t.drill is not None:
         active = active | t.drill.move_ep
     if t.shadow is not None:

@@ -1,0 +1,13 @@
+arm   k=1 legal (n)      k=2 legal (n)      k>=3 legal (n)       feeder legal all (n) / 0-1 bin (n)   falls/1000 env-s
+K0a   0.6445 ( 3983)   0.8113 ( 2533)   0.9103 ( 18286)    0.6970 ( 6010) / 0.6888 ( 3509)         2.023
+K0b   0.6631 ( 3734)   0.8263 ( 2464)   0.9204 ( 19509)    0.7090 ( 5484) / 0.7005 ( 3149)         1.929
+KI    0.6617 ( 3819)   0.8173 ( 2513)   0.9182 ( 19009)    0.7081 ( 5683) / 0.7058 ( 3301)         2.129
+
+rule (last quarter, pair courts):
+  KI k=1 legal - mean(K0): +0.79 pt >= +3.00 -> FAIL
+  KI k=1 legal - mean(K0): +0.79 pt >= 2 x |K0a - K0b| = 2 x 1.86 = 3.72 -> FAIL
+  KI k>=3 legal - mean(K0): +0.29 pt >= -1.00 -> PASS
+  KI feeder legal - mean(K0): +0.51 pt >= -2.00 -> PASS
+  KI falls per 1,000 env-s: 2.129 <= 4.157 -> PASS
+config check KI pair_idle_recovery true: ok; K0a without it: ok
+VERDICT: FAIL
