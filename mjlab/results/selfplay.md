@@ -1284,3 +1284,17 @@ The rejected Neutral_SR clips are included in a sensitivity line only, which als
 H0 and the encoder fail together, which points away from the decoder. By the coded route, BODY? sends the loop to E: work within the controller's reach. The first lever within reach is the stale stance target on court feeds (D-176).
 
 **Housekeeping.** results/agility-summary.json (the first screen's) had been overwritten by a stdout-only peek: agility_summary.py defaulted --json to that file. The committed version is restored, and the default is now None (write only when asked).
+
+## Court-feed stance diagnostic (D-176): FAIL (2026-10-30)
+
+scripts/diag/courtstance50.sh: run 14's task with the feeder-ball direction tally, from run 18b model_29000, 400 iterations at 1e-4, last quarter [train-log].
+
+| arm | left + back legal | forward + right legal | left peak | back peak | falls / 1,000 env-s |
+|---|---|---|---|---|---|
+| K0a (control) | 0.3396 | 0.8488 | 1.57 m/s | 1.47 m/s | 2.26 |
+| K0b (control, identical) | 0.3644 | 0.8522 | 1.59 m/s | 1.51 m/s | 2.56 |
+| KF court_feed_stance | 0.3808 | 0.8506 | 1.66 m/s | 1.61 m/s | 2.78 |
+
+**Rule.** KF - mean(K0) on left + back was +2.88 points. It needed both >= +3.0 and >= 2 x A/A drift (2 x 2.48 = 4.96). Forward + right was +0.01 (needs >= -2.0); falls 2.78 (needs <= 4.157). The config check is ok. **VERDICT: FAIL.**
+
+The direction is positive: earlier onset (0.25 vs 0.27 s) and peak speed +0.07-0.10 m/s. But the size sits inside the A/A drift, and the A/A drift itself is 2.5 points over 400 iterations. That drift is worth recording for every later 400-iteration screen. Per D-176, the flag is not carried into a rally run. Route E continues with ball 1, the first robot-to-robot ball, which fails 0.26-0.30 in the read against 0.01-0.04 for balls 3-5.

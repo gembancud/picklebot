@@ -1,0 +1,18 @@
+K0a: left + back legal 0.3396, forward + right legal 0.8488, falls / 1,000 env-s 2.264
+   forward  feeds   9093 legal 0.874 contact 0.930 onset p50 0.43 peak mean 1.36 m/s
+   left     feeds   4297 legal 0.368 contact 0.512 onset p50 0.27 peak mean 1.57 m/s
+   back     feeds   2196 legal 0.283 contact 0.515 onset p50 0.31 peak mean 1.47 m/s
+   right    feeds   8852 legal 0.823 contact 0.890 onset p50 0.37 peak mean 1.24 m/s
+K0b: left + back legal 0.3644, forward + right legal 0.8522, falls / 1,000 env-s 2.555
+   forward  feeds   9042 legal 0.867 contact 0.926 onset p50 0.41 peak mean 1.38 m/s
+   left     feeds   4078 legal 0.365 contact 0.497 onset p50 0.27 peak mean 1.59 m/s
+   back     feeds   2179 legal 0.363 contact 0.564 onset p50 0.31 peak mean 1.51 m/s
+   right    feeds   8884 legal 0.837 contact 0.896 onset p50 0.35 peak mean 1.21 m/s
+KF: left + back legal 0.3808, forward + right legal 0.8506, falls / 1,000 env-s 2.777
+   forward  feeds   8853 legal 0.864 contact 0.924 onset p50 0.43 peak mean 1.41 m/s
+   left     feeds   3761 legal 0.395 contact 0.535 onset p50 0.25 peak mean 1.66 m/s
+   back     feeds   2130 legal 0.356 contact 0.597 onset p50 0.29 peak mean 1.61 m/s
+   right    feeds   9154 legal 0.837 contact 0.899 onset p50 0.37 peak mean 1.23 m/s
+rule: KF - mean(K0) left + back +2.88 (needs >= +3.0 and >= 2 x A/A 2.48 = 4.96); forward + right +0.01 (needs >= -2.0); KF falls 2.777 (needs <= 4.157)
+config check KF court_feed_stance true: ok
+VERDICT: FAIL
