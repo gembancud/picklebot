@@ -41,3 +41,34 @@ A, by majority (4 of 5):
 - **Parent (RL).** RL wanted a clean restart, because the drift in 16600 confounds the fix. If A's action std keeps climbing, RL's next single change is entropy_coef 0.001.
 - **Iteration budget (experiment design).** Experiment design wanted 774 iterations, for 1,500 in total.
 - **Kill lines (experiment design).** Experiment design wanted the D-180 line retired in favour of a dose line. The majority kept it.
+
+## Round 52 (2026-10-31): fw1c-A killed on noise; mean-action reads pass
+
+**Inputs:** results/footwork-round52-brief.md.
+
+### Correction checks
+
+| Reviewer | Finding |
+|---|---|
+| RL | KILL-no-settle read the behaviour policy: noise, not skill. footwork_eval passed falls=None, so the coded verdict was MIXED and "BODY-OK" was worked out by hand. |
+| Motion | The same falls=None fault. By hand, 0.29 per 1,000 env-s (A 0.45). |
+| Coach | The driver naming bug; otherwise D-181 was right. |
+| Experiment design | The JSONs say MIXED. The naming bug also reused the run name. Seeds 4220210 / 4220211 were not ledgered. The D-entry was missing. |
+| Architecture | The naming bug crashed the summary, so fw1c-summary.json was never written. stage2_eval also turns observation corruption off, so the gap is not action noise alone. |
+
+### Votes
+
+5 of 5 for (a): confirm on a frozen mean-action read, then step 2's premise checks. 5 of 5 for teacher model_16600:
+- A is a killed arm;
+- B0 settles in time more often in all 8 sectors;
+- A clusters 38 of its 55 falls at back-left.
+
+(b), entropy 0.001 as a run, was rejected (RL, experiment design, architecture). It is kept as the setting for any later fine-tune.
+
+(c), the heading limit, is gated on evidence:
+- **Coach:** a mid-move heading counter; more than 20 % of back moves turned more than 90° means the heading limit first.
+- **Motion and experiment design:** the clips' direction rule.
+
+### Decision
+
+D-182.

@@ -4574,3 +4574,51 @@ Everything else is fw1's, including tasks, arms, iterations, measure read and co
    - heading at mid-move for the back sector (turn-and-run vs backpedal).
 
    **Queued for the run after A:** coach's heading limit (at most 90 degrees from the net). RL's fallback if action std keeps climbing is entropy_coef 0.01 -> 0.001.
+
+
+## D-182 - fw1c-A killed on noise; panel round 52: confirm step 1 on a frozen mean-action read of model_16600 (2026-10-31)
+
+**fw1c** (D-181):
+- **B0, the stochastic re-read of fw1b-S model_16600** on the fixed instrument (seed 170):
+  - sustained 1.84-2.09 m/s, censored 0.084, falls 3.49;
+  - untimed arrival 0.31-0.38, settled in time 0.15-0.22;
+  - coded verdict **MIXED**: only BODY-OK (d), arrival, fails.
+  - Overshoot after entry was 0.25 m, the radius itself: the robot hovers, it does not run through.
+- **Arm A** was killed by the coded watcher on KILL-no-settle at iteration 320: untimed arrival 0.437, min(L, B, R) speed 1.53 m/s, falls 1.37.
+- **A driver bug:** the read tag "A" collided with the training counters, so A's read was skipped and the summary crashed. results/fw1c-summary.json was never written; B0 is in the .txt.
+
+**Diagnostic reads with mean actions** (stage2_eval through scripts/diag/footwork_eval.py, dev seeds 4220210 and 4220211, results/fw1c-det-*.json):
+- model_16600: untimed arrival 0.989-0.998, sustained 1.88-2.11 m/s, settled in time 0.52-0.65, settle 0.8-1.0 s after entry, 36 falls in 122,880 env-s (0.29 per 1,000 env-s), censored 0.077.
+- A (model_16900): similar.
+
+The first footwork_eval passed falls=None, so the coded verdict in those JSONs is MIXED. "Every BODY-OK line passes" was worked out by hand, and those reads are not cited as BODY-OK.
+
+**Panel round 52** (mjlab/results/footwork-review.md): 5 of 5 for (a).
+
+**Changed premise.** The step-1 reads were stochastic, as in training. Every downstream consumer of the teacher uses action means:
+- step 2's clips (record_policy_clips uses get_inference_policy);
+- DAgger / MSE targets, which match the mean only and never copy its log_std;
+- every evaluation in this project (stage2_eval).
+
+The stochastic read therefore measures tolerance to training noise, not the teacher. Training noise means action std 0.51 and the task's observation corruption; architecture noted stage2_eval switches the latter off. fw1c's MIXED stays on record. Any claim from here is limited to "BODY-OK under mean actions": a PPO fine-tune from this checkpoint inherits the noise, and for that use MIXED applies. No threshold changes.
+
+**Confirmation** (scripts/diag/footwork_fw1d_confirm.sh, sha256 467a98fd2c53280159529b33ca466b9eff801574fec56ed206ce06d19debb0b9; footwork_eval.py sha256 35207932f299c9a50428cd395c70653d7b31c6daf3cec9d7709668fd2e16d997). Frozen before it runs, one shot.
+- **Sole candidate:** model_16600. fw1c-A is a killed arm, so it is ineligible and there is no selection step.
+- **Read C** (gating): mean actions, Measure60, 1,024 envs, 120 s, dev seed 4220212.
+  - bodyspeed_rule unchanged;
+  - falls = 1000 robot_falls / (envs x sim_seconds), asserted equal to the drill's fell count;
+  - config check in code.
+  - STEP1 = "BODY-OK(mean-action)" if the verdict is BODY-OK, else "not answered (fw1c MIXED stands)".
+- **Read CN** (reported only): the same with observation corruption kept on (stage2_eval --keep-corruption, new), seed 4220213.
+
+**Heading gate** (coach, for the next step; pre-registered on read C): if more than 20 % of the back, back-left and back-right moves, pooled, are more than 90 degrees from facing the net at mid-move (new mid_heading_hist counter), the heading limit comes before step 2's clips. Otherwise step 2's premise checks start.
+
+**Step 2's premise checks** (motion and architecture; thresholds already frozen elsewhere):
+- **Videos:** stage2_eval --video by sector. Look for foot slide, riding on ankle roll and lunges.
+- **Clips:** record_policy_clips.py on model_16600, mean actions, a training seed of 171 or later; report clips kept against envs.
+- **Acceptance:** amass_g1_import check() / accept() unchanged. Report fast_lateral_back_s before and after acceptance. Then the frozen amass_footwork_npz.sh direction rule, which shows whether the clips add lateral or backward travel.
+- **Encoder path:** tracking_eval.py --latent with latent-07 on a fresh dev seed. Footwork at 95 % or more means route D is not needed; below 90 % is route D's premise.
+- **Style:** style_score.py, reported.
+- **Not run:** RL's entropy_coef 0.001 is not a run of its own. It becomes the setting of any later PPO fine-tune from this teacher.
+
+Seeds 4220210-4220213 are ledgered, and 4220210 / 4220211 are never reused. Future drivers give reads their own tags (never a training tag).

@@ -35,6 +35,7 @@ of 3-5 m spots, against the rule's 10 %). Instrument fix (all tasks): the sustai
 from __future__ import annotations
 
 import dataclasses
+import math
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -55,6 +56,7 @@ TASK_FW_SETTLE = "Picklebot-Footwork-Specialist-Settle-G1"  # D-181: pay "settle
 TASK_FW_MEASURE60 = "Picklebot-Footwork-Measure60-G1"  # D-181: 60-s episodes, pay "settled" (read at rate 0)
 PAY_MODES = ("entry", "settled")
 MEASURE_EPISODE_S = 60.0
+HEADING_BIN, HEADING_BINS = 10.0, 18  # degrees from facing the net, 0-180
 CMD_CAP = 2.5  # m/s
 V_REQ = (1.2, 2.2)  # deadline speed, m/s
 DIST = (1.0, 5.0)
@@ -100,6 +102,12 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.entry_t = torch.zeros(n, device=dev)
         self.post_max = torch.zeros(n, device=dev)
         self._settled = torch.zeros(n, dtype=torch.bool, device=dev)
+        # D-182 (coach, round 52): heading at mid-move, |pelvis yaw from facing the net| when the robot first gets
+        # within half the spot's start distance; histogram per sector, HEADING_BIN-degree bins, booked at resolution
+        self.d0 = torch.ones(n, device=dev)
+        self.mid_done = torch.zeros(n, dtype=torch.bool, device=dev)
+        self.mid_yaw = torch.zeros(n, device=dev)
+        self.mid_hist = torch.zeros(md.N_SECTORS, HEADING_BINS, dtype=torch.long, device=dev)
         self._ar = torch.arange(n, device=dev)
         self._calls = 0
 
@@ -126,6 +134,8 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         k = (best / SPEED_BIN).clamp(0, SPEED_BINS - 1).long()
         self.best_hist.view(-1).index_add_(0, sec * SPEED_BINS + k, b.long())
         self.best_sum.index_add_(0, sec, best * b.float())
+        h = (self.mid_yaw / HEADING_BIN).clamp(0, HEADING_BINS - 1).long()
+        self.mid_hist.view(-1).index_add_(0, sec * HEADING_BINS + h, (res & self.mid_done).long())
         super()._new_spot(mask)
         m = mask.unsqueeze(-1)
         self.buf = torch.where(m, torch.zeros_like(self.buf), self.buf)
@@ -133,6 +143,8 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.cnt = torch.where(mask, torch.zeros_like(self.cnt), self.cnt)
         self.best = torch.where(mask, torch.full_like(self.best, -1e3), self.best)
         self.post_max = torch.where(mask, torch.zeros_like(self.post_max), self.post_max)
+        self.d0 = torch.where(mask, (self.t.recover_xy - self.t.pelvis_xy()).norm(dim=-1), self.d0)
+        self.mid_done = self.mid_done & ~mask
         self.live = self.live | (mask & self.move_ep)
 
     def update(self, dt: float) -> None:
@@ -142,6 +154,11 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         t = self.t
         d = (t.recover_xy - t.pelvis_xy()).norm(dim=-1)
         self.post_max = torch.where(self.entered & self.live, torch.maximum(self.post_max, d), self.post_max)
+        mid = self.move_ep & self.live & ~self.mid_done & (d <= 0.5 * self.d0)
+        yaw = md._yaw(t._entity.data.root_link_pose_w[:, 3:7])
+        self.mid_yaw = torch.where(mid, torch.atan2(torch.sin(yaw), torch.cos(yaw)).abs() * (180.0 / math.pi),
+                                   self.mid_yaw)
+        self.mid_done = self.mid_done | mid
         if self._calls % self.decimation == 0:
             mv = self.move_ep & self.live
             v = t._entity.data.root_link_lin_vel_w[:, :2]
@@ -185,6 +202,8 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         out["best_sum"] = [round(x, 4) for x in self.best_sum.tolist()]
         out["settle_time_sum"] = [round(x, 4) for x in self.settle_time_sum.tolist()]
         out["overshoot_sum"] = [round(x, 4) for x in self.overshoot_sum.tolist()]
+        out["mid_heading_hist"] = self.mid_hist.tolist()
+        out["mid_heading_bin_deg"] = HEADING_BIN
         return out
 
     def summary(self) -> dict:

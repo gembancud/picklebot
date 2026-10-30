@@ -237,3 +237,22 @@ def test_watch_window_lines():
     assert fw.window_lines(_rows(0.8, 1.1))["kill"] == "KILL-speed-traded"
     w = fw.window_lines(_rows(0.8, 2.0))
     assert w["kill"] is None and abs(w["untimed_arrival"] - 0.8) < 0.02 and w["from_it"] == 300 and w["to_it"] == 400
+
+
+def test_mid_move_heading_counter():
+    import math
+    t, dr = _drill(2)
+    t.shadow = None
+    t.recover_xy = torch.tensor([[-2.4, 0.0], [-2.4, 0.0]])  # 4 m toward the net
+    dr.d0[:] = 4.0
+    dr.limit[:] = 100.0
+    # env 0 faces the net (yaw 0); env 1 faces away (yaw pi): both cross the half-way point
+    t._entity.data.root_link_pose_w[1, 3:7] = torch.tensor([0.0, 0.0, 0.0, 1.0])
+    t.place([[-4.3, 0.0], [-4.3, 0.0]])  # 1.9 m left: inside half of 4 m
+    dr.update(0.005)
+    assert dr.mid_done.all() and abs(float(dr.mid_yaw[0])) < 1e-3 and abs(float(dr.mid_yaw[1]) - 180.0) < 1e-3
+    dr.limit[:] = 0.0  # resolve both
+    dr.update(0.005)
+    h = torch.tensor(dr.counters()["mid_heading_hist"]).sum(0)
+    assert int(h[0]) == 1 and int(h[17]) == 1 and not dr.mid_done.any()
+    assert math.isclose(dr.counters()["mid_heading_bin_deg"], 10.0)

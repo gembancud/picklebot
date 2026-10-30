@@ -111,6 +111,8 @@ def main():
     ap.add_argument("--sim2real-only", choices=["obs", "act", "noise"], default=None,
                     help="Stage 5E diagnostics only: keep just one sim-to-real effect")
     ap.add_argument("--json", default=None)
+    ap.add_argument("--keep-corruption", action="store_true",
+                    help="D-182 diagnostic: keep the task's observation corruption (noise) on in this evaluation")
     args = ap.parse_args()
     assert args.seed in seeds.DEV_EVAL_SEEDS, "evaluation must use development seeds"
 
@@ -191,7 +193,7 @@ def main():
         cfg.actions["ball"].start_anchor_y = args.anchor_y
     if args.audit_fixes:
         cfg.actions["ball"].pair_reset_parks = cfg.actions["ball"].pair_count_volleys = True
-    cfg.observations["actor"].enable_corruption = False
+    cfg.observations["actor"].enable_corruption = bool(args.keep_corruption)
     groups = {"all": list(STAGE4_FAMILIES), "reach": list(REACH_FAMILIES), "every": list(FAMILY_NAMES),
               "drill5b": list(STAGE4_FAMILIES) + list(REACH_FAMILIES)}  # the Stage 5B drill (14 families)
     fams = groups.get(args.families) or args.families.split(",")
