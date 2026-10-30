@@ -1327,3 +1327,22 @@ Failure by receiver distance to the predicted interception:
 **Reading.** Ball 1 does not arrive faster. It arrives a little wider (+0.32 m at p50) and more often left or back. But at the same distance the receiver fails 3-5x more than on later balls, and it fails mostly on contact (0.78 vs 0.97). That points at the receiver's state at ball 1 (it has stood through the partner's feeder ball) or at a shot property the tally does not measure (spin, height, bounce depth). Next is a second tally on those variables.
 
 **Housekeeping.** A full CPU test run showed about 53 failures in older test files (test_feeds, test_swing_hint, test_style, test_task_return_stand). They predate today: for example, scripts/tune_feed.py's fake term lacks `replay`, which return_stand reads since 2026-10-21. This is flagged as a separate task.
+
+## Ball-1 split tally (ballidx52): STATE, with a caveat (2026-10-30)
+
+The split tally (task Picklebot-Agility-BallIdx-Split-ReadCfg-LamR2-G1, seed 154, otherwise as ballidx51) was measured within the matched 0.75-1.5 m distance band. Failure there is 0.163 for k = 1 against 0.032 for k >= 3 [train-diag].
+
+| variable | k = 1 p50 | k >= 3 p50 | k = 1 failure by tercile (low / mid / high) |
+|---|---|---|---|
+| spin | 75.9 rad/s | 91.6 | .158 / .120 / .227 |
+| net clearance | 0.965 m | 0.740 | .150 / .128 / .198 |
+| bounce depth | 3.46 m | 3.17 | .102 / .127 / .232 |
+| angle | -3.7 deg | +1.6 | .199 / .115 / .164 |
+| receiver pelvis speed | 0.157 m/s | 0.382 | .086 / .109 / .271 |
+| receiver distance to its recovery spot | 0.624 m | 0.320 | .108 / .151 / .232 |
+| receiver yaw error | 19.0 deg | 16.4 | .178 / .158 / .149 |
+| receiver idle time | 1.19 s | 1.34 | .211 / .126 / .147 |
+
+**Coded rule.** STATE, fired by pelvis speed alone (p50 gap -0.225 against <= -0.20; worst tercile 0.271 >= 2 x best 0.172). No shot variable fired. Near-misses: recovery distance (+0.30 m against +0.40) and bounce depth.
+
+**Caveat (agent's reading).** The firing variable points the wrong way inside k = 1: the fastest receivers fail most. The rule checks only the gap and the tercile spread, not that the two agree. The coherent reading is recovery distance. While the partner plays the feeder ball, the idle robot stands about 0.6 m off its recovery spot, nearly still. When ball 1 comes, it must scramble, and failure rises with that distance. The next lever is readiness: shaping the idle robot back to its recovery spot during the partner's feeder ball (D-177).

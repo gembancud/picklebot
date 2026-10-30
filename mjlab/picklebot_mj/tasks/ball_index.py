@@ -38,6 +38,23 @@ DIST_BIN, DIST_BINS = 0.25, 40  # m (last bin: >= 9.75 m)
 PRED_BATCH = 128  # hand-offs predicted per control step (due ones first; leftovers wait a step, from the stored state)
 PRED_HORIZON_S = 3.0
 
+# Split variables (opt-in, split=True; ballidx52): shot quality of the handed ball and the receiver's state at the hand-off.
+# Each: (name, low edge, bin width, bins); a last extra bin holds "missing" (e.g. no bounce before the receiver's contact).
+# Histograms per (group, k bin, distance bin, variable bin), for all balls and for the legal ones.
+SPLIT_VARS = (
+    ("spin", 0.0, 10.0, 50),  # |omega| at the hand-off, rad/s
+    ("net_clear", -0.5, 0.05, 60),  # ball centre - radius - net centre height where it crosses x = 0, m (simulated)
+    ("bounce_depth", 0.0, 0.25, 40),  # -x of its first bounce on the receiver's side, m from the net (simulated)
+    ("angle", -60.0, 3.0, 40),  # incoming horizontal angle vs the court axis, deg (atan2(vy, -vx) at the hand-off)
+    ("pelvis_speed", 0.0, 0.1, 40),  # receiver pelvis ground speed at the hand-off, m/s
+    ("recover_dist", 0.0, 0.1, 50),  # receiver pelvis to its recover_xy at the hand-off, m
+    ("yaw_err", 0.0, 4.5, 40),  # |receiver yaw| vs facing the net (+x), deg
+    ("idle", 0.0, 0.1, 80),  # s since the receiver's own last paddle contact or its episode / rally start (later)
+)
+SHOT_VARS = ("spin", "net_clear", "bounce_depth", "angle")
+STATE_VARS = ("pelvis_speed", "recover_dist", "yaw_err", "idle")
+BOUNCE_Z = 0.5  # m: a vz sign change (down -> up) below this height, before the receiver's contact, is the bounce
+
 
 def default_predictor(pos: torch.Tensor, vel: torch.Tensor, spin: torch.Tensor):
     """(interception point (N, 3), found (N,)) from the planner's contact rollout."""
@@ -53,7 +70,7 @@ def direction_class(rel_xy_heading: torch.Tensor) -> torch.Tensor:
 
 
 class BallIndexTally:
-    def __init__(self, term, env, predictor=None, batch: int = PRED_BATCH):
+    def __init__(self, term, env, predictor=None, batch: int = PRED_BATCH, split: bool = False):
         self.t, self.env = term, env
         pc = term.pairs
         assert pc is not None, "the ball-index tally hooks PairCourts.step (pair mode)"
@@ -79,6 +96,18 @@ class BallIndexTally:
         self.hist.update({k: zl(cells, DIST_BINS) for k in ("dist", "dist_legal")})
         self.gk = {k: zl(N_GROUPS * N_KBINS) for k in ("received", "void", "censored")}
         self._calls = 0
+        self.split = bool(split)
+        if self.split:
+            nv = len(SPLIT_VARS)
+            self.sv = torch.full((n, nv), float("nan"), device=dev)  # this ball's split variables (nan: missing)
+            self.idle = z(n)
+            self.prev = z(n, 3)  # the open ball's previous position and vz (net crossing / bounce detection)
+            self.prev_vz = z(n)
+            self.crossed, self.bounced = b(), b()
+            sc = N_GROUPS * N_KBINS * DIST_BINS
+            self.shist = {name: zl(sc, nb + 1) for name, _, _, nb in SPLIT_VARS}
+            self.shist_legal = {name: zl(sc, nb + 1) for name, _, _, nb in SPLIT_VARS}
+            self._vi = {name: i for i, (name, *_) in enumerate(SPLIT_VARS)}
         self._orig_step, self._orig_reset = pc.step, pc.on_reset
         pc.step = self.step
         pc.on_reset = self.on_reset
@@ -113,6 +142,14 @@ class BallIndexTally:
         for name, bins, nb in (("speed", sb, SPEED_BINS), ("hspeed", hb, SPEED_BINS), ("dist", db, DIST_BINS)):
             self.hist[name].view(-1).index_add_(0, cell * nb + bins, ml)
             self.hist[name + "_legal"].view(-1).index_add_(0, cell * nb + bins, lg)
+        if self.split:
+            sc = self._gk() * DIST_BINS + db
+            for i, (name, lo, w, nb) in enumerate(SPLIT_VARS):
+                v = self.sv[:, i]
+                vb = torch.where(v.isnan(), torch.full_like(db, nb),
+                                 ((v.nan_to_num(lo) - lo) / w).floor().clamp(0, nb - 1).long())
+                self.shist[name].view(-1).index_add_(0, sc * (nb + 1) + vb, ml)
+                self.shist_legal[name].view(-1).index_add_(0, sc * (nb + 1) + vb, lg)
         self.open &= ~m
         self.pend &= ~m
 
@@ -134,10 +171,60 @@ class BallIndexTally:
         self.pend = self.pend & ~torch.zeros_like(self.pend).index_copy(0, idx, sel)
 
     # ------------------------------------------------------------------------------
+    def _split_track(self, contact, dt: float) -> None:
+        """Per physics step: the idle clock, and the open ball's simulated net crossing and first bounce (both only
+        before the receiver's first contact: the flight the hitter gave it)."""
+        from picklebot_mj import court
+        from picklebot_mj.ball import BALL_RADIUS
+        t = self.t
+        self.idle = self.idle + dt
+        if contact is not None:
+            self.idle = torch.where(contact, torch.zeros_like(self.idle), self.idle)
+        p, vz = t.ball.pos, t.ball.vel[:, 2]
+        fl = self.open & ~t.hit_done
+        cross = fl & ~self.crossed & (self.prev[:, 0] > 0) & (p[:, 0] <= 0)
+        f = (self.prev[:, 0] / (self.prev[:, 0] - p[:, 0]).clamp(min=1e-9)).clamp(0, 1)
+        z = self.prev[:, 2] + f * (p[:, 2] - self.prev[:, 2])
+        i = self._vi["net_clear"]
+        self.sv[:, i] = torch.where(cross, z - BALL_RADIUS - court.NET_CENTER_HEIGHT, self.sv[:, i])
+        self.crossed |= cross
+        bnc = fl & ~self.bounced & (p[:, 0] < 0) & (self.prev_vz < 0) & (vz >= 0) & (p[:, 2] < BOUNCE_Z)
+        i = self._vi["bounce_depth"]
+        self.sv[:, i] = torch.where(bnc, -p[:, 0], self.sv[:, i])
+        self.bounced |= bnc
+        self.prev, self.prev_vz = p.clone(), vz.clone()
+
+    def _split_handoff(self, recv, handed, fire) -> None:
+        """At the hand-off: the shot's spin and angle, the receiver's state; the flight trackers restart."""
+        t, pc = self.t, self.t.pairs
+        data = t._entity.data
+        c, s = _yaw_frame(data.root_link_pose_w[:, 3:7])
+        yaw = torch.atan2(s, c).abs() * (180.0 / math.pi)
+        vals = {
+            "spin": handed[:, 6:9].norm(dim=-1),
+            "angle": torch.atan2(handed[:, 4], -handed[:, 3]) * (180.0 / math.pi),
+            "pelvis_speed": data.root_link_lin_vel_w[:, :2].norm(dim=-1),
+            "recover_dist": (t.pelvis_xy() - t.recover_xy).norm(dim=-1),
+            "yaw_err": yaw,
+            "idle": self.idle,
+        }
+        new = torch.full_like(self.sv, float("nan"))
+        for name, v in vals.items():
+            new[:, self._vi[name]] = v
+        rm = recv.unsqueeze(-1)
+        self.sv = torch.where(rm, new, self.sv)
+        self.prev = torch.where(rm, handed[:, :3], self.prev)
+        self.prev_vz = torch.where(recv, handed[:, 5], self.prev_vz)
+        self.crossed &= ~recv
+        self.bounced &= ~recv
+        self.idle = torch.where(pc.court(fire).repeat(2), torch.zeros_like(self.idle), self.idle)  # rally start
+
     def step(self, over, legal, fell, crossing, dt, delay, contact=None, busy=None):
         pc, t = self.t.pairs, self.t
         self._predict_step()
         self._calls += 1
+        if self.split:
+            self._split_track(contact, dt)
         live0 = ~pc.court_dead.repeat(2)
         o = over
         if contact is not None:  # as pairs.py counts them (D-135): the hitter's fault is not the receiver's miss
@@ -178,6 +265,8 @@ class BallIndexTally:
         self.open |= r
         self.pend |= r
         self.gk["received"].index_add_(0, self._gk(), r.long())
+        if self.split:
+            self._split_handoff(recv, handed, fire)
         return fire, recv
 
     def on_reset(self, env_ids, fell_open=None):
@@ -193,6 +282,8 @@ class BallIndexTally:
         self._book(f, self.t.hit_done, torch.zeros_like(f), f)
         self.open &= ~m
         self.pend &= ~m
+        if self.split:  # a new episode starts the idle clock
+            self.idle = torch.where(m, torch.zeros_like(self.idle), self.idle)
         return self._orig_reset(env_ids, fell_open)
 
     def counters(self) -> dict:
@@ -201,8 +292,12 @@ class BallIndexTally:
         out["hspd_sum"] = [round(x, 4) for x in self.hspd_sum.tolist()]
         out.update({k: v.tolist() for k, v in self.hist.items()})
         out.update({k: v.tolist() for k, v in self.gk.items()})
+        if self.split:
+            out["split"] = {k: v.tolist() for k, v in self.shist.items()}
+            out["split_legal"] = {k: v.tolist() for k, v in self.shist_legal.items()}
         return out
 
 
 META = {"groups": ["pair", "drill"], "k_bins": ["1", "2", "3+"], "directions": list(DIR_NAMES),
-        "speed_bin": SPEED_BIN, "dist_bin": DIST_BIN, "cell": "(group * 3 + k_bin) * 5 + direction"}
+        "speed_bin": SPEED_BIN, "dist_bin": DIST_BIN, "cell": "(group * 3 + k_bin) * 5 + direction",
+        "split_vars": [list(v) for v in SPLIT_VARS], "split_cell": "(group * 3 + k_bin) * 40 + dist_bin; last var bin missing"}

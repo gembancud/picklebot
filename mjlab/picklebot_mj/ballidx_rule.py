@@ -165,3 +165,104 @@ def route(s: dict) -> dict:
     if a and b:
         fired.append("DIRECTION")
     return {"fired": fired, "verdict": " + ".join(fired) if fired else "OTHER", "lines": lines}
+
+
+# ----------------------------------------------------------------------------------------
+# ballidx52: shot quality vs receiver state within the matched distance band (scripts/diag/ballidx52.sh).
+# SHOT if, in the band, a shot variable's k=1 p50 differs from k>=3's by at least: spin +30 %, net clearance -0.10 m or
+# +0.15 m, bounce depth +/-0.5 m, angle +/-10 deg; AND k=1 failure in that variable's worst tercile >= 2 x its best.
+# STATE likewise for a receiver-state variable: pelvis speed -0.2 m/s, distance to the recovery spot +0.4 m, yaw error
+# +15 deg, idle time +1.0 s. Both: BOTH; neither: OTHER.
+DIST_BINS = 40
+MATCHED_BAND = (3, 6)  # distance bins 3-5: 0.75-1.5 m
+SHOT_TESTS = {"spin": ("ratio", 1.30), "net_clear": ("either", -0.10, 0.15), "bounce_depth": ("abs", 0.5),
+              "angle": ("abs", 10.0)}
+STATE_TESTS = {"pelvis_speed": ("le", -0.2), "recover_dist": ("ge", 0.4), "yaw_err": ("ge", 15.0), "idle": ("ge", 1.0)}
+
+
+def band_hist(c: dict, g: int, k: int, name: str, band=MATCHED_BAND) -> tuple[list[int], list[int]]:
+    rows = [(g * N_KBINS + k) * DIST_BINS + d for d in range(*band)]
+    h = _addv([c["split"][name][r] for r in rows])
+    lg = _addv([c["split_legal"][name][r] for r in rows])
+    return h, lg
+
+
+def terciles3(hist: list[int], legal: list[int]) -> list[dict]:
+    """Three terciles by count (a bin goes to the tercile holding the midpoint of its cumulative share)."""
+    n = sum(hist)
+    out = [{"balls": 0, "legal": 0, "bins": []} for _ in range(3)]
+    acc = 0
+    for i, (b, lg) in enumerate(zip(hist, legal)):
+        if b == 0:
+            continue
+        j = min(2, int(3 * (acc + b / 2) / n))
+        out[j]["balls"] += b
+        out[j]["legal"] += lg
+        out[j]["bins"].append(i)
+        acc += b
+    for o in out:
+        o["failure"] = round(1 - o["legal"] / o["balls"], 4) if o["balls"] else None
+        o["bins"] = [min(o["bins"]), max(o["bins"])] if o["bins"] else None
+    return out
+
+
+def var_stats(hist, legal, lo: float, w: float, nb: int) -> dict:
+    h, lg = hist[:nb], legal[:nb]
+    q = lambda p: None if quantile(h, p, w) is None else round(lo + quantile(h, p, w), 4)  # noqa: E731
+    ts = terciles3(h, lg)
+    f = [t["failure"] for t in ts if t["failure"] is not None]
+    for t in ts:
+        if t["bins"] is not None:
+            t["range"] = [round(lo + t["bins"][0] * w, 3), round(lo + (t["bins"][1] + 1) * w, 3)]
+    return {"balls": sum(hist), "missing": hist[nb] if len(hist) > nb else 0, "p50": q(0.5), "p90": q(0.9),
+            "failure": round(1 - sum(lg) / sum(h), 4) if sum(h) else None, "terciles": ts,
+            "worst": max(f) if f else None, "best": min(f) if f else None}
+
+
+def split_summary(c: dict, g: int = 0, band=MATCHED_BAND) -> dict:
+    from picklebot_mj.tasks.ball_index import SPLIT_VARS
+    out = {"group": g, "band_m": [band[0] * DIST_BIN, band[1] * DIST_BIN], "vars": {}}
+    for name, lo, w, nb in SPLIT_VARS:
+        out["vars"][name] = [var_stats(*band_hist(c, g, k, name, band), lo, w, nb) for k in range(N_KBINS)]
+    return out
+
+
+def route_split(ss: dict) -> dict:
+    lines, fired = [], {"SHOT": [], "STATE": []}
+    for family, tests in (("SHOT", SHOT_TESTS), ("STATE", STATE_TESTS)):
+        for name, test in tests.items():
+            k1, k3 = ss["vars"][name][0], ss["vars"][name][2]
+            a1, a3 = k1["p50"], k3["p50"]
+            ok_a = False
+            if a1 is None or a3 is None:
+                lines.append(f"{family} {name} (a): k=1 p50 {_f(a1)} vs k>=3 p50 {_f(a3)} -> FAIL (no data)")
+            elif test[0] == "ratio":
+                r = a1 / a3 if a3 else None
+                ok_a = r is not None and r >= test[1] - 1e-12
+                lines.append(f"{family} {name} (a): k=1 p50 / k>=3 p50 = {_f(a1)} / {_f(a3)} = {_f(r)} >= {test[1]:.2f}"
+                             f" -> {'PASS' if ok_a else 'FAIL'}")
+            else:
+                d = a1 - a3
+                if test[0] == "either":
+                    ok_a = d <= test[1] + 1e-12 or d >= test[2] - 1e-12
+                    cond = f"<= {test[1]:+.2f} or >= {test[2]:+.2f}"
+                elif test[0] == "abs":
+                    ok_a = abs(d) >= test[1] - 1e-12
+                    cond = f"|d| >= {test[1]:.2f}"
+                elif test[0] == "le":
+                    ok_a = d <= test[1] + 1e-12
+                    cond = f"<= {test[1]:+.2f}"
+                else:
+                    ok_a = d >= test[1] - 1e-12
+                    cond = f">= {test[1]:+.2f}"
+                lines.append(f"{family} {name} (a): k=1 p50 - k>=3 p50 = {_f(a1)} - {_f(a3)} = {d:+.3f} {cond}"
+                             f" -> {'PASS' if ok_a else 'FAIL'}")
+            wst, bst = k1["worst"], k1["best"]
+            ok_b = wst is not None and bst is not None and wst >= RATIO * bst - 1e-12
+            lines.append(f"{family} {name} (b): k=1 worst-tercile failure {_f(wst)} >= 2 x best {_f(bst)} = "
+                         f"{_f(None if bst is None else RATIO * bst)} -> {'PASS' if ok_b else 'FAIL'}")
+            if ok_a and ok_b:
+                fired[family].append(name)
+    s, t = bool(fired["SHOT"]), bool(fired["STATE"])
+    verdict = "BOTH" if s and t else ("SHOT" if s else ("STATE" if t else "OTHER"))
+    return {"fired": fired, "verdict": verdict, "lines": lines}

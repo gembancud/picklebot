@@ -15,6 +15,7 @@ control picklebot_mj/agility_control.py):
 - TASK_AGILITY2_RES (arms A0, A), TASK_AGILITY2_RES_L3 (arm B), TASK_AGILITY2_TEACHER (arm F).
 Ball-index diagnostic (scripts/diag/ballidx51.sh): TASK_AGILITY_BALLIDX, rally run 22b's training task plus the handed-ball
 tally (tasks/ball_index.py; PICKLEBOT_BALLIDX_LOG=path, every PICKLEBOT_BALLIDX_LOG_EVERY env steps, default 240).
+TASK_AGILITY_BALLIDX_SPLIT (scripts/diag/ballidx52.sh): the same with the split variables (ball_index_split).
 
 Logging: PICKLEBOT_AGILITY_LOG=path appends the cumulative counters every PICKLEBOT_AGILITY_LOG_EVERY env steps
 (default 240 = 10 iterations at 24 steps per env; one host sync each time), as PICKLEBOT_PAIR_LOG does.
@@ -56,6 +57,7 @@ class AgilityBallActionCfg(BallPhysicsActionCfg):
     deadline_arrival_mode: str = "hold"  # "first_entry": deadline arrival = first entry within 0.25 m (D-172)
     direction_tally: bool = False  # feeder-ball outcomes by direction (pair mode)
     ball_index_tally: bool = False  # handed-ball outcomes by rally index, speed, direction, distance (pair mode)
+    ball_index_split: bool = False  # + shot-quality and receiver-state variables by k and distance (needs the tally)
 
     def build(self, env) -> "AgilityBallAction":
         return AgilityBallAction(self, env)
@@ -77,7 +79,8 @@ class AgilityBallAction(BallPhysicsAction):
         self.ballidx = None
         if cfg.ball_index_tally:
             from picklebot_mj.tasks.ball_index import BallIndexTally
-            self.ballidx = BallIndexTally(self, env)
+            self.ballidx = BallIndexTally(self, env, split=cfg.ball_index_split)
+        assert cfg.ball_index_tally or not cfg.ball_index_split, "ball_index_split needs ball_index_tally"
         self._log_path = os.environ.get("PICKLEBOT_AGILITY_LOG")
         self._log_every = int(os.environ.get("PICKLEBOT_AGILITY_LOG_EVERY", str(LOG_EVERY)))
         self._log_last = -1
@@ -183,3 +186,6 @@ _register(TASK_AGILITY_BALL_CFS, SRC_RES, lambda c: to_agility_ball(c, direction
 SRC_22B = _tasks.TASK_LATENT_COURT_V2_RES_PPO_CLEAN_MIX_KA_PAIRS_COOP_MOVES_WEAK_PACE25_LAMR2_DRILLCOURTS_EP120
 TASK_AGILITY_BALLIDX = "Picklebot-Agility-BallIdx-ReadCfg-LamR2-G1"
 _register(TASK_AGILITY_BALLIDX, SRC_22B, lambda c: to_agility_ball(c, ball_index_tally=True))
+# ballidx52 (scripts/diag/ballidx52.sh): the same plus the split variables (receiver state vs shot quality; logging only)
+TASK_AGILITY_BALLIDX_SPLIT = "Picklebot-Agility-BallIdx-Split-ReadCfg-LamR2-G1"
+_register(TASK_AGILITY_BALLIDX_SPLIT, SRC_22B, lambda c: to_agility_ball(c, ball_index_tally=True, ball_index_split=True))

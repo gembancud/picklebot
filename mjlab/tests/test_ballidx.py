@@ -246,3 +246,135 @@ def test_ballidx_task_differs_from_its_source_only_in_the_tally_flag():
     assert load_env_cfg(ag.TASK_AGILITY_BALLIDX).actions["ball"].pair_drill_court_frac == 0.5
     assert load_runner_cls(ag.TASK_AGILITY_BALLIDX) is load_runner_cls(ag.SRC_22B)
     assert load_rl_cfg(ag.TASK_AGILITY_BALLIDX) == load_rl_cfg(ag.SRC_22B)
+
+
+# ------------------------------------------------------------------------------------------
+# ballidx52: split variables (shot quality vs receiver state)
+def test_split_tally_records_shot_and_receiver_state_at_the_hand_off():
+    import math
+
+    from picklebot_mj.tasks.ball_index import BallIndexTally, SPLIT_VARS
+    n = 4
+    t = _Term(n)
+    data = t._entity.data
+    data.root_link_lin_vel_w = torch.zeros(n, 3)
+    t.recover_xy = torch.zeros(n, 2)
+    tally = BallIndexTally(t, t._env, predictor=lambda p, v, w: (p.clone(), torch.ones(p.shape[0], dtype=torch.bool)),
+                           batch=4, split=True)
+    _step(t, fire=(0,))  # court 0's rally starts: idle clocks of envs 0 and 2 restart
+    for _ in range(9):
+        _step(t)
+    # receiver env 2: pelvis (-5, 0), yaw 30 deg, moving at 0.5 m/s, 0.5 m from its recovery spot
+    data.root_link_pose_w[2, :2] = torch.tensor([-5.0, 0.0])
+    data.root_link_pose_w[2, 3], data.root_link_pose_w[2, 6] = math.cos(math.radians(15)), math.sin(math.radians(15))
+    data.root_link_lin_vel_w[2, :2] = torch.tensor([0.3, 0.4])
+    t.recover_xy[2] = torch.tensor([-5.3, 0.4])
+    t.ball.pos[0] = torch.tensor([-3.0, 0.0, 1.0])
+    t.ball.vel[0] = torch.tensor([5.0, -1.0, 0.0])
+    t.ball.spin[0] = torch.tensor([0.0, 30.0, 40.0])
+    _step(t, recv=(2,))  # the 11th step since the feeder ball
+    v = {name: float(tally.sv[2, i]) for i, (name, *_) in enumerate(SPLIT_VARS)}
+    assert abs(v["spin"] - 50.0) < 1e-4 and abs(v["angle"] - math.degrees(math.atan2(1.0, 5.0))) < 1e-3
+    assert abs(v["pelvis_speed"] - 0.5) < 1e-5 and abs(v["recover_dist"] - 0.5) < 1e-5 and abs(v["yaw_err"] - 30.0) < 1e-3
+    assert abs(v["idle"] - 10 * 0.005) < 1e-6  # 10 steps after the rally start
+    assert math.isnan(v["net_clear"]) and math.isnan(v["bounce_depth"])
+    # the simulated flight in env 2: crosses x = 0 between x 1 and -1 at z 1.1, bounces 4.2 m deep
+    for p, vz in (((1.0, 0, 1.2), -1.0), ((-1.0, 0, 1.0), -1.0), ((-4.0, 0, 0.1), -3.0), ((-4.2, 0, 0.12), 2.0),
+                  ((-4.4, 0, 0.3), -0.5), ((-4.6, 0, 0.2), 0.5)):
+        t.ball.pos[2] = torch.tensor(p)
+        t.ball.vel[2, 2] = vz
+        _step(t)
+    v = {name: float(tally.sv[2, i]) for i, (name, *_) in enumerate(SPLIT_VARS)}
+    assert abs(v["net_clear"] - (1.1 - 0.037 - 0.8636)) < 1e-4 and abs(v["bounce_depth"] - 4.2) < 1e-5  # first bounce
+    t.hit_done[2] = True
+    _step(t, over=(2,), legal=(2,), contact=(0,))
+    c = tally.counters()
+    db = int(min(float(tally.dist[2]) / 0.25, 39))
+    row = (0 * 3 + 0) * 40 + db
+    assert c["split"]["spin"][row][5] == 1 and c["split_legal"]["spin"][row][5] == 1
+    assert c["split"]["bounce_depth"][row][16] == 1 and c["split"]["idle"][row][0] == 1
+    assert sum(sum(r) for r in c["split"]["yaw_err"]) == 1
+    assert float(tally.idle[0]) == 0.0  # env 0's own contact restarts its clock
+    tally.on_reset(torch.tensor([2]))
+    assert float(tally.idle[2]) == 0.0
+
+
+def _split_counters(balls):
+    """Split counters from synthetic balls (k_bin, dist_bin, {var: value}, legal); other variables missing."""
+    import math
+
+    from picklebot_mj.tasks import ball_index as bi
+    rows = bi.N_GROUPS * bi.N_KBINS * bi.DIST_BINS
+    c = {"split": {}, "split_legal": {}}
+    for name, lo, w, nb in bi.SPLIT_VARS:
+        c["split"][name] = [[0] * (nb + 1) for _ in range(rows)]
+        c["split_legal"][name] = [[0] * (nb + 1) for _ in range(rows)]
+    for kb, db, vals, lg in balls:
+        r = kb * bi.DIST_BINS + db
+        for name, lo, w, nb in bi.SPLIT_VARS:
+            x = vals.get(name, float("nan"))
+            b = nb if math.isnan(x) else min(max(int(math.floor((x - lo) / w)), 0), nb - 1)
+            c["split"][name][r][b] += 1
+            c["split_legal"][name][r][b] += int(lg)
+    return c
+
+
+def _split_case(k1_shift=None, k1_fail_var=None):
+    """k>=3 and k=1 balls in the matched band with every variable at a base value; k=1 optionally shifted on one
+    variable, and its failure (0.1 / 0.2 / 0.4 by thirds) tied to one variable's thirds."""
+    base = {"spin": 50.0, "net_clear": 0.3, "bounce_depth": 4.0, "angle": 0.0, "pelvis_speed": 0.5,
+            "recover_dist": 0.5, "yaw_err": 10.0, "idle": 1.5}
+    spread = {"spin": 10.0, "net_clear": 0.1, "bounce_depth": 0.5, "angle": 5.0, "pelvis_speed": 0.1,
+              "recover_dist": 0.1, "yaw_err": 5.0, "idle": 0.2}
+    balls = []
+    for j in range(300):
+        t = j % 3
+        vals = {k: v + (t - 1) * spread[k] for k, v in base.items()}
+        balls.append((2, 3 + j % 3, vals, j % 50 != 0))
+        v1 = dict(vals)
+        for k, d in (k1_shift or {}).items():
+            v1[k] = v1[k] + d
+        f = (0.1, 0.2, 0.4)[t] if k1_fail_var else 0.1
+        balls.append((0, 3 + (j // 3) % 3, v1, (j // 3) % 100 >= round(100 * f)))
+    return br.split_summary(_split_counters(balls))
+
+
+def test_split_rule_routes_shot_state_both_other():
+    assert br.route_split(_split_case())["verdict"] == "OTHER"
+    r = br.route_split(_split_case({"idle": 1.2}, "idle"))
+    assert r["verdict"] == "STATE" and r["fired"]["STATE"] == ["idle"]
+    assert br.route_split(_split_case({"idle": 0.8}, "idle"))["verdict"] == "OTHER"  # +0.8 s < +1.0 s
+    assert br.route_split(_split_case({"pelvis_speed": -0.3}, "x"))["fired"]["STATE"] == ["pelvis_speed"]
+    r = br.route_split(_split_case({"spin": 20.0}, "x"))  # 70 / 50 = 1.4 >= 1.3
+    assert r["verdict"] == "SHOT" and r["fired"]["SHOT"] == ["spin"]
+    assert br.route_split(_split_case({"net_clear": -0.2}, "x"))["fired"]["SHOT"] == ["net_clear"]
+    assert br.route_split(_split_case({"net_clear": 0.05}, "x"))["verdict"] == "OTHER"  # +0.05 < +0.15
+    assert br.route_split(_split_case({"angle": -12.0}, "x"))["fired"]["SHOT"] == ["angle"]
+    assert br.route_split(_split_case({"spin": 20.0, "recover_dist": 0.5}, "x"))["verdict"] == "BOTH"
+    assert br.route_split(_split_case({"idle": 1.2}))["verdict"] == "OTHER"  # flat failure: no 2 x tercile
+    r = br.route_split(_split_case())
+    assert len(r["lines"]) == 16 and all(("PASS" in x or "FAIL" in x) for x in r["lines"])
+
+
+def test_terciles3_partition():
+    ts = br.terciles3([10, 10, 10, 0], [9, 8, 6, 0])
+    assert [t["balls"] for t in ts] == [10, 10, 10] and [t["failure"] for t in ts] == [0.1, 0.2, 0.4]
+    s = br.var_stats([0, 10, 0, 5], [0, 5, 0, 0], 1.0, 0.5, 3)
+    assert s["missing"] == 5 and s["p50"] == 1.75 and s["failure"] == 0.5
+
+
+def test_split_task_differs_from_the_ballidx_task_only_in_the_split_flag():
+    import dataclasses
+
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg, load_runner_cls
+
+    import picklebot_mj.tasks.agility as ag
+    for play in (False, True):
+        a, s = load_env_cfg(ag.TASK_AGILITY_BALLIDX, play=play), load_env_cfg(ag.TASK_AGILITY_BALLIDX_SPLIT, play=play)
+        ab, sb = a.actions["ball"], s.actions["ball"]
+        assert [f.name for f in dataclasses.fields(ab) if getattr(ab, f.name) != getattr(sb, f.name)] == ["ball_index_split"]
+        assert sb.ball_index_split and sb.ball_index_tally and not ab.ball_index_split
+        assert [k for k in a.actions if k != "ball" and a.actions[k] != s.actions[k]] == []
+        assert list(a.rewards) == list(s.rewards) and a.episode_length_s == s.episode_length_s
+    assert load_runner_cls(ag.TASK_AGILITY_BALLIDX_SPLIT) is load_runner_cls(ag.SRC_22B)
