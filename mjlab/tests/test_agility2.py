@@ -410,6 +410,8 @@ def test_court_feed_stance_sets_each_court_feeds_own_target():
             for step in range(300):
                 env.step(act)
                 new = ((t.family != prev_fam) | (t.court_feed != prev_cf)) & t.court_feed
+                if t.pairs is not None:  # D-177 fix: launcher feeds only (a received hand-off keeps its stance_xy)
+                    new = new & ~t.pairs.handed
                 if step > 0 and new.any():
                     d = (t.stance_xy[new] - prev_st[new]).norm(dim=-1)
                     n_new += int(new.sum()); n_moved += int((d > 1e-4).sum())
@@ -424,6 +426,54 @@ def test_court_feed_stance_sets_each_court_feeds_own_target():
         if flag:
             assert n_match / n_new > 0.8, n_match / n_new
     assert moved[False] < 0.2 and moved[True] > 0.8, moved
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+def test_court_feed_stance_leaves_hand_offs_alone():
+    """D-177 fix: with court_feed_stance, an env that just received a robot-to-robot hand-off keeps its previous
+    stance_xy (only launcher feeds are retargeted), although _feed draws court_feed for it. Hand-offs are forced on
+    parked envs through a wrapper on PairCourts.step (zero actions rarely make contact)."""
+    sys.path.insert(0, os.path.dirname(__file__))
+    from test_drill_v2 import LATENT, _env
+    if not LATENT.exists():
+        pytest.skip("needs the H1 latent controller")
+    from picklebot_mj.tasks.shadow_swing import stance_spot
+    task = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LamR2-G1"
+    env = _env(task, n=256, court_feed_stance=True, court_feed_prob=1.0)
+    t = env.action_manager.get_term("ball")
+    pc = t.pairs
+    orig = pc.step
+    st = {"armed": False, "force": None, "prev": None}
+
+    def step(*a, **k):
+        fire, recv = orig(*a, **k)
+        if st["armed"]:
+            st["armed"] = False
+            ids = torch.arange(t.num_envs, device=t.device)
+            force = pc.parked & ~fire & ~recv & ~t.plan_pending & (ids % 3 == 0)
+            st["force"], st["prev"] = force.clone(), t.stance_xy.clone()
+            pc.parked &= ~force
+            recv = recv | force
+        return fire, recv
+
+    pc.step = step
+    act = torch.zeros(env.num_envs, env.action_manager.total_action_dim, device=env.device)
+    checked = moved_if_retargeted = 0
+    with torch.inference_mode():
+        for i in range(120):
+            st["armed"] = i % 20 == 10
+            env.step(act)
+            f = st["force"]
+            if f is not None:
+                st["force"] = None
+                f = f & ~env.reset_buf.bool()  # an env reset in this step has a new episode's stance
+                assert bool(t.court_feed[f].all())  # the hand-off envs were drawn as court feeds
+                assert torch.allclose(t.stance_xy[f], st["prev"][f], rtol=0, atol=0, equal_nan=True)  # kept their target
+                checked += int(f.sum())
+                moved_if_retargeted += int(((stance_spot(t, t.cfg.hint_v2)[f] - st["prev"][f]).norm(dim=-1) > 1e-3).sum())
+    env.close()
+    assert checked > 20, checked
+    assert moved_if_retargeted > 0.5 * checked, (moved_if_retargeted, checked)  # the old code would have moved them
 
 
 def test_entry_point_does_not_import_the_agility_modules():

@@ -1372,3 +1372,27 @@ The split tally (task Picklebot-Agility-BallIdx-Split-ReadCfg-LamR2-G1, seed 154
 - Config check: ok.
 
 **VERDICT: FAIL.** Pulling the idle robot back to its spot does not lift ball 1 within 400 iterations. That is four within-reach levers in a row inside the A/A noise: stance cap, court-feed stance, the anchor and idle recovery. Panel round 50 next.
+
+## Body-speed test (bodyspeed54): VOID; court_feed_stance scope fixed (2026-10-30)
+
+**court_feed_stance** now retargets launcher feeds only: `fire & ~recv`. A GPU test checks that hand-offs keep their stance_xy, and the existing test now excludes handed balls. Side finding: some envs' stance_xy hold NaN (not diagnosed).
+
+**bodyspeed54** (task Picklebot-Teacher-Move-Fast25-G1, picklebot_mj/tasks/body_speed.py; seed 158). The flat walking teacher (teacher-move-01 model_15900) was fine-tuned for 1,500 iterations at 1e-4 with:
+- command cap 2.5 m/s, gain 3.0 (braking radius kept at 0.83 m);
+- 3-5 m spots in a widened box;
+- 60 s episodes.
+
+Last 1/8 [train-log]:
+
+| sector | sustained p50 / p90 | untimed arrival |
+|---|---|---|
+| forward | 1.06 / 1.20 | 0.33 |
+| left | 1.12 / 1.25 | 0.34 |
+| back | 1.24 / 1.45 | 0.27 |
+| right | 0.38 / 0.73 | 0.01 |
+
+Censored share 0.081; falls 4.72 per 1,000 env-s.
+
+**Coded rule.** VOID: the forward positive control is 1.06 < 1.8 m/s. **VERDICT: VOID.**
+
+The fine-tune degraded steadily. At the start of training it was near the parent: sustained 1.13-1.44 m/s and about 97 % arrival. By the end, arrival had fallen to 0.01-0.36 and mean reward from about 135 to 86. The 2.5 m/s command was never followed, so the test did not measure the body's limit. Per D-177, the agent now reports to the user.

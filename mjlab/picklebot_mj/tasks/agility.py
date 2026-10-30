@@ -60,6 +60,11 @@ class AgilityBallActionCfg(BallPhysicsActionCfg):
     ball_index_tally: bool = False  # handed-ball outcomes by rally index, speed, direction, distance (pair mode)
     ball_index_split: bool = False  # + shot-quality and receiver-state variables by k and distance (needs the tally)
     pair_idle_recovery: bool = False  # D-177: spot_progress also while this env has no ball in play (pairs.parked)
+    # Body-speed test (tasks/body_speed.py): None keeps MoveDrill exactly; a value swaps in FastMoveDrill with this
+    # command cap (gain scaled, braking radius 0.83 m), and optionally its spot distance range / spot box.
+    move_cmd_max_speed: float | None = None
+    move_dist_range: tuple | None = None
+    move_spot_box: tuple | None = None
 
     def build(self, env) -> "AgilityBallAction":
         return AgilityBallAction(self, env)
@@ -77,6 +82,15 @@ class AgilityBallAction(BallPhysicsAction):
                                               deadline_ends_spot=cfg.deadline_ends_spot,
                                               heading_free_m=cfg.heading_free_m,
                                               arrival_mode=cfg.deadline_arrival_mode)
+        if cfg.move_cmd_max_speed is not None:
+            assert self.drill is not None and not cfg.deadline_drill, "the fast move drill needs move_prob > 0"
+            from picklebot_mj.tasks.body_speed import FastMoveDrill
+            self.drill = FastMoveDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights,
+                                       cmd_max_speed=cfg.move_cmd_max_speed, dist_range=cfg.move_dist_range,
+                                       spot_box=cfg.move_spot_box)
+        self._bs_path = os.environ.get("PICKLEBOT_BODYSPEED_LOG") if cfg.move_cmd_max_speed is not None else None
+        self._bs_every = int(os.environ.get("PICKLEBOT_BODYSPEED_LOG_EVERY", str(LOG_EVERY)))
+        self._bs_last = -1
         self.dir_tally = dd.DirectionTally(self, env) if cfg.direction_tally else None
         self.ballidx = None
         if cfg.ball_index_tally:
@@ -105,6 +119,12 @@ class AgilityBallAction(BallPhysicsAction):
         super().apply_actions()
         if self._bi_path:
             self._ballidx_log()
+        if self._bs_path:  # PICKLEBOT_BODYSPEED_LOG: FastMoveDrill's cumulative per-sector counters
+            step = int(self._env.common_step_counter)  # host-side int: no sync
+            if step % self._bs_every == 0 and step != self._bs_last:
+                self._bs_last = step
+                with open(self._bs_path, "a") as f:
+                    f.write(json.dumps({"step": step, "body": self.drill.counters()}) + "\n")
         if not self._log_path:
             return
         step = int(self._env.common_step_counter)  # host-side int: no sync
@@ -196,3 +216,22 @@ _register(TASK_AGILITY_BALLIDX_SPLIT, SRC_22B, lambda c: to_agility_ball(c, ball
 TASK_AGILITY_BALLIDX_IDLEREC = "Picklebot-Agility-BallIdx-IdleRec-ReadCfg-LamR2-G1"
 _register(TASK_AGILITY_BALLIDX_IDLEREC, SRC_22B,
           lambda c: to_agility_ball(c, ball_index_tally=True, pair_idle_recovery=True))
+
+# Body-speed test (panel round 50, motion reviewer's option F; scripts/diag/bodyspeed54.sh): the flat walking teacher's
+# own task with the internal command cap raised to 2.5 m/s (gain scaled, braking radius 0.83 m). To cruise at 2-2.5 m/s
+# the spots are 3-5 m away (MoveDrill: 0.5-3 m) inside a box widened behind the baseline and past the sidelines, within
+# the floor (court + 4 m runoff); MoveDrill's SPOT_BOX, the 4 x 5.6 m half court, leaves no room for 3-5 m back or
+# lateral spots. Episodes last 60 s: 8 s would cut about a third of 3-5 m spots at the episode limit, and 60 s keeps the
+# censored share near 5 %. Everything else as Picklebot-Teacher-Move-G1.
+TASK_TEACHER_MOVE_FAST25 = "Picklebot-Teacher-Move-Fast25-G1"
+FAST25 = dict(move_cmd_max_speed=2.5, move_dist_range=(3.0, 5.0), move_spot_box=((-10.4, -2.4), (-5.5, 5.5)))
+FAST25_EPISODE_S = 60.0
+
+
+def fast25(cfg):
+    to_agility_ball(cfg, **FAST25)
+    cfg.episode_length_s = max(cfg.episode_length_s, FAST25_EPISODE_S)  # play cfg keeps its own (longer) length
+    return cfg
+
+
+_register(TASK_TEACHER_MOVE_FAST25, SRC_TEACHER, fast25)

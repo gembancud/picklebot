@@ -1084,9 +1084,12 @@ class BallPhysicsAction(ActionTerm):
             self._handoff = torch.zeros_like(recv)
         if getattr(self.cfg, "court_feed_stance", False) and getattr(self, "plan_on", False):
             # D-176: court feeds get no planner spot (D-116), so stance_progress pointed at a stale stance_xy on them.
-            # Their stance target is set from the ball actually in play (after a hand-off's ball is installed).
+            # Their stance target is set from the ball actually in play. D-177 fix (panel round 50, architecture review):
+            # launcher feeds only; in pair mode fire includes the hand-offs (recv), which _feed also draws court_feed for,
+            # and a robot-to-robot ball is not a court feed, so a received env keeps its stance_xy.
             from picklebot_mj.tasks.shadow_swing import stance_spot
-            cf = (fire & self.court_feed).unsqueeze(-1)
+            launch = fire if recv is None else fire & ~recv
+            cf = (launch & self.court_feed).unsqueeze(-1)
             self.stance_xy = torch.where(cf, stance_spot(self, self.cfg.hint_v2), self.stance_xy)
         if self.shadow is not None:
             self.shadow.after_refeed(fire)
