@@ -161,8 +161,8 @@ The LAFAN1 endpoint is kept, 5 of 5.
 | Experiment design | (d) | paired ΔR, a fidelity guard, no promotion; then O2 unless NO-MOVE |
 | Architecture | (d) | `--decoder-only` is required; the sampler floor is the real stroke protection |
 | RL | (d) | the decoder check D ≥ 0.85; R ≥ 0.85 / ≤ 0.70; reject O2 and the share change |
-| Motion | pending at launch | |
+| Motion | (d) (arrived after launch) | refutes the reference-skate hypothesis (it explains ≤ 0.03); the stroke loss is real; R ≥ 0.75 / ≤ 0.65; O2 next if triggered |
 
-(c) was rejected by all reporting reviewers.
+(d) carried 5 of 5, and (c) was rejected 5 of 5.
 
 **Decision:** D-187.

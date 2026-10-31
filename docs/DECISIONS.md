@@ -4871,3 +4871,13 @@ Smoke: 16 envs on 4220226, sustained 1.1-1.45 m/s (reported). The smoke also exp
 4. **No gate is consumed.** The result cannot promote h0-fw-02 or amend any D-185 / D-186 line.
    - NO-MOVE: the H0 route stops, and the panel is re-asked about where the rally cap lives.
    - Otherwise: panel round 57 picks the next run (candidates: the sampler floor + entropy 0.001 H0 run; a residual rebuild on H1').
+
+**D-187 addendum** (motion's round-56 report arrived after launch, before any diagnostic read). Motion votes (d), so (d) is **5 of 5**.
+- **The reference hypothesis is refuted.** CPU reads of tennis-lafan3 body_pos_w show stance-foot sliding is 3.5 % of reference travel (walk 7 %, run 3.5 %, sprint 2.5 %, fightAndSports 2 %). Corrected for it, D would be 0.936 at the median.
+- **Reference skate does not track D:** r = 0.11. The robot slips 2-3x more than the reference.
+- **LAFAN1 reference feet float about 3 cm,** which is uncorrelated with D.
+- **Mirrored fightAndSports at 0.68 is a policy asymmetry,** not a reference one: the references are identical and there are only 22 windows.
+- **The references explain at most about 0.03.** The 0.90 line is reachable in principle and stays. O1 at any weight is the wrong lever.
+- **The stroke loss is real:** the parent's seed-to-seed spread is about 1 point; the child loses on both seeds; ee_body_pos terminations went 80 -> 120.
+- **Motion's own bridge lines** (R >= 0.75 -> H0 travel is a lever, then O2; R <= 0.65 -> stop H0) are reported alongside the frozen paired dR rule, not in place of it.
+- **Motion's O2 sketch,** if triggered later: kill if a stroke falls > 5 points below s5c-03b. It goes to round 57.
