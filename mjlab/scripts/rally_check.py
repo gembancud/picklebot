@@ -295,26 +295,28 @@ def p5_open(p: dict) -> tuple[float, list[float]]:
     return k / max(n, 1), wilson(k, n)
 
 
-def r19_guards(fam: dict, d: dict) -> bool:
+def r19_guards(fam: dict, d: dict, ref: str = R14, cross_ref: str = CROSS_FH_29000, name: str = "run 14",
+               cross_name: str = "model_29000") -> bool:
     """D-160's cumulative guards: no feeder family's contact more than 5 points below run 14 (cross_forehand: no more
-    than 3 below run 18b model_29000's read), left + back feeder contact no more than 5 below run 14."""
-    f14 = json.load(open(f"{R14}-pairs.json"))["per_family"]
-    f29 = json.load(open(CROSS_FH_29000))["per_family"]
+    than 3 below run 18b model_29000's read), left + back feeder contact no more than 5 below run 14.
+    D-193: `ref` / `cross_ref` change the reference reads (same slacks); the defaults replay the D-160 guards unchanged."""
+    f14 = json.load(open(f"{ref}-pairs.json"))["per_family"]
+    f29 = json.load(open(cross_ref))["per_family"]
     ok = True
     for k in f14:
         if k not in fam:
             continue
-        ref, slack, base = (f29[k]["contact"], 0.03, "model_29000") if k == "cross_forehand" else (f14[k]["contact"], 0.05, "run 14")
-        if fam[k]["contact"] < ref - slack:
-            print(f"guard: {k} contact {fam[k]['contact']:.4f} < {base} {ref:.4f} - {slack} (KILL)")
+        r, slack, base = (f29[k]["contact"], 0.03, cross_name) if k == "cross_forehand" else (f14[k]["contact"], 0.05, name)
+        if fam[k]["contact"] < r - slack:
+            print(f"guard: {k} contact {fam[k]['contact']:.4f} < {base} {r:.4f} - {slack} (KILL)")
             ok = False
     worst = min(((fam[k]["contact"] - f14[k]["contact"], k) for k in f14 if k in fam and k != "cross_forehand"), default=(0.0, None))
-    print(f"guard: worst family contact vs run 14 {100 * worst[0]:+.1f} ({worst[1]}; kill below -5); cross_forehand "
-          f"{fam['cross_forehand']['contact']:.4f} vs model_29000 {f29['cross_forehand']['contact']:.4f} (kill below -3)")
-    d14 = json.load(open(f"{R14}-dir.json"))["directions"]
+    print(f"guard: worst family contact vs {name} {100 * worst[0]:+.1f} ({worst[1]}; kill below -5); cross_forehand "
+          f"{fam['cross_forehand']['contact']:.4f} vs {cross_name} {f29['cross_forehand']['contact']:.4f} (kill below -3)")
+    d14 = json.load(open(f"{ref}-dir.json"))["directions"]
     con = lambda x: sum(x[k]["contact"] * x[k]["feeds"] for k in ("left", "back")) / max(x["left"]["feeds"] + x["back"]["feeds"], 1)  # noqa: E731
     g14, g1 = con(d14), con(d)
-    print(f"guard: left + back feeder contact {g1:.4f} vs run 14 {g14:.4f} ({100 * (g1 - g14):+.1f}; kill below -5)")
+    print(f"guard: left + back feeder contact {g1:.4f} vs {name} {g14:.4f} ({100 * (g1 - g14):+.1f}; kill below -5)")
     return ok and g1 >= g14 - 0.05
 
 
@@ -373,6 +375,33 @@ def r19_gate(prefix: str, tag: str) -> bool:
     print(f"run 19 gate: P(5+) open {q1:.4f} {q1ci} (>= parent {q0:.4f} + 0.02, low above {q0:.4f}); partner legal {own:.4f} "
           f"(>= {own0 - 0.015:.4f}); feeder legal {fed:.4f} (>= {fed14 - 0.02:.4f}); gap {100 * gap:.1f} (<= 3); falls "
           f"{falls} (<= 0.04): {'PASS' if ok else 'not met'}")
+    return ok
+
+
+def d1s2_gate(prefix: str, tag: str) -> bool:
+    """D-193 stage-2 run verdict (22b's residual re-climbed on the d1 base): paired against the parent 22b model_30200 read
+    on the same seeds (PREFIX-parent-early-{pairs,dir}.json, its own base): P(5+) open >= parent + 2.0 with a Wilson low
+    above the parent's point; partner-ball legal >= parent - 1.5; feeder-ball legal >= parent - 1.0; sides within 3; court
+    falls <= 4 % (the h5f battery); D-160's guards with the same slacks against the parent's reads. The promotion gate
+    (r19-gate against run 14) is computed and reported separately and unchanged."""
+    j, j0 = json.load(open(f"{prefix}-target.json")), json.load(open(f"{prefix}-parent-early-pairs.json"))
+    p = j["pairs"]
+    q0, _ = p5_open(j0["pairs"])
+    q1, q1ci = p5_open(p)
+    own0, _ = boot_low(j0["pairs"]["court_counts"], 1, 0)
+    own, _ = boot_low(p["court_counts"], 1, 0)
+    fed0, _ = boot_low(j0["pairs"]["court_counts"], 3, 2)
+    fed, _ = boot_low(p["court_counts"], 3, 2)
+    P = pair_stats(p)
+    gap = abs(P["sides"]["A"] - P["sides"]["B"])
+    falls = json.load(open(f"results/stage5f-{tag}-summary.json"))["falls_court"]
+    g = r19_guards(j["per_family"], json.load(open(f"{prefix}-endpoint-dir.json"))["directions"],
+                   ref=f"{prefix}-parent-early", cross_ref=f"{prefix}-parent-early-pairs.json", name="22b", cross_name="22b")
+    ok = (q1 >= q0 + 0.02 and q1ci[0] > q0 and own >= own0 - 0.015 and fed >= fed0 - 0.01 and gap <= 0.03
+          and falls <= 0.04 and g)
+    print(f"d1 stage-2 run verdict: P(5+) open {q1:.4f} {q1ci} (>= 22b {q0:.4f} + 0.02, low above {q0:.4f}); partner legal "
+          f"{own:.4f} (>= {own0 - 0.015:.4f}); feeder legal {fed:.4f} (>= {fed0 - 0.01:.4f}); gap {100 * gap:.1f} (<= 3); "
+          f"falls {falls} (<= 0.04): {'PASS' if ok else 'not met'}")
     return ok
 
 
@@ -518,6 +547,8 @@ def _main() -> None:
         sys.exit(0 if early_r19(prefix) else 1)
     if mode == "r19-gate":
         sys.exit(0 if r19_gate(prefix, sys.argv[3]) else 1)
+    if mode == "d1s2-gate":
+        sys.exit(0 if d1s2_gate(prefix, sys.argv[3]) else 1)
     if mode == "early-sched":
         sys.exit(0 if early_sched(prefix) else 1)
     if mode == "sched-gate":
