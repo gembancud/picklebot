@@ -4942,3 +4942,8 @@ Smoke: 16 envs on 4220226, sustained 1.1-1.45 m/s (reported). The smoke also exp
   - **Then** the zero-shot bridge under the validity rule.
 - **(c) is gated** on ADAPTS-FAST plus experiment design's CPU-only P(5+) upper bound from existing rally logs: the share of failed rallies caused by late left / back arrival. If removing them all cannot reach about 50 %, the panel weighs (d) first.
 - **Not adopted** (single reviewers): architecture's pre-read of RES_BASE alone with H1'; RL's critic warm-up of 30.
+
+**D-188 addendum: implementation fault in P1's kill watcher, fixed before the check.**
+- **The fault:** the watcher inside scripts/diag/h1_adapt01.sh read the training log before it existed. `grep -c ... || echo 0` printed "0\n0", the loop test errored, and the watcher wrote a false "CONTINUE" (0.00 / 0.00) at iteration 0.
+- **The fix:** scripts/diag/h1_adapt01_watch.sh applies the same frozen line unchanged. It was started at iteration 8, before any data the line reads, and overwrites results/h1adapt01-kill.txt.
+- The driver's post-training check reads that file, so a kill still yields NO-ADAPT. No threshold or read changed.
