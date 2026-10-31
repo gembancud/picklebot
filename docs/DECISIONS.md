@@ -5122,3 +5122,21 @@ The one change is `--teacher` model_15900 -> fw1b-S model_16600. latent-07 is ke
 **Reported only:** P(5+) against D-189's bound of about 0.5. Footwork alone cannot reach 0.80.
 
 **Seeds:** dev 4220249-4220256 and training 184-185 ledgered.
+
+### D-191 result (2026-10-31): body-ceiling test MIXED
+
+fw-fast4-01 (cap 4 m/s, seed 183) ran its 1,500 iterations to model_18099 with no kill. Paired read on dev 4220247: Measure60-Fast4, spots 4-6 m, mean actions; child against fw1b-S.
+
+| | fw1b-S | Fast4 child |
+|---|---|---|
+| falls per 1,000 env-s | 1.44 | 0.155 |
+| worst arrival | 0.974 | 0.999 |
+| sustained p50 by sector (m/s) | 2.13-2.38 | 2.35-2.53 |
+| sustained p90 (m/s) | — | 2.62-2.79 |
+| peak p50 (m/s) | — | 2.63-2.81 |
+| first step to 1.5 m, p50 (s) | 1.23-1.28 | 1.28-1.38 (forward / sideways about 0.1 s slower) |
+| settled share | 0.18-0.27 | 0.21-0.32 |
+
+- **Verdict: MIXED.** min(L, B, R) went 2.13 -> 2.35 (+0.22 m/s), between the +0.10 and +0.30 lines.
+- The body is not capped at 2 m/s. The specialist got faster and steadier at once, but it is not yet near 3-4 m/s, and it is slower off the mark.
+- Per D-192, d1 is unchanged (fw1b-S). Fast4 becomes a d1b candidate only after its floor test (dev 4220248), a 1-3 m settle check and a mean-action arrival check.
