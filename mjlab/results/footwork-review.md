@@ -235,3 +235,39 @@ fw1b-S carried 4 of 5 votes, and the recipe is exact s5c-18 5 of 5.
 - The kickstart kill combines motion's mse_move line (anchored to the floor test) with RL's mse_hit multiplier (2x), applied to the 0.00085 actually logged over s5c-18's rows 300-360.
 
 **Decision:** D-192.
+
+## Round 60 (2026-10-31): the d1 teacher check read TEACHER-SLOW
+
+Brief: footwork-round60-brief.md.
+
+**Correction checks**
+- All five: the code ran as specified. The 1.6 m/s line was set from long-spot reads (3-6 m) and never bounded for 0.5-3 m spots, where a best-1-s window is mostly acceleration and braking.
+- Experiment design takes the error as its own.
+  - Its framing, that the drill "asks for speed", was a category error, as RL also noted: the kickstart is pure supervised DAgger and the teacher sees only the spot.
+  - The bodyspeed router's "VERDICT: VOID" lines in d1-teacher-*.log don't apply to this read and must not be quoted.
+- Motion:
+  - fw1b-S's speed histogram is flat (limited by distance); the walker's piles up at 1.0-1.2 m/s (its own cap);
+  - total arrival is only slightly quicker (left 2.14 vs 2.33 s), with 5-6 cm of overshoot and a longer settle.
+- Coach: falls are about 11x the walker's (0.090 vs 0.008 per 1,000 env-s), both tiny.
+- Architecture: the base gate reads R_LB on 3-5 m Fast25 spots, which the kickstart never trains. CAP-HELD is therefore close to built in.
+
+**Votes**
+
+| reviewer | vote | lines |
+|---|---|---|
+| Coach | C, then A | first step <= walker - 0.25 s; settled >= walker + 0.10; falls <= 0.5 |
+| Motion | C, then A | first step <= walker - 0.25 s; peak >= walker + 0.30; falls <= 0.15 |
+| RL | C, then A | first step <= walker - 0.25 s; D-188 validity. If CAP-HELD with first step <= parent, next is d1b = drill geometry only (seed 188) |
+| Experiment design | A | any new line now would be chosen knowing the answer; the base gate predates the data |
+| Architecture | B, fallback A | B is feasible on L3: about 40 lines, a ball-episodes test, an import, and `task` added to the smoke's free set |
+
+C then A carried 3 of 5.
+
+**Coded line.** The line shared by all three C votes (first step <= walker - 0.25 s in left and back), plus D-188's existing validity numbers. Coach's and motion's extra lines had no majority. The shared line was set after the 0.35-0.41 s gap had been seen, and is recorded as such.
+
+**Stage 2 (all who ruled):**
+- r19-gate and the D-160 guards against run 14 stay computed and reported, with their expected FAIL stated before launch. No M1 or target claim may come from them.
+- The run verdict uses the same guard slacks against 22b model_30200 on the same seeds: a `ref` argument to r19_guards, default run 14.
+- KILL-NO-ARRIVE comes from an early read of a checkpoint saved at +360 (D-188 validity: worst untimed arrival < 0.80). No logging hook.
+
+**Decision:** D-193.

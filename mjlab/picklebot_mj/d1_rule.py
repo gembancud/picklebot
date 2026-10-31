@@ -134,3 +134,29 @@ def base_verdict(agility_v: str, retention_v: str) -> str:
     if retention_v != "RETAINS":
         return "REJECTED"
     return "BASE-PASS"
+
+
+# D-193 (panel round 60, coach / motion / RL; experiment design voted A): the teacher check's 1.6 m/s line was
+# mis-calibrated for 0.5-3 m spots (the sustained window is capped by spot length); TEACHER-SLOW stays recorded as failed.
+# A fresh-seed premise check on the metric the three C votes share, plus D-188's existing validity numbers (no new
+# threshold beyond the shared one, which was set after the 0.35-0.41 s gap had been seen; recorded as such).
+PREMISE_FIRST_STEP_GAIN = 0.25  # s
+
+
+def premise_check(teacher: dict, walker: dict) -> tuple[str, list[str]]:
+    t, w = agility(teacher), agility(walker)
+    lines, ok = [], True
+    for i, name in ((LEFT, "left"), (BACK, "back")):
+        tf, wf = t["first_step_p50"][i], w["first_step_p50"][i]
+        good = tf is not None and wf is not None and tf <= wf - PREMISE_FIRST_STEP_GAIN
+        ok &= good
+        lines.append(f"{name}: first-step p50 teacher {tf} vs walker {wf} s (need <= walker - {PREMISE_FIRST_STEP_GAIN}) "
+                     f"-> {'ok' if good else 'FAIL'}")
+    valid = t["worst_arrival"] >= 0.80 and t["fallen_censored_share"] <= 0.15
+    ok &= valid
+    lines.append(f"teacher validity (D-188): worst untimed arrival {t['worst_arrival']:.3f} >= 0.80, fallen + censored "
+                 f"{t['fallen_censored_share']:.3f} <= 0.15 -> {'ok' if valid else 'FAIL'}")
+    lines.append(f"reported: peak p50 L/B teacher {t['peak_p50'][LEFT]}/{t['peak_p50'][BACK]} vs walker "
+                 f"{w['peak_p50'][LEFT]}/{w['peak_p50'][BACK]}; settled L/B {t['settled'][LEFT]}/{t['settled'][BACK]} vs "
+                 f"{w['settled'][LEFT]}/{w['settled'][BACK]}; falls {t['falls']:.3f} vs {w['falls']:.3f} per 1,000 env-s")
+    return ("PREMISE-OK" if ok else "PREMISE-FAIL"), lines

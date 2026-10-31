@@ -52,3 +52,10 @@ def test_retention_and_base():
     assert dr.base_verdict("MIXED", "RETAINS") == "BASE-PASS"
     assert dr.base_verdict("MIXED", "REJECTED") == "REJECTED"
     assert dr.base_verdict("CAP-HELD", "RETAINS") == "CAP-HELD"
+
+
+def test_premise_check():
+    walker = _drill([0.8] * 8, first_s=1.75)
+    assert dr.premise_check(_drill([1.0] * 8, first_s=1.4), walker)[0] == "PREMISE-OK"
+    assert dr.premise_check(_drill([1.0] * 8, first_s=1.6), walker)[0] == "PREMISE-FAIL"  # only 0.15 s quicker
+    assert dr.premise_check(_drill([1.0] * 8, first_s=1.4, censored=30), walker)[0] == "PREMISE-FAIL"  # validity

@@ -5140,3 +5140,39 @@ fw-fast4-01 (cap 4 m/s, seed 183) ran its 1,500 iterations to model_18099 with n
 - **Verdict: MIXED.** min(L, B, R) went 2.13 -> 2.35 (+0.22 m/s), between the +0.10 and +0.30 lines.
 - The body is not capped at 2 m/s. The specialist got faster and steadier at once, but it is not yet near 3-4 m/s, and it is slower off the mark.
 - Per D-192, d1 is unchanged (fw1b-S). Fast4 becomes a d1b candidate only after its floor test (dev 4220248), a 1-3 m settle check and a mean-action arrival check.
+
+## D-193 (2026-10-31): the D-192 teacher check failed on a mis-calibrated line; a fresh premise check, then d1
+
+Panel round 60 (mjlab/results/footwork-review.md).
+
+**The D-192 teacher check stays recorded as TEACHER-SLOW, failed as coded** (results/d1-summary.txt, dev 4220249).
+- Neither half passed:
+  - 1.6 m/s was unreachable by construction on 0.5-3 m spots;
+  - the gain was +0.23 m/s against a required +0.3.
+- Cause, agreed by all five reviewers: the sustained (best 1-s window) line was set from 3-6 m reads and never bounded for the kickstart's 0.5-3 m geometry, where a move is mostly acceleration and braking. Experiment design takes the calibration error as its own.
+
+On the metrics that spot length doesn't cap, fw1b-S beats the walker on the same read:
+- first step to 1.5 m: 1.36-1.41 s vs 1.71-1.82 s;
+- peak p50: +0.36-0.41 m/s;
+- settled: 19-34 % vs 0-2 %.
+
+Against it: falls 0.090 vs 0.008 per 1,000 env-s, 5-6 cm overshoot, and only slightly quicker total arrival.
+
+**Decision (C then A, 3 of 5).** scripts/diag/d1_run.sh:
+1. **Premise check** on fresh dev 4220266, same read: fw1b-S and model_15900 on Measure60-Court, mean actions.
+   - **PREMISE-OK** if, in left and back, fw1b-S's first-step p50 <= the walker's - 0.25 s, and fw1b-S passes D-188 validity (worst untimed arrival >= 0.80, fallen + censored <= 0.15).
+   - Otherwise **PREMISE-FAIL**: stop, and turn to the first-handed-ball levers (D).
+   - The 0.25 s line is the one all three C votes share. It was set after the 0.35-0.41 s gap had been seen. Experiment design voted A, holding that any line chosen now is chosen knowing the answer.
+2. **Then D-192 unchanged:** smoke 185, kickstart s5c-d1-fw1bS (seed 184), kill rows 300-360, base gate dev 4220250-4220256, as coded in d1_rule.py. Outputs results/d1r-*.
+
+**Pre-registered next step (RL, architecture).** The base gate reads R_LB on 3-5 m Fast25 spots, which the kickstart never trains (MoveDrill 0.5-3 m). If the gate reads CAP-HELD while the first-step p50 in left and back is <= model_32874's, the next single change is **d1b**:
+- the kickstart's move episodes on FootworkDrill geometry (1-5 m, the Fast25 box), with fw1b-S fixed;
+- training seed 188, a teacher check on its own geometry with D-192's line unchanged;
+- about 40 lines: an L3 variant built without deadline_task, a ball-episodes-unchanged test, an import in kickstart_h4.py, and `task` added to the smoke's free set.
+
+**Stage-2 rulings** (coded in its own entry before launch):
+- **Promotion gate.** rally_check.py r19-gate and the D-160 guards against run 14 stay computed and reported. Their expected FAIL is stated in advance: 22b model_30200 already fails them (reach_deep -34.7, left + back -9.2). No M1 or target claim may come from them.
+- **Run verdict.** The same guard slacks (5 / 3 / 5 points) against 22b model_30200 read on the same seeds: a `ref` argument to r19_guards, default run 14, so old gates replay unchanged. Plus feeder >= 22b - 1.0, plus the agility lines. The reference changes, not the threshold.
+- **KILL-NO-ARRIVE.** An early read of a checkpoint saved at +360 (Measure60-L3Base composite, a fixed seed from 4220257-4220265). Kill if D-188 validity fails. No logging hook, since that would change 22b's task.
+
+**Seeds:** dev 4220266 ledgered; training 188 reserved for d1b.
