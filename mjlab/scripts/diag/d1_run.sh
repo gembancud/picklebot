@@ -40,7 +40,9 @@ import glob, json, sys
 ref = json.load(open(glob.glob("artifacts/train/logs/picklebot_return_stand/*_s5c-18-merge17/kickstart_log_*.json")[0]))["args"]
 new = json.load(open(sorted(glob.glob("artifacts/train/logs/picklebot_return_stand/*_s5c-d1-fw1bS-smoke/kickstart_log_*.json"))[-1]))["args"]
 free = {"run_name", "teacher", "seed", "envs", "max_seconds", "log_root"}
-diff = {k: (ref.get(k), new.get(k)) for k in set(ref) | set(new) if k not in free and ref.get(k) != new.get(k)}
+off = {"family_teacher": [], "early_stop": 0.0}  # flags added to kickstart_h4.py after s5c-18; these defaults are "off"
+diff = {k: (ref.get(k), new.get(k)) for k in set(ref) | set(new) if k not in free and ref.get(k) != new.get(k)
+        and not (k not in ref and k in off and new.get(k) == off[k])}
 ok = not diff and new["teacher"].endswith("fw1b-S/model_16600.pt") and new["recover"] is False
 print(f"smoke: args diff vs s5c-18 {diff}; teacher {new['teacher']} -> {'ok' if ok else 'FAIL'}")
 sys.exit(0 if ok else 1)

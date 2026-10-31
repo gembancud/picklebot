@@ -5176,3 +5176,12 @@ Against it: falls 0.090 vs 0.008 per 1,000 env-s, 5-6 cm overshoot, and only sli
 - **KILL-NO-ARRIVE.** An early read of a checkpoint saved at +360 (Measure60-L3Base composite, a fixed seed from 4220257-4220265). Kill if D-188 validity fails. No logging hook, since that would change 22b's task.
 
 **Seeds:** dev 4220266 ledgered; training 188 reserved for d1b.
+
+### D-193 addendum (2026-10-31): smoke check false positive fixed
+
+d1_run.sh's smoke check stopped with SMOKE-FAIL. The cause was the check, not the run:
+- kickstart_h4.py gained `--family-teacher` (default []) and `--early-stop` (default 0.0) after s5c-18, so s5c-18's args lack them.
+- Both defaults mean "off": no family teachers, and early stop is disabled (kickstart_h4.py:142, :264).
+- The check now treats a key that is absent from s5c-18's args as equal when the new value is that off default. Every other key must still match exactly.
+
+The smoke run itself (seed 185) ran normally and was kept. The failed summary is kept as results/d1r-summary.smokefail.txt and its marker as artifacts/train/d1run.done.smokefail. The driver is relaunched; it re-uses the existing premise and smoke outputs.

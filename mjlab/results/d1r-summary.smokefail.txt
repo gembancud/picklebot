@@ -1,0 +1,7 @@
+left: first-step p50 teacher 1.3609 vs walker 1.7114 s (need <= walker - 0.25) -> ok
+back: first-step p50 teacher 1.4112 vs walker 1.817 s (need <= walker - 0.25) -> ok
+teacher validity (D-188): worst untimed arrival 0.964 >= 0.80, fallen + censored 0.055 <= 0.15 -> ok
+reported: peak p50 L/B teacher 1.5186/1.308 vs walker 1.0997/0.9527; settled L/B 0.284/0.193 vs 0.007/0.004; falls 0.033 vs 0.008 per 1,000 env-s
+PREMISE: PREMISE-OK
+smoke: args diff vs s5c-18 {'family_teacher': (None, []), 'early_stop': (None, 0.0)}; teacher artifacts/train/logs/picklebot_return_stand/2026-10-31_01-16-15_fw1b-S/model_16600.pt -> FAIL
+VERDICT: SMOKE-FAIL
