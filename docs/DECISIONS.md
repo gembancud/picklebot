@@ -5027,3 +5027,38 @@ That is RL's P2, so the agent runs P2 before d1. d1 stays queued.
     - **EXPRESSES** if >= 0.85 -> a rally run with this drill in move episodes;
     - **CAP-IN-07** if <= 0.70 -> d1;
     - **MIXED** otherwise -> d1.
+
+
+## D-191 - P2 CAP-IN-07; the user asks for agility beyond 2 m/s: a body-ceiling test first, then d1 (2026-10-31)
+
+**P2** (D-190, frozen; results/p2speed-summary.txt; paired on dev 4220246): **CAP-IN-07**.
+- The read is valid: falls 1.89 against 6.53 for the base; worst untimed arrival 0.976 against 0.878; fallen + censored 0.099.
+- R_LB 0.635 -> 0.661.
+
+| | base | P2 |
+|---|---|---|
+| sustained speed (m/s) | 1.16-1.45 | 1.20-1.51 |
+| settled share, back sectors | 0.04-0.07 | 0.11-0.18 |
+| residual saturation | 0 | 0 |
+
+- **Reading:** the working speed reward made the composite safer and more settled, but barely faster. The residual's range is not what binds (saturation 0). The composite rides a frozen RES_BASE whose footwork came from the 1-m/s walking teacher.
+- **Next by the rule: d1.** Rebuild the base by the s5c-18 recipe with fw1b-S model_16600 as the footwork teacher, keeping latent-07. The floor test supports it: legs explained 0.954.
+
+**The user (2026-10-31):**
+> So yeah, well, one to we can basically move improve to about 2 meters. I know that professional racket sport players probably, well, actually there's a range, right? For beginners is around, I think north around 1 to 2 meters per second, and then for the intermediate ones it's around like 3 to 4 [...] And then for actual professionals, it's going to be 4 to 5 or 4 to 6. [...] we would have to find a way to really move higher and higher. [...] So in most cases, it's really going to be improving the agility.
+
+The agent's answers:
+- On a pickleball court (half court about 6 x 6.7 m; moves of 1-3 m) first-step quickness and stopping matter as much as top speed.
+- The G1 body's own ceiling has never been measured. The specialist was only ever asked for 2.5 m/s.
+
+**Body-ceiling test** (scripts/diag/fw_fast4.sh, sha256 b20d060a; frozen; launched after P2):
+- **Change:** the specialist's task with the command cap 2.5 -> 4.0 m/s, deadlines from v_req U(1.5, 3.5) and spots 2-6 m. This is task Picklebot-Footwork-Specialist-Fast4-G1, with a new cfg field footwork_cmd_cap.
+- **Training:** from fw1b-S model_16600 with fw1b's algorithm, 4,096 envs, 1,500 iterations, training seed 183.
+- **Kill:** falls > 8.314 per 1,000 env-s over the last 100 iterations after iteration 100 -> VOID-unstable.
+- **Read:** Measure60-Fast4 (spots 4-6 m), mean actions, paired child vs parent on dev 4220247, under D-188's validity rule.
+  - On min(L, B, R) sustained p50: **CEILING-RAISED** at >= parent + 0.30 m/s; **CEILING-HELD** at <= parent + 0.10; otherwise **MIXED**.
+  - Reported: a new **first-step metric**, the time until the pelvis is 1.5 m closer to the spot (FootworkDrill first_step_hist, tested), plus peak speeds.
+- **The agility plan:**
+  - raise the specialist's targets toward the body's measured ceiling;
+  - each faster specialist then teaches the next rally base (d1 now, with fw1b-S; later with a faster specialist);
+  - the agility metrics (time to 1.5 m, sustained and peak speed, settle) are reported for every footwork result from here on.
