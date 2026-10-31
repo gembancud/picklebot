@@ -4995,3 +4995,35 @@ Smoke: 16 envs on 4220226, sustained 1.1-1.45 m/s (reported). The smoke also exp
 **Not adopted now, recorded for round 59:**
 - RL's P2: the rally composite trained with the specialist's fixed speed reward, as a capacity screen.
 - Experiment design's direction x ball-index read, to decide whether footwork or the first-handed-ball levers come first.
+
+
+## D-190 - Floor test: latent-07 can express the specialist's legs (0.954); the user's "train for longer" -> P2 speed screen first (2026-10-31)
+
+**Floor test** (D-189, frozen; results/fw-floor-summary.txt):
+- fw1b-S model_16600's joint actions, fitted through latent-07's decoder in move episodes (dev 4220245):
+  - **legs explained 0.954 at lam 3**, 0.973 at lam 5;
+  - waist 0.79 / 0.90, left arm 0.93 / 0.95, right arm 0.85 / 0.89;
+  - saturated share 0.26 / 0.12.
+- **ROUTE: d1** (the s5c-18 recipe with fw1b-S as the footwork teacher, keeping latent-07).
+- **What it shows:** the specialist's fast-footwork actions are reachable inside latent-07's action space, state by state. That supports RL's round-58 point. The composite's slowness is in what it was trained for (speed reward capped near 1 m/s), not only in what the decoder can express.
+
+**The user (2026-10-31):** "We did some shuffling and back pedal motion right? Why not just train for longer?" The agent's answer:
+- longer training of the H0 tracker or of P1 would not help (both plateaued or collapsed);
+- longer training of the current rally composite with its current reward would not make it faster;
+- training it with the specialist's working speed reward has never been tried.
+
+That is RL's P2, so the agent runs P2 before d1. d1 stays queued.
+
+**P2** (scripts/diag/p2_speed.sh, sha256 6cdc53a7; frozen):
+- **Task:** Picklebot-Footwork-Train-RallyLamR2-G1, run 14's task with a move-only FootworkDrill and fw_track_lin_vel. Its config test checks that only the drill and the speed kernel change.
+- **Training:** from 22b model_30200, ScheduledPPO 1e-4 constant (22b's settings), 4,096 envs, 600 iterations, training seed 181, smoke 182.
+- **Kill at +150** (training):
+  - falls over iterations 131-150 > 2 x those over 1-20 -> KILL-UNSTABLE;
+  - untimed arrival < 0.80 -> KILL-NO-ARRIVE.
+  - No ball episodes are trained, so there is no legal_return line, and P2 is not a rally candidate.
+- **Endpoint, paired on dev 4220246** (Measure60-RallyLamR2, both on latent-07):
+  - D-188's validity rule first; invalid -> INVALID, re-ask the panel.
+  - Then R_LB (left / back sustained, as a ratio to the specialist's):
+    - **EXPRESSES** if >= 0.85 -> a rally run with this drill in move episodes;
+    - **CAP-IN-07** if <= 0.70 -> d1;
+    - **MIXED** otherwise -> d1.

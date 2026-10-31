@@ -327,3 +327,30 @@ def rally_measure(cfg):
 register_mjlab_task(task_id=TASK_FW_RALLY_MEASURE, env_cfg=rally_measure(load_env_cfg(ag.SRC_RES)),
                     play_env_cfg=rally_measure(load_env_cfg(ag.SRC_RES, play=True)), rl_cfg=load_rl_cfg(ag.SRC_RES),
                     runner_cls=load_runner_cls(ag.SRC_RES))
+
+
+# D-190 P2 (RL's capacity screen, the user's "why not just train for longer?"): the current rally composite (lam_r 2
+# residual around RES_BASE on latent-07; run 14's task) trained on the footwork specialist's drill with its working speed
+# reward. One change from the specialist's footwork_task on this task: move episodes only (move_prob 1.0) are the
+# FootworkDrill (spots 1-5 m, deadline, pay "settled", heading free beyond 1 m) and move_track_lin_vel is fw_track_lin_vel
+# (std 0.5 x max(1, |v_cmd|)); the composite's other rewards are untouched. 20-s episodes.
+TASK_FW_RALLY_TRAIN = "Picklebot-Footwork-Train-RallyLamR2-G1"
+
+
+def rally_train(cfg):
+    ag.deadline_task(cfg)
+    b = cfg.actions["ball"]
+    vals = {f.name: getattr(b, f.name) for f in dataclasses.fields(b) if f.init}
+    vals.update(deadline_arrival_mode="first_entry", deadline_v_req=V_REQ, deadline_dist=DIST, footwork_dist=DIST,
+                move_spot_box=SPOT_BOX, footwork_pay="settled")
+    cfg.actions["ball"] = FootworkBallActionCfg(**vals)
+    r = cfg.rewards
+    assert r["move_track_lin_vel"].func is md.move_track_lin_vel
+    r["move_track_lin_vel"] = dataclasses.replace(r["move_track_lin_vel"], func=fw_track_lin_vel)
+    cfg.episode_length_s = max(cfg.episode_length_s, EPISODE_S)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_FW_RALLY_TRAIN, env_cfg=rally_train(load_env_cfg(ag.SRC_RES)),
+                    play_env_cfg=rally_train(load_env_cfg(ag.SRC_RES, play=True)), rl_cfg=load_rl_cfg(ag.SRC_RES),
+                    runner_cls=load_runner_cls(ag.SRC_RES))

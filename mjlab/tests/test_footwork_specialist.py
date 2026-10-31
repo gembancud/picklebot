@@ -256,3 +256,21 @@ def test_mid_move_heading_counter():
     h = torch.tensor(dr.counters()["mid_heading_hist"]).sum(0)
     assert int(h[0]) == 1 and int(h[17]) == 1 and not dr.mid_done.any()
     assert math.isclose(dr.counters()["mid_heading_bin_deg"], 10.0)
+
+
+def test_rally_train_task_changes_only_the_drill_and_the_speed_kernel():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks.agility as ag
+    import picklebot_mj.tasks.footwork_specialist as fs
+    src, a = load_env_cfg(ag.SRC_RES), load_env_cfg(fs.TASK_FW_RALLY_TRAIN)
+    assert isinstance(a.actions["ball"], fs.FootworkBallActionCfg)
+    b = a.actions["ball"]
+    assert b.move_prob == 1.0 and b.footwork_pay == "settled" and b.footwork_dist == fs.DIST
+    changed = sorted(k for k in src.rewards if src.rewards[k].func is not a.rewards[k].func
+                     or src.rewards[k].weight != a.rewards[k].weight)
+    assert changed == ["move_track_lin_vel", "move_track_yaw"], changed
+    assert a.rewards["move_track_lin_vel"].func is fs.fw_track_lin_vel
+    assert [k for k in src.actions if k != "ball" and src.actions[k] != a.actions[k]] == []
+    assert a.episode_length_s >= 20.0
