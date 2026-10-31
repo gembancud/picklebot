@@ -1,0 +1,23 @@
+left: first-step p50 teacher 1.3609 vs walker 1.7114 s (need <= walker - 0.25) -> ok
+back: first-step p50 teacher 1.4112 vs walker 1.817 s (need <= walker - 0.25) -> ok
+teacher validity (D-188): worst untimed arrival 0.964 >= 0.80, fallen + censored 0.055 <= 0.15 -> ok
+reported: peak p50 L/B teacher 1.5186/1.308 vs walker 1.0997/0.9527; settled L/B 0.284/0.193 vs 0.007/0.004; falls 0.033 vs 0.008 per 1,000 env-s
+PREMISE: PREMISE-OK
+smoke: args diff vs s5c-18 {}; teacher artifacts/train/logs/picklebot_return_stand/2026-10-31_01-16-15_fw1b-S/model_16600.pt -> ok
+kickstart: {"run": "s5c-d1-fw1bS", "exit_code": 0, "finished": "2026-10-31T20:19:24+08:00"}
+rows 301-360: mse_move 0.0299 (kill > 0.142), mse_hit 0.00161 (kill > 0.0017); first-20 mse_move 0.0635 (reported) -> CONTINUE
+endpoint artifacts/train/logs/picklebot_return_stand/2026-10-31_18-24-20_s5c-d1-fw1bS/model_32854.pt
+iterations 1179 (s5c-18: 1,199); final mse_move 0.02582 (s5c-18: 0.0336), mse_hit 0.00114
+parent {'falls': 56.787, 'worst_arrival': 0.448, 'fallen_censored_share': 0.256, 'sustained_p50': [1.1178, 1.0765, 1.0373, 1.3821, 1.5262, 1.3928, 1.3039, 1.1958], 'peak_p50': [1.2745, 1.3053, 1.354, 1.6579, 1.7774, 1.5982, 1.5747, 1.4356], 'first_step_p50': [1.8542, 1.848, 1.8101, 1.4359, 1.3848, 1.4928, 1.5791, 1.693], 'settled': [0.011, 0.009, 0.004, 0.051, 0.052, 0.047, 0.021, 0.021], 'R_LB': 0.623}
+child {'falls': 12.02, 'worst_arrival': 0.83, 'fallen_censored_share': 0.087, 'sustained_p50': [1.5824, 1.5066, 1.4641, 1.6906, 1.827, 2.0074, 1.6806, 1.5731], 'peak_p50': [1.8744, 1.8673, 1.8847, 2.0134, 2.1365, 2.2593, 1.9898, 1.8775], 'first_step_p50': [1.4438, 1.4796, 1.5136, 1.3635, 1.2968, 1.2738, 1.4007, 1.4202], 'settled': [0.216, 0.183, 0.142, 0.304, 0.371, 0.515, 0.317, 0.213], 'R_LB': 0.801}
+agility: valid True, first-step L/B no slower True, R_LB 0.623 -> 0.801 -> MIXED
+hitting parent {'main': 0.8013, 'cells': 43, 'n_cells': 55, 'families': {'easy_forehand': 0.992, 'wide_forehand': 0.9666, 'backhand': 0.9859, 'deep': 0.994, 'short': 0.9892, 'high': 0.9976, 'low': 0.9836, 'fast': 0.9423, 'topspin': 0.9797, 'backspin': 0.8438, 'reach_forehand': 0.9734, 'reach_backhand': 0.9563, 'reach_short': 0.9437, 'reach_deep': 0.4927}, 'style': 4.029639720916748, 'falls_court': 0.0356, 'falls_move': 0.0111}
+hitting child {'main': 0.8022, 'cells': 43, 'n_cells': 55, 'families': {'easy_forehand': 0.9888, 'wide_forehand': 0.9783, 'backhand': 0.9904, 'deep': 0.9965, 'short': 0.9949, 'high': 0.9976, 'low': 0.9773, 'fast': 0.938, 'topspin': 0.9849, 'backspin': 0.8477, 'reach_forehand': 0.9775, 'reach_backhand': 0.954, 'reach_short': 0.9162, 'reach_deep': 0.5036}, 'style': 4.027612209320068, 'falls_court': 0.0318, 'falls_move': 0.0073}
+[pass] main 0.8022 >= parent 0.8013 - 0.02
+[pass] passing cells 43 >= parent 43 - 2
+[pass] worst drill5b family reach_short -0.027 >= -0.05
+[pass] style 4.028 <= parent 4.030 + 0.15
+[pass] move falls 0.0073 <= max(0.01, 0.0111)
+[pass] court falls 0.0318 <= parent 0.0356 + 0.01
+retention: RETAINS
+VERDICT: BASE-PASS

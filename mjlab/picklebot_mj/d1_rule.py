@@ -160,3 +160,74 @@ def premise_check(teacher: dict, walker: dict) -> tuple[str, list[str]]:
                  f"{w['peak_p50'][LEFT]}/{w['peak_p50'][BACK]}; settled L/B {t['settled'][LEFT]}/{t['settled'][BACK]} vs "
                  f"{w['settled'][LEFT]}/{w['settled'][BACK]}; falls {t['falls']:.3f} vs {w['falls']:.3f} per 1,000 env-s")
     return ("PREMISE-OK" if ok else "PREMISE-FAIL"), lines
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Stage 2 (D-193 rulings; experiment design round 59): 22b's residual (model_30200) re-climbed on the d1 base.
+# Kill at +360, from the training log: falls per 1,000 env-s over iterations 341-360 > 2 x 22b's over its last 100
+# iterations before model_30200 -> KILL-UNSTABLE; mean Episode_Reward/legal_return over 341-360 < 22b's same-window mean
+# - 0.05 -> KILL-NO-HIT. From the +360 checkpoint's Measure60-RallyLamR2 read (PICKLEBOT_RES_BASE = the d1 base): D-188
+# validity fails (worst untimed arrival < 0.80 or (fallen + censored) / spots > 0.15) -> KILL-NO-ARRIVE.
+import re as _re  # noqa: E402
+
+S2_KILL_ITERS = (341, 360)
+
+
+def log_blocks(path: str) -> dict[int, str]:
+    """rsl_rl training log -> {iteration: block text}."""
+    t = open(path, errors="ignore").read()
+    parts = _re.split(r"Learning iteration (\d+)/\d+", t)
+    return {int(parts[i]): parts[i + 1] for i in range(1, len(parts) - 1, 2)}
+
+
+def window_stats(blocks: dict[int, str], its: list[int], envs: int) -> tuple[float, float]:
+    """(falls per 1,000 env-s, mean Episode_Reward/legal_return) over the given iterations."""
+    import os
+    import sys
+    import tempfile
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts", "diag"))
+    from falls_by_length import falls_per_1000_env_s
+    text = "".join(f"Learning iteration {i}/0\n{blocks[i]}" for i in its if i in blocks)
+    with tempfile.NamedTemporaryFile("w", suffix=".log", delete=False) as f:
+        f.write(text)
+    try:
+        falls = falls_per_1000_env_s(f.name, envs=envs)[0]
+    finally:
+        os.unlink(f.name)
+    lr = [float(x) for x in _re.findall(r"Episode_Reward/legal_return: ([-0-9.]+)", text)]
+    return falls, (sum(lr) / len(lr) if lr else float("nan"))
+
+
+def s2_train_kill(child_log: str, start_it: int, ref_log: str, ref_start_it: int, envs: int) -> tuple[str, str] | None:
+    """None until iteration start_it + 360 is logged; then (verdict, line). Reference: 22b's own log over the same
+    iterations since its resume (ref_start_it + 341-360), not its last 100: Episode_Reward/legal_return averages only
+    the episodes ending in the window, and 120-s episodes first end about 250 iterations after a resume, so the literal
+    "last 100" reference (0.755) would have killed 22b's own trajectory (0.602 at +341-360). Proposed at the base gate's
+    panel review (round 61)."""
+    b = log_blocks(child_log)
+    lo, hi = S2_KILL_ITERS
+    want = list(range(start_it + lo, start_it + hi + 1))
+    if want[-1] not in b:
+        return None
+    rb = log_blocks(ref_log)
+    f1, l1 = window_stats(b, want, envs)
+    f0, l0 = window_stats(rb, list(range(ref_start_it + lo, ref_start_it + hi + 1)), envs)
+    v = "KILL-UNSTABLE" if f1 > 2 * f0 else "KILL-NO-HIT" if not l1 >= l0 - 0.05 else "CONTINUE"
+    return v, (f"+{lo}-{hi}: falls per 1,000 env-s {f1:.2f} (kill > 2 x 22b {f0:.2f}); legal_return {l1:.4f} "
+               f"(kill < 22b {l0:.4f} - 0.05) -> {v}")
+
+
+def s2_arrive_kill(read: dict) -> tuple[str, str]:
+    a = agility(read)
+    ok = a["worst_arrival"] >= 0.80 and a["fallen_censored_share"] <= 0.15
+    v = "CONTINUE" if ok else "KILL-NO-ARRIVE"
+    return v, (f"+360 read: worst untimed arrival {a['worst_arrival']:.3f} (kill < 0.80), fallen + censored "
+               f"{a['fallen_censored_share']:.3f} (kill > 0.15), falls {a['falls']:.2f} (reported) -> {v}")
+
+
+def s2_verdict(rally_pass: bool, agility_v: str) -> str:
+    if rally_pass and agility_v == "AGILE":
+        return "D1-PASS"
+    if rally_pass and agility_v == "MIXED":
+        return "ADOPT-AGILITY-NOT-MET"
+    return "PANEL"

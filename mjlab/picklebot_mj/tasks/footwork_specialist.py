@@ -397,3 +397,18 @@ _SRC_L3 = "Picklebot-Latent-Court-L3-G1"
 register_mjlab_task(task_id=TASK_FW_L3BASE_MEASURE, env_cfg=rally_measure(load_env_cfg(_SRC_L3)),
                     play_env_cfg=rally_measure(load_env_cfg(_SRC_L3, play=True)), rl_cfg=load_rl_cfg(_SRC_L3),
                     runner_cls=load_runner_cls(_SRC_L3))
+# d1b (D-193, pre-registered; used only if the d1 base gate reads CAP-HELD with first step <= the parent's): the
+# kickstart's own task (Picklebot-Latent-Court-L3-G1) with its move episodes' spot geometry widened to the specialist's
+# (1-5 m in the Fast25 box) through FastMoveDrill (body_speed.py), which keeps MoveDrill's episode logic (move_prob,
+# held arrival, untimed limit); ball episodes unchanged. The command cap (2.5 m/s) only shapes the move reward, which the
+# kickstart's supervised loss does not use. One change against d1: the move-episode geometry.
+TASK_L3_FWGEOM = "Picklebot-Latent-Court-L3-FwGeom-G1"
+
+
+def l3_fwgeom(cfg):
+    return ag.to_agility_ball(cfg, move_cmd_max_speed=CMD_CAP, move_dist_range=DIST, move_spot_box=SPOT_BOX)
+
+
+register_mjlab_task(task_id=TASK_L3_FWGEOM, env_cfg=l3_fwgeom(load_env_cfg(_SRC_L3)),
+                    play_env_cfg=l3_fwgeom(load_env_cfg(_SRC_L3, play=True)), rl_cfg=load_rl_cfg(_SRC_L3),
+                    runner_cls=load_runner_cls(_SRC_L3))
