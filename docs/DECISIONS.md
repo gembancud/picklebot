@@ -4947,3 +4947,51 @@ Smoke: 16 envs on 4220226, sustained 1.1-1.45 m/s (reported). The smoke also exp
 - **The fault:** the watcher inside scripts/diag/h1_adapt01.sh read the training log before it existed. `grep -c ... || echo 0` printed "0\n0", the loop test errored, and the watcher wrote a false "CONTINUE" (0.00 / 0.00) at iteration 0.
 - **The fix:** scripts/diag/h1_adapt01_watch.sh applies the same frozen line unchanged. It was started at iteration 8, before any data the line reads, and overwrites results/h1adapt01-kill.txt.
 - The driver's post-training check reads that file, so a kill still yields NO-ADAPT. No threshold or read changed.
+
+
+## D-189 - P1 NO-ADAPT; P(5+) bound about 0.5; panel round 58: route C (keep latent-07, teach the legs from the specialist), floor test first (2026-10-31)
+
+**P1** (D-188; results/h1adapt01-summary.txt): **NO-ADAPT**, as printed. R is not read.
+
+| | P1 | baseline | line |
+|---|---|---|---|
+| falls per 1,000 env-s | 79.5 | 6.9 | <= 13.8 |
+| worst untimed arrival | 0.015 | | >= 0.80 |
+| fallen + censored share | 0.401 | | <= 0.15 |
+
+- **Scope:** H1' (the serve-broken decoder) only, with 400 iterations from 22b model_30200. It does not show that a stroke-fixed decoder cannot adapt.
+- **The pairs read** (0 shots in 53,852 rallies) is reported only, CONFOUNDED.
+- **Implementation / pre-registration fault (architecture):** the kill line watched falls only.
+  - Hitting collapsed during training: legal_return 0.64 -> 0.0013, paddle_contact 0.138 -> 0.0035. Falls dropped because the policy gave up the ball.
+  - The verdict stands, for a stronger reason.
+  - **Rule from now on:** any adaptation run carries a legal_return kill line next to its falls line.
+- **(c) gate:** D-188 gated (c) on ADAPTS-FAST, and that gate is now failed. Reopening (c) needs a new D-entry naming the premise that changed.
+- **RL's confound:** the rally task, Measure60-RallyLamR2 and agility arm A all kept the old move_track_lin_vel kernel (std 0.5, commands up to 1.0 m/s). So D-186's CAP-INHERITED R compares a policy trained toward 1 m/s with one trained toward 2 m/s. Controller capacity and training objective are confounded. This is recorded; nothing is relabelled.
+
+**P(5+) upper bound** (CPU only; scripts/diag/p5_bound.py, sha256 50e47107; results/p5-bound.txt). It is a model: P(5+) is scaled by the feeder ball's legal rate. Experiment design saw these numbers by hand before any line was set, so the D-188 line (0.50) is kept and no new line is proposed.
+
+| checkpoint | F | B_LB | B_LBf | B_max | vs 0.50 |
+|---|---|---|---|---|---|
+| 22b | 0.659 | 0.509 | 0.486 | 0.592 | >= |
+| 23 | 0.690 | 0.493 | 0.475 | 0.566 | < |
+
+- The bound **straddles** the line. Even perfect feeder balls top out at 0.57-0.59, against the 0.80 target.
+- The larger leak is the first handed balls: k = 1 legal is 0.64-0.69 against 0.91-0.93 for balls 3 and later (ballidx52, idlerec53).
+- **Footwork is necessary but not sufficient**, and the climb must also fix the first handed balls.
+
+**Panel round 58** (mjlab/results/footwork-review.md):
+- **Vote:** (d), 4 of 5 (coach, motion, RL, architecture); experiment design voted (e). (c) is rejected 5 of 5. The move-phase decoder switch is rejected.
+- **Route C keeps latent-07 and its strokes.** It teaches the composite's legs from the footwork specialist, the only controller that already stops (arrival >= 0.99).
+- **Architecture's finding:** fw1b-S model_16600 has the walking teacher's interface (118 -> 29). So the s5c-18 kickstart recipe can take it as the footwork teacher with no new code.
+
+**First GPU action: the floor test** (architecture; it is the gate of route C in the coach's and the footwork-route doc's design). scripts/diag/fw_floor.sh, sha256 24a6e385:
+- scripts/latent_reach_floor.py unchanged, launched through runpy;
+- fw1b-S on Picklebot-Footwork-Specialist-G1, move episodes only, lams 3 / 5, 256 envs, 8 s, dev seed 4220245.
+- **Routing on legs explained at lam 3** (D-082's walking teacher: 93 %):
+  - >= 0.85 -> **d1**: rebuild the base by the s5c-18 recipe with fw1b-S as the footwork teacher, keeping latent-07.
+  - < 0.85 -> **d2**: a residual-aware kickstart with leg_r 0.3 (about 20 lines in scripts/kickstart_h4.py).
+- Lam 5 is reported.
+
+**Not adopted now, recorded for round 59:**
+- RL's P2: the rally composite trained with the specialist's fixed speed reward, as a capacity screen.
+- Experiment design's direction x ball-index read, to decide whether footwork or the first-handed-ball levers come first.

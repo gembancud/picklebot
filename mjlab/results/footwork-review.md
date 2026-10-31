@@ -186,3 +186,23 @@ The LAFAN1 endpoint is kept, 5 of 5.
 | Architecture | (b), after a cheap pre-read | (a), then (c) |
 
 **Decision:** D-188.
+
+## Round 58 (2026-10-31): P1 NO-ADAPT
+
+**Correction checks**
+- Architecture: P1's kill line watched falls only; hitting collapsed (legal_return 0.64 -> 0.001), so the fall drop came from giving up the ball.
+- RL: the rally composite was never trained with a working speed reward, so the cap premise is confounded.
+- Experiment design: the scope is H1' only; the (c) gate has failed.
+- Motion: adaptation moved, but found no braking latent.
+
+**Votes**
+
+| reviewer | route | first action |
+|---|---|---|
+| Coach | (d) route C | a kickstart with the floor-check gate; the bound in parallel |
+| Motion | (d) via the leg residual + kickstart | the CPU bound first (switch to (e) if < 0.5) |
+| RL | (d) | the P2 capacity screen (the fixed speed reward); the bound in parallel |
+| Experiment design | (e) | the bound + a direction x ball-index read |
+| Architecture | (d) route C, cheapest variant | the bound, then the floor test (d1 if legs >= 0.85, else d2) |
+
+**Decision:** D-189 — the floor test first.
