@@ -57,6 +57,7 @@ TASK_FW_MEASURE60 = "Picklebot-Footwork-Measure60-G1"  # D-181: 60-s episodes, p
 PAY_MODES = ("entry", "settled")
 MEASURE_EPISODE_S = 60.0
 HEADING_BIN, HEADING_BINS = 10.0, 18  # degrees from facing the net, 0-180
+FIRST_STEP_M, FIRST_BIN, FIRST_BINS = 1.5, 0.05, 80  # D-191 first-step metric: metres, seconds (last bin >= 3.95 s)
 CMD_CAP = 2.5  # m/s
 V_REQ = (1.2, 2.2)  # deadline speed, m/s
 DIST = (1.0, 5.0)
@@ -108,6 +109,10 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.mid_done = torch.zeros(n, dtype=torch.bool, device=dev)
         self.mid_yaw = torch.zeros(n, device=dev)
         self.mid_hist = torch.zeros(md.N_SECTORS, HEADING_BINS, dtype=torch.long, device=dev)
+        # D-191 (the user: agility, first-step quickness): time from the spot's issue until the pelvis is FIRST_STEP_M
+        # closer to it, for spots at least that far away; histogram per sector, FIRST_BIN-s bins, booked at resolution
+        self.first_t = torch.full((n,), -1.0, device=dev)
+        self.first_hist = torch.zeros(md.N_SECTORS, FIRST_BINS, dtype=torch.long, device=dev)
         self._ar = torch.arange(n, device=dev)
         self._calls = 0
 
@@ -136,6 +141,8 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.best_sum.index_add_(0, sec, best * b.float())
         h = (self.mid_yaw / HEADING_BIN).clamp(0, HEADING_BINS - 1).long()
         self.mid_hist.view(-1).index_add_(0, sec * HEADING_BINS + h, (res & self.mid_done).long())
+        ft = (self.first_t / FIRST_BIN).clamp(0, FIRST_BINS - 1).long()
+        self.first_hist.view(-1).index_add_(0, sec * FIRST_BINS + ft, (res & (self.first_t >= 0)).long())
         super()._new_spot(mask)
         m = mask.unsqueeze(-1)
         self.buf = torch.where(m, torch.zeros_like(self.buf), self.buf)
@@ -145,6 +152,7 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.post_max = torch.where(mask, torch.zeros_like(self.post_max), self.post_max)
         self.d0 = torch.where(mask, (self.t.recover_xy - self.t.pelvis_xy()).norm(dim=-1), self.d0)
         self.mid_done = self.mid_done & ~mask
+        self.first_t = torch.where(mask, torch.full_like(self.first_t, -1.0), self.first_t)
         self.live = self.live | (mask & self.move_ep)
 
     def update(self, dt: float) -> None:
@@ -159,6 +167,8 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.mid_yaw = torch.where(mid, torch.atan2(torch.sin(yaw), torch.cos(yaw)).abs() * (180.0 / math.pi),
                                    self.mid_yaw)
         self.mid_done = self.mid_done | mid
+        first = self.move_ep & self.live & (self.first_t < 0) & (self.d0 >= FIRST_STEP_M) & (self.d0 - d >= FIRST_STEP_M)
+        self.first_t = torch.where(first, self.elapsed, self.first_t)
         if self._calls % self.decimation == 0:
             mv = self.move_ep & self.live
             v = t._entity.data.root_link_lin_vel_w[:, :2]
@@ -204,6 +214,8 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         out["overshoot_sum"] = [round(x, 4) for x in self.overshoot_sum.tolist()]
         out["mid_heading_hist"] = self.mid_hist.tolist()
         out["mid_heading_bin_deg"] = HEADING_BIN
+        out["first_step_hist"] = self.first_hist.tolist()
+        out["first_step_bin_s"] = FIRST_BIN
         return out
 
     def summary(self) -> dict:
@@ -220,6 +232,7 @@ class FootworkBallActionCfg(ag.AgilityBallActionCfg):
     footwork_drill: bool = True
     footwork_dist: tuple = DIST
     footwork_pay: str = "entry"  # "settled" (D-181): the bonus pays the held arrival of an in-time first entry
+    footwork_cmd_cap: float = CMD_CAP  # D-191: the internal command's speed cap (m/s)
 
     def build(self, env) -> "FootworkBallAction":
         return FootworkBallAction(self, env)
@@ -233,7 +246,8 @@ class FootworkBallAction(ag.AgilityBallAction):
         if cfg.footwork_drill:
             self.drill = FootworkDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights,
                                        dist_range=cfg.footwork_dist, v_req_range=cfg.deadline_v_req,
-                                       heading_free_m=cfg.heading_free_m, pay=cfg.footwork_pay)
+                                       heading_free_m=cfg.heading_free_m, pay=cfg.footwork_pay,
+                                       cmd_cap=cfg.footwork_cmd_cap)
 
 
 def fw_track_lin_vel(env, std: float = TRACK_STD) -> torch.Tensor:
@@ -268,13 +282,13 @@ class fw_posture(vr.variable_posture):
         return torch.exp(-torch.mean(err / std ** 2, dim=1))
 
 
-def footwork_task(cfg, dist=DIST, pay="entry", episode_s=EPISODE_S):
+def footwork_task(cfg, dist=DIST, pay="entry", episode_s=EPISODE_S, cmd_cap=CMD_CAP, v_req=V_REQ):
     """The walking teacher's task -> the footwork specialist (module docstring)."""
     ag.deadline_task(cfg)  # move-only deadline drill, free-heading yaw reward
     b = cfg.actions["ball"]
     vals = {f.name: getattr(b, f.name) for f in dataclasses.fields(b) if f.init}
-    vals.update(deadline_arrival_mode="first_entry", deadline_v_req=V_REQ, deadline_dist=dist, footwork_dist=dist,
-                move_spot_box=SPOT_BOX, footwork_pay=pay)
+    vals.update(deadline_arrival_mode="first_entry", deadline_v_req=v_req, deadline_dist=dist, footwork_dist=dist,
+                move_spot_box=SPOT_BOX, footwork_pay=pay, footwork_cmd_cap=cmd_cap)
     cfg.actions["ball"] = FootworkBallActionCfg(**vals)
     r = cfg.rewards
     assert r["move_track_lin_vel"].func is md.move_track_lin_vel and r["pose"].func is vr.variable_posture
@@ -354,3 +368,16 @@ def rally_train(cfg):
 register_mjlab_task(task_id=TASK_FW_RALLY_TRAIN, env_cfg=rally_train(load_env_cfg(ag.SRC_RES)),
                     play_env_cfg=rally_train(load_env_cfg(ag.SRC_RES, play=True)), rl_cfg=load_rl_cfg(ag.SRC_RES),
                     runner_cls=load_runner_cls(ag.SRC_RES))
+
+
+# D-191 body-ceiling test (the user 2026-10-31: beginners 1-2 m/s, intermediates about 3-4, professionals 4-6; "keep
+# improving the agility"): the specialist with the command cap raised 2.5 -> 4.0 m/s, deadlines from v_req U(1.5, 3.5)
+# and spots 2-6 m so top speed can be reached (training); the measure read uses spots 4-6 m, 60-s episodes. Pay
+# "settled" (D-181). Everything else is the specialist's task.
+TASK_FW_FAST4 = "Picklebot-Footwork-Specialist-Fast4-G1"
+TASK_FW_MEASURE_FAST4 = "Picklebot-Footwork-Measure60-Fast4-G1"
+FAST4_CAP, FAST4_V_REQ, FAST4_DIST, FAST4_MEASURE_DIST = 4.0, (1.5, 3.5), (2.0, 6.0), (4.0, 6.0)
+_register(TASK_FW_FAST4, lambda c: footwork_task(c, dist=FAST4_DIST, pay="settled", cmd_cap=FAST4_CAP, v_req=FAST4_V_REQ))
+_register(TASK_FW_MEASURE_FAST4, lambda c: footwork_task(c, dist=FAST4_MEASURE_DIST, pay="settled",
+                                                          episode_s=MEASURE_EPISODE_S, cmd_cap=FAST4_CAP,
+                                                          v_req=FAST4_V_REQ))

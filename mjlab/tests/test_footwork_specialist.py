@@ -274,3 +274,34 @@ def test_rally_train_task_changes_only_the_drill_and_the_speed_kernel():
     assert a.rewards["move_track_lin_vel"].func is fs.fw_track_lin_vel
     assert [k for k in src.actions if k != "ball" and src.actions[k] != a.actions[k]] == []
     assert a.episode_length_s >= 20.0
+
+
+def test_first_step_time_is_booked():
+    t, dr = _drill(2)
+    t.shadow = None
+    t.recover_xy = torch.tensor([[-2.4, 0.0], [-2.4, 0.0]])  # 4 m toward the net
+    dr.d0[:], dr.limit[:], dr.elapsed[:] = 4.0, 100.0, 0.0
+    for _ in range(100):  # 0.5 s, no progress
+        dr.update(0.005)
+    assert (dr.first_t < 0).all()
+    t.place([[-4.8, 0.0], [-6.0, 0.0]])  # env 0 is 1.6 m closer, env 1 only 0.4 m
+    dr.update(0.005)
+    assert abs(float(dr.first_t[0]) - 0.500) < 1e-3 and float(dr.first_t[1]) < 0  # elapsed before this step
+    dr.limit[:] = 0.0
+    dr.update(0.005)
+    h = torch.tensor(dr.counters()["first_step_hist"]).sum(0)
+    assert int(h.sum()) == 1 and int(h[9]) + int(h[10]) == 1  # 0.500 s at a 0.05-s bin edge (float)
+
+
+def test_fast4_tasks():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks.footwork_specialist as fs
+    a, f, m = load_env_cfg(fs.TASK_FW), load_env_cfg(fs.TASK_FW_FAST4), load_env_cfg(fs.TASK_FW_MEASURE_FAST4)
+    fb, mb = f.actions["ball"], m.actions["ball"]
+    assert fb.footwork_cmd_cap == 4.0 and fb.deadline_v_req == (1.5, 3.5) and fb.footwork_dist == (2.0, 6.0)
+    assert fb.footwork_pay == "settled" and mb.footwork_dist == (4.0, 6.0) and m.episode_length_s == 60.0
+    assert a.actions["ball"].footwork_cmd_cap == 2.5
+    for k in a.rewards:
+        assert a.rewards[k].func is f.rewards[k].func and a.rewards[k].weight == f.rewards[k].weight
