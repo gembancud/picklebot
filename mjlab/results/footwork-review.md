@@ -141,3 +141,28 @@ D-182.
 The LAFAN1 endpoint is kept, 5 of 5.
 
 **Decision:** D-186.
+
+## Round 56 (2026-10-31): h0-fw-02 endpoint H0F-FAIL
+
+**Correction checks**
+- Coach: one-seed serve SE is about ±4 points, but both seeds dropped.
+- Experiment design:
+  - endpoint() labels FAIL before RETENTION;
+  - the fwHO read was child-only (allowed);
+  - LAFAN1 slip rose from 0.26 to 0.30.
+- Architecture: 66298 is the 3,000th update; the sampler collapses onto one serve window (about 94 % of tennis samples) and resets on resume.
+- RL: entropy_coef 0.005 against 0.001; action std 0.33 -> 0.40.
+
+**Votes**
+
+| reviewer | vote | notes |
+|---|---|---|
+| Coach | (d) | ΔR / R lines |
+| Experiment design | (d) | paired ΔR, a fidelity guard, no promotion; then O2 unless NO-MOVE |
+| Architecture | (d) | `--decoder-only` is required; the sampler floor is the real stroke protection |
+| RL | (d) | the decoder check D ≥ 0.85; R ≥ 0.85 / ≤ 0.70; reject O2 and the share change |
+| Motion | pending at launch | |
+
+(c) was rejected by all reporting reviewers.
+
+**Decision:** D-187.

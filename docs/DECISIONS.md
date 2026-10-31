@@ -4825,3 +4825,49 @@ Smoke: 16 envs on 4220226, sustained 1.1-1.45 m/s (reported). The smoke also exp
   - Reads: 4220222 (fw), 4220223 / 4220224 (tl), 4220232 (fwHO, child).
   - H0F-FAIL re-asks the panel, which must then say whether O1 at any weight is the wrong lever.
 - **Not adopted** (single reviewers): RL's +300 training-log line and its 5-point stroke kill; experiment design's +0.060 dose line (covered by 0.82).
+
+
+## D-187 - h0-fw-02 H0F-FAIL; panel round 56: a decoder-only H1 re-distil + paired zero-shot rally bridge (diagnostic) (2026-10-31)
+
+**h0-fw-02** (D-186):
+- **Kill check at +900:** CONTINUE. D_fw 0.924, D_lafan 0.852; strokes within 2.3 points; anti-lunge line ok.
+- **Endpoint** (2026-10-31_07-51-57_h0-fw-02b/model_66298, the 3,000th update): **H0F-FAIL** (D_lafan 0.865 < 0.90), **plus 3 retention misses**: serve -3.8, smash -3.7, backhand volley -3.3 points.
+  - Seed-level paired SEs: 2.4 / 1.6 / 1.1 points. The misses cannot be told apart from the -3 line, but the erosion is real: pooled about -2.1 points, and the worst stroke went from -2.3 at +900 to -3.8.
+  - endpoint() returns FAIL before RETENTION, so the label alone hides the misses. The fwHO read was child-only, which is allowed because its line is absolute.
+- **Held-out footwork** (57 clips, seed 176, never trained on): D_fwHO **0.963**. D_fw 0.962.
+- **D_lafan** is 0.866 / 0.864 on the two seeds, against the parent's 0.737 / 0.738. By family, child vs parent:
+  - run 0.90 vs 0.77;
+  - walk 0.83 vs 0.70;
+  - sprint 0.84-0.85 vs 0.69-0.73;
+  - mirrored fightAndSports 0.68 vs 0.60.
+- **LAFAN1 stance slip** rose from 0.26 to 0.30. Some of the gain may be skating.
+
+**Diagnosis** (round 56):
+- **O1 is saturated.** At the training lag of 0.30 m, weight 2 / std 1 has a slope of 1.10 against the parent's 1.23. The two are equal at 0.32 m. error_anchor_pos has been flat at 0.29-0.33 since about +600, and D_lafan gained only +0.013 over 2,100 iterations. O1 is the wrong lever for the last 0.035.
+- **The rest of the gap may be set by the reference.** LAFAN1 reference skate is about 0.13 m/s, about 10 % of travel at 1.0-1.5 m/s, while the robot-recorded footwork clips have none. This is a hypothesis, not a measured premise. A per-window regression of D on reference skate / speed is the evaluation-only test.
+- **The stroke erosion has two contributors:**
+  - action std rose from 0.33 to 0.40 and entropy from 8.4 to 14.0 (RL), against a flat 0.33 in the parent; entropy_coef was 0.005;
+  - the adaptive sampler collapses onto one serve window (top-1 probability 0.47, about 94 % of tennis samples; picklebot_mj/tasks/tracking.py:117; it also resets on resume). This is pre-existing.
+- **If H0 is retrained:**
+  - protect the strokes with a per-source uniform floor in the sampler, not with the share or the learning rate;
+  - consider entropy_coef 0.001;
+  - add the sampler's top-1 share to the kill check.
+
+**Panel round 56** (mjlab/results/footwork-review.md):
+- **(d), 4 of 5** (coach, experiment design, architecture, RL; motion's report pending at launch): a diagnostic only.
+- **(c), accepting h0-fw-02 on the held-out gate, is rejected.** The held-out gate was added on top of the LAFAN1 line, so a pass was the anticipated result, not a changed premise. The retention misses alone would also block an H1 re-distil under D-185.
+- **(a) O2 is rejected** by RL and coach: 68 % of child LAFAN1 FAST windows still end with more than 0.5 m of lag.
+- **(b), the tennis share, is rejected** by architecture: it aims at the wrong cause.
+
+**The diagnostic** (scripts/diag/h1_fwdec.sh, sha256 af16ae28; frozen):
+1. **H1'** re-distils latent-07's decoder only, by DAgger from model_66298, on TennisLafan3FF-Root1.
+   - The normaliser, encoder and prior are frozen and asserted bit-identical. RES_BASE and rally 22b live in latent-07's z-space.
+   - As scripts/h5f_c2_h1decoder.sh: lr 1e-4, beta over 5 %, KL 0, prior BC 0.5, smoothness 0.005, 1,400 iterations / 6,900 s, training seed 177.
+2. **Fidelity guard:** H1' vs latent-07 strokes on tennis-lafan3, dev 4220234. Any stroke more than 3 points below latent-07 labels the bridge read **CONFOUNDED**.
+   - RL's decoder check is a qualifier: H1' held-out footwork D (FootworkFastHO, dev 4220241) < 0.85 labels it **DECODER-NOT-COPIED**.
+3. **Paired bridge on dev 4220233:** rally 22b model_30200 with latent-07 and with H1' (PICKLEBOT_CONTROLLER), on the D-185 bridge task and statistic R.
+   - dR = R(H1') - R(latent-07). **CAP-MOVES** if dR >= +0.10; **NO-MOVE** if dR <= +0.03; otherwise **MIXED**.
+   - Reported only: R(H1') >= 0.85 TRANSMITS / <= 0.70 NOT-TRANSMITTED.
+4. **No gate is consumed.** The result cannot promote h0-fw-02 or amend any D-185 / D-186 line.
+   - NO-MOVE: the H0 route stops, and the panel is re-asked about where the rally cap lives.
+   - Otherwise: panel round 57 picks the next run (candidates: the sampler floor + entropy 0.001 H0 run; a residual rebuild on H1').
