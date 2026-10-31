@@ -4881,3 +4881,64 @@ Smoke: 16 envs on 4220226, sustained 1.1-1.45 m/s (reported). The smoke also exp
 - **The stroke loss is real:** the parent's seed-to-seed spread is about 1 point; the child loses on both seeds; ee_body_pos terminations went 80 -> 120.
 - **Motion's own bridge lines** (R >= 0.75 -> H0 travel is a lever, then O2; R <= 0.65 -> stop H0) are reported alongside the frozen paired dR rule, not in place of it.
 - **Motion's O2 sketch,** if triggered later: kill if a stroke falls > 5 points below s5c-03b. It goes to round 57.
+
+
+## D-188 - H1' diagnostic: CAP-MOVES (CONFOUNDED) as printed, INVALID-READ post hoc; panel round 57: adaptation probe P1 (2026-10-31)
+
+**H1' diagnostic** (D-187; results/h1fwdec-summary.txt). The frozen parts are bit-identical to latent-07.
+- **Printed verdict:** dR = +0.188 -> **CAP-MOVES (CONFOUNDED)**. R(H1') 0.824 is MIXED.
+- **Fidelity guard:** serve -23.3, smash -8.0, backhand volley -4.8, forehand volley -3.5, forehand -2.4 points vs latent-07.
+- **Held-out footwork travel:** H1' 0.956, latent-07 0.582.
+- **H1' tracking on its own:** fall rate 0.0062 (latent-07 0.0066).
+- **Post hoc qualifier, INVALID-READ** (nothing relabelled):
+
+  | zero-shot composite | latent-07 | H1' |
+  |---|---|---|
+  | falls per 1,000 env-s | 7.1 | 202 |
+  | untimed arrival | 0.87-0.97 | <= 0.006 in every sector |
+  | share of spots that fell | — | about 74 % |
+
+  R(H1') is measured on spots that ran to their time-out without stopping. It carries no information about the composite's cap.
+- **What stands:**
+  - the decoder can copy the teacher's travel;
+  - the frozen z-space carries faster leg motion (peak 1.5 -> 2.3 m/s);
+  - a zero-shot swap is not viable.
+
+**Gaps recorded.**
+- **Pre-registration gap:** the D-185 / D-187 bridges had no falls or arrival line.
+- **D-187 slip:** the distil ran on TL3FF's collapsed sampler although D-186 had flagged it. That is the probable cause of the serve loss. In DAgger the sampler chases the student's failures onto one serve window, and per-sample MSE is dominated by locomotion.
+
+**Mechanism** (round 57):
+- **Composite (RL):** the composite acts only within a ball of about 2.5 sigma_p around mu_p. The distil trained the decoder on encoder samples (KL(q||p) about 65-71 nats). Prior BC covered only the centre, at prior_mse 0.019 against mse 0.008. So RES_BASE's learned steering now produces faster motion that it cannot stop.
+- **Decoder (motion):** H1' adds travel even where the reference stands still. On windows below 0.25 m/s, pelvis speed is 0.238 against 0.209; the serve overshoots the reference by 24 %. Joint-velocity error is up 10-15 %.
+- **Wiring (architecture):** checked and correct. The prior's input includes the decoder's last output, so mu_p / sigma_p shift too.
+
+**Rule from now on** (experiment design): any speed verdict from a swapped or adapted controller prints INVALID unless all of these hold:
+- falls <= 2 x the paired baseline;
+- untimed arrival >= 0.80 in the worst sector;
+- (fallen + censored) / spots <= 0.15.
+
+**Panel round 57** (mjlab/results/footwork-review.md): **(b) first, 3 of 5** (experiment design, RL, architecture). Coach and motion voted (a) first.
+- Reason: whether the composite can adapt decides the route; the stroke fix is a known cause with a known fix; (b) needs no new code.
+- Caveat recorded: an adaptation measured on H1' is assumed to carry over to a stroke-fixed decoder. That is an assumption, not a measured fact.
+
+**P1** (scripts/diag/h1_adapt01.sh, sha256 d4c8c9af; frozen):
+- **Training:** rally 22b's task, overrides and optimiser settings (ScheduledPPO 1e-4, KL guard 0.05, std floor 0.1, constant rate), 12,288 envs, from model_30200.
+- **The one change:** the controller H1', set by the recorded override `--env.actions.latent.checkpoint` (architecture: PICKLEBOT_CONTROLLER stays evaluation-only). The smoke asserts it in params/env.yaml.
+- 400 iterations, fixed endpoint. Training seed 178, smoke 179.
+- **Kill at +120** (training log): falls over iterations 101-120 > 0.5 x those over 1-20 -> KILL-NO-ADAPT.
+- **Endpoint:** paired bridge on dev 4220242 (P1 with H1' against 22b with latent-07), with the validity rule above.
+  - Invalid: **ADAPT-FAIL**, or **NO-ADAPT** if falls > 50.
+  - Valid: dR >= +0.10 **ADAPTS-FAST**; dR <= +0.03 **ADAPTS-SLOW**; otherwise **MIXED**.
+  - Reported only (CONFOUNDED): the pairs rally read on dev 4220244, both arms.
+- **Routes:**
+  - ADAPTS-FAST -> (a), then (c) on the stroke-fixed decoder.
+  - ADAPT-FAIL / NO-ADAPT -> re-ask the panel: (c) vs (d).
+  - ADAPTS-SLOW -> the cap is in balance and stopping. Stop route D and take (d).
+- **(a), when it comes:**
+  - **Sampler fix:** a per-source uniform floor in picklebot_mj/tasks/tracking.py (about 4 lines; architecture), training seed 180.
+  - **Gates:** strokes within 3 points of latent-07; held-out D >= 0.85; mean pelvis speed on reference windows < 0.25 m/s at <= 0.23 (motion); joint-velocity error <= latent-07 + 5 % (motion).
+  - **Kill line:** the sampler's top-1 share.
+  - **Then** the zero-shot bridge under the validity rule.
+- **(c) is gated** on ADAPTS-FAST plus experiment design's CPU-only P(5+) upper bound from existing rally logs: the share of failed rallies caused by late left / back arrival. If removing them all cannot reach about 50 %, the panel weighs (d) first.
+- **Not adopted** (single reviewers): architecture's pre-read of RES_BASE alone with H1'; RL's critic warm-up of 30.

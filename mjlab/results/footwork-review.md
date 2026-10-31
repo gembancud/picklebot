@@ -166,3 +166,23 @@ The LAFAN1 endpoint is kept, 5 of 5.
 (d) carried 5 of 5, and (c) was rejected 5 of 5.
 
 **Decision:** D-187.
+
+## Round 57 (2026-10-31): the H1' diagnostic
+
+**Correction checks** (all five): the bridge rule had no falls or arrival line, a pre-registration gap; nothing is relabelled.
+- Experiment design: a post-hoc INVALID-READ qualifier; the slip of distilling on the collapsed sampler.
+- Motion: H1' cannot stand still or brake.
+- RL: the z-support mismatch.
+- Architecture: the wiring is correct; PICKLEBOT_CONTROLLER is evaluation-only.
+
+**Votes**
+
+| reviewer | first | then |
+|---|---|---|
+| Coach | (a) | (b) |
+| Motion | (a), with stillness / braking lines | (b) not first; (c) and (d) no |
+| Experiment design | (b) P1 + the validity rule | (a); (c) gated on a P(5+) bound |
+| RL | (b) | (a) if it adapts, (d) if not |
+| Architecture | (b), after a cheap pre-read | (a), then (c) |
+
+**Decision:** D-188.
