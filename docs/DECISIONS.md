@@ -5062,3 +5062,63 @@ The agent's answers:
   - raise the specialist's targets toward the body's measured ceiling;
   - each faster specialist then teaches the next rally base (d1 now, with fw1b-S; later with a faster specialist);
   - the agility metrics (time to 1.5 m, sustained and peak speed, settle) are reported for every footwork result from here on.
+
+## D-192 (2026-10-31): d1 — rebuild the base with the footwork specialist as its move teacher
+
+Panel round 59 (mjlab/results/footwork-review.md).
+
+**Correction (4 of 5 reviewers).** s5c-18 did not copy the walking teacher after the hit.
+- Its args have `recover: False`, and `recover_share` is 0.0 throughout.
+- The walker was copied only in move-to-spot episodes (move-prob 0.5). Ball-episode footwork comes from s5c-17.
+- d1 therefore reaches rally footwork only indirectly. This is a known limit.
+- Queued as the next single change, if the base gains speed but the rally does not: d1 + `--recover` (D-085).
+
+**Decision.** d1 = s5c-18's exact kickstart (scripts/kickstart_h4.py):
+- `--init s5c-15/model_31675 --hit-teacher s5c-17/model_31400 --lam-self 3.0 --hit-loss latent --beta-frac 0 --envs 4096 --max-seconds 6900`;
+- task Picklebot-Latent-Court-L3-G1, move-prob 0.5, no `--recover`.
+
+The one change is `--teacher` model_15900 -> fw1b-S model_16600. latent-07 is kept.
+- Run s5c-d1-fw1bS, training seed 184 (s5c-18 used 1); smoke seed 185.
+- Teacher vote: fw1b-S 4 of 5. Experiment design wanted Fast4 if it passed three checks.
+- Fast4 can teach a later rebuild (d1b) only after its own floor (>= 0.85), settle and mean-action arrival checks. Dev 4220248 is reserved for that.
+- Driver: scripts/diag/d1_base.sh. It waits for fw_fast4.sh to finish, keeping the GPU exclusive.
+
+**Coded lines** (picklebot_mj/d1_rule.py, tests/test_d1_rule.py):
+
+1. **Teacher check** (dev 4220249).
+   - fw1b-S and model_15900 run on the new Picklebot-Footwork-Measure60-Court-G1: the kickstart's MoveDrill geometry, 0.5-3 m spots in the half court, 60-s episodes, mean actions.
+   - **TEACHER-OK** if, in both left and back, fw1b-S's sustained p50 is >= 1.6 m/s and >= the walker's + 0.3.
+   - Otherwise **TEACHER-SLOW**: stop and re-ask the panel. The drill is not swapped.
+2. **Smoke.** Its kickstart_log args must equal s5c-18's, except run_name, teacher, seed, envs, max_seconds and log_root.
+3. **Kickstart kill**, on the mean over log rows 300-360 (about 30 %):
+   - mse_move > 0.142 (2x the floor test's all-joint 0.071) -> **KILL-NO-FIT**;
+   - mse_hit > 0.0017 (2x s5c-18's 0.00085 over the same rows) -> **KILL-HIT-INTERFERE**.
+   - Reported: iterations reached (s5c-18: 1,199) and the final mse_move (s5c-18: 0.0336).
+4. **Base gate**, paired against RES_BASE model_32874.
+   - **Agility** on the new Picklebot-Footwork-Measure60-L3Base-G1 (dev 4220250, 1,024 envs, 120 s, mean actions):
+     - D-188 validity first, else **INVALID**;
+     - R_LB = mean over left and back of sustained p50 / the specialist's (fw1d-C);
+     - **AGILE** if R_LB >= 0.85 and the first-step p50 in left and back is <= the parent's;
+     - **CAP-HELD** if R_LB <= 0.70;
+     - otherwise **MIXED**.
+   - **Hitting** on the D-086 battery (h5c_eval.sh, Court-L3 / Drill3-Prior5-L3, dev 4220251-4220256, both arms). **RETAINS** only if all hold:
+     - main >= parent - 0.02;
+     - passing cells >= parent - 2;
+     - no drill5b family more than 0.05 below the parent;
+     - style <= parent + 0.15;
+     - move falls <= max(0.01, parent);
+     - court falls <= parent + 0.01.
+     - Otherwise **REJECTED**. PROTOCOL-DRIFT is flagged, not gated, if the parent's main is more than 0.03 from its archived 0.7993.
+   - **Verdict:**
+     - INVALID, CAP-HELD or REJECTED -> stop and re-ask the panel (d2 after CAP-HELD);
+     - AGILE or MIXED, with RETAINS -> **BASE-PASS**, then stage 2.
+
+**Stage 2** (pre-registered before it launches, in its own entry): 22b's residual re-climbs on the new base via PICKLEBOT_RES_BASE.
+- Zero-shot read first, then 1,200 fixed iterations with 22b's settings.
+- Kill at +360: KILL-UNSTABLE / KILL-NO-HIT / KILL-NO-ARRIVE.
+- Endpoint: r19-gate unchanged, plus feeder >= 22b - 1.0, plus the agility lines.
+- Seeds reserved: dev 4220257-4220265, training 186-187.
+
+**Reported only:** P(5+) against D-189's bound of about 0.5. Footwork alone cannot reach 0.80.
+
+**Seeds:** dev 4220249-4220256 and training 184-185 ledgered.

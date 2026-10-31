@@ -247,7 +247,7 @@ class FootworkBallAction(ag.AgilityBallAction):
             self.drill = FootworkDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights,
                                        dist_range=cfg.footwork_dist, v_req_range=cfg.deadline_v_req,
                                        heading_free_m=cfg.heading_free_m, pay=cfg.footwork_pay,
-                                       cmd_cap=cfg.footwork_cmd_cap)
+                                       cmd_cap=cfg.footwork_cmd_cap, spot_box=cfg.move_spot_box or SPOT_BOX)
 
 
 def fw_track_lin_vel(env, std: float = TRACK_STD) -> torch.Tensor:
@@ -282,13 +282,13 @@ class fw_posture(vr.variable_posture):
         return torch.exp(-torch.mean(err / std ** 2, dim=1))
 
 
-def footwork_task(cfg, dist=DIST, pay="entry", episode_s=EPISODE_S, cmd_cap=CMD_CAP, v_req=V_REQ):
+def footwork_task(cfg, dist=DIST, pay="entry", episode_s=EPISODE_S, cmd_cap=CMD_CAP, v_req=V_REQ, spot_box=SPOT_BOX):
     """The walking teacher's task -> the footwork specialist (module docstring)."""
     ag.deadline_task(cfg)  # move-only deadline drill, free-heading yaw reward
     b = cfg.actions["ball"]
     vals = {f.name: getattr(b, f.name) for f in dataclasses.fields(b) if f.init}
     vals.update(deadline_arrival_mode="first_entry", deadline_v_req=v_req, deadline_dist=dist, footwork_dist=dist,
-                move_spot_box=SPOT_BOX, footwork_pay=pay, footwork_cmd_cap=cmd_cap)
+                move_spot_box=spot_box, footwork_pay=pay, footwork_cmd_cap=cmd_cap)
     cfg.actions["ball"] = FootworkBallActionCfg(**vals)
     r = cfg.rewards
     assert r["move_track_lin_vel"].func is md.move_track_lin_vel and r["pose"].func is vr.variable_posture
@@ -381,3 +381,19 @@ _register(TASK_FW_FAST4, lambda c: footwork_task(c, dist=FAST4_DIST, pay="settle
 _register(TASK_FW_MEASURE_FAST4, lambda c: footwork_task(c, dist=FAST4_MEASURE_DIST, pay="settled",
                                                           episode_s=MEASURE_EPISODE_S, cmd_cap=FAST4_CAP,
                                                           v_req=FAST4_V_REQ))
+
+
+# D-192 d1 (panel round 59): the base rebuilt by the s5c-18 kickstart recipe with fw1b-S as the move-episode teacher.
+# Pre-launch teacher check (experiment design): the kickstart's move episodes draw MoveDrill spots (0.5-3 m inside the
+# robot half court, move_drill.SPOT_BOX), so the teacher is read on that geometry: the measure drill with those spots,
+# 60-s episodes, pay "settled" (the teacher sees only the spot; the cap and deadlines are never observed).
+TASK_FW_MEASURE_COURT = "Picklebot-Footwork-Measure60-Court-G1"
+_register(TASK_FW_MEASURE_COURT, lambda c: footwork_task(c, dist=md.DIST_RANGE, pay="settled", episode_s=MEASURE_EPISODE_S,
+                                                          spot_box=md.SPOT_BOX))
+# Base gate (architecture): a base (a Picklebot-Latent-Court-L3-G1 executor, e.g. RES_BASE model_32874 or the d1
+# endpoint) read on its own on the Measure60 drill (spots 3-5 m in the Fast25 box, as the rally composite's bridge read).
+TASK_FW_L3BASE_MEASURE = "Picklebot-Footwork-Measure60-L3Base-G1"
+_SRC_L3 = "Picklebot-Latent-Court-L3-G1"
+register_mjlab_task(task_id=TASK_FW_L3BASE_MEASURE, env_cfg=rally_measure(load_env_cfg(_SRC_L3)),
+                    play_env_cfg=rally_measure(load_env_cfg(_SRC_L3, play=True)), rl_cfg=load_rl_cfg(_SRC_L3),
+                    runner_cls=load_runner_cls(_SRC_L3))

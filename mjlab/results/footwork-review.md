@@ -206,3 +206,32 @@ The LAFAN1 endpoint is kept, 5 of 5.
 | Architecture | (d) route C, cheapest variant | the bound, then the floor test (d1 if legs >= 0.85, else d2) |
 
 **Decision:** D-189 — the floor test first.
+
+## Round 59 (2026-10-31): design d1
+
+Brief: footwork-round59-brief.md.
+
+**Correction checks** (RL, motion, experiment design, architecture): the brief was wrong that s5c-18 copied the walking teacher "after the hit".
+- Its args have `recover: False`, and `recover_share` is 0.0 in every logged row.
+- So the walking teacher was copied only in move-to-spot episodes (about 50 %). Ball-episode approach and recovery copy s5c-17, which descends from the 1-m/s walker.
+- d1 therefore changes footwork in rally play only indirectly. This is recorded as a known limit.
+- Also: s5c-18 ran on seed 1, and its endpoint was the wall cap (1,199 iterations).
+- Coach: Fast4 is read only on 4-6 m spots; court moves are 1-3 m.
+
+**Votes**
+
+| reviewer | teacher | notes |
+|---|---|---|
+| Coach | fw1b-S now | Fast4 only after its own floor and settle checks (d1b); base gate R_LB >= 0.85 |
+| RL | fw1b-S now | Fast4 trains on 2-6 m, so the kickstart's 0.5-3 m spots are off its range; kill on mse_hit / mse_move; fallback d1 + `--recover` |
+| Motion | fw1b-S now | Fast4's settling is unchecked (training settled about 3 %); watch the wrist, whose variance is 34.7 |
+| Experiment design | conditional | Fast4 if CEILING-RAISED, valid and floor >= 0.85; else fw1b-S. Pre-launch teacher check on the kickstart geometry; base gate and re-climb lines |
+| Architecture | fw1b-S now | exact command; the teacher sees only the spot, so the cap and v_req don't matter; L3Base measure task; PICKLEBOT_RES_BASE for the re-climb |
+
+fw1b-S carried 4 of 5 votes, and the recipe is exact s5c-18 5 of 5.
+
+**Adopted lines (coded in picklebot_mj/d1_rule.py)**
+- Experiment design's teacher check, base gate and retention battery.
+- The kickstart kill combines motion's mse_move line (anchored to the floor test) with RL's mse_hit multiplier (2x), applied to the 0.00085 actually logged over s5c-18's rows 300-360.
+
+**Decision:** D-192.
