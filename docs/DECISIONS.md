@@ -5185,3 +5185,75 @@ d1_run.sh's smoke check stopped with SMOKE-FAIL. The cause was the check, not th
 - The check now treats a key that is absent from s5c-18's args as equal when the new value is that off default. Every other key must still match exactly.
 
 The smoke run itself (seed 185) ran normally and was kept. The failed summary is kept as results/d1r-summary.smokefail.txt and its marker as artifacts/train/d1run.done.smokefail. The driver is relaunched; it re-uses the existing premise and smoke outputs.
+
+## D-194 (2026-10-31): d1 base BASE-PASS; stage 2 (22b re-climbed on the new base) launched
+
+**Base gate (D-192 / D-193), results/d1r-summary.txt.** s5c-d1-fw1bS model_32854 (seed 184, 1,179 iterations, mse_move 0.0258) against model_32874.
+
+Agility on Measure60-L3Base, dev 4220250. Verdict **MIXED** (valid; first step no slower; R_LB below 0.85):
+
+| | model_32874 | d1 |
+|---|---|---|
+| falls per 1,000 env-s | 56.8 | 12.0 |
+| worst untimed arrival | 0.448 | 0.830 |
+| sustained p50 (m/s) | 1.04-1.53 | 1.46-2.01 |
+| first step p50 (s) | 1.38-1.85 | 1.27-1.51 (faster in every sector) |
+| settled | 0.00-0.05 | 0.14-0.52 |
+| R_LB | 0.623 | 0.801 |
+
+The R_LB shortfall is on the left (0.73 of the specialist; back 0.87).
+
+Hitting on the D-086 battery, dev 4220251-4220256. Verdict **RETAINS**:
+
+| | model_32874 | d1 |
+|---|---|---|
+| main | 0.8013 | 0.8022 |
+| passing cells | 43 | 43 |
+| worst drill5b family | — | -2.7 points |
+| style | 4.030 | 4.028 |
+| move-drill falls | 0.0111 | 0.0073 |
+| court falls | 0.0356 | 0.0318 |
+
+**BASE-PASS.**
+
+**Stage 2 (panel round 61: 5 of 5 for stage 2 before d1b).** scripts/diag/d1_stage2.sh.
+
+One change against rally 22b: the frozen base, `PICKLEBOT_RES_BASE` = d1 model_32854.
+- Unchanged from 22b: the task and overrides; ScheduledPPO at a constant 1e-4 (model_30200 itself trained at a constant 1e-4, since its cooldown began at 32200); KL 0.05; std floor 0.1; critic warm-up 0; 12,288 envs.
+- From 22b model_30200, 1,200 iterations to the fixed endpoint model_31399. Training seed 186, smoke 187.
+- The smoke uses 22b's checks (exit, traceback, falls <= 4.157, std / gradient, 13 config keys, actor noise), plus base_checkpoint and save_interval 40.
+
+**Pre-training reads.**
+- Zero-shot on dev 4220257, both arms (22b on its own base and on the d1 base): pairs and Measure60-RallyLamR2, reported.
+- 22b on its own base on Measure60-RallyLamR2, dev 4220258: the reference for KILL-NO-ARRIVE.
+
+**Kill at +360** (picklebot_mj/d1_rule.py):
+- KILL-UNSTABLE: falls per 1,000 env-s over +341-360 > 2 x 22b's 30100-30199 (1.574).
+- KILL-NO-HIT: mean Episode_Reward/legal_return < 22b's 0.7549 - 0.05.
+- KILL-NO-ARRIVE: model_30560's Measure60 read (dev 4220258) fails D-188 validity against 22b's read (falls <= 2x, worst untimed arrival >= 0.80, fallen + censored <= 0.15). The task is Measure60-RallyLamR2, the composite read P2 used; D-193's "L3Base composite" names the same read.
+- Round 61 rejected my proposed same-age reference. Its premise, a resume artefact in the logged legal_return, was refuted by experiment design: the transient is over by +241, and 22b's continuation from model_30200 stays inside the literal line in every 20-iteration window (tests/test_d1_rule.py). Architecture also rejected it for falls, which are length-independent (D-170).
+
+**Endpoint**, paired on the same seeds. Parent: 22b model_30200 on its own base. Child: model_31399 on the d1 base.
+- Seeds: pairs 4220259; pairs with a 3-s refeed 4220260 (reported); direction split 4220261; Measure60 4220262; the child's h5f battery 4220267-4220282.
+- **Run verdict** (`rally_check.py d1s2-gate`):
+  - P(5+) open >= 22b + 2.0, with the Wilson low above 22b's point (D-160 r19-gate);
+  - partner legal >= 22b - 1.5 (D-160);
+  - feeder legal >= 22b - 1.0 (round 59);
+  - sides within 3 and court falls <= 4 % (rally target / run 18 sched_gate);
+  - D-160's family and left + back guards with the same slacks against 22b's reads.
+- **Agility** (`agility_verdict`, against 22b's composite).
+- **Verdicts:**
+  - **D1-PASS** (rally pass + AGILE) and **ADOPT-AGILITY-NOT-MET** (rally pass + MIXED) mean adopt the child;
+  - otherwise **PANEL**.
+  - Motion expects MIXED (composite R_LB about 0.80).
+
+**Stated before launch.**
+- **The training-time confound.** The child gets 1,200 more updates than model_30200, and 22b's own continuation kept improving. A pass is an adoption claim. It shows the base caused a rally gain only if the child also beats 22b model_30600 (+400 on its own base), read on the same seeds 4220259 and 4220261 and reported.
+- **The promotion gate is reported only.** r19-gate, M1 and target against run 14 are expected to FAIL: 22b's feeder legal is 0.656 against run 14's 0.823, and 22b fails the D-160 guards.
+
+**Queued.**
+- If the rally doesn't gain: d1 + `--recover` (ball-episode footwork still comes from s5c-17), then d1b (the longer-move geometry; Picklebot-Latent-Court-L3-FwGeom-G1, seed 188).
+- The first-handed-ball levers.
+- The Fast4 floor test (dev 4220248).
+
+**Seeds.** dev 4220257-4220262 and 4220267-4220282; training 186-187. 4220263-4220265 released unused.

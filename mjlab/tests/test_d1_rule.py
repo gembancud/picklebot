@@ -59,3 +59,22 @@ def test_premise_check():
     assert dr.premise_check(_drill([1.0] * 8, first_s=1.4), walker)[0] == "PREMISE-OK"
     assert dr.premise_check(_drill([1.0] * 8, first_s=1.6), walker)[0] == "PREMISE-FAIL"  # only 0.15 s quicker
     assert dr.premise_check(_drill([1.0] * 8, first_s=1.4, censored=30), walker)[0] == "PREMISE-FAIL"  # validity
+
+
+def test_stage2_kill_lines():
+    """D-194: the literal reference (22b 30100-30199) never kills 22b's own continuation from model_30200 (every
+    20-iteration window of 30201-30600); synthetic hitting / falls breaches do."""
+    import os
+    log = "artifacts/train/rally-22b-readcfg.log"
+    assert dr.s2_window_verdict(1.6, 0.70, 1.574, 0.7549) == "KILL-NO-HIT"
+    assert dr.s2_window_verdict(3.2, 0.76, 1.574, 0.7549) == "KILL-UNSTABLE"
+    assert dr.s2_window_verdict(3.1, 0.71, 1.574, 0.7549) == "CONTINUE"
+    if not os.path.exists(log):  # git-ignored training log
+        import pytest
+        pytest.skip("22b training log not present")
+    b = dr.log_blocks(log)
+    f0, l0 = dr.window_stats(b, dr.S2_REF_ITERS, 12288)
+    assert abs(f0 - 1.574) < 0.01 and abs(l0 - 0.7549) < 0.001
+    for lo in range(30201, 30600, 20):
+        f1, l1 = dr.window_stats(b, range(lo, lo + 20), 12288)
+        assert dr.s2_window_verdict(f1, l1, f0, l0) == "CONTINUE", (lo, f1, l1)

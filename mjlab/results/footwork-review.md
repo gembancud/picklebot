@@ -271,3 +271,49 @@ C then A carried 3 of 5.
 - KILL-NO-ARRIVE comes from an early read of a checkpoint saved at +360 (D-188 validity: worst untimed arrival < 0.80). No logging hook.
 
 **Decision:** D-193.
+
+## Round 61 (2026-10-31): d1 BASE-PASS; review of stage 2
+
+Brief: footwork-round61-brief.md.
+
+**Correction checks**
+- **Experiment design.** The brief's reason for the same-age kill reference was wrong.
+  - 22b's resume transient was over by about +241 (legal 0.601 at +241-260, 0.602 at +341-360).
+  - The rise to 0.755 was learning from the weaker model_29000.
+  - 22b's own continuation from model_30200 (30201-30600) reads 0.73-0.84 legal and 1.39-1.89 falls in every 20-iteration window, so the literal line never kills a replicate of the child's start.
+  - The draft's replay test was tautological.
+- **Architecture.** The same-age falls reference loosened KILL-UNSTABLE from 3.14 to 4.70. Falls per env-s are length-independent (D-170). It also found:
+  - the half-written-block race;
+  - no training exit check;
+  - the smoke checks only config;
+  - an unpinned base;
+  - a gate crash read as "not met".
+- **RL.**
+  - The one-change claim is false against model_30200: the child gets 1,200 more updates.
+  - The smoke dropped 22b's falls / std / config checks.
+- **Coach.** Same confound. Worst arrival 0.830 only just clears 0.80.
+- **Motion.**
+  - Constant LR matches what model_30200 trained under.
+  - The base's R_LB shortfall is all on the left (0.73 of the specialist; back 0.87).
+  - Expect a composite R_LB of about 0.80, i.e. MIXED.
+
+**Votes**
+
+| reviewer | stage 2 or d1b | kill reference | other |
+|---|---|---|---|
+| Coach | stage 2 | accept | report the confound; first-ball and left/back legal |
+| Motion | stage 2 | accept | report R_LB at zero-shot / endpoint and falls by sector; d1 + `--recover` before d1b |
+| RL | stage 2 | accept (lenient) | control arm A1; critic warm-up 30; restore smoke checks |
+| Experiment design | stage 2 | **reject**; literal line with pinned window | falls in KILL-NO-ARRIVE; zero-shot both arms; model_30600 reported; warm-up 0 |
+| Architecture | stage 2 | accept for legal, **reject for falls** | fixes 1-7 |
+
+Stage 2 carried 5 of 5.
+
+**Kill reference: literal line kept.** The three accepting votes rested on the brief's premise, which experiment design's correction check refuted with the log. Keeping a loosened line on a refuted premise would break the never-loosen rule. Falls were also rejected on their own grounds (architecture). New tests show the literal line never kills 22b's own continuation.
+
+**Also adopted**
+- Critic warm-up 0: experiment design and architecture; motion matched 22b. RL's 30 had no majority.
+- model_30600 read, reported (experiment design), instead of the control arm (RL only), which is costlier.
+- From RL and architecture: 22b's smoke checks restored; the pinned base; the exit and endpoint checks; the half-block guard; GATE-CRASH; falls added to KILL-NO-ARRIVE with 22b's own-base read as reference.
+
+**Decision:** D-194.

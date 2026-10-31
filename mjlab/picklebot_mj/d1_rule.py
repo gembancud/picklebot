@@ -163,14 +163,19 @@ def premise_check(teacher: dict, walker: dict) -> tuple[str, list[str]]:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Stage 2 (D-193 rulings; experiment design round 59): 22b's residual (model_30200) re-climbed on the d1 base.
-# Kill at +360, from the training log: falls per 1,000 env-s over iterations 341-360 > 2 x 22b's over its last 100
-# iterations before model_30200 -> KILL-UNSTABLE; mean Episode_Reward/legal_return over 341-360 < 22b's same-window mean
-# - 0.05 -> KILL-NO-HIT. From the +360 checkpoint's Measure60-RallyLamR2 read (PICKLEBOT_RES_BASE = the d1 base): D-188
-# validity fails (worst untimed arrival < 0.80 or (fallen + censored) / spots > 0.15) -> KILL-NO-ARRIVE.
+# Stage 2 (D-194: D-193 rulings, experiment design round 59, amended in round 61): 22b's residual (model_30200)
+# re-climbed on the d1 base. Kill at +360, from the training log, against 22b's last 100 iterations before model_30200
+# (30100-30199; falls 1.574, legal_return 0.7549 per 1,000 env-s / per ended episode): falls per 1,000 env-s over
+# +341-360 > 2 x reference -> KILL-UNSTABLE; mean Episode_Reward/legal_return over +341-360 < reference - 0.05 ->
+# KILL-NO-HIT. Round 61 rejected a same-age reference (22b's +341-360 after its resume from model_29000): 22b's rise from
+# 0.60 to 0.755 was learning, not a log artefact, and its own continuation from model_30200 (30201-30600) stays inside the
+# literal line in every 20-iteration window. From the +360 checkpoint's Measure60-RallyLamR2 read (PICKLEBOT_RES_BASE =
+# the d1 base), D-188 validity against 22b's read on its own base (same task, same seed): falls > 2 x parent, worst
+# untimed arrival < 0.80 or (fallen + censored) / spots > 0.15 -> KILL-NO-ARRIVE.
 import re as _re  # noqa: E402
 
 S2_KILL_ITERS = (341, 360)
+S2_REF_ITERS = range(30100, 30200)
 
 
 def log_blocks(path: str) -> dict[int, str]:
@@ -180,7 +185,7 @@ def log_blocks(path: str) -> dict[int, str]:
     return {int(parts[i]): parts[i + 1] for i in range(1, len(parts) - 1, 2)}
 
 
-def window_stats(blocks: dict[int, str], its: list[int], envs: int) -> tuple[float, float]:
+def window_stats(blocks: dict[int, str], its, envs: int) -> tuple[float, float]:
     """(falls per 1,000 env-s, mean Episode_Reward/legal_return) over the given iterations."""
     import os
     import sys
@@ -198,34 +203,35 @@ def window_stats(blocks: dict[int, str], its: list[int], envs: int) -> tuple[flo
     return falls, (sum(lr) / len(lr) if lr else float("nan"))
 
 
-def s2_train_kill(child_log: str, start_it: int, ref_log: str, ref_start_it: int, envs: int) -> tuple[str, str] | None:
-    """None until iteration start_it + 360 is logged; then (verdict, line). Reference: 22b's own log over the same
-    iterations since its resume (ref_start_it + 341-360), not its last 100: Episode_Reward/legal_return averages only
-    the episodes ending in the window, and 120-s episodes first end about 250 iterations after a resume, so the literal
-    "last 100" reference (0.755) would have killed 22b's own trajectory (0.602 at +341-360). Proposed at the base gate's
-    panel review (round 61)."""
+def s2_window_verdict(f1: float, l1: float, f0: float, l0: float) -> str:
+    return "KILL-UNSTABLE" if f1 > 2 * f0 else "KILL-NO-HIT" if not l1 >= l0 - 0.05 else "CONTINUE"
+
+
+def s2_train_kill(child_log: str, start_it: int, ref_log: str, envs: int, ref_its=S2_REF_ITERS) -> tuple[str, str] | None:
+    """None until iteration start_it + 361 has begun (so +360's block is complete); then (verdict, line)."""
     b = log_blocks(child_log)
     lo, hi = S2_KILL_ITERS
-    want = list(range(start_it + lo, start_it + hi + 1))
-    if want[-1] not in b:
+    if start_it + hi + 1 not in b:
         return None
-    rb = log_blocks(ref_log)
-    f1, l1 = window_stats(b, want, envs)
-    f0, l0 = window_stats(rb, list(range(ref_start_it + lo, ref_start_it + hi + 1)), envs)
-    v = "KILL-UNSTABLE" if f1 > 2 * f0 else "KILL-NO-HIT" if not l1 >= l0 - 0.05 else "CONTINUE"
+    f1, l1 = window_stats(b, range(start_it + lo, start_it + hi + 1), envs)
+    f0, l0 = window_stats(log_blocks(ref_log), ref_its, envs)
+    v = s2_window_verdict(f1, l1, f0, l0)
+    fr, lrr = window_stats(b, range(start_it + 241, start_it + 261), envs)
     return v, (f"+{lo}-{hi}: falls per 1,000 env-s {f1:.2f} (kill > 2 x 22b {f0:.2f}); legal_return {l1:.4f} "
-               f"(kill < 22b {l0:.4f} - 0.05) -> {v}")
+               f"(kill < 22b {l0:.4f} - 0.05) -> {v}; reported +241-260: falls {fr:.2f}, legal_return {lrr:.4f}")
 
 
-def s2_arrive_kill(read: dict) -> tuple[str, str]:
-    a = agility(read)
-    ok = a["worst_arrival"] >= 0.80 and a["fallen_censored_share"] <= 0.15
+def s2_arrive_kill(read: dict, parent_read: dict) -> tuple[str, str]:
+    a, p = agility(read), agility(parent_read)
+    ok = a["falls"] <= 2 * p["falls"] and a["worst_arrival"] >= 0.80 and a["fallen_censored_share"] <= 0.15
     v = "CONTINUE" if ok else "KILL-NO-ARRIVE"
-    return v, (f"+360 read: worst untimed arrival {a['worst_arrival']:.3f} (kill < 0.80), fallen + censored "
-               f"{a['fallen_censored_share']:.3f} (kill > 0.15), falls {a['falls']:.2f} (reported) -> {v}")
+    return v, (f"Measure60 read: falls {a['falls']:.2f} (kill > 2 x 22b {p['falls']:.2f}); worst untimed arrival "
+               f"{a['worst_arrival']:.3f} (kill < 0.80); fallen + censored {a['fallen_censored_share']:.3f} (kill > 0.15) -> {v}")
 
 
 def s2_verdict(rally_pass: bool, agility_v: str) -> str:
+    """D1-PASS / ADOPT-AGILITY-NOT-MET mean adopt the child; they show the base caused a rally gain only if the child
+    also beats the 22b model_30600 read (reported, D-194)."""
     if rally_pass and agility_v == "AGILE":
         return "D1-PASS"
     if rally_pass and agility_v == "MIXED":
