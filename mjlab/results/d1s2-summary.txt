@@ -1,0 +1,55 @@
+d1 base /mnt/f/dev/picklebot-mjlab/mjlab/artifacts/train/logs/picklebot_return_stand/2026-10-31_18-24-20_s5c-d1-fw1bS/model_32854.pt
+zero-shot 22b own base (reported): P(5+) open 0.3785; partner legal 0.9889; feeder legal 0.6621; Measure60 worst arrival 0.880, falls 6.36, sustained L/B 1.1608/1.4474
+zero-shot 22b on d1 base (reported): P(5+) open 0.3814; partner legal 0.9889; feeder legal 0.6517; Measure60 worst arrival 0.897, falls 5.80, sustained L/B 1.4669/1.8906
+zero-shot arrival line (reported): Measure60 read: falls 5.80 (kill > 2 x 22b 6.36); worst untimed arrival 0.897 (kill < 0.80); fallen + censored 0.106 (kill > 0.15) -> CONTINUE
+smoke exit 0 ok
+smoke no traceback ok
+smoke falls per 1,000 env-seconds 2.818 ok
+smoke std min 0.1041 outputs with no gradient [] ok
+smoke config check: missing []; actor noise on True; base_checkpoint is the d1 base True; save_interval 40 True -> ok
+training: {"run": "rally-d1s2", "exit_code": 0, "finished": "2026-11-01T01:44:43+08:00"}
++341-360: falls per 1,000 env-s 1.56 (kill > 2 x 22b 1.57); legal_return 0.8160 (kill < 22b 0.7549 - 0.05) -> CONTINUE; reported +241-260: falls 1.60, legal_return 0.8443
++360 Measure60 read: falls 1.42 (kill > 2 x 22b 6.62); worst untimed arrival 0.986 (kill < 0.80); fallen + censored 0.095 (kill > 0.15) -> CONTINUE
+endpoint artifacts/train/logs/picklebot_return_stand/2026-10-31_23-11-02_rally-d1s2/model_31399.pt
+guard: wide_forehand contact 0.6808 < 22b 0.7452 - 0.05 (KILL)
+guard: deep contact 0.7232 < 22b 0.7737 - 0.05 (KILL)
+guard: backspin contact 0.6205 < 22b 0.6890 - 0.05 (KILL)
+guard: reach_deep contact 0.1494 < 22b 0.2143 - 0.05 (KILL)
+guard: cross_forehand contact 0.7616 < 22b 0.7937 - 0.03 (KILL)
+guard: cross_backhand contact 0.3675 < 22b 0.4505 - 0.05 (KILL)
+guard: worst family contact vs 22b -8.3 (cross_backhand; kill below -5); cross_forehand 0.7616 vs 22b 0.7937 (kill below -3)
+guard: left + back feeder contact 0.4298 vs 22b 0.4824 (-5.3; kill below -5)
+d1 stage-2 run verdict: P(5+) open 0.3692 [0.3517, 0.387] (>= 22b 0.3810 + 0.02, low above 0.3810); partner legal 0.9914 (>= 0.9744); feeder legal 0.6219 (>= 0.6377); gap 0.7 (<= 3); falls 0.0681 (<= 0.04): not met
+reported (promotion gate against run 14, expected FAIL):
+guard: easy_forehand contact 0.7136 < run 14 0.8947 - 0.05 (KILL)
+guard: wide_forehand contact 0.6808 < run 14 0.9022 - 0.05 (KILL)
+guard: backhand contact 0.5979 < run 14 0.8613 - 0.05 (KILL)
+guard: deep contact 0.7232 < run 14 0.9143 - 0.05 (KILL)
+guard: short contact 0.8438 < run 14 0.9662 - 0.05 (KILL)
+guard: high contact 0.9014 < run 14 0.9653 - 0.05 (KILL)
+guard: low contact 0.5938 < run 14 0.8259 - 0.05 (KILL)
+guard: fast contact 0.4444 < run 14 0.7488 - 0.05 (KILL)
+guard: topspin contact 0.6927 < run 14 0.9022 - 0.05 (KILL)
+guard: backspin contact 0.6205 < run 14 0.9090 - 0.05 (KILL)
+guard: reach_forehand contact 0.8449 < run 14 0.9432 - 0.05 (KILL)
+guard: reach_backhand contact 0.6199 < run 14 0.8267 - 0.05 (KILL)
+guard: reach_short contact 0.8545 < run 14 0.9162 - 0.05 (KILL)
+guard: reach_deep contact 0.1494 < run 14 0.5298 - 0.05 (KILL)
+guard: cross_forehand contact 0.7616 < model_29000 0.8495 - 0.03 (KILL)
+guard: cross_backhand contact 0.3675 < run 14 0.6920 - 0.05 (KILL)
+guard: worst family contact vs run 14 -38.0 (reach_deep; kill below -5); cross_forehand 0.7616 vs model_29000 0.8495 (kill below -3)
+guard: left + back feeder contact 0.4298 vs run 14 0.5878 (-15.8; kill below -5)
+run 19 gate: P(5+) open 0.3692 [0.3517, 0.387] (>= parent 0.3810 + 0.02, low above 0.3810); partner legal 0.9914 (>= 0.9744); feeder legal 0.6219 (>= 0.8026); gap 0.7 (<= 3); falls 0.0681 (<= 0.04): not met
+M1: partner-ball legal 0.9914 (bootstrap low 0.9907; bar >= 0.50, low >= 0.49); feeder-ball legal 0.6219 (low 0.6040; bar >= 0.85, low >= 0.84); sides {'A': 0.9767, 'B': 0.9836} (gap 0.7, <= 3); court falls 0.0681 (<= 0.04); rallies 1834
+M1 reported: P(3+) 0.0333; P(5+) 0.0180; falls per shot {'A': 0.0009, 'B': 0.0011}; started {'feeder': 2857, 'handoffs': 90784}
+M1 not met
+target (contact hand-off): rallies 1834; P(5+) 0.0180 [0.0128, 0.0252] (pass: >= 0.80, low >= 0.78); P(4+) 0.0218; mean 1.102; own-ball legal 0.9914 [0.9908, 0.992]; feeder-ball legal 0.6216 [0.6034, 0.6394]; sides {'A': 0.9767, 'B': 0.9836} (gap 0.7 points, <= 3); court falls 0.0681 (<= 0.04)
+target P(5+) with open rallies counted (D-160, primary): 0.3692 [0.3517, 0.387]
+target not met
+parent {'falls': 6.909, 'worst_arrival': 0.883, 'fallen_censored_share': 0.109, 'sustained_p50': [1.2387, 1.1942, 1.1644, 1.314, 1.4527, 1.3699, 1.3411, 1.2984], 'peak_p50': [1.3992, 1.4301, 1.4837, 1.5567, 1.6612, 1.571, 1.6282, 1.5248], 'first_step_p50': [1.7095, 1.697, 1.6285, 1.4819, 1.4168, 1.4467, 1.5076, 1.5409], 'settled': [0.024, 0.032, 0.007, 0.035, 0.073, 0.039, 0.041, 0.054], 'R_LB': 0.637}
+child {'falls': 1.074, 'worst_arrival': 0.984, 'fallen_censored_share': 0.096, 'sustained_p50': [1.5096, 1.4372, 1.3938, 1.433, 1.4256, 1.534, 1.3565, 1.457], 'peak_p50': [1.8141, 1.8112, 1.7962, 1.7648, 1.6765, 1.7596, 1.6426, 1.7741], 'first_step_p50': [1.54, 1.5195, 1.5418, 1.4656, 1.455, 1.3909, 1.467, 1.4721], 'settled': [0.096, 0.09, 0.073, 0.083, 0.059, 0.12, 0.07, 0.125], 'R_LB': 0.688}
+22b model_30200: P(5+) open 0.3810 [0.3637, 0.3986]; partner 0.9894; feeder 0.6477; left + back feeder contact 0.4824
+22b model_30600 (reported): P(5+) open 0.3850 [0.3669, 0.4034]; partner 0.9920; feeder 0.6276; left + back feeder contact 0.4714
+child: P(5+) open 0.3692 [0.3517, 0.387]; partner 0.9914; feeder 0.6219; left + back feeder contact 0.4298
+agility vs 22b: CAP-HELD (R_LB 0.637 -> 0.688; first-step L/B no slower False); rally run verdict not met
+VERDICT: PANEL

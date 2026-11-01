@@ -5257,3 +5257,47 @@ One change against rally 22b: the frozen base, `PICKLEBOT_RES_BASE` = d1 model_3
 - The Fast4 floor test (dev 4220248).
 
 **Seeds.** dev 4220257-4220262 and 4220267-4220282; training 186-187. 4220263-4220265 released unused.
+
+## D-195 (2026-11-01): d1 stage 2 reads PANEL — 22b re-climbed on the d1 base got safer, not better at rallies
+
+scripts/diag/d1_stage2.sh: rally-d1s2 model_31399 (seed 186, 1,200 iterations, exit 0). All +360 checks read CONTINUE (training log: falls 1.56, legal 0.816; model_30560 Measure60: falls 1.42 against 22b's 6.62, worst arrival 0.986). Summary: mjlab/results/d1s2-summary.txt.
+
+**Zero-shot, dev 4220257** (22b model_30200 with no training; reported):
+
+| | own base | d1 base |
+|---|---|---|
+| P(5+) open | 0.3785 | 0.3814 |
+| partner legal | 0.989 | 0.989 |
+| feeder legal | 0.662 | 0.652 |
+| Measure60 sustained L / B (m/s) | 1.16 / 1.45 | 1.47 / 1.89 |
+| Measure60 falls | 6.36 | 5.80 |
+| Measure60 worst arrival | 0.880 | 0.897 |
+
+**Endpoint, paired on the same seeds:**
+
+| | 22b model_30200 | 22b model_30600 (reported) | child |
+|---|---|---|---|
+| P(5+) open | 0.3810 | 0.3850 | 0.3692 [0.352, 0.387] |
+| partner legal | 0.989 | 0.992 | 0.991 |
+| feeder legal | 0.648 | 0.628 | 0.622 |
+| left + back feeder contact | 0.482 | 0.471 | 0.430 |
+
+- **Run verdict (`d1s2-gate`): not met.**
+  - P(5+) is below 22b + 2.0.
+  - Feeder legal 0.622 < 0.638.
+  - Court falls 0.068 > 0.04, from the h5f battery 4220267-4220282. Earlier composites read 0.06-0.075 there; 22b has no h5f read.
+  - Guards against 22b broken: wide_forehand, deep, backspin, reach_deep, cross_forehand, cross_backhand (worst -8.3); left + back -5.3.
+- **Agility against 22b's composite (Measure60, dev 4220262): CAP-HELD.**
+  - R_LB 0.637 -> 0.688.
+  - Sustained L / B: 22b 1.16 / 1.45; child 1.39 / 1.43.
+  - First step: left faster, back slower (1.455 vs 1.417 s).
+  - Falls 6.91 -> 1.07; worst arrival 0.883 -> 0.984.
+- **Promotion gate (r19-gate / M1 / target against run 14):** FAIL, as stated before launch.
+- **VERDICT: PANEL.**
+
+**Reading (for the panel).**
+- The faster base was not the problem: 22b on the d1 base with no training already had the same rally numbers and much faster footwork (zero-shot).
+- 22b's rally task then trained the speed back out (sustained L / B 1.47 / 1.89 -> 1.39 / 1.43) and lost feeder and left / back contact. The task rewards move speed only to about 1 m/s (motion, round 61), and ball-episode footwork is still s5c-17's.
+- What stayed: far fewer falls and better arrival on the movement read.
+
+**Seeds:** as D-194. Nothing new used.
