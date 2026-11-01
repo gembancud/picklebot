@@ -385,3 +385,92 @@ def test_rally_ready_adds_only_the_ready_term_and_pays_once_per_event():
     ages[:] = 5.0
     t.pairs.step()
     assert abs(float(fs.ready_at_event(env)[0]) - math.exp(-1.0)) < 1e-6
+
+
+def test_rally_parked_adds_one_term_paid_only_while_parked_on_a_dead_court():
+    """D-202: the parked task equals d1s3's except one added reward term; the term pays ready_value only for envs parked
+    on a dead court, not busy, not young; never at a live court."""
+    import math
+    from types import SimpleNamespace
+    import torch
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+    from picklebot_mj.tasks import footwork_specialist as fs
+    a, b = load_env_cfg(fs.TASK_RALLY_FASTMOVE), load_env_cfg(fs.TASK_RALLY_PARKED)
+    assert type(a.actions["ball"]) is type(b.actions["ball"])
+    assert list(b.rewards) == list(a.rewards) + ["parked_ready"]
+    assert all(a.rewards[k] == b.rewards[k] for k in a.rewards)
+    assert b.rewards["parked_ready"].weight == fs.PARKED_W and b.rewards["parked_ready"].func is fs.parked_ready
+    n = 6  # envs 0-2 on courts 0-2 side A, 3-5 their partners
+    pairs = SimpleNamespace(court_dead=torch.tensor([True, True, False]), parked=torch.tensor([True, True, True, True, False, True]),
+                            partner=(torch.arange(n) + 3) % n)
+    data = SimpleNamespace(root_link_lin_vel_w=torch.zeros(n, 3))
+    t = SimpleNamespace(pairs=pairs, _entity=SimpleNamespace(data=data), recover_xy=torch.zeros(n, 2),
+                        pelvis_xy=lambda: torch.zeros(n, 2), drill=SimpleNamespace(move_ep=torch.tensor([False, True, False, False, False, False])),
+                        shadow=None)
+    env = SimpleNamespace(action_manager=SimpleNamespace(get_term=lambda name: t), episode_length_buf=torch.tensor([500, 500, 500, 500, 500, 10]),
+                          step_dt=0.02)
+    r = fs.parked_ready(env)
+    # env 0: dead court 0, parked, set -> 1; env 1: busy (move episode) -> 0; env 2: court 2 live -> 0;
+    # env 3: court 0 dead, parked -> 1; env 4: not parked -> 0; env 5: court 2 live (and young) -> 0
+    assert r.tolist() == [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+    data.root_link_lin_vel_w[0, 0] = 0.3
+    assert abs(float(fs.parked_ready(env)[0]) - math.exp(-1.0)) < 1e-6
+
+
+def test_parked_mask_young_alone_and_on_real_pair_courts():
+    """D-202 (architecture, round 66): young is tested alone (dead court, parked, 0.2 s old -> 0); on a real PairCourts the
+    mask is true only from the rally's end to the feeder fire, false on the fire step and on hand-off steps, and false
+    for a robot reset within READY_MIN_AGE_S. Rewards are computed after the step's pair update."""
+    from types import SimpleNamespace
+    import torch
+    from picklebot_mj.pairs import PairCourts
+    from picklebot_mj.tasks import footwork_specialist as fs
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    pc = PairCourts(4, "cpu", handoff="contact")  # courts (0, 2) and (1, 3)
+    t = SimpleNamespace(pairs=pc, drill=None, shadow=None)
+    env = SimpleNamespace(action_manager=SimpleNamespace(get_term=lambda name: t), episode_length_buf=torch.full((4,), 10),
+                          step_dt=0.02)
+    pc.on_reset(torch.arange(4))
+    assert pc.court_dead.all() and pc.parked.all()
+    assert not fs.parked_mask(env).any()  # dead, parked, but 0.2 s old
+    env.episode_length_buf[:] = 500
+    assert fs.parked_mask(env).all()
+    fired = None
+    for _ in range(30):  # restart delay 0.1 s at dt 0.01
+        fire, _ = pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=Z)
+        m = fs.parked_mask(env)
+        if fire.any():
+            fired = fire.clone()
+            assert not m.any()  # the fire step: both courts live
+            break
+        assert m.all()
+    a = 2 if fired[2] else 0
+    b = 2 - a
+    _, recv = pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(a))  # a's legal contact hands the ball to b
+    assert bool(recv[b]) and not fs.parked_mask(env)[[a, b]].any()
+    pc.step(F(a), F(a), Z, Z, 0.01, 0.1, contact=Z)  # a's own copy lands legally: a parked, court live
+    assert bool(pc.parked[a]) and not fs.parked_mask(env)[[a, b]].any()
+    pc.step(F(b), Z, Z, Z, 0.01, 0.1, contact=Z)  # b misses: the rally ends, both parked on a dead court
+    assert fs.parked_mask(env)[[a, b]].all()
+    pc.on_reset(torch.tensor([a]))
+    env.episode_length_buf[a] = 0  # a robot reset: young
+    m = fs.parked_mask(env)
+    assert not bool(m[a]) and bool(m[b])
+
+
+def test_parked_mask_needs_both_robots_idle():
+    """D-202 (RL, round 66): on a dead court a parked robot is not paid while its partner still has a ball in play."""
+    from types import SimpleNamespace
+    import torch
+    from picklebot_mj.pairs import PairCourts
+    from picklebot_mj.tasks import footwork_specialist as fs
+    pc = PairCourts(4, "cpu", handoff="contact")
+    pc.on_reset(torch.arange(4))
+    t = SimpleNamespace(pairs=pc, drill=None, shadow=None)
+    env = SimpleNamespace(action_manager=SimpleNamespace(get_term=lambda name: t), episode_length_buf=torch.full((4,), 500),
+                          step_dt=0.02)
+    assert fs.parked_mask(env).all()
+    pc.parked[2] = False  # env 2 (court 0's side B) still has a ball in play
+    assert fs.parked_mask(env).tolist() == [False, True, False, True]

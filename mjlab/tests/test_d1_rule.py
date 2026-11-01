@@ -162,3 +162,30 @@ def test_stage5_share_bin_and_verdicts(tmp_path):
     assert v(True, True, None, True, True, True, True, True, True) == "CAP-PASS"
     assert v(True, True, True, False, False, True, True, True, True) == "CAP-F"
     assert v(False, True, None, False, False, True, True, True, True) == "CAP-FAIL"
+
+
+def test_stage6_farm_dose_and_verdicts(tmp_path):
+    import json
+    start, pstart = 31399, 30200
+    cr = [{"step": (start + it) * 24, "rallies": 10000 * k, "shots": 17000 * k} for k, it in enumerate((101, 201, 301, 401))]
+    pr = [{"step": (pstart + it) * 24, "rallies": 10000 * k, "shots": 18000 * k} for k, it in enumerate((100, 200, 300))]
+    assert dr.s6_farm_kill(cr, pr, start, pstart)[0] == "CONTINUE"  # 1.7 vs 1.8 (>= 1.62)
+    short = [{"step": r["step"], "rallies": r["rallies"], "shots": 15000 * k} for k, r in enumerate(cr)]
+    assert dr.s6_farm_kill(short, pr, start, pstart)[0] == "KILL-FARM"  # 1.5 < 1.62
+    assert dr.s6_farm_kill([], pr, start, pstart)[0] == "NO-DATA"
+    var = lambda v, d: {"pelvis_speed": {"p50": v}, "recover_dist": {"p50": d}}  # noqa: E731
+    assert dr.s6_dose(var(0.20, 0.9), var(0.28, 0.9))[0]
+    assert dr.s6_dose(var(0.28, 0.75), var(0.28, 0.9))[0]
+    assert not dr.s6_dose(var(0.25, 0.85), var(0.28, 0.9))[0]
+    assert not dr.s6_dose(var(None, 0.5), var(0.28, 0.9))[0]
+    p = tmp_path / "parked.jsonl"
+    p.write_text(json.dumps({"step": 240, "parked": [20.0, 40.0, 100.0, 12.0]}) + "\n")
+    assert "paid steps 40 of 100" in dr.parked_paid(str(p))
+    v = dr.s6_verdict
+    assert v(False, True, True, True, None, True, True, True, True, True, True) == "NO-DOSE"
+    assert v(True, False, True, True, None, True, True, True, True, True, True) == "GUARD-BREACH"
+    assert v(True, True, True, False, None, True, True, True, True, True, True) == "MIX"
+    assert v(True, True, True, True, False, True, True, True, True, True, True) == "MORE-TIME"
+    assert v(True, True, True, True, None, True, True, True, True, True, True) == "PARK-PASS"
+    assert v(True, True, True, True, None, False, False, True, True, True, True) == "PARK-F"
+    assert v(True, True, False, True, None, False, False, True, True, True, True) == "PARK-FAIL"

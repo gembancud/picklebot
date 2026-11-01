@@ -454,3 +454,59 @@ Brief: footwork-round65-brief.md.
 - These keep (b) and (d) queued.
 
 **Decision:** D-201.
+
+
+## Round 66 (2026-11-02): d1s5 smoke reads SMOKE-FAIL
+
+Brief: footwork-round66-brief.md.
+
+**Correction checks** (all five reviewers)
+- **The falls line is valid under the cap.** Cap restarts are not resets: the cap only ends the rally in PairCourts and feeds a new ball (pairs.py). The terminations, the 120 s episode and the per-env-second estimator (D-170) are unchanged. No instrument defect, so the stop stands.
+- **The smoke cannot settle 4.40 against 4.157 alone:** about 86 falls against about 82 at the line, Poisson SD about 9. Bootstrap ranges over iterations are wide (RL 95 %: d1s3 1.92-4.82, d1s5 2.24-7.18).
+- **The half-split points to the cap, not noise.** Falls per 1,000 env-s, iterations 1-20 / 21-40:
+
+| smoke | first half | second half |
+|---|---|---|
+| d1s2 | 4.15 | 1.69 |
+| d1s3 | 4.40 | 2.26 |
+| d1s4 | 3.66 | 1.67 |
+| d1s5 | 4.16 | 4.64 |
+
+  Every parent smoke falls to about 2 after the resume transient; d1s5 does not. This fits the mechanism: the cap feeds a new ball about 0.5 s after a successful rally, while the robots are still at rally tempo (motion).
+- **(ii) is a re-roll** (experiment design, RL, motion): it was proposed only after the failure and would give a failed gate more chances to pass.
+- **Process** (architecture): the (b) task was drafted under the D-202 label before the vote. Nothing was launched before the vote.
+- **Lesson** (RL, descriptive only): about 1 parent smoke in 8 would cross the 1.5x line, so smoke summaries now report the half-split next to the line. The threshold is unchanged.
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| Coach | (i) -> (b); withdraws (c): no coach feeds before the player is set |
+| Motion | (i) -> (b), with the mask, value and weight restated for coding |
+| Experiment design | (i) -> (b); record d1s5 as SMOKE-FAIL plainly; adds GUARDS |
+| RL | (i) -> (b); adds KILL-FARM and the both-idle condition; (d) stays queued |
+| Architecture | (i) -> (b), with code fixes 1-4 and a dose line |
+
+**5 of 5 for (i): option (b), parked readiness, run d1s6.** The lines below were folded in before launch:
+- **Mask:** `court_dead & parked & partner parked & not busy & age >= 1.0 s`.
+  - The both-idle term is RL's: the paid window is the refeed countdown, so it cannot be stretched by ending rallies early.
+  - RL's 2-s young window is not adopted; motion's and architecture's 1.0 s (READY_MIN_AGE_S) is kept.
+- **Tests:** young alone; a real PairCourts rally (paid only from the rally's end to the fire; not on the fire step, hand-off steps, or within 1 s of a reset); both idle.
+  - Motion's "moving recover_xy at the fire must not change the paid sum" holds, because the mask is false on the fire step.
+- **Dose log** (report only): PICKLEBOT_READY_LOG, `parked` = [paid sum, paid steps, dead-court env steps, sum of squares], in the smoke and in training.
+- **DOSE at the endpoint** (architecture): on the paired dose runs' k = 0 feeder tally, pelvis-speed p50 at the fire <= parent - 0.05 m/s, or recovery-distance p50 <= parent - 0.10 m.
+  - The feeder tally holds the same quantities as the launch log and is already read.
+- **GUARDS** (experiment design): rally_check.r19_guards against the parent's reads. It covers reach_deep, backhand, fast and left + back, plus the other families at D-160's slacks.
+- **KILL-FARM** (RL): mean rally length over iterations 100-300 < 0.9 x the parent d1s3 run's (3.258, 59,624 rallies; kill below 2.93).
+  - RL's second clause (dead-court fraction > parent + 0.05) is not coded: the parent's training log never recorded it. The child's fraction is reported from the dose log.
+- **Seeds:** training 195, smoke 196.
+  - Reads use the paired D-199 dev seeds 4220306-4220327 against the reused parent references, as in D-201 (experiment design). RL proposed fresh dev seeds for the child, but paired seeds are the practice here.
+  - Dev 4220328-4220335 is reserved for any new read.
+
+**Queued:**
+- (d), observing parked / countdown / next receiver: first if (b) reads NO-DOSE or NO-ARRIVE (RL);
+- the falls lever;
+- coach's time-to-first-step-after-fire read;
+- d1 + --recover; d1b; Fast4 floor test; H1''.
+
+**Decision:** D-202.

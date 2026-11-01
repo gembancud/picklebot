@@ -5661,3 +5661,65 @@ The tie rule (least new code) gives (c). Its lines are experiment design's. (b) 
 | CAP-FAIL | panel |
 
 **Seeds:** as above (ledgered); training 193-194.
+
+### D-201 result (2026-11-02): d1s5 reads SMOKE-FAIL - nothing trained
+
+The pre-registered smoke (training seed 194, 1,024 envs, 40 iterations, pair_rally_cap 5) read 4.398 falls per 1,000 env-s against the line 4.157. Exit 0, no traceback, std 0.106, config ok. The parent family's smokes read 2.61-3.27 on the same line. Training seed 193 was never used. Summary: mjlab/results/d1s5-summary.txt.
+
+Panel round 66 (mjlab/results/footwork-review.md) found no instrument defect: cap restarts are not resets, and the episode length and estimator are unchanged, so the stop stands. A single smoke cannot separate 4.40 from 4.157 (about 86 vs 82 falls, Poisson SD about 9). But the half-split can: over iterations 21-40, every parent smoke falls to about 2 (1.67-2.26), while d1s5 stays at 4.64. The cap feeds a new ball about 0.5 s after a successful rally, to robots still at rally tempo. Re-running smokes to decide (option ii) was ruled a re-roll. Read: (c) in this form fails on falls. Smoke summaries now report the half-split next to the line (descriptive; the line is unchanged).
+
+## D-202 (2026-11-02): d1s6 - parked readiness on the d1s3 child
+
+Panel round 66: 5 of 5 for (i), i.e. round 65's runner-up (b). Run: scripts/diag/d1_stage6.sh (watcher d1s6_watch.py).
+
+**One change:** the parent d1s3 child (rally-d1s3 model_31399, d1 base s5c-d1-fw1bS model_32854) trains 1,200 iterations on Picklebot-Rally22b-FastMove-Parked-G1. This is d1s3's task plus one reward term, parked_ready (weight 2):
+- **Value:** ready_value, exp(-(|v_xy| / 0.3)^2) x exp(-(|pelvis - recover_xy| / 1.0)^2), against the recover_xy the robot observes.
+- **Paid only while** `court_dead & parked & partner parked & not busy & age >= 1.0 s`. The paid window is the refeed countdown (both robots idle, RL). Nothing is paid at contacts, hand-offs or the fire step.
+- **Settings unchanged:** no rally cap; ScheduledPPO 1e-4 constant, KL 0.05, std floor 0.1, warm-up 0, 12,288 envs; endpoint model_32598.
+
+**Folded in before launch** (architecture's fixes 1-4, RL):
+- tests for young alone, a real PairCourts rally, and both idle;
+- a dose log (PICKLEBOT_READY_LOG, report only) in the smoke and in training.
+
+**Smoke:** d1s3's checks with the falls line 4.157 unchanged (half-split reported). The config check requires parked_ready, no ready_at_event, and pair_rally_cap 0.
+
+**Kill at +360** (windows from rows that exist; NO-DATA never kills):
+- D-194's training-log lines.
+- KILL-FARM: mean rally length over iterations 100-300 < 0.9 x the parent d1s3 run's (3.258; kill below 2.93). RL's dead-court-fraction clause is not coded: the parent never logged it.
+- KILL-SLOWED / KILL-NO-ARRIVE on model_31760 against the parent.
+
+**Endpoint lines:**
+
+| line | rule |
+|---|---|
+| DOSE | paired dose runs, k = 0 feeder tally: pelvis-speed p50 at the fire <= parent - 0.05 m/s, or recovery-distance p50 <= parent - 0.10 m |
+| GUARDS | rally_check.r19_guards against the parent: families >= -0.05, cross_forehand >= -0.03, left + back feeder contact >= -0.05 |
+| F-UP | as D-201, with F-BIN required |
+| F-BAND | as D-201 |
+| REFEED3 | as D-201 |
+| P5-KEPT | as D-201 |
+| K3-KEPT | as D-201 |
+| AGILE-KEPT | as D-201 |
+| rally | d1s2-gate against the parent, labelled |
+| ABS-F | as D-201 |
+
+**Control:** d1s3 continued on its own task, training seed 195. It runs only if the child is F-UP.
+
+**Verdicts, in this order of precedence:**
+
+| verdict | next step |
+|---|---|
+| KILL | panel |
+| INVALID | panel |
+| NO-DOSE | panel; (d) is queued first |
+| GUARD-BREACH | panel |
+| MIX | panel |
+| MORE-TIME | panel |
+| PARK-PASS | new parent |
+| PARK-F (PARK-PASS without ABS-F and the rally gate) | new feeder parent |
+| PARK-FAIL | panel |
+
+**Seeds:**
+- Reads use dev 4220306-4220327, paired with the reused parent references: D-199's reads, and D-201's parent dose read on 4220326.
+- Training seeds 195 (run and control) and 196 (smoke).
+- Dev 4220328-4220335 is reserved for new reads. All are ledgered.

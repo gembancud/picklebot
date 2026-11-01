@@ -432,3 +432,71 @@ def s5_verdict(fup: bool, fband: bool, fup_control: bool | None, abs_f: bool, ra
     if fup and fband and kept:
         return "CAP-F"
     return "CAP-FAIL"
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-202 d1s6 (panel round 66, option (b) parked readiness, Picklebot-Rally22b-FastMove-Parked-G1). Kill at +360 adds
+# KILL-FARM (RL): the mean rally length (pair log shots / rallies, all courts) over iterations 100-300 < 0.9 x the parent
+# d1s3 run's at the same iterations. Endpoint DOSE (architecture): on the paired LR-0 dose runs' k = 0 feeder tally, the
+# child's pelvis-speed p50 at the feeder fire <= parent - 0.05 m/s, or its recovery-distance p50 <= parent - 0.10 m.
+# GUARDS: rally_check.r19_guards against the parent's reads (every family >= parent - 0.05, cross_forehand - 0.03,
+# left + back feeder contact - 0.05; covers experiment design's reach_deep / backhand / fast / left + back).
+FARM_RATIO, DOSE_V, DOSE_D = 0.9, 0.05, 0.10
+
+
+def _rally_length(rows: list[dict], it_lo: int, it_hi: int, start_it: int) -> tuple[float, int]:
+    a = _row_from(rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(rows, max((start_it + it_hi) * STEPS_PER_IT, a["step"] + (it_hi - it_lo) * STEPS_PER_IT))
+    if a is None or b is None or b["step"] <= a["step"]:
+        return float("nan"), 0
+    r, sh = b["rallies"] - a["rallies"], b["shots"] - a["shots"]
+    return (sh / r if r else float("nan")), int(r)
+
+
+def s6_farm_kill(child_rows: list[dict], parent_rows: list[dict], child_start: int, parent_start: int) -> tuple[str, str]:
+    c, nc = _rally_length(child_rows, 100, 300, child_start)
+    p, npar = _rally_length(parent_rows, 100, 300, parent_start)
+    if c != c or p != p or min(nc, npar) < MIN_WINDOW_EVENTS:
+        return "NO-DATA", f"rally-length windows: child {c} (n {nc}), parent {p} (n {npar}): NO-DATA (not a kill)"
+    v = "CONTINUE" if c >= FARM_RATIO * p else "KILL-FARM"
+    return v, f"mean rally length, iterations 100-300: child {c:.3f} vs parent {p:.3f} (kill below {FARM_RATIO} x) -> {v}"
+
+
+def s6_dose(child_vars: dict, parent_vars: dict) -> tuple[bool, str]:
+    """child_vars / parent_vars: feeder_rule.feeder_stats(...)["vars"] of the paired dose runs."""
+    cv, pv = child_vars["pelvis_speed"]["p50"], parent_vars["pelvis_speed"]["p50"]
+    cd, pd = child_vars["recover_dist"]["p50"], parent_vars["recover_dist"]["p50"]
+    ok = None not in (cv, pv, cd, pd) and (cv <= pv - DOSE_V or cd <= pd - DOSE_D)
+    return ok, (f"DOSE: pelvis speed p50 at the feeder fire {cv} vs parent {pv} (<= -{DOSE_V}) or recovery distance p50 "
+                f"{cd} vs {pd} (<= -{DOSE_D}) -> {'DOSE' if ok else 'NO-DOSE'}")
+
+
+def parked_paid(path: str) -> str:
+    """Report only: the training dose log (parked_ready, PICKLEBOT_READY_LOG)."""
+    import json
+    rows = [json.loads(line) for line in open(path)] if __import__("os").path.exists(path) else []
+    rows = [r for r in rows if "parked" in r]
+    if not rows:
+        return "parked dose log: no rows"
+    s, n, dead, _ = rows[-1]["parked"]
+    return (f"parked dose log (step {rows[-1]['step']}): paid steps {int(n)} of {int(dead)} dead-court env steps "
+            f"({n / max(dead, 1):.3f}); mean value when paid {s / max(n, 1):.3f}")
+
+
+def s6_verdict(dose: bool, guards: bool, fup: bool, fband: bool, fup_control: bool | None, abs_f: bool, rally: bool,
+               agile: bool, k3: bool, p5_kept: bool, refeed3: bool) -> str:
+    """After KILL / INVALID (the driver): NO-DOSE -> GUARD-BREACH -> MIX -> MORE-TIME -> PARK-PASS -> PARK-F -> PARK-FAIL."""
+    if not dose:
+        return "NO-DOSE"
+    if not guards:
+        return "GUARD-BREACH"
+    if fup and not fband:
+        return "MIX"
+    if fup and fup_control is False:
+        return "MORE-TIME"
+    kept = agile and k3 and p5_kept and refeed3
+    if fup and fband and kept and abs_f and rally:
+        return "PARK-PASS"
+    if fup and fband and kept:
+        return "PARK-F"
+    return "PARK-FAIL"

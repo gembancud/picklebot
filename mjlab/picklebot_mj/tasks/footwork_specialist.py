@@ -562,3 +562,64 @@ def rally_ready(cfg):
 register_mjlab_task(task_id=TASK_RALLY_READY, env_cfg=rally_ready(load_env_cfg(ag.SRC_22B)),
                     play_env_cfg=rally_ready(load_env_cfg(ag.SRC_22B, play=True)), rl_cfg=load_rl_cfg(ag.SRC_22B),
                     runner_cls=load_runner_cls(ag.SRC_22B))
+
+
+# D-202 d1s6 (panel rounds 65-66, option (b): parked readiness): d1s3's task (Rally22b-FastMove) plus one reward term for
+# being set while the court is dead and this env is parked waiting for the next feeder ball (court_dead & parked), the
+# state ballidx63 found failing at the feeder fire. Not while busy (a move or ghost-swing drill episode: the drill's own
+# speed terms apply there) and not within READY_MIN_AGE_S of an episode start; nothing is paid at partner contacts (D-200:
+# readiness at contacts planted the feet when the first step should load). Value as ready_value (v_std 0.3 m/s, d_std
+# 1.0 m, D-199's), against the recover_xy the robot observes; weight PARKED_W per step (2 x dt 0.02 x ~25 parked steps
+# = about 1.0 per dead ball, as d1s4's 1.0 per event; the step count is a guess until the dose log measures it).
+TASK_RALLY_PARKED = "Picklebot-Rally22b-FastMove-Parked-G1"
+PARKED_W = 2.0
+
+
+def parked_mask(env) -> torch.Tensor:
+    t = env.action_manager.get_term("ball")
+    pc = t.pairs
+    # both robots idle (RL, round 66): a parked robot whose partner still has a ball in play is not paid, so the window
+    # is the refeed countdown and cannot be stretched by ending rallies early
+    m = pc.court_dead.repeat(2) & pc.parked & pc.parked[pc.partner]
+    dr = getattr(t, "drill", None)
+    if dr is not None:
+        m = m & ~dr.move_ep
+    sh = getattr(t, "shadow", None)
+    if sh is not None:
+        m = m & ~sh.swing_ep
+    age = env.episode_length_buf.float() * env.step_dt
+    return m & (age >= READY_MIN_AGE_S)
+
+
+def parked_ready(env) -> torch.Tensor:
+    """With PICKLEBOT_READY_LOG set (report only) also appends cumulative [sum of paid values, paid steps, dead-court
+    steps, sum of squares] every READY_LOG_EVERY steps (architecture's dose log, round 66)."""
+    t = env.action_manager.get_term("ball")
+    m = parked_mask(env).float()
+    out = ready_value(t) * m
+    log = os.environ.get("PICKLEBOT_READY_LOG")
+    if log:
+        if not hasattr(t, "parked_stats"):
+            t.parked_stats, t._parked_last = torch.zeros(4, device=out.device), -1
+        t.parked_stats[0] += out.sum()
+        t.parked_stats[1] += m.sum()
+        t.parked_stats[2] += t.pairs.court_dead.sum() * 2
+        t.parked_stats[3] += (out * out).sum()
+        step = int(env.common_step_counter)
+        if step % READY_LOG_EVERY == 0 and step != t._parked_last:
+            t._parked_last = step
+            import json
+            with open(log, "a") as f:
+                f.write(json.dumps({"step": step, "parked": [round(x, 4) for x in t.parked_stats.tolist()]}) + "\n")
+    return out
+
+
+def rally_parked(cfg):
+    cfg = rally_fastmove(cfg)
+    cfg.rewards["parked_ready"] = RewardTermCfg(func=parked_ready, weight=PARKED_W)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_PARKED, env_cfg=rally_parked(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_parked(load_env_cfg(ag.SRC_22B, play=True)), rl_cfg=load_rl_cfg(ag.SRC_22B),
+                    runner_cls=load_runner_cls(ag.SRC_22B))
