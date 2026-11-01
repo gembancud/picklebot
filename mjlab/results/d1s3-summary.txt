@@ -1,0 +1,51 @@
+d1 base /mnt/f/dev/picklebot-mjlab/mjlab/artifacts/train/logs/picklebot_return_stand/2026-10-31_18-24-20_s5c-d1-fw1bS/model_32854.pt
+pre-training 22b own base: P(5+) open 0.3812 [0.3638, 0.399]; partner 0.9896; feeder 0.6523; left + back feeder contact 0.4571; h5f court falls 0.0563; Measure60 R_LB 0.636, sustained L/B 1.1613/1.4542, falls 6.87
+pre-training 22b on d1 base (untrained): P(5+) open 0.3690 [0.352, 0.3864]; partner 0.9885; feeder 0.6598; left + back feeder contact 0.4786; h5f court falls 0.0458; Measure60 R_LB 0.818, sustained L/B 1.4683/1.8939, falls 5.61
+smoke exit 0 ok
+smoke no traceback ok
+smoke falls per 1,000 env-seconds 3.274 ok
+smoke std min 0.104 outputs with no gradient [] ok
+smoke config check: missing []; actor noise on True; base_checkpoint is the d1 base True; save_interval 40 True; fast move reward True -> ok
+training: {"run": "rally-d1s3", "exit_code": 0, "finished": "2026-11-01T14:41:04+08:00"}
++341-360: falls per 1,000 env-s 1.42 (kill > 2 x 22b 1.57); legal_return 0.8066 (kill < 22b 0.7549 - 0.05) -> CONTINUE; reported +241-260: falls 1.50, legal_return 0.7474
++360 Measure60 read: sustained L/B 1.5475/1.8498 vs Z 1.4663/1.8795 (kill below Z - 0.15); falls 4.71 (kill > 2 x Z 5.27); worst untimed arrival 0.943 (kill < 0.80); fallen + censored 0.092 (kill > 0.15) -> CONTINUE
+endpoint artifacts/train/logs/picklebot_return_stand/2026-11-01_12-07-09_rally-d1s3/model_31399.pt
+guard: easy_forehand contact 0.6792 < 22b 0.7431 - 0.05 (KILL)
+guard: backhand contact 0.6720 < 22b 0.7282 - 0.05 (KILL)
+guard: deep contact 0.6859 < 22b 0.7552 - 0.05 (KILL)
+guard: worst family contact vs 22b -6.9 (deep; kill below -5); cross_forehand 0.7455 vs 22b 0.7688 (kill below -3)
+guard: left + back feeder contact 0.4955 vs 22b 0.4571 (+3.8; kill below -5)
+d1 stage-2 run verdict: P(5+) open 0.3796 [0.3621, 0.3975] (>= 22b 0.3812 + 0.02, low above 0.3812); partner legal 0.9910 (>= 0.9746); feeder legal 0.6352 (>= 0.6423); gap 0.6 (<= 3); falls 0.0618 (<= 0.04): not met
+reported (promotion gate against run 14, expected FAIL):
+guard: easy_forehand contact 0.6792 < run 14 0.8947 - 0.05 (KILL)
+guard: wide_forehand contact 0.7460 < run 14 0.9022 - 0.05 (KILL)
+guard: backhand contact 0.6720 < run 14 0.8613 - 0.05 (KILL)
+guard: deep contact 0.6859 < run 14 0.9143 - 0.05 (KILL)
+guard: short contact 0.8929 < run 14 0.9662 - 0.05 (KILL)
+guard: high contact 0.8857 < run 14 0.9653 - 0.05 (KILL)
+guard: low contact 0.5469 < run 14 0.8259 - 0.05 (KILL)
+guard: fast contact 0.4574 < run 14 0.7488 - 0.05 (KILL)
+guard: topspin contact 0.7173 < run 14 0.9022 - 0.05 (KILL)
+guard: backspin contact 0.7061 < run 14 0.9090 - 0.05 (KILL)
+guard: reach_forehand contact 0.8736 < run 14 0.9432 - 0.05 (KILL)
+guard: reach_backhand contact 0.5795 < run 14 0.8267 - 0.05 (KILL)
+guard: reach_deep contact 0.2293 < run 14 0.5298 - 0.05 (KILL)
+guard: cross_forehand contact 0.7455 < model_29000 0.8495 - 0.03 (KILL)
+guard: cross_backhand contact 0.5031 < run 14 0.6920 - 0.05 (KILL)
+guard: worst family contact vs run 14 -30.1 (reach_deep; kill below -5); cross_forehand 0.7455 vs model_29000 0.8495 (kill below -3)
+guard: left + back feeder contact 0.4955 vs run 14 0.5878 (-9.2; kill below -5)
+run 19 gate: P(5+) open 0.3796 [0.3621, 0.3975] (>= parent 0.3812 + 0.02, low above 0.3812); partner legal 0.9910 (>= 0.9746); feeder legal 0.6352 (>= 0.8026); gap 0.6 (<= 3); falls 0.0618 (<= 0.04): not met
+target (contact hand-off): rallies 1862; P(5+) 0.0408 [0.0327, 0.0508] (pass: >= 0.80, low >= 0.78); P(4+) 0.0451; mean 1.752; own-ball legal 0.9910 [0.9904, 0.9916]; feeder-ball legal 0.6349 [0.6169, 0.6525]; sides {'A': 0.9775, 'B': 0.9832} (gap 0.6 points, <= 3); court falls 0.0618 (<= 0.04)
+target P(5+) with open rallies counted (D-160, primary): 0.3796 [0.3621, 0.3975]
+target not met
+agility vs the untrained composite (Z): AGILE-KEPT; R_LB 0.825 vs Z 0.818 (need >= Z - 0.03); first step left 1.4146 vs Z 1.5128 s (need <= Z + 0.05); first step back 1.294 vs Z 1.2942 s (need <= Z + 0.05)
+agility vs 22b (reported): MIXED (R_LB 0.636 -> 0.825)
+22b model_30200: P(5+) open 0.3812 [0.3638, 0.399]; partner 0.9896; feeder 0.6523; left + back feeder contact 0.4571
+22b on d1 base, untrained: P(5+) open 0.3690 [0.352, 0.3864]; partner 0.9885; feeder 0.6598; left + back feeder contact 0.4786
+stage-2 child (reported): P(5+) open 0.3800 [0.362, 0.3983]; partner 0.9921; feeder 0.6228; left + back feeder contact 0.4569
+22b model_30600 (reported): P(5+) open 0.3861 [0.368, 0.4046]; partner 0.9912; feeder 0.6515; left + back feeder contact 0.4839
+d1s3 child: P(5+) open 0.3796 [0.3621, 0.3975]; partner 0.9910; feeder 0.6352; left + back feeder contact 0.4955
+h5f court falls p22b: 0.0563
+h5f court falls zs: 0.0458
+h5f court falls child: 0.0618
+rally run verdict not met; VERDICT: SPEED-KEPT

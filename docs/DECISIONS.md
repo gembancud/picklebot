@@ -5351,3 +5351,44 @@ Task Picklebot-Rally22b-FastMove-G1 is 22b's task with move_track_lin_vel replac
 **Stated before launch (RL).** A rally gain is not expected: the zero-shot showed the rally does not use the extra speed as read. This run tests whether rally training can keep the agility the user asked for. The target lever is (e), the first handed balls, next on whichever base keeps the speed.
 
 **Seeds:** dev 4220283-4220302; training 189-190.
+
+## D-197 (2026-11-01): d1s3 reads SPEED-KEPT — the faster base keeps its speed through rally training; no rally gain
+
+scripts/diag/d1_stage3.sh: rally-d1s3 model_31399 (seed 189, 1,200 iterations, exit 0). Summary: mjlab/results/d1s3-summary.txt.
+
+**+360 checks: all CONTINUE.**
+- Training log: falls 1.42, legal 0.807.
+- model_30560 Measure60: L/B 1.55 / 1.85 against Z's 1.47 / 1.88; falls 4.71.
+
+**Paired endpoint, dev 4220283-4220301:**
+
+| | 22b model_30200 | Z (d1 base, untrained) | 22b model_30600 (reported) | stage-2 child (reported) | **d1s3 child** |
+|---|---|---|---|---|---|
+| P(5+) open | 0.381 | 0.369 | 0.386 | 0.380 | **0.380** |
+| feeder legal | 0.652 | 0.660 | 0.652 | 0.623 | **0.635** |
+| left + back feeder contact | 0.457 | 0.479 | 0.484 | 0.457 | **0.496** |
+| h5f court falls | 0.0563 | 0.0458 | — | — | **0.0618** |
+| Measure60 R_LB | 0.636 | 0.818 | — | 0.686 | **0.825** |
+| sustained L / B (m/s) | 1.16 / 1.45 | 1.47 / 1.89 | — | 1.39 / 1.42 | **1.61 / 1.78** |
+| first step L / B (s) | 1.63 / 1.42 | 1.51 / 1.29 | — | 1.55 / 1.46 | **1.41 / 1.29** |
+| Measure60 falls | 6.87 | 5.61 | — | 0.85 | **3.13** |
+
+**Agility: AGILE-KEPT.**
+- R_LB 0.825 against Z's 0.818.
+- First step left 1.41 vs 1.51; back 1.29 vs 1.29.
+
+**Rally (`d1s2-gate`): not met.**
+- P(5+) is 22b + 0.0, not + 2.0.
+- Feeder 0.635 < 0.642.
+- Court falls 0.062 > 0.04. 22b itself reads 0.0563 on the same seeds, so this absolute line fails the parent.
+- Guard: deep -6.9.
+
+**VERDICT: SPEED-KEPT.**
+
+**Reading.**
+- The move-episode speed reward (D-196) stops rally training from eroding the d1 base's speed. In stage 2 the same check went from R_LB 0.82 to 0.69.
+- The child reaches more left / back balls than 22b (+3.8). Against 22b's own continuation (model_30600) the edge is only +1.2.
+- Rally length is unchanged. The binding constraint is elsewhere: D-189's first handed balls.
+- 22b's ball-index read (results/ballidx52-summary.txt, training seeds) puts the k = 1 failures on receivers that are still moving (pelvis speed tercile 3: fail 0.271 vs 0.086), far from their recovery spot (0.232 vs 0.108) or short of idle time (0.211). That is recovery to ready.
+
+**Seeds:** as D-196.
