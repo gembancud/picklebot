@@ -412,3 +412,43 @@ def l3_fwgeom(cfg):
 register_mjlab_task(task_id=TASK_L3_FWGEOM, env_cfg=l3_fwgeom(load_env_cfg(_SRC_L3)),
                     play_env_cfg=l3_fwgeom(load_env_cfg(_SRC_L3, play=True)), rl_cfg=load_rl_cfg(_SRC_L3),
                     runner_cls=load_runner_cls(_SRC_L3))
+
+
+# D-196 d1s3 (panel round 62: motion, RL, architecture): 22b's rally task with only the move-episode speed reward
+# changed. Stage 2 (D-195) trained the d1 base's speed back out: 22b's move_track_lin_vel scores the MoveDrill command,
+# capped at 1.0 m/s with a std 0.5 kernel, so 1.9 m/s pays exp(-3.24) = 0.04. Here, in move episodes only, the command is
+# MoveDrill's with the cap raised to CMD_CAP (2.5 m/s; gain scaled, braking radius unchanged, heading still to the net)
+# and the kernel is fw_track_lin_vel's (std 0.5 x max(1, |v_cmd|)). Everywhere else in the walk mask (S-D2c shadow-swing
+# episodes) the command and kernel are 22b's exactly (cap 1.0 -> std 0.5). The drill object, spot sampling, arrival and
+# ball episodes are untouched (architecture: FastMoveDrill re-implements spot sampling and was never run in pair mode).
+TASK_RALLY_FASTMOVE = "Picklebot-Rally22b-FastMove-G1"
+
+
+def rally_fast_track_lin_vel(env, std: float = TRACK_STD, cap: float = CMD_CAP) -> torch.Tensor:
+    dr = md._drill(env)
+    if dr is None:
+        return torch.zeros(env.num_envs, device=env.device)
+    v_cmd, _ = dr.command()  # MoveDrill's: cap 1.0 m/s
+    t = dr.t
+    yaw = md._yaw(t._entity.data.root_link_pose_w[:, 3:7])
+    delta = t.recover_xy - t.pelvis_xy()
+    d = delta.norm(dim=-1, keepdim=True)
+    v_w = delta / d.clamp(min=1e-6) * (md.CMD_GAIN * cap / md.CMD_MAX_SPEED * d).clamp(max=cap)
+    c, s = torch.cos(yaw), torch.sin(yaw)
+    v_fast = torch.stack([c * v_w[:, 0] + s * v_w[:, 1], -s * v_w[:, 0] + c * v_w[:, 1]], -1)
+    v_cmd = torch.where(dr.move_ep.unsqueeze(-1), v_fast, v_cmd)
+    v = t._entity.data.root_link_lin_vel_b[:, :2]
+    k = std * v_cmd.norm(dim=-1).clamp(min=1.0)
+    return torch.exp(-((v_cmd - v) ** 2).sum(-1) / k ** 2) * md._walk_mask(dr)
+
+
+def rally_fastmove(cfg):
+    r = cfg.rewards
+    assert r["move_track_lin_vel"].func is md.move_track_lin_vel
+    r["move_track_lin_vel"] = dataclasses.replace(r["move_track_lin_vel"], func=rally_fast_track_lin_vel)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_FASTMOVE, env_cfg=rally_fastmove(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_fastmove(load_env_cfg(ag.SRC_22B, play=True)), rl_cfg=load_rl_cfg(ag.SRC_22B),
+                    runner_cls=load_runner_cls(ag.SRC_22B))

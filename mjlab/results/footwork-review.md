@@ -317,3 +317,38 @@ Stage 2 carried 5 of 5.
 - From RL and architecture: 22b's smoke checks restored; the pinned base; the exit and endpoint checks; the half-block guard; GATE-CRASH; falls added to KILL-NO-ARRIVE with 22b's own-base read as reference.
 
 **Decision:** D-194.
+
+## Round 62 (2026-11-01): d1 stage 2 reads PANEL
+
+Brief: footwork-round62-brief.md.
+
+**Correction checks**
+- **The speed loss is real, not seed noise** (all five). 22b's Measure60 reads on dev 4220257, 4220258 and 4220262 agree within 0.01 m/s. Back sustained fell steadily: 1.89 (zero-shot) -> 1.62 (+360) -> 1.43 (endpoint), with every sector slower.
+- **The mechanism is not settled.**
+  - Experiment design: "speed trained out" is a post-hoc story. The child settles at 1.36-1.53 m/s, not 1 m/s, and the loss sits where the zero-shot fell most (back falls 248 -> 52 -> 10).
+  - RL: the 1 m/s cap with a std 0.5 kernel pays 0.04 at 1.9 m/s, an active penalty. Logged move_track_lin_vel drifted back toward 22b's (0.441 -> 0.482 against 22b's 0.498). P2 cut falls without slowing.
+- **The zero-shot was not "safer" where it matters** (experiment design). Left falls 108 against 22b's 38-46; back 248 against 138-170.
+- **The feeder loss is mostly the stated training-time confound** (RL, experiment design). 22b's own +400 already reads 0.628.
+- **Court falls were unpaired** (RL, experiment design): 22b has no h5f read. Future gates read the parent on the same h5f seeds.
+- **Option (d) as briefed was a no-op** (RL, architecture). fw_track_lin_vel under MoveDrill's 1.0 m/s command keeps std 0.5. The cap must rise too.
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| Coach | (a) adopt the zero-shot if non-inferior on fresh seeds, then (e) |
+| Motion | (d) with the cap raised; (a) h5f as a reported reference; KILL-SLOWED and AGILE-KEPT lines |
+| RL | (a) ZS read, then (d) with the cap + kernel; KILL-SLOWED on R_LB; a rally gain not expected; (e) next |
+| Experiment design | (b) d1 + `--recover` with a zero-shot gate before any stage 2; against (a), as post-hoc |
+| Architecture | (d) corrected (cap 2.5 + kernel, move episodes only), with (a)'s reads as the reference |
+
+**(d) carried 3 of 5.** Adopting (a) was rejected 3 to 2, so (a)'s reads are a reference only.
+
+**Variant.** Architecture's least-code form, decided by the least-code rule since no variant had a majority. Instead of FastMoveDrill, which re-implements spot sampling and has never run in pair mode, only the reward changes. In move episodes it scores the 2.5-m/s-capped command with the widened kernel. Elsewhere it is 22b's exactly; a test checks both.
+
+**Kill and endpoint lines.** Merged from motion and RL, paired with Z (22b on the d1 base, untrained) on the same seed:
+- KILL-SLOWED if left or back sustained < Z - 0.15;
+- KILL-NO-ARRIVE if D-188 validity against Z fails;
+- AGILE-KEPT if R_LB >= Z - 0.03 and first step <= Z + 0.05.
+
+**Decision:** D-196.

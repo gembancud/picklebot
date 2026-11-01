@@ -78,3 +78,14 @@ def test_stage2_kill_lines():
     for lo in range(30201, 30600, 20):
         f1, l1 = dr.window_stats(b, range(lo, lo + 20), 12288)
         assert dr.s2_window_verdict(f1, l1, f0, l0) == "CONTINUE", (lo, f1, l1)
+
+
+def test_stage3_speed_lines():
+    spec = [{"sustained_p50": 2.0}] * 8
+    z = _drill([1.6] * 8, first_s=1.3, falls=1)
+    assert dr.s3_speed_kill(_drill([1.5] * 8, falls=1), z)[0] == "CONTINUE"
+    assert dr.s3_speed_kill(_drill([1.4] * 8, falls=1), z)[0] == "KILL-SLOWED"
+    assert dr.s3_speed_kill(_drill([1.6] * 8, falls=3), z)[0] == "KILL-NO-ARRIVE"
+    assert dr.s3_agility_kept(_drill([1.6] * 8, first_s=1.3), z, spec)[0] == "AGILE-KEPT"
+    assert dr.s3_agility_kept(_drill([1.5] * 8, first_s=1.3), z, spec)[0] == "SPEED-LOST"  # R_LB 0.75 < 0.80 - 0.03
+    assert dr.s3_agility_kept(_drill([1.6] * 8, first_s=1.5), z, spec)[0] == "SPEED-LOST"  # first step 0.2 s slower

@@ -305,3 +305,35 @@ def test_fast4_tasks():
     assert a.actions["ball"].footwork_cmd_cap == 2.5
     for k in a.rewards:
         assert a.rewards[k].func is f.rewards[k].func and a.rewards[k].weight == f.rewards[k].weight
+
+
+def test_rally_fastmove_only_changes_move_speed_reward():
+    """D-196: the d1s3 task equals 22b's except move_track_lin_vel's function; the function equals 22b's outside move
+    episodes and scores the 2.5-m/s-capped command with the widened kernel inside them."""
+    import dataclasses as dc
+    from types import SimpleNamespace
+    import torch
+    from mjlab.tasks.registry import load_env_cfg
+    from picklebot_mj.tasks import agility as ag
+    import mjlab.tasks  # noqa: F401
+    from picklebot_mj.tasks import footwork_specialist as fs
+    from picklebot_mj.tasks import move_drill as md
+    a, b = load_env_cfg(ag.SRC_22B), load_env_cfg(fs.TASK_RALLY_FASTMOVE)
+    assert type(a.actions["ball"]) is type(b.actions["ball"]) and dc.asdict(a.actions["ball"]) == dc.asdict(b.actions["ball"])
+    assert list(a.rewards) == list(b.rewards)
+    diff = [k for k in a.rewards if a.rewards[k] != b.rewards[k]]
+    assert diff == ["move_track_lin_vel"] and b.rewards["move_track_lin_vel"].func is fs.rally_fast_track_lin_vel
+    assert a.episode_length_s == b.episode_length_s and list(a.observations) == list(b.observations)
+    # function: 4 envs, spot 3 m ahead along x, robot facing +x (yaw 0), moving at 1.9 m/s
+    n = 4
+    quat = torch.tensor([[1.0, 0, 0, 0]] * n)
+    data = SimpleNamespace(root_link_pose_w=torch.cat([torch.zeros(n, 3), quat], -1),
+                           root_link_lin_vel_b=torch.tensor([[1.9, 0.0]] * n))
+    t = SimpleNamespace(_entity=SimpleNamespace(data=data), recover_xy=torch.tensor([[3.0, 0.0]] * n),
+                        pelvis_xy=lambda: torch.zeros(n, 2), shadow=None, cfg=SimpleNamespace())
+    dr = SimpleNamespace(t=t, move_ep=torch.tensor([True, True, False, False]))
+    dr.command = lambda: md.MoveDrill.command(dr)
+    env = SimpleNamespace(num_envs=n, device="cpu", action_manager=SimpleNamespace(get_term=lambda name: SimpleNamespace(drill=dr)))
+    new, old = fs.rally_fast_track_lin_vel(env), md.move_track_lin_vel(env)
+    assert torch.allclose(new[2:], old[2:])  # outside move episodes (zero here: no walk mask) identical
+    assert float(old[0]) < 0.05 and float(new[0]) > 0.75  # 1.9 m/s toward a 3-m spot: 22b pays 0.04, d1s3 0.79

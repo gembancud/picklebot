@@ -237,3 +237,36 @@ def s2_verdict(rally_pass: bool, agility_v: str) -> str:
     if rally_pass and agility_v == "MIXED":
         return "ADOPT-AGILITY-NOT-MET"
     return "PANEL"
+
+
+# D-196 d1s3 (panel round 62): the speed lines are paired with the untrained composite Z (22b on the d1 base) on the
+# same seed. Kill at +360: KILL-SLOWED if sustained p50 left or back < Z's - 0.15 m/s (motion); KILL-NO-ARRIVE if D-188
+# validity fails against Z. Endpoint: AGILE-KEPT if R_LB >= Z's - 0.03 (RL) and first-step p50 left and back <= Z's +
+# 0.05 s (motion); else SPEED-LOST.
+S3_SLOW_M_S, S3_RLB_SLACK, S3_FIRST_SLACK = 0.15, 0.03, 0.05
+
+
+def s3_speed_kill(read: dict, z_read: dict) -> tuple[str, str]:
+    a, z = agility(read), agility(z_read)
+    slow = [n for i, n in ((LEFT, "left"), (BACK, "back"))
+            if not (a["sustained_p50"][i] is not None and a["sustained_p50"][i] >= z["sustained_p50"][i] - S3_SLOW_M_S)]
+    valid = a["falls"] <= 2 * z["falls"] and a["worst_arrival"] >= 0.80 and a["fallen_censored_share"] <= 0.15
+    v = "KILL-SLOWED" if slow else "KILL-NO-ARRIVE" if not valid else "CONTINUE"
+    return v, (f"Measure60 read: sustained L/B {a['sustained_p50'][LEFT]}/{a['sustained_p50'][BACK]} vs Z "
+               f"{z['sustained_p50'][LEFT]}/{z['sustained_p50'][BACK]} (kill below Z - {S3_SLOW_M_S}); falls {a['falls']:.2f} "
+               f"(kill > 2 x Z {z['falls']:.2f}); worst untimed arrival {a['worst_arrival']:.3f} (kill < 0.80); fallen + "
+               f"censored {a['fallen_censored_share']:.3f} (kill > 0.15) -> {v}")
+
+
+def s3_agility_kept(read: dict, z_read: dict, spec_sectors: list[dict]) -> tuple[str, list[str]]:
+    a, z = agility(read), agility(z_read)
+    rlb = lambda x: sum(x["sustained_p50"][i] / spec_sectors[i]["sustained_p50"] for i in (LEFT, BACK)) / 2  # noqa: E731
+    ra, rz = rlb(a), rlb(z)
+    lines = [f"R_LB {ra:.3f} vs Z {rz:.3f} (need >= Z - {S3_RLB_SLACK})"]
+    ok = ra >= rz - S3_RLB_SLACK
+    for i, n in ((LEFT, "left"), (BACK, "back")):
+        fa, fz = a["first_step_p50"][i], z["first_step_p50"][i]
+        good = fa is not None and fz is not None and fa <= fz + S3_FIRST_SLACK
+        ok &= good
+        lines.append(f"first step {n} {fa} vs Z {fz} s (need <= Z + {S3_FIRST_SLACK})")
+    return ("AGILE-KEPT" if ok else "SPEED-LOST"), lines

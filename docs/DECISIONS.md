@@ -5301,3 +5301,53 @@ scripts/diag/d1_stage2.sh: rally-d1s2 model_31399 (seed 186, 1,200 iterations, e
 - What stayed: far fewer falls and better arrival on the movement read.
 
 **Seeds:** as D-194. Nothing new used.
+
+## D-196 (2026-11-01): d1s3 — stage 2 with the move-episode speed reward raised to 2.5 m/s
+
+Panel round 62 (mjlab/results/footwork-review.md). (d) carried 3 of 5: motion, RL, architecture.
+- Coach voted (a), then (e).
+- Experiment design voted (b), d1 + `--recover`, with a zero-shot gate.
+- Adopting the untrained composite (a) was rejected 3 to 2. Its reads are a reported reference only.
+
+**Corrections to D-195** (round 62):
+- The speed loss is real, not seed noise. 22b reads agree within 0.01 m/s across three seeds; back went 1.89 -> 1.62 -> 1.43.
+- The mechanism is not settled. RL: the 1 m/s command with a std 0.5 kernel pays 0.04 at 1.9 m/s, and the logged move reward drifted back toward 22b's. Experiment design: a speed-for-falls trade fits too; the zero-shot fell more than 22b in left (108 vs 38-46) and back (248 vs 138-170).
+- The feeder loss is mostly the stated training-time confound (22b +400: 0.628).
+- The h5f court-falls line was unpaired. From now on the parent is read on the same h5f seeds.
+
+**Decision.** scripts/diag/d1_stage3.sh. One change against stage 2 (D-194): the move-episode speed reward.
+
+Task Picklebot-Rally22b-FastMove-G1 is 22b's task with move_track_lin_vel replaced by `rally_fast_track_lin_vel`:
+- **In move episodes:** MoveDrill's command with the cap raised 1.0 -> 2.5 m/s (gain scaled, braking radius unchanged, heading still to the net), and the kernel std 0.5 x max(1, |v_cmd|).
+- **Elsewhere in the walk mask** (shadow-swing episodes): 22b's exactly.
+- **Unchanged:** the drill object, spot sampling, arrival and ball episodes. FastMoveDrill was not used: it re-implements spot sampling and has never run in pair mode.
+- **Tests** (tests/test_footwork_specialist.py): the config equals 22b's except that one function; the function equals 22b's outside move episodes; at 1.9 m/s toward a 3-m spot it pays 0.79 where 22b pays 0.04.
+
+**Run.** Everything else as stage 2:
+- From 22b model_30200 on the d1 base (model_32854), 1,200 iterations to model_31399.
+- Constant 1e-4, KL 0.05, std floor 0.1, warm-up 0, 12,288 envs.
+- Training seed 189, smoke 190. The smoke uses stage 2's checks plus the new reward present in params.
+
+**Pre-training reads on fresh seeds**, two arms (P = 22b on its own base, Z = 22b on the d1 base, untrained):
+- pairs 4220283, direction split 4220284, Measure60 4220285, h5f battery 4220286-4220301;
+- Z on Measure60 at 4220302 (the +360 kill reference).
+
+**Kill at +360:**
+- KILL-UNSTABLE / KILL-NO-HIT: D-194's training-log lines, unchanged.
+- From model_30560 on Measure60, dev 4220302, against Z on the same seed:
+  - KILL-SLOWED if sustained left or back < Z - 0.15 m/s;
+  - KILL-NO-ARRIVE if D-188 validity fails against Z.
+
+**Endpoint** (the child on 4220283-4220301):
+- **Rally:** d1s2-gate against P, lines unchanged (court falls <= 0.04 absolute, with P's paired h5f falls reported).
+- **Agility:** AGILE-KEPT if R_LB >= Z - 0.03 and first-step left and back <= Z + 0.05 s; otherwise SPEED-LOST.
+- **Reported:** agility against 22b; the stage-2 child and 22b model_30600 on the same pairs, direction and Measure60 seeds; r19-gate and target against run 14 (expected FAIL).
+
+**Verdicts:**
+- **D1S3-PASS:** rally pass + AGILE-KEPT.
+- **SPEED-KEPT:** AGILE-KEPT, rally not met.
+- **SPEED-LOST:** to the panel.
+
+**Stated before launch (RL).** A rally gain is not expected: the zero-shot showed the rally does not use the extra speed as read. This run tests whether rally training can keep the agility the user asked for. The target lever is (e), the first handed balls, next on whichever base keeps the speed.
+
+**Seeds:** dev 4220283-4220302; training 189-190.
