@@ -5560,3 +5560,40 @@ The same lines on the nearest windows with data (results/d1s4-kill-aligned.txt),
 The resume adds an RNG break at 31760 against an uninterrupted run; this is stated, and the control arm (if run) is uninterrupted. The false-kill summary is kept as results/d1s4-summary.falsekill.txt and its marker as artifacts/train/d1s4.done.falsekill.
 
 **Lesson, coded later:** the kill windows must be built from rows that exist, i.e. the nearest rows at or after the window edges, with a check that both windows hold at least 1,000 events.
+
+## D-200 (2026-11-02): d1s4 reads NO-DOSE - the readiness reward moved the hand-offs, not the feeder ball
+
+Run: scripts/diag/d1_stage4.sh + d1_stage4b.sh. The endpoint is rally-d1s4b model_32598. Training was resumed at 31760 after the false +360 kill (D-199 addendum 2). Summary: mjlab/results/d1s4-summary.txt.
+
+**Training.**
+- Every +360 line read CONTINUE on aligned windows.
+- The ready per-event mean rose from 0.32 to about 0.375.
+
+**Endpoint**, paired against the parent (the d1s3 child) on dev 4220306-4220327:
+
+| | parent (d1s3 child) | child | note |
+|---|---|---|---|
+| feeder legal | 0.629 | 0.596 (low 0.579) | F-UP not met; ABS-F not met |
+| P(5+) open | 0.387 | 0.384 | |
+| partner legal | 0.992 | 0.993 | |
+| left + back feeder contact | 0.437 | 0.378 | guard -5.9 broken; back 0.643 -> 0.540; reach_deep -10.7 |
+| refeed 3 s feeder | 0.756 | 0.729 | the child is worse even when given time to set |
+| Measure60 R_LB | 0.824 | 0.852 | AGILE-KEPT; first steps L/B 1.41 / 1.27 s |
+| k >= 3 legal | 0.960 | 0.966 | K3-KEPT |
+| h5f court falls | 0.062 | 0.056 | |
+| feeder balls started | 2,821 | 2,724 | |
+
+**DOSE, from the LR-0 feeder read on dev 4220326.**
+- The k = 0 pelvis-speed p50 at the fire is 0.291 against the parent's 0.296; the line needed <= parent - 0.05. Not met.
+- Reported:
+  - recovery distance p50 at the fire is 0.998 m against 0.866 m (worse);
+  - k = 0 contact is 0.766 against 0.790.
+
+**VERDICT: NO-DOSE** (precedence: dose before F-UP). The control arm was not run, because the child was not F-UP.
+
+**Reading, for panel round 65.**
+- The term pays at feeder fires and at partner contacts. Contacts outnumber fires about 4:1 (D-171 share), so the rise in its mean came from the hand-offs.
+- The receiver's state at the feeder fire did not change. Its distance to the recovery spot got worse, and feeder legal and left / back reach fell.
+- Rule (D-199): NO-DOSE goes to the panel and does not automatically mean a higher weight.
+
+**Seeds:** as D-199.

@@ -1,0 +1,27 @@
+parent artifacts/train/logs/picklebot_return_stand/2026-11-01_12-07-09_rally-d1s3/model_31399.pt on the d1 base /mnt/f/dev/picklebot-mjlab/mjlab/artifacts/train/logs/picklebot_return_stand/2026-10-31_18-24-20_s5c-d1-fw1bS/model_32854.pt
+smoke exit 0 ok
+smoke no traceback ok
+smoke falls per 1,000 env-seconds 2.607 ok
+smoke std min 0.1063 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + ready terms True; ready events paid 3815.0 -> ok
+resumed training: {"run": "rally-d1s4b", "exit_code": 0, "finished": "2026-11-02T01:45:33+08:00"}
+endpoint artifacts/train/logs/picklebot_return_stand/2026-11-02_00-03-46_rally-d1s4b/model_32598.pt
+guard: backhand contact 0.5707 < 22b 0.6750 - 0.05 (KILL)
+guard: fast contact 0.4535 < 22b 0.5138 - 0.05 (KILL)
+guard: reach_deep contact 0.0311 < 22b 0.1384 - 0.05 (KILL)
+guard: worst family contact vs 22b -10.7 (reach_deep; kill below -5); cross_forehand 0.7414 vs 22b 0.7487 (kill below -3)
+guard: left + back feeder contact 0.3780 vs 22b 0.4366 (-5.9; kill below -5)
+d1 stage-2 run verdict: P(5+) open 0.3839 [0.3658, 0.4023] (>= 22b 0.3873 + 0.02, low above 0.3873); partner legal 0.9934 (>= 0.9767); feeder legal 0.5958 (>= 0.6185); gap 0.7 (<= 3); falls 0.0564 (<= 0.04): not met
+F-UP vs parent: feeder legal 0.5958 (low 0.5790) vs 0.6285: >= +0.05 and low above -> not
+ABS-F: feeder legal 0.5958 >= 0.80 -> False
+AGILE-KEPT vs parent: AGILE-KEPT; R_LB 0.852 vs Z 0.824 (need >= Z - 0.03); first step left 1.4068 vs Z 1.4163 s (need <= Z + 0.05); first step back 1.2718 vs Z 1.2969 s (need <= Z + 0.05)
+DOSE: k=0 pelvis speed p50 at the fire 0.2908 vs parent 0.2956 (need <= parent - 0.05) -> False; reported: recover dist p50 0.9984 vs 0.8661, k=0 contact 0.7664 vs 0.7898, band contact 0.8804 vs 0.8847
+K3-KEPT: k>=3 legal 0.9663 vs parent 0.96 (need >= parent - 0.01) -> True
+parent: P(5+) open 0.3873 [0.3695, 0.4055]; feeder 0.6285; partner 0.9917; feeder balls started 2821
+child: P(5+) open 0.3839 [0.3658, 0.4023]; feeder 0.5958; partner 0.9934; feeder balls started 2724
+22b (reported): P(5+) open 0.3903 [0.3726, 0.4084]; feeder 0.6457; partner 0.9902; feeder balls started 2871
+parent refeed 3 s: P(5+) open 0.5527 [0.5308, 0.5744]; feeder 0.7562; partner 0.9945; feeder balls started 2003
+child refeed 3 s: P(5+) open 0.5487 [0.5263, 0.571]; feeder 0.7294; partner 0.9960; feeder balls started 1900
+h5f court falls parent: 0.062
+h5f court falls child: 0.0564
+VERDICT: NO-DOSE
