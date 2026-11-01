@@ -5531,3 +5531,12 @@ Round 64 also completes the D-198 result table: yaw p50 17.3 deg (failure by ter
 **Deferred** (not coded, stated): motion's 0.5-s post-fire displacement (FROZEN) and coach's time-to-first-step after the fire. The Measure60 first step is reported instead.
 
 **Seeds:** dev 4220306-4220327; training 191-192.
+
+### D-199 addendum (2026-11-01): kill-watcher offset fixed before +360
+
+- **Bug.** The inline watcher's KILL-NO-DOSE and KILL-EVENTS windows assumed the env step counter starts at 0. On a resume it continues from the resumed iteration x 24: the smoke's ready log reads step 754,560, and d1s3's pair log starts at 727,200. Both windows would have found no events, and KILL-NO-DOSE would have fired falsely.
+- **Fix.** It was caught from the smoke log, before +360, with no line or threshold changed:
+  - picklebot_mj/d1_rule.py windows now take the resume iteration (child 31399; parent d1s3 run 30200);
+  - tests/test_d1_rule.py adds a test that reproduces the bug and checks the fix;
+  - the running watcher was replaced, without touching training, by scripts/diag/d1s4_watch.py, which has the same lines and writes the same results/d1s4-kill.txt.
+- **Smoke result** (all 5 ok): falls 2.61; std min 0.106; 3,815 ready events paid; mean value 0.28 per event; 42 young events skipped.

@@ -107,3 +107,15 @@ def test_stage4_dose_events_and_verdicts():
     assert v(False, True, False, True, True, True, True, True, True) == "NO-DOSE"
     assert v(False, True, True, False, None, False, False, True, True) == "READY-FAIL"
     assert v(True, True, True, True, True, True, True, True, True) == "KILL"
+
+
+def test_stage4_windows_follow_the_resumed_step_counter():
+    start = 31399
+    off = start * 24
+    rows = [{"step": off + s, "ready": [0.1 * n, n, 0, 0.01 * n]} for s, n in ((240, 100), (480, 200))]
+    rows += [{"step": off + 340 * 24, "ready": [20.0, 200, 0, 2.0]}, {"step": off + 360 * 24, "ready": [50.0, 300, 0, 11.0]}]
+    assert dr.s4_dose_kill(rows, start)[0] == "CONTINUE"
+    assert dr.s4_dose_kill(rows)[0] == "KILL-NO-DOSE"  # the unshifted windows find no events: the bug this guards
+    cp = [{"step": off + 100 * 24, "feeder": 0}, {"step": off + 300 * 24, "feeder": 1000}]
+    pp = [{"step": 30200 * 24 + 100 * 24, "feeder": 0}, {"step": 30200 * 24 + 300 * 24, "feeder": 1000}]
+    assert dr.s4_events_kill(cp, pp, start, 30200)[0] == "CONTINUE"

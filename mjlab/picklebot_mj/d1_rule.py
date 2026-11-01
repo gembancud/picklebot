@@ -286,10 +286,11 @@ def s3_agility_kept(read: dict, z_read: dict, spec_sectors: list[dict]) -> tuple
 STEPS_PER_IT = 24
 
 
-def _ready_window(rows: list[dict], it_lo: int, it_hi: int) -> tuple[float, float, int]:
-    """(mean, SE, events) of the per-event ready value between iterations it_lo-1 and it_hi (cumulative rows)."""
+def _ready_window(rows: list[dict], it_lo: int, it_hi: int, start_it: int = 0) -> tuple[float, float, int]:
+    """(mean, SE, events) of the per-event ready value between iterations it_lo-1 and it_hi after the resume at start_it
+    (cumulative rows; the env step counter continues from start_it x STEPS_PER_IT on a resume)."""
     def at(it):
-        s = it * STEPS_PER_IT
+        s = (start_it + it) * STEPS_PER_IT
         prev = [r for r in rows if r["step"] <= s]
         return prev[-1]["ready"] if prev else [0.0, 0.0, 0.0, 0.0]
     a, b = at(it_lo - 1), at(it_hi)
@@ -301,18 +302,18 @@ def _ready_window(rows: list[dict], it_lo: int, it_hi: int) -> tuple[float, floa
     return mean, (var / n) ** 0.5, int(n)
 
 
-def s4_dose_kill(rows: list[dict]) -> tuple[str, str]:
-    m0, se0, n0 = _ready_window(rows, 1, 20)
-    m1, _, n1 = _ready_window(rows, 341, 360)
+def s4_dose_kill(rows: list[dict], start_it: int = 0) -> tuple[str, str]:
+    m0, se0, n0 = _ready_window(rows, 1, 20, start_it)
+    m1, _, n1 = _ready_window(rows, 341, 360, start_it)
     ok = n0 > 0 and n1 > 0 and m1 > m0 + 2 * se0
     v = "CONTINUE" if ok else "KILL-NO-DOSE"
     return v, (f"ready per-event mean +1-20 {m0:.4f} (SE {se0:.4f}, n {n0}) -> +341-360 {m1:.4f} (n {n1}); "
                f"kill unless above +1-20 + 2 SE = {m0 + 2 * se0:.4f} -> {v}")
 
 
-def _feeder_rate(pair_rows: list[dict], it_lo: int, it_hi: int) -> float:
+def _feeder_rate(pair_rows: list[dict], it_lo: int, it_hi: int, start_it: int = 0) -> float:
     def at(it):
-        s = it * STEPS_PER_IT
+        s = (start_it + it) * STEPS_PER_IT
         prev = [r for r in pair_rows if r["step"] <= s]
         return prev[-1] if prev else None
     a, b = at(it_lo), at(it_hi)
@@ -321,8 +322,10 @@ def _feeder_rate(pair_rows: list[dict], it_lo: int, it_hi: int) -> float:
     return (b["feeder"] - a["feeder"]) / (b["step"] - a["step"])
 
 
-def s4_events_kill(child_pairs: list[dict], parent_pairs: list[dict]) -> tuple[str, str]:
-    c, p = _feeder_rate(child_pairs, 100, 300), _feeder_rate(parent_pairs, 100, 300)
+def s4_events_kill(child_pairs: list[dict], parent_pairs: list[dict], child_start: int = 0,
+                   parent_start: int = 0) -> tuple[str, str]:
+    c = _feeder_rate(child_pairs, 100, 300, child_start)
+    p = _feeder_rate(parent_pairs, 100, 300, parent_start)
     ok = c == c and p == p and c <= 1.10 * p
     v = "CONTINUE" if ok else "KILL-EVENTS"
     return v, f"feeder fires per env step, iterations 100-300: child {c:.4f} vs parent {p:.4f} (kill > 1.10 x) -> {v}"
