@@ -5540,3 +5540,23 @@ Round 64 also completes the D-198 result table: yaw p50 17.3 deg (failure by ter
   - tests/test_d1_rule.py adds a test that reproduces the bug and checks the fix;
   - the running watcher was replaced, without touching training, by scripts/diag/d1s4_watch.py, which has the same lines and writes the same results/d1s4-kill.txt.
 - **Smoke result** (all 5 ok): falls 2.61; std min 0.106; 3,815 ready events paid; mean value 0.28 per event; 42 young events skipped.
+
+### D-199 addendum 2 (2026-11-01): a false +360 kill (empty windows), lines re-read on aligned windows, run resumed
+
+The inline watcher's KILL-NO-DOSE and KILL-EVENTS fired on empty windows ("nan"), not on measured values. rally-d1s4 was stopped at iteration 31763.
+- The ready log's first row is at +21, then one every 10 iterations, so the +1-20 window had no rows.
+- The pair log writes every 100 iterations from 31500, so the child's +100 edge (step 31499 x 24) preceded its first row.
+
+The same lines on the nearest windows with data (results/d1s4-kill-aligned.txt), with no threshold changed:
+- **Training log:** falls 1.30 against the 3.14 kill line; legal 0.827 against the 0.705 kill line -> CONTINUE.
+- **Ready per-event mean:** +21-41 0.322 (SE 0.002) -> +341-361 0.367, above 0.327 -> CONTINUE.
+- **Feeder fires per env step:** child +101-301 11.71 against parent +100-300 12.42 (kill above 13.66) -> CONTINUE.
+
+**Resume** (scripts/diag/d1_stage4b.sh):
+1. The remaining +360 line, KILL-SLOWED / KILL-NO-ARRIVE, is read on model_31760 (dev 4220309) against the parent.
+2. If it reads CONTINUE, training resumes from model_31760 for 839 iterations to the planned endpoint model_32598, with the same settings and training seed 191 (run rally-d1s4b).
+3. d1_stage4.sh's endpoint section follows unchanged.
+
+The resume adds an RNG break at 31760 against an uninterrupted run; this is stated, and the control arm (if run) is uninterrupted. The false-kill summary is kept as results/d1s4-summary.falsekill.txt and its marker as artifacts/train/d1s4.done.falsekill.
+
+**Lesson, coded later:** the kill windows must be built from rows that exist, i.e. the nearest rows at or after the window edges, with a check that both windows hold at least 1,000 events.

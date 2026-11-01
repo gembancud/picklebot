@@ -1,0 +1,12 @@
+parent artifacts/train/logs/picklebot_return_stand/2026-11-01_12-07-09_rally-d1s3/model_31399.pt on the d1 base /mnt/f/dev/picklebot-mjlab/mjlab/artifacts/train/logs/picklebot_return_stand/2026-10-31_18-24-20_s5c-d1-fw1bS/model_32854.pt
+smoke exit 0 ok
+smoke no traceback ok
+smoke falls per 1,000 env-seconds 2.607 ok
+smoke std min 0.1063 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + ready terms True; ready events paid 3815.0 -> ok
+training: {"run": "rally-d1s4", "exit_code": 143, "finished": "2026-11-01T23:42:58+08:00"}
+nohup: ignoring input
++341-360: falls per 1,000 env-s 1.30 (kill > 2 x 22b 1.57); legal_return 0.8274 (kill < 22b 0.7549 - 0.05) -> CONTINUE; reported +241-260: falls 1.40, legal_return 0.8884
+ready per-event mean +1-20 nan (SE nan, n 0) -> +341-360 0.3540 (n 25576); kill unless above +1-20 + 2 SE = nan -> KILL-NO-DOSE
+feeder fires per env step, iterations 100-300: child nan vs parent 12.4173 (kill > 1.10 x) -> KILL-EVENTS
+VERDICT: KILL (KILL-NO-DOSE)
