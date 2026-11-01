@@ -53,6 +53,11 @@ SPLIT_VARS = (
 )
 SHOT_VARS = ("spin", "net_clear", "bounce_depth", "angle")
 STATE_VARS = ("pelvis_speed", "recover_dist", "yaw_err", "idle")
+# D-198 (panel round 63, opt-in feeder=True, needs split=True): the feeder ball (k = 0) as its own tally. The receiver's
+# state is taken at the feeder fire (pelvis speed, distance to recover_xy, |yaw|, and idle = time since its own last
+# paddle contact or episode start, read before the rally-start reset); the ball's state (for the predicted interception)
+# one physics step later, once _refeed has installed it. Outcome as the handed balls. Its counters are separate, so the
+# k >= 1 cells are exactly those of feeder=False.
 BOUNCE_Z = 0.5  # m: a vz sign change (down -> up) below this height, before the receiver's contact, is the bounce
 
 
@@ -70,7 +75,7 @@ def direction_class(rel_xy_heading: torch.Tensor) -> torch.Tensor:
 
 
 class BallIndexTally:
-    def __init__(self, term, env, predictor=None, batch: int = PRED_BATCH, split: bool = False):
+    def __init__(self, term, env, predictor=None, batch: int = PRED_BATCH, split: bool = False, feeder: bool = False):
         self.t, self.env = term, env
         pc = term.pairs
         assert pc is not None, "the ball-index tally hooks PairCourts.step (pair mode)"
@@ -108,6 +113,19 @@ class BallIndexTally:
             self.shist = {name: zl(sc, nb + 1) for name, _, _, nb in SPLIT_VARS}
             self.shist_legal = {name: zl(sc, nb + 1) for name, _, _, nb in SPLIT_VARS}
             self._vi = {name: i for i, (name, *_) in enumerate(SPLIT_VARS)}
+        self.feeder = bool(feeder)
+        if self.feeder:
+            assert self.split, "the feeder tally needs split=True (its idle clock)"
+            self.is0, self.f0pend = b(), b()
+            self.f = {k: zl(N_GROUPS * N_DIRS) for k in ("balls", "contact", "legal", "fell", "early")}
+            self.fhist = {k: zl(N_GROUPS * N_DIRS, DIST_BINS) for k in ("dist", "dist_legal", "dist_contact")}
+            self.dist_contact = zl(cells, DIST_BINS)  # k >= 1 contact by distance (the feeder rule's matched band)
+            self.fgk = {k: zl(N_GROUPS) for k in ("received", "void", "censored")}
+            self.fsv = torch.full((n, len(STATE_VARS)), float("nan"), device=dev)
+            fsc = N_GROUPS * DIST_BINS
+            nbs = {name: nb for name, _, _, nb in SPLIT_VARS}
+            self.fshist = {name: zl(fsc, nbs[name] + 1) for name in STATE_VARS}
+            self.fshist_legal = {name: zl(fsc, nbs[name] + 1) for name in STATE_VARS}
         self._orig_step, self._orig_reset = pc.step, pc.on_reset
         pc.step = self.step
         pc.on_reset = self.on_reset
@@ -126,6 +144,10 @@ class BallIndexTally:
     def _book(self, m: torch.Tensor, contact: torch.Tensor, legal: torch.Tensor, fell: torch.Tensor,
               early: torch.Tensor | None = None) -> None:
         """Count the open balls ending in mask m with these outcomes (per env tensors)."""
+        full = m
+        if self.feeder:
+            self._book0(m & self.is0, contact, legal, fell, early)
+            m = m & ~self.is0
         cell = self._cell()
         ml = m.long()
         self.c["balls"].index_add_(0, cell, ml)
@@ -142,6 +164,8 @@ class BallIndexTally:
         for name, bins, nb in (("speed", sb, SPEED_BINS), ("hspeed", hb, SPEED_BINS), ("dist", db, DIST_BINS)):
             self.hist[name].view(-1).index_add_(0, cell * nb + bins, ml)
             self.hist[name + "_legal"].view(-1).index_add_(0, cell * nb + bins, lg)
+        if self.feeder:
+            self.dist_contact.view(-1).index_add_(0, cell * DIST_BINS + db, (m & contact).long())
         if self.split:
             sc = self._gk() * DIST_BINS + db
             for i, (name, lo, w, nb) in enumerate(SPLIT_VARS):
@@ -150,8 +174,48 @@ class BallIndexTally:
                                  ((v.nan_to_num(lo) - lo) / w).floor().clamp(0, nb - 1).long())
                 self.shist[name].view(-1).index_add_(0, sc * (nb + 1) + vb, ml)
                 self.shist_legal[name].view(-1).index_add_(0, sc * (nb + 1) + vb, lg)
-        self.open &= ~m
-        self.pend &= ~m
+        self.open &= ~full
+        self.pend &= ~full
+        if self.feeder:
+            self.is0 &= ~full
+
+    def _book0(self, m, contact, legal, fell, early=None) -> None:
+        """The feeder-ball (k = 0) counters for the open feeder balls ending in mask m."""
+        cell = self._group() * N_DIRS + self.dirc
+        ml, lg = m.long(), (m & legal).long()
+        self.f["balls"].index_add_(0, cell, ml)
+        self.f["contact"].index_add_(0, cell, (m & contact).long())
+        self.f["legal"].index_add_(0, cell, lg)
+        self.f["fell"].index_add_(0, cell, (m & fell).long())
+        if early is not None:
+            self.f["early"].index_add_(0, cell, (m & early).long())
+        db = (self.dist.nan_to_num(1e3) / DIST_BIN).clamp(0, DIST_BINS - 1).long()
+        self.fhist["dist"].view(-1).index_add_(0, cell * DIST_BINS + db, ml)
+        self.fhist["dist_legal"].view(-1).index_add_(0, cell * DIST_BINS + db, lg)
+        self.fhist["dist_contact"].view(-1).index_add_(0, cell * DIST_BINS + db, (m & contact).long())
+        sc = self._group() * DIST_BINS + db
+        for j, name in enumerate(STATE_VARS):
+            _, lo, w, nb = SPLIT_VARS[self._vi[name]]
+            v = self.fsv[:, j]
+            vb = torch.where(v.isnan(), torch.full_like(db, nb), ((v.nan_to_num(lo) - lo) / w).floor().clamp(0, nb - 1).long())
+            self.fshist[name].view(-1).index_add_(0, sc * (nb + 1) + vb, ml)
+            self.fshist_legal[name].view(-1).index_add_(0, sc * (nb + 1) + vb, lg)
+
+    def _open0(self) -> None:
+        """Per physics step: the feeder balls fired last step are installed now: open them with their state."""
+        t, m = self.t, self.f0pend
+        rm = m.unsqueeze(-1)
+        st = torch.cat([t.ball.pos, t.ball.vel, t.ball.spin], -1)
+        self.st = torch.where(rm, st, self.st)
+        self.spd = torch.where(m, st[:, 3:6].norm(dim=-1), self.spd)
+        self.hspd = torch.where(m, st[:, 3:5].norm(dim=-1), self.hspd)
+        self.dirc = torch.where(m, torch.full_like(self.dirc, N_DIRS - 1), self.dirc)
+        self.dist = torch.where(m, torch.full_like(self.dist, 1e3), self.dist)
+        self.open |= m
+        self.pend |= m
+        self.is0 |= m
+        self.fgk["received"].index_add_(0, self._group(), m.long())
+        self.f0pend = self.f0pend & ~m
 
     def _predict_step(self) -> None:
         """Once per control step: a fixed batch of pending hand-offs (due first) gets its predicted interception."""
@@ -225,6 +289,8 @@ class BallIndexTally:
         self._calls += 1
         if self.split:
             self._split_track(contact, dt)
+        if self.feeder:
+            self._open0()
         live0 = ~pc.court_dead.repeat(2)
         o = over
         if contact is not None:  # as pairs.py counts them (D-135): the hitter's fault is not the receiver's miss
@@ -232,7 +298,12 @@ class BallIndexTally:
             o = over & ~(w & ~legal & (over & ~legal)[pc.partner])
         end = over & self.open
         counted = end & o & live0
-        self.gk["void"].index_add_(0, self._gk(), (end & ~counted).long())
+        if self.feeder:
+            self.fgk["void"].index_add_(0, self._group(), (end & ~counted & self.is0).long())
+            self.gk["void"].index_add_(0, self._gk(), (end & ~counted & ~self.is0).long())
+            self.is0 &= ~(end & ~counted)
+        else:
+            self.gk["void"].index_add_(0, self._gk(), (end & ~counted).long())
         self.open &= ~(end & ~counted)
         self.pend &= self.open
         self._book(counted, t.hit_done, legal, fell)
@@ -242,6 +313,8 @@ class BallIndexTally:
         one = torch.ones_like(early)
         self._book(early, one, one, torch.zeros_like(early), early=one)
         self.open &= ~(fire | recv)  # defensive: a new feed replaces whatever was open
+        if self.feeder:
+            self.is0 &= ~(fire | recv)
         # rally index: hand-offs on the court since its feeder ball
         cf, cr = pc.court(fire), pc.court(recv)
         self.nh = torch.where(cf, torch.zeros_like(self.nh), self.nh) + cr.long()
@@ -265,6 +338,15 @@ class BallIndexTally:
         self.open |= r
         self.pend |= r
         self.gk["received"].index_add_(0, self._gk(), r.long())
+        if self.feeder:  # the feeder ball's receiver at the fire (idle read before _split_handoff restarts it)
+            pv = {"pelvis_speed": data.root_link_lin_vel_w[:, :2].norm(dim=-1),
+                  "recover_dist": (t.pelvis_xy() - t.recover_xy).norm(dim=-1),
+                  "yaw_err": torch.atan2(s, c).abs() * (180.0 / math.pi), "idle": self.idle}
+            fm = fire.unsqueeze(-1)
+            self.fsv = torch.where(fm, torch.stack([pv[k] for k in STATE_VARS], -1), self.fsv)
+            self.pel0 = torch.where(fm, t.pelvis_xy(), self.pel0)
+            self.c0, self.s0 = torch.where(fire, c, self.c0), torch.where(fire, s, self.s0)
+            self.f0pend |= fire
         if self.split:
             self._split_handoff(recv, handed, fire)
         return fire, recv
@@ -277,8 +359,14 @@ class BallIndexTally:
         mo = m & self.open
         live = ~self.t.pairs.court_dead.repeat(2)
         f = mo & live & (fell_open if fell_open is not None else torch.zeros_like(mo))
-        self.gk["void"].index_add_(0, self._gk(), (mo & ~live).long())  # the court's rally had already ended
-        self.gk["censored"].index_add_(0, self._gk(), (mo & live & ~f).long())
+        if self.feeder:
+            for k, mm in (("void", mo & ~live), ("censored", mo & live & ~f)):
+                self.gk[k].index_add_(0, self._gk(), (mm & ~self.is0).long())
+                self.fgk[k].index_add_(0, self._group(), (mm & self.is0).long())
+            self.f0pend &= ~m
+        else:
+            self.gk["void"].index_add_(0, self._gk(), (mo & ~live).long())  # the court's rally had already ended
+            self.gk["censored"].index_add_(0, self._gk(), (mo & live & ~f).long())
         self._book(f, self.t.hit_done, torch.zeros_like(f), f)
         self.open &= ~m
         self.pend &= ~m
@@ -295,9 +383,17 @@ class BallIndexTally:
         if self.split:
             out["split"] = {k: v.tolist() for k, v in self.shist.items()}
             out["split_legal"] = {k: v.tolist() for k, v in self.shist_legal.items()}
+        if self.feeder:
+            out["dist_contact"] = self.dist_contact.tolist()
+            out["feeder"] = {**{k: v.tolist() for k, v in self.f.items()}, **{k: v.tolist() for k, v in self.fhist.items()},
+                             **{k: v.tolist() for k, v in self.fgk.items()},
+                             "split": {k: v.tolist() for k, v in self.fshist.items()},
+                             "split_legal": {k: v.tolist() for k, v in self.fshist_legal.items()}}
         return out
 
 
 META = {"groups": ["pair", "drill"], "k_bins": ["1", "2", "3+"], "directions": list(DIR_NAMES),
         "speed_bin": SPEED_BIN, "dist_bin": DIST_BIN, "cell": "(group * 3 + k_bin) * 5 + direction",
         "split_vars": [list(v) for v in SPLIT_VARS], "split_cell": "(group * 3 + k_bin) * 40 + dist_bin; last var bin missing"}
+META_FEEDER = {"cell": "group * 5 + direction", "split_cell": "group * 40 + dist_bin; last var bin missing",
+               "state_vars": list(STATE_VARS)}

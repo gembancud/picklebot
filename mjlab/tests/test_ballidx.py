@@ -378,3 +378,49 @@ def test_split_task_differs_from_the_ballidx_task_only_in_the_split_flag():
         assert [k for k in a.actions if k != "ball" and a.actions[k] != s.actions[k]] == []
         assert list(a.rewards) == list(s.rewards) and a.episode_length_s == s.episode_length_s
     assert load_runner_cls(ag.TASK_AGILITY_BALLIDX_SPLIT) is load_runner_cls(ag.SRC_22B)
+
+
+def _feeder_script(feeder: bool):
+    """A scripted pair-court sequence: a feeder ball to env 0 (contacted, legal), its return handed to env 4 (missed),
+    then a second rally's feeder ball to env 4 (missed, no contact). Returns the tally."""
+    from picklebot_mj.tasks.ball_index import BallIndexTally
+    n = 8
+    t = _Term(n)
+    data = t._entity.data
+    data.root_link_lin_vel_w = torch.zeros(n, 3)
+    t.recover_xy = torch.zeros(n, 2)
+    tally = BallIndexTally(t, t._env, predictor=lambda p, v, w: (p.clone(), torch.ones(p.shape[0], dtype=torch.bool)),
+                           batch=8, split=True, feeder=feeder)
+    data.root_link_lin_vel_w[0, :2] = torch.tensor([0.6, 0.8])  # env 0 moving at 1.0 m/s at the fire
+    for _ in range(4):
+        _step(t)
+    _step(t, fire=(0,))
+    t.ball.pos[0] = torch.tensor([-1.0, 0.0, 1.0])  # _refeed installs the feeder ball (1 m in front of env 0's pelvis)
+    for _ in range(4):  # the interception is predicted once per control step (decimation 4)
+        _step(t)
+    t.hit_done[0] = True
+    _step(t, contact=(0,), recv=(4,))  # env 0 returns it; the contact hand-off gives env 4 the partner's ball
+    _step(t, over=(0,), legal=(0,))
+    _step(t, over=(4,))  # env 4 misses the handed ball
+    t.hit_done[:] = False
+    _step(t, fire=(4,))
+    t.ball.pos[4] = torch.tensor([-2.0, 0.0, 1.0])
+    _step(t)
+    _step(t, over=(4,))  # env 4 misses the feeder ball without contact
+    return tally
+
+
+def test_feeder_tally_leaves_k1_counters_unchanged_and_counts_feeder_balls():
+    a, b = _feeder_script(False).counters(), _feeder_script(True).counters()
+    fb = b.pop("feeder")
+    dc = b.pop("dist_contact")
+    assert sum(map(sum, dc)) == 0  # the handed ball (env 4) was missed without contact
+    assert sum(map(sum, fb["dist_contact"])) == 1
+    assert a == b  # the k >= 1 cells, histograms and split counters are exactly those without the feeder tally
+    assert sum(fb["balls"]) == 2 and sum(fb["contact"]) == 1 and sum(fb["legal"]) == 1 and sum(fb["received"]) == 2
+    # env 0's state at the fire: pelvis speed 1.0 m/s -> bin 10 of pelvis_speed; distance 1 m -> dist bin 4
+    from picklebot_mj.tasks.ball_index import META_FEEDER
+    assert META_FEEDER["state_vars"][0] == "pelvis_speed"
+    row = 0 * 40 + 4
+    assert fb["split"]["pelvis_speed"][row][10] == 1 and fb["split_legal"]["pelvis_speed"][row][10] == 1
+    assert sum(sum(r) for r in fb["split"]["idle"]) == 2

@@ -352,3 +352,40 @@ Brief: footwork-round62-brief.md.
 - AGILE-KEPT if R_LB >= Z - 0.03 and first step <= Z + 0.05.
 
 **Decision:** D-196.
+
+## Round 63 (2026-11-01): d1s3 reads SPEED-KEPT; the next step toward the target
+
+Brief: footwork-round63-brief.md.
+
+**Chair's correction, sent mid-round** (from the coach, confirmed in rally-target.md): the first good shot is the return of the feeder ball.
+- So P(5+) <= feeder legal, which is about 0.65 for every player.
+- The feeder ball is the first gate and a hard ceiling below 0.80, not "the other half".
+- Motion, RL, experiment design and architecture voted after the correction (motion and experiment design revised).
+
+**Correction checks**
+- **D-197 under-reports the guards** (experiment design, architecture). Three family guards broke against 22b: easy_forehand -6.4, backhand -5.6 and deep -6.9.
+- **"No worse at rallies" overstates it** (experiment design). Feeder -1.7, court falls +0.55 against 22b.
+- **The brief quoted ballidx52 selectively** (experiment design, architecture, RL, motion):
+  - Only pelvis_speed fired.
+  - k = 1 receivers are slower than k >= 3 receivers (p50 0.157 vs 0.382).
+  - The stillest k = 1 tercile still fails 0.086, against k >= 3's fastest at 0.042.
+  - State explains about 9 % of k = 1 failures.
+  - At k = 1 the receiver has not hit yet.
+  - D-177's spot_progress paid moving, not being set.
+- **Motion:** D-171's manipulation on 22b, refeed 3 s against 0.5 s: feeder 0.778 vs 0.656, P(5+) 0.548 vs 0.390. Readiness at rally start matters.
+- **Experiment design, from existing JSONs:** feeder legal is the same for players whose agility differs widely (0.649-0.654). 76 % of feeder failures are no-contact; easy_forehand contact is only 0.72-0.75, against k >= 3 contact of 0.968.
+- **RL:** the feeder share of training balls fell 0.29 -> 0.15 (D-171), so feeder skill is being forgotten.
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| Coach | a read: ball-index split plus a feeder-failure split |
+| Motion (revised) | (e3) `ready_at_handoff` at fire or receive, feeder-primary, with an (e1) baseline arm |
+| RL | (e4) `pair_rally_cap` = 5 on the d1s3 task |
+| Experiment design (revised) | (e4) as a read first: a feeder-ball split (a k = 0 bin), arms C / P / C2, FEED-STATE / FEED-SHOT / FEED-OTHER |
+| Architecture | (e4) refeed read + (e1), about 1 GPU-h; then (e3) with fire or receive if readiness dominates |
+
+**A read first carried 3 of 5** (coach, experiment design, architecture). Its lines are experiment design's (the tie-breaker), plus architecture's refeed 0.5 s vs 3 s read, reported. Parent from here on: the d1s3 child (4 of 5).
+
+**Decision:** D-198.

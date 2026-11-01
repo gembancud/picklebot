@@ -59,6 +59,7 @@ class AgilityBallActionCfg(BallPhysicsActionCfg):
     direction_tally: bool = False  # feeder-ball outcomes by direction (pair mode)
     ball_index_tally: bool = False  # handed-ball outcomes by rally index, speed, direction, distance (pair mode)
     ball_index_split: bool = False  # + shot-quality and receiver-state variables by k and distance (needs the tally)
+    ball_index_feeder: bool = False  # D-198: + the feeder ball (k = 0) as its own tally (needs the split)
     pair_idle_recovery: bool = False  # D-177: spot_progress also while this env has no ball in play (pairs.parked)
     # Body-speed test (tasks/body_speed.py): None keeps MoveDrill exactly; a value swaps in FastMoveDrill with this
     # command cap (gain scaled, braking radius 0.83 m), and optionally its spot distance range / spot box.
@@ -95,7 +96,7 @@ class AgilityBallAction(BallPhysicsAction):
         self.ballidx = None
         if cfg.ball_index_tally:
             from picklebot_mj.tasks.ball_index import BallIndexTally
-            self.ballidx = BallIndexTally(self, env, split=cfg.ball_index_split)
+            self.ballidx = BallIndexTally(self, env, split=cfg.ball_index_split, feeder=cfg.ball_index_feeder)
         assert cfg.ball_index_tally or not cfg.ball_index_split, "ball_index_split needs ball_index_tally"
         self._log_path = os.environ.get("PICKLEBOT_AGILITY_LOG")
         self._log_every = int(os.environ.get("PICKLEBOT_AGILITY_LOG_EVERY", str(LOG_EVERY)))
@@ -211,6 +212,10 @@ _register(TASK_AGILITY_BALLIDX, SRC_22B, lambda c: to_agility_ball(c, ball_index
 # ballidx52 (scripts/diag/ballidx52.sh): the same plus the split variables (receiver state vs shot quality; logging only)
 TASK_AGILITY_BALLIDX_SPLIT = "Picklebot-Agility-BallIdx-Split-ReadCfg-LamR2-G1"
 _register(TASK_AGILITY_BALLIDX_SPLIT, SRC_22B, lambda c: to_agility_ball(c, ball_index_tally=True, ball_index_split=True))
+# D-198 feeder split (panel round 63, scripts/diag/ballidx63.sh): the split task plus the feeder-ball tally; logging only.
+TASK_AGILITY_BALLIDX_FEEDER = "Picklebot-Agility-BallIdx-Feeder-ReadCfg-LamR2-G1"
+_register(TASK_AGILITY_BALLIDX_FEEDER, SRC_22B,
+          lambda c: to_agility_ball(c, ball_index_tally=True, ball_index_split=True, ball_index_feeder=True))
 # D-177 idle recovery (scripts/diag/idlerec53.sh): the ballidx task plus pair_idle_recovery: spot_progress (same function,
 # weight and max_speed) is also active while the env has no ball of its own in play (pairs.parked), toward recover_xy.
 TASK_AGILITY_BALLIDX_IDLEREC = "Picklebot-Agility-BallIdx-IdleRec-ReadCfg-LamR2-G1"

@@ -5392,3 +5392,54 @@ scripts/diag/d1_stage3.sh: rally-d1s3 model_31399 (seed 189, 1,200 iterations, e
 - 22b's ball-index read (results/ballidx52-summary.txt, training seeds) puts the k = 1 failures on receivers that are still moving (pelvis speed tercile 3: fail 0.271 vs 0.086), far from their recovery spot (0.232 vs 0.108) or short of idle time (0.211). That is recovery to ready.
 
 **Seeds:** as D-196.
+
+### D-197 addendum (2026-11-01, panel round 63): corrections
+
+- **Guards.** Three D-160 family guards broke against 22b, not one: easy_forehand -6.4, backhand -5.6 and deep -6.9. They are recorded as debt against the d1s3 child.
+- **Rally comparison.** "No rally gain" stands. The round-63 brief's "no worse at rallies" was wrong: on the paired seeds the child is worse on feeder (-1.7 pt), on court falls (+0.55 pt against 22b) and on the three guards. The SPEED-KEPT verdict follows the pre-registered table and stands.
+- **"The binding constraint is elsewhere: D-189's first handed balls" was wrong.**
+  - The first good shot is the feeder ball's return (rally-target.md), so P(5+) <= feeder legal, about 0.65 for every player. The feeder ball is the first gate.
+  - The ballidx52 reading ("recovery to ready") was also too strong. Only pelvis_speed fired, k = 1 receivers are slower than k >= 3 ones, and state accounts for about 9 % of k = 1 failures.
+
+## D-198 (2026-11-01): the feeder ball is the first gate — a feeder-ball split read before any lever
+
+Panel round 63 (mjlab/results/footwork-review.md).
+- **Parent from here on:** the d1s3 child, rally-d1s3 model_31399 (4 of 5). It carries the D-191 agility. 22b model_30200 stays a paired reference arm.
+- **Next step: a read first** (3 of 5: coach, experiment design, architecture). Motion voted for a "ready at hand-off" reward; RL for `pair_rally_cap` = 5.
+
+**Why the feeder ball.**
+- P(5+) <= feeder legal (rally-target.md), and feeder legal is 0.649-0.654 whether agility is 0.64 or 0.83.
+- 76 % of feeder failures are no-contact, including easy forehands (contact 0.72-0.75), while k >= 3 balls are contacted 0.968.
+- D-171's manipulation (22b, refeed 3 s against 0.5 s) moved feeder 0.656 -> 0.778. Readiness at rally start matters, but it does not explain the whole gap.
+
+**Code** (tested; tests/test_ballidx.py, tests/test_feeder_rule.py):
+- picklebot_mj/tasks/ball_index.py gains an opt-in feeder-ball (k = 0) tally:
+  - the receiver's state at the feeder fire (pelvis speed, recovery distance, |yaw|, and idle since its own last contact);
+  - the ball's state one physics step later, once installed, for the predicted interception;
+  - outcomes, and contact by distance;
+  - with `feeder=False` (every existing task) the counters are exactly as before (a test checks this).
+- Task Picklebot-Agility-BallIdx-Feeder-ReadCfg-LamR2-G1 is the split task plus the feeder tally (logging only).
+
+**Read** (scripts/diag/ballidx63.sh). Three arms, each LR 0, 200 iterations, 4,096 envs, ballidx52's overrides, second half, pair courts:
+- **C:** the d1s3 child on the d1 base, dev 4220303;
+- **P:** 22b on its own base, dev 4220303 (paired with C, reported);
+- **C2:** the d1s3 child, dev 4220304 (the noise arm).
+
+Reported: the C child's pairs read at refeed 0.5 s and 3 s (dev 4220305).
+
+**Rule** (picklebot_mj/feeder_rule.py). On C, in the matched band (0.75-1.5 m), every gap must also exceed 2 x its |C - C2| difference:
+
+| verdict | condition | next step |
+|---|---|---|
+| **FEED-STATE** | k = 0 contact <= k >= 3 contact - 0.10, and a receiver-state variable passes route_split (b) at k = 0 | a readiness lever at rally start (motion's `ready_at_handoff` keyed at fire or receive) |
+| **FEED-SHOT** | k = 0 contact within 0.05 of k >= 3 | a feeder-family lever (RL's `pair_rally_cap` / feeder share) |
+| **FEED-OTHER** | neither | to the panel (timing or perception of a ball not from a robot) |
+| **INVALID** | the config check fails (including each arm's base_checkpoint), or < 800 matched-band feeder balls in any arm | no rerun on the same seeds |
+
+**Lines that stay.**
+- The court-falls line (<= 0.04) comes from the rally target and is not loosened. The parent itself fails it (0.056 on paired h5f seeds), so every later run also reports falls paired against its parent.
+- Any later feeder lever's endpoint uses the absolute feeder line (>= 0.80) and must not lower k >= 3.
+
+**Seeds.**
+- Used: dev 4220303-4220305.
+- Reserved for the follow-up run: dev 4220306-4220324 and training 191-192.
