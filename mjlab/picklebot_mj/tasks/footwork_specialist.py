@@ -458,12 +458,17 @@ register_mjlab_task(task_id=TASK_RALLY_FASTMOVE, env_cfg=rally_fastmove(load_env
 # one reward term for being set at the moment a ball is put in play for this env: the feeder fire or the partner's
 # contact (the contact hand-off). ballidx63: at the feeder fire the receiver is still moving (pelvis speed p50 0.28 m/s)
 # and about 0.9 m from its recovery spot; failures 0.09 -> 0.37 across pelvis-speed terciles and 0.05 -> 0.35 across
-# recovery-distance terciles; refeed 3 s instead of 0.5 s lifts feeder legal 0.62 -> 0.74. The term pays
-# exp(-(|v_xy| / 0.3)^2) exp(-(|pelvis - recover_xy| / 0.5)^2) on the control step after the event only (latched from
-# PairCourts.step, which runs every physics substep), never while the ball is in flight; weight READY_W as paddle_contact
-# (an event term: weight x dt per event). The ball term's class changes only to add the latch (field values unchanged).
+# recovery-distance terciles; refeed 3 s instead of 0.5 s lifts feeder legal 0.62 -> 0.74.
+# The value exp(-(|v_xy| / READY_V_STD)^2) exp(-(|pelvis - recover_xy| / READY_D_STD)^2) is computed INSIDE the
+# PairCourts.step wrapper, at the event substep, before _refeed draws the next ball's recovery spot (round 64: reading it
+# at reward time scored against a spot the robot cannot see), the state ballidx63 measured. It is paid once, on the next
+# reward step; never while the ball is in flight. Events within READY_MIN_AGE_S of an episode start are not paid (coach:
+# the robot is still on its spawn spot). Weight READY_W as paddle_contact (an event term: weight x dt = 1.0 per event).
+# PICKLEBOT_READY_LOG (optional): cumulative per-event sums for the per-event dose line. The ball term's class changes
+# only to add the latch (field values unchanged).
 TASK_RALLY_READY = "Picklebot-Rally22b-FastMove-Ready-G1"
-READY_W, READY_V_STD, READY_D_STD = 50.0, 0.3, 0.5
+READY_W, READY_V_STD, READY_D_STD, READY_MIN_AGE_S = 50.0, 0.3, 1.0, 1.0
+READY_LOG_EVERY = 240  # env steps (10 iterations of 24)
 
 
 from picklebot_mj.tasks import return_stand as _rs  # noqa: E402
@@ -480,36 +485,68 @@ class ReadyBallAction(_rs.BallPhysicsAction):
         super().__init__(cfg, env)
         assert self.pairs is not None, "the ready latch hooks PairCourts.step (pair mode)"
         self.ready_due = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
-        install_ready_latch(self)
+        self.ready_val = torch.zeros(self.num_envs, device=self.device)
+        self.ready_stats = torch.zeros(4, device=self.device)  # paid sum, events paid, events skipped (young), paid sum of squares
+        self._ready_log = os.environ.get("PICKLEBOT_READY_LOG")
+        self._ready_last = -1
+        install_ready_latch(self, age_fn=self._age)
+
+    def _age(self) -> torch.Tensor:
+        env = self._env
+        return env.episode_length_buf.float() * env.step_dt
 
     def reset(self, env_ids=None) -> None:
         super().reset(env_ids)
         if env_ids is None:
             self.ready_due[:] = False
+            self.ready_val[:] = 0.0
         else:
             self.ready_due[env_ids] = False
+            self.ready_val[env_ids] = 0.0
 
 
-def install_ready_latch(term) -> None:
-    """Wrap term.pairs.step so the envs given a ball this physics step (feeder fire | partner contact) are latched."""
+def ready_value(term, v_std: float = READY_V_STD, d_std: float = READY_D_STD) -> torch.Tensor:
+    v = term._entity.data.root_link_lin_vel_w[:, :2].norm(dim=-1)
+    d = (term.pelvis_xy() - term.recover_xy).norm(dim=-1)
+    return torch.exp(-(v / v_std) ** 2) * torch.exp(-(d / d_std) ** 2)
+
+
+def install_ready_latch(term, age_fn=None) -> None:
+    """Wrap term.pairs.step: for the envs given a ball this physics step (feeder fire | partner contact) and not already
+    latched, store the ready value now (before _refeed moves recover_xy) and latch them."""
     orig = term.pairs.step
 
     def step(*args, **kwargs):
         fire, recv = orig(*args, **kwargs)
-        term.ready_due |= fire | recv
+        ev = (fire | recv) & ~term.ready_due
+        if age_fn is not None:
+            young = age_fn() < READY_MIN_AGE_S
+            if hasattr(term, "ready_stats"):
+                term.ready_stats[2] += (ev & young).sum()
+            ev = ev & ~young
+        term.ready_val = torch.where(ev, ready_value(term), term.ready_val)
+        term.ready_due |= ev
         return fire, recv
 
     term.pairs.step = step
 
 
-def ready_at_event(env, v_std: float = READY_V_STD, d_std: float = READY_D_STD) -> torch.Tensor:
+def ready_at_event(env) -> torch.Tensor:
     t = env.action_manager.get_term("ball")
-    m = t.ready_due
-    data = t._entity.data
-    v = data.root_link_lin_vel_w[:, :2].norm(dim=-1)
-    d = (t.pelvis_xy() - t.recover_xy).norm(dim=-1)
-    out = torch.exp(-(v / v_std) ** 2) * torch.exp(-(d / d_std) ** 2) * m.float()
-    t.ready_due = torch.zeros_like(m)
+    m = t.ready_due.float()
+    out = t.ready_val * m
+    if hasattr(t, "ready_stats"):
+        t.ready_stats[0] += out.sum()
+        t.ready_stats[1] += m.sum()
+        t.ready_stats[3] += (out * out).sum()
+        if t._ready_log:
+            step = int(env.common_step_counter)
+            if step % READY_LOG_EVERY == 0 and step != t._ready_last:
+                t._ready_last = step
+                import json
+                with open(t._ready_log, "a") as f:
+                    f.write(json.dumps({"step": step, "ready": [round(x, 4) for x in t.ready_stats.tolist()]}) + "\n")
+    t.ready_due.zero_()
     return out
 
 

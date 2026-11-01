@@ -5472,3 +5472,62 @@ scripts/diag/ballidx63.sh; mjlab/results/ballidx63-summary.txt. Config was valid
 **Reported:** the C child's pairs read (dev 4220305), refeed 0.5 s against 3 s: feeder 0.624 vs 0.739, P(5+) open 0.366 vs 0.514.
 
 **Next, by D-198:** a readiness lever at rally start. Drafted as D-199 and reviewed by panel round 64 before launch.
+
+## D-199 (2026-11-01): d1s4 - the d1s3 child trained to be set when its ball is put in play
+
+Panel round 64 (mjlab/results/footwork-review.md). This is D-198's FEED-STATE route.
+
+Round 64 also completes the D-198 result table: yaw p50 17.3 deg (failure by tercile 0.219 / 0.165 / 0.217, FAIL) and idle p50 2.22 s (0.162 / 0.201 / 0.244, FAIL). C trails 22b in matched-band contact (0.882 vs 0.904). Pelvis speed and recovery distance are correlated, so they count as one finding. The causal support is the refeed manipulation.
+
+**One change against d1s3:** task Picklebot-Rally22b-FastMove-Ready-G1 = d1s3's task + `ready_at_event` (picklebot_mj/tasks/footwork_specialist.py).
+- **Value:** exp(-(|v_xy| / 0.3)^2) x exp(-(|pelvis - recover_xy| / 1.0)^2).
+- **When it is computed:** at the physics substep the env is given a ball (feeder fire or partner contact), inside the PairCourts.step wrapper, before `_refeed` moves `recover_xy`. This is the state ballidx63 measured.
+- **When it is paid:** once, on the next reward step; never while the ball is in flight. Events within 1.0 s of an episode start are not paid.
+- **Weight:** 50 (x dt 0.02 = 1.0 per event, as paddle_contact).
+- **Ball term:** its class changes only to carry the latch; the field values are unchanged.
+- **Round-64 fixes:** the draft read `recover_xy` after `_refeed`, against a spot drawn for the next ball (RL, experiment design, architecture, motion), and d_std went 0.5 -> 1.0.
+- **Tests:** tests/test_footwork_specialist.py.
+
+**Run** (scripts/diag/d1_stage4.sh):
+- parent: the d1s3 child (rally-d1s3 model_31399) on the d1 base;
+- d1s3's optimizer and overrides, 12,288 envs, 1,200 iterations (endpoint model_32598);
+- training seed 191, smoke 192 (d1s3's checks + both terms present + ready events paid > 0).
+
+**Reads.** The parent is re-read on every seed:
+- pairs 4220306 (with 22b reported), direction 4220307, Measure60 4220308;
+- +360 Measure60 4220309 (the parent as reference);
+- h5f 4220310-4220325 (parent and child);
+- LR-0 feeder-tally dose read 4220326;
+- refeed 3 s pairs 4220327 (reported).
+
+**Kill at +360:**
+- D-194's training-log lines, unchanged.
+- KILL-SLOWED / KILL-NO-ARRIVE: D-196's lines against the parent's Measure60.
+- **KILL-NO-DOSE:** the per-event ready mean over +341-360 is not above the +1-20 mean + 2 SE (PICKLEBOT_READY_LOG).
+- **KILL-EVENTS:** feeder fires per env step over iterations 100-300 exceed d1s3's own run by more than 10 %.
+
+**Endpoint lines:**
+- **F-UP:** feeder legal >= parent + 0.05, with the court-bootstrap low above the parent's point.
+- **ABS-F:** feeder legal >= 0.80 (D-198); required for READY-PASS.
+- **Rally:** d1s2-gate against the parent, unchanged. The court-falls line stays 0.04 absolute; falls paired with the parent are reported.
+- **AGILE-KEPT:** against the parent.
+- **K3-KEPT:** k >= 3 legal >= parent - 0.01 (dose read).
+- **DOSE:** the k = 0 pelvis-speed p50 at the fire <= parent - 0.05 (matched band, dose read). Recovery distance, k = 0 contact and feeder balls started are reported.
+
+**Control:** d1s3 continued for 1,200 iterations on Rally22b-FastMove with no term, training seed 191 (paired). It runs only if the child is F-UP, and is read on the same pairs and dose seeds. If the child passes F-UP against the parent but not against the control, the verdict is READY-TIME.
+
+**Verdicts, in this order of precedence:**
+
+| verdict | next step |
+|---|---|
+| KILL | panel |
+| INVALID | panel |
+| NO-DOSE | panel; not automatically a higher weight |
+| READY-TIME | panel |
+| READY-PASS | new parent |
+| READY-F | new parent for the feeder; panel on the rally |
+| READY-FAIL | panel |
+
+**Deferred** (not coded, stated): motion's 0.5-s post-fire displacement (FROZEN) and coach's time-to-first-step after the fire. The Measure60 first step is reported instead.
+
+**Seeds:** dev 4220306-4220327; training 191-192.

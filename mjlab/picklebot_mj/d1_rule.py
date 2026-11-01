@@ -270,3 +270,86 @@ def s3_agility_kept(read: dict, z_read: dict, spec_sectors: list[dict]) -> tuple
         ok &= good
         lines.append(f"first step {n} {fa} vs Z {fz} s (need <= Z + {S3_FIRST_SLACK})")
     return ("AGILE-KEPT" if ok else "SPEED-LOST"), lines
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-199 d1s4 (panel round 64): the d1s3 child + ready_at_event. Kill at +360 adds, to D-194's training-log lines and
+# D-196's speed lines (now against the parent d1s3 on the same seed):
+# KILL-NO-DOSE: the per-event mean ready value over +341-360 is not above the +1-20 mean by more than 2 SE of the +1-20
+# window (PICKLEBOT_READY_LOG rows: cumulative [sum, events, young, sum of squares] by env step); KILL-EVENTS: feeder
+# fires per env step over iterations 100-300 exceed the parent's (d1s3's own training, same iterations) by > 10 %.
+# Endpoint (paired with the parent; the control = d1s3 continued without the term, run only if the child is F-UP):
+# F-UP feeder legal >= ref + 0.05 with the court-bootstrap low above ref's point; ABS-F feeder legal >= 0.80 (required
+# for READY-PASS, D-198); rally = d1s2-gate against the parent; AGILE-KEPT against the parent; K3-KEPT k >= 3 legal
+# >= parent - 0.01 (dose read); DOSE k = 0 pelvis-speed p50 at the fire <= parent - 0.05 (matched band, dose read).
+# Precedence: KILL -> INVALID -> NO-DOSE -> READY-TIME -> READY-PASS -> READY-F -> READY-FAIL.
+STEPS_PER_IT = 24
+
+
+def _ready_window(rows: list[dict], it_lo: int, it_hi: int) -> tuple[float, float, int]:
+    """(mean, SE, events) of the per-event ready value between iterations it_lo-1 and it_hi (cumulative rows)."""
+    def at(it):
+        s = it * STEPS_PER_IT
+        prev = [r for r in rows if r["step"] <= s]
+        return prev[-1]["ready"] if prev else [0.0, 0.0, 0.0, 0.0]
+    a, b = at(it_lo - 1), at(it_hi)
+    sm, n, sq = b[0] - a[0], b[1] - a[1], b[3] - a[3]
+    if n <= 0:
+        return float("nan"), float("nan"), 0
+    mean = sm / n
+    var = max(sq / n - mean * mean, 0.0)
+    return mean, (var / n) ** 0.5, int(n)
+
+
+def s4_dose_kill(rows: list[dict]) -> tuple[str, str]:
+    m0, se0, n0 = _ready_window(rows, 1, 20)
+    m1, _, n1 = _ready_window(rows, 341, 360)
+    ok = n0 > 0 and n1 > 0 and m1 > m0 + 2 * se0
+    v = "CONTINUE" if ok else "KILL-NO-DOSE"
+    return v, (f"ready per-event mean +1-20 {m0:.4f} (SE {se0:.4f}, n {n0}) -> +341-360 {m1:.4f} (n {n1}); "
+               f"kill unless above +1-20 + 2 SE = {m0 + 2 * se0:.4f} -> {v}")
+
+
+def _feeder_rate(pair_rows: list[dict], it_lo: int, it_hi: int) -> float:
+    def at(it):
+        s = it * STEPS_PER_IT
+        prev = [r for r in pair_rows if r["step"] <= s]
+        return prev[-1] if prev else None
+    a, b = at(it_lo), at(it_hi)
+    if a is None or b is None or b["step"] <= a["step"]:
+        return float("nan")
+    return (b["feeder"] - a["feeder"]) / (b["step"] - a["step"])
+
+
+def s4_events_kill(child_pairs: list[dict], parent_pairs: list[dict]) -> tuple[str, str]:
+    c, p = _feeder_rate(child_pairs, 100, 300), _feeder_rate(parent_pairs, 100, 300)
+    ok = c == c and p == p and c <= 1.10 * p
+    v = "CONTINUE" if ok else "KILL-EVENTS"
+    return v, f"feeder fires per env step, iterations 100-300: child {c:.4f} vs parent {p:.4f} (kill > 1.10 x) -> {v}"
+
+
+def f_up(child_pairs: dict, ref_pairs: dict) -> tuple[bool, str]:
+    import sys as _sys
+    _sys.path.insert(0, "scripts")
+    import rally_check as rc
+    fc, lo = rc.boot_low(child_pairs["court_counts"], 3, 2)
+    fr, _ = rc.boot_low(ref_pairs["court_counts"], 3, 2)
+    ok = fc >= fr + 0.05 and lo > fr
+    return ok, f"feeder legal {fc:.4f} (low {lo:.4f}) vs {fr:.4f}: >= +0.05 and low above -> {'F-UP' if ok else 'not'}"
+
+
+def s4_verdict(killed: bool, valid: bool, dose: bool, fup_parent: bool, fup_control: bool | None, abs_f: bool,
+               rally: bool, agile: bool, k3: bool) -> str:
+    if killed:
+        return "KILL"
+    if not valid:
+        return "INVALID"
+    if not dose:
+        return "NO-DOSE"
+    if fup_parent and fup_control is False:
+        return "READY-TIME"
+    if fup_parent and abs_f and rally and agile and k3:
+        return "READY-PASS"
+    if fup_parent and agile and k3:
+        return "READY-F"
+    return "READY-FAIL"

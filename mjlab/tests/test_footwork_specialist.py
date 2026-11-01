@@ -357,15 +357,31 @@ def test_rally_ready_adds_only_the_ready_term_and_pays_once_per_event():
     assert all(a.rewards[k] == b.rewards[k] for k in a.rewards)
     assert b.rewards["ready_at_event"].weight == fs.READY_W and b.rewards["ready_at_event"].func is fs.ready_at_event
     n = 4
-    pairs = SimpleNamespace(step=lambda *a, **k: (torch.tensor([True, False, False, False]), torch.tensor([False, True, False, False])))
+    fire, recv = torch.tensor([True, False, False, False]), torch.tensor([False, True, False, False])
     data = SimpleNamespace(root_link_lin_vel_w=torch.tensor([[0.0, 0, 0], [0.3, 0, 0], [0.0, 0, 0], [0.0, 0, 0]]))
-    t = SimpleNamespace(pairs=pairs, ready_due=torch.zeros(n, dtype=torch.bool), _entity=SimpleNamespace(data=data),
-                        recover_xy=torch.tensor([[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.5, 0.0]]),
+    t = SimpleNamespace(ready_due=torch.zeros(n, dtype=torch.bool), ready_val=torch.zeros(n), _entity=SimpleNamespace(data=data),
+                        recover_xy=torch.tensor([[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [1.0, 0.0]]),
                         pelvis_xy=lambda: torch.zeros(n, 2))
-    fs.install_ready_latch(t)
+
+    def pair_step(*a, **k):
+        return fire, recv
+    t.pairs = SimpleNamespace(step=pair_step)
+    ages = torch.tensor([5.0, 5.0, 5.0, 5.0])
+    fs.install_ready_latch(t, age_fn=lambda: ages)
     t.pairs.step()
-    t.pairs.step()  # a second physics substep: the latch holds
+    # _refeed then redraws the new ball's recovery spot for the fired envs: the paid value must not change
+    t.recover_xy = torch.tensor([[3.0, 3.0], [3.0, 3.0], [0.0, 0.0], [1.0, 0.0]])
+    t.pairs.step()  # a second physics substep: already latched, the stored value holds
     env = SimpleNamespace(action_manager=SimpleNamespace(get_term=lambda name: t))
     r = fs.ready_at_event(env)
     assert abs(float(r[0]) - 1.0) < 1e-6 and abs(float(r[1]) - math.exp(-1.0)) < 1e-6 and float(r[2]) == 0.0
     assert float(fs.ready_at_event(env).sum()) == 0.0  # paid once: the latch is cleared
+    # an event within READY_MIN_AGE_S of the episode start is not paid
+    ages[:] = 0.5
+    t.pairs.step()
+    assert float(fs.ready_at_event(env).sum()) == 0.0
+    # d_std 1.0: 1 m from the spot, still -> exp(-1)
+    t.recover_xy = torch.tensor([[1.0, 0.0], [0.0, 0.0], [0.0, 0.0], [1.0, 0.0]])
+    ages[:] = 5.0
+    t.pairs.step()
+    assert abs(float(fs.ready_at_event(env)[0]) - math.exp(-1.0)) < 1e-6

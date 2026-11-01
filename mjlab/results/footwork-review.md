@@ -389,3 +389,33 @@ Brief: footwork-round63-brief.md.
 **A read first carried 3 of 5** (coach, experiment design, architecture). Its lines are experiment design's (the tie-breaker), plus architecture's refeed 0.5 s vs 3 s read, reported. Parent from here on: the d1s3 child (4 of 5).
 
 **Decision:** D-198.
+
+## Round 64 (2026-11-01): review of the readiness run (D-199 draft)
+
+Brief: footwork-round64-brief.md.
+
+**Correction checks**
+- **FEED-STATE was reached faithfully** (all five), with experiment design's caveats:
+  - pelvis speed and recovery distance are correlated, so they count as one finding;
+  - the tercile split is correlational; the refeed manipulation is the causal support;
+  - report yaw (p50 17.3 deg; failure 0.219 / 0.165 / 0.217) and idle (p50 2.22 s; failure 0.162 / 0.201 / 0.244) in full; the brief's table showed mojibake there;
+  - C trails 22b in matched-band contact (0.882 vs 0.904).
+- **Blocking bug in the draft** (RL, experiment design, architecture, motion): `ready_at_event` read `recover_xy` at reward time, after `_refeed` had drawn the next ball's spot. The registered config has recovery random and court_feed_prob 0.8, so the term would have scored distance to a spot the robot cannot see. The draft's test used a static stub and missed it. **Fixed:** the value is computed inside the PairCourts.step wrapper at the event substep, before `_refeed`. The new test moves `recover_xy` after the event and checks the paid value does not change.
+- **d_std 0.5 -> 1.0** (motion, RL, architecture; experiment design flagged it). At the medians (0.28 m/s, 0.94 m) the term paid about 0.01 per event; at 1.0 it pays about 0.17. Weight 50 is kept (all five).
+- **Coach:** events within 1 s of an episode start are excluded, since the robot is still on its spawn spot.
+
+**Amendments adopted**
+- **RL:**
+  - KILL-NO-DOSE on the per-event mean (logged sum, count and sum of squares), which must rise by more than 2 SE of the +1-20 window;
+  - KILL-EVENTS: feeder fires within 1.10 x of d1s3's own run.
+- **Experiment design:**
+  - a control arm (d1s3 continued without the term, training seed 191), run only if the child is F-UP; otherwise READY-TIME;
+  - ABS-F (feeder >= 0.80) required for READY-PASS, as D-198 said;
+  - K3-KEPT as its own line;
+  - verdict precedence;
+  - seeds 4220325-4220327 ledgered.
+- **Dose line:** RL's draft line (k = 0 pelvis-speed p50 at least 0.05 below the parent). Motion's recovery-distance alternative is reported.
+
+**Not coded** (reported reads deferred, stated here): motion's FROZEN guard (pelvis displacement in the 0.5 s after the fire) and coach's time-to-first-step after the fire. They need a new tally field. The Measure60 first step is reported instead.
+
+**Decision:** D-199.

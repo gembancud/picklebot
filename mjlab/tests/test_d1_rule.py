@@ -89,3 +89,21 @@ def test_stage3_speed_lines():
     assert dr.s3_agility_kept(_drill([1.6] * 8, first_s=1.3), z, spec)[0] == "AGILE-KEPT"
     assert dr.s3_agility_kept(_drill([1.5] * 8, first_s=1.3), z, spec)[0] == "SPEED-LOST"  # R_LB 0.75 < 0.80 - 0.03
     assert dr.s3_agility_kept(_drill([1.6] * 8, first_s=1.5), z, spec)[0] == "SPEED-LOST"  # first step 0.2 s slower
+
+
+def test_stage4_dose_events_and_verdicts():
+    rows = [{"step": s, "ready": [0.1 * n, n, 0, 0.01 * n]} for s, n in ((240, 100), (480, 200))]  # mean 0.1, no spread
+    rows += [{"step": 341 * 24 - 24, "ready": [20.0, 200, 0, 2.0]}, {"step": 360 * 24, "ready": [20.0 + 0.3 * 100, 300, 0, 2.0 + 0.09 * 100]}]
+    assert dr.s4_dose_kill(rows)[0] == "CONTINUE"  # 0.3 per event late vs 0.1 early
+    flat = rows[:3] + [{"step": 360 * 24, "ready": [20.0 + 0.1 * 100, 300, 0, 2.0 + 0.01 * 100]}]
+    assert dr.s4_dose_kill(flat)[0] == "KILL-NO-DOSE"
+    par = [{"step": 100 * 24, "feeder": 0}, {"step": 300 * 24, "feeder": 1000}]
+    assert dr.s4_events_kill([{"step": 100 * 24, "feeder": 0}, {"step": 300 * 24, "feeder": 1090}], par)[0] == "CONTINUE"
+    assert dr.s4_events_kill([{"step": 100 * 24, "feeder": 0}, {"step": 300 * 24, "feeder": 1200}], par)[0] == "KILL-EVENTS"
+    v = dr.s4_verdict
+    assert v(False, True, True, True, None, True, True, True, True) == "READY-PASS"
+    assert v(False, True, True, True, False, True, True, True, True) == "READY-TIME"
+    assert v(False, True, True, True, True, False, False, True, True) == "READY-F"
+    assert v(False, True, False, True, True, True, True, True, True) == "NO-DOSE"
+    assert v(False, True, True, False, None, False, False, True, True) == "READY-FAIL"
+    assert v(True, True, True, True, True, True, True, True, True) == "KILL"
