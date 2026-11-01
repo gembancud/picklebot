@@ -92,10 +92,11 @@ def test_stage3_speed_lines():
 
 
 def test_stage4_dose_events_and_verdicts():
-    rows = [{"step": s, "ready": [0.1 * n, n, 0, 0.01 * n]} for s, n in ((240, 100), (480, 200))]  # mean 0.1, no spread
-    rows += [{"step": 341 * 24 - 24, "ready": [20.0, 200, 0, 2.0]}, {"step": 360 * 24, "ready": [20.0 + 0.3 * 100, 300, 0, 2.0 + 0.09 * 100]}]
+    rows = [{"step": 0, "ready": [0.0, 0, 0, 0.0]}, {"step": 480, "ready": [0.1 * 2000, 2000, 0, 0.01 * 2000]}]  # mean 0.1
+    rows += [{"step": 340 * 24, "ready": [400.0, 4000, 0, 40.0]},
+             {"step": 360 * 24, "ready": [400.0 + 0.3 * 2000, 6000, 0, 40.0 + 0.09 * 2000]}]
     assert dr.s4_dose_kill(rows)[0] == "CONTINUE"  # 0.3 per event late vs 0.1 early
-    flat = rows[:3] + [{"step": 360 * 24, "ready": [20.0 + 0.1 * 100, 300, 0, 2.0 + 0.01 * 100]}]
+    flat = rows[:3] + [{"step": 360 * 24, "ready": [400.0 + 0.1 * 2000, 6000, 0, 40.0 + 0.01 * 2000]}]
     assert dr.s4_dose_kill(flat)[0] == "KILL-NO-DOSE"
     par = [{"step": 100 * 24, "feeder": 0}, {"step": 300 * 24, "feeder": 1000}]
     assert dr.s4_events_kill([{"step": 100 * 24, "feeder": 0}, {"step": 300 * 24, "feeder": 1090}], par)[0] == "CONTINUE"
@@ -112,10 +113,52 @@ def test_stage4_dose_events_and_verdicts():
 def test_stage4_windows_follow_the_resumed_step_counter():
     start = 31399
     off = start * 24
-    rows = [{"step": off + s, "ready": [0.1 * n, n, 0, 0.01 * n]} for s, n in ((240, 100), (480, 200))]
-    rows += [{"step": off + 340 * 24, "ready": [20.0, 200, 0, 2.0]}, {"step": off + 360 * 24, "ready": [50.0, 300, 0, 11.0]}]
+    rows = [{"step": off, "ready": [0.0, 0, 0, 0.0]}, {"step": off + 480, "ready": [200.0, 2000, 0, 20.0]}]
+    rows += [{"step": off + 340 * 24, "ready": [400.0, 4000, 0, 40.0]}, {"step": off + 360 * 24, "ready": [1000.0, 6000, 0, 220.0]}]
     assert dr.s4_dose_kill(rows, start)[0] == "CONTINUE"
-    assert dr.s4_dose_kill(rows)[0] == "KILL-NO-DOSE"  # the unshifted windows find no events: the bug this guards
     cp = [{"step": off + 100 * 24, "feeder": 0}, {"step": off + 300 * 24, "feeder": 1000}]
     pp = [{"step": 30200 * 24 + 100 * 24, "feeder": 0}, {"step": 30200 * 24 + 300 * 24, "feeder": 1000}]
     assert dr.s4_events_kill(cp, pp, start, 30200)[0] == "CONTINUE"
+
+
+def test_windows_use_existing_rows_and_report_no_data():
+    """D-200 addendum: rows at +21, +31, ... (as d1s4's ready log) give a +1-20 window from the first rows that exist; a
+    window with too few events is NO-DATA, never a kill."""
+    start = 31399
+    off = start * 24
+    rows = [{"step": off + it * 24, "ready": [0.3 * 1500 * k, 1500 * k, 0, 0.09 * 1500 * k]} for k, it in enumerate(range(21, 400, 10), 1)]
+    v, _ = dr.s4_dose_kill(rows, start)
+    assert v == "KILL-NO-DOSE"  # flat mean 0.3: windows found from existing rows, the line itself fails
+    few = [{"step": off + it * 24, "ready": [0.3 * 10 * k, 10 * k, 0, 0.09 * 10 * k]} for k, it in enumerate(range(21, 400, 10), 1)]
+    assert dr.s4_dose_kill(few, start)[0] == "NO-DATA"
+    cp = [{"step": off + it * 24, "feeder": 10 * it} for it in (101, 201, 301, 401)]
+    pp = [{"step": 30200 * 24 + it * 24, "feeder": 10 * it} for it in (100, 200, 300)]
+    assert dr.s4_events_kill(cp, pp, start, 30200)[0] == "CONTINUE"
+    assert dr.s4_events_kill([], pp, start, 30200)[0] == "NO-DATA"
+
+
+def test_stage5_share_bin_and_verdicts(tmp_path):
+    import json
+    start, pstart = 31399, 30200
+    cr = [{"step": (start + it) * 24, "split": [[3000 * k, 7000 * k], [0, 0]]} for k, it in enumerate((101, 201, 301, 401))]
+    pr = [{"step": (pstart + it) * 24, "split": [[2000 * k, 8000 * k], [0, 0]]} for k, it in enumerate((100, 200, 300))]
+    assert dr.s5_share_kill(cr, pr, start, pstart)[0] == "CONTINUE"  # 0.30 vs 0.20
+    low = [{"step": r["step"], "split": [[2100 * k, 7900 * k], [0, 0]]} for k, r in enumerate(cr)]
+    assert dr.s5_share_kill(low, pr, start, pstart)[0] == "KILL-NO-SHARE"
+    assert dr.s5_share_kill([], pr, start, pstart)[0] == "NO-DATA"
+
+    def log(path, legal_rate):
+        with open(path, "w") as f:
+            for k in range(5):
+                f.write(json.dumps({"step": 240 * k, "launch": {"outcome_feeds_legal": [[300 * k, int(300 * k * legal_rate)], [0, 0], [0, 0]]}}) + "\n")
+    log(tmp_path / "c.jsonl", 0.75)
+    log(tmp_path / "p.jsonl", 0.65)
+    assert dr.f_bin(str(tmp_path / "c.jsonl"), str(tmp_path / "p.jsonl"))[0]
+    log(tmp_path / "c.jsonl", 0.68)
+    assert not dr.f_bin(str(tmp_path / "c.jsonl"), str(tmp_path / "p.jsonl"))[0]
+    v = dr.s5_verdict
+    assert v(True, False, None, True, True, True, True, True, True) == "MIX"
+    assert v(True, True, False, True, True, True, True, True, True) == "MORE-TIME"
+    assert v(True, True, None, True, True, True, True, True, True) == "CAP-PASS"
+    assert v(True, True, True, False, False, True, True, True, True) == "CAP-F"
+    assert v(False, True, None, False, False, True, True, True, True) == "CAP-FAIL"

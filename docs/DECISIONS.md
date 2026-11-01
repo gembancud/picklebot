@@ -5597,3 +5597,67 @@ Run: scripts/diag/d1_stage4.sh + d1_stage4b.sh. The endpoint is rally-d1s4b mode
 - Rule (D-199): NO-DOSE goes to the panel and does not automatically mean a higher weight.
 
 **Seeds:** as D-199.
+
+### D-200 addendum (2026-11-02, panel round 65): corrections
+
+- **Guards.** Four guard breaches, not two: reach_deep -10.7, left + back -5.9, backhand -10.4 (0.675 -> 0.571) and fast -6.0 (0.514 -> 0.454).
+- **Labels.** The "22b" label in rally_check d1s2_gate output is wrong: the reference is the parent (the d1s3 child). The code now takes the label as an optional fourth argument; the default replays old gates unchanged.
+- **Event ratio.** It is 3.5:1 in this run's own log (830,874 hand-offs vs 235,820 fires), not 4:1. "The gain came from the hand-offs" is [inferred], since the ready log has no per-event split.
+- **Reading.** NO-DOSE with harm. Readiness paid at partner contacts rewarded planted feet when the first step should load. No later term pays readiness at partner contacts.
+- **Observability** (RL, architecture). The policy observes neither parked, court_dead, the refeed timer, nor which side gets the next feeder ball. recovery_reward pays only after the robot's own legal hit.
+- **The D-199 addendum-2 lesson is now coded** (picklebot_mj/d1_rule.py `_row_from`, MIN_WINDOW_EVENTS 1,000, NO-DATA verdicts; tests).
+
+## D-201 (2026-11-02): d1s5 - the d1s3 child trained with pair_rally_cap 5
+
+Panel round 65 (mjlab/results/footwork-review.md). There was no majority:
+
+| option | votes |
+|---|---|
+| (c) `pair_rally_cap` = 5 | coach, experiment design |
+| (b) parked readiness | motion, architecture |
+| (d) observe the restart | RL |
+
+The tie rule (least new code) gives (c). Its lines are experiment design's. (b) and (d) stay queued, with RL's and architecture's caveat that D-172 found the cap's earlier gain was launch mix.
+
+**One change against d1s3.** A training-only override `pair_rally_cap` = 5 on d1s3's task (Picklebot-Rally22b-FastMove-G1), the D-161 knob. A rally ends after 5 shots and a new feeder ball follows, giving more feeder balls and post-rally starts in practice. Reads use no cap.
+- Parent: the d1s3 child, model_31399, on the d1 base.
+- Settings: d1s3's, 1,200 iterations, endpoint model_32598.
+- Seeds: training 193, smoke 194. The smoke checks `pair_rally_cap: 5` in params.
+
+**Paired references.** The parent's D-199 reads on dev 4220306-4220327 are reused, reported as such. Only the parent's dose read is re-run, on dev 4220326 with the launch-bin pair log. The child is read on the same seeds.
+
+**Kill at +360** (windows from rows that exist; NO-DATA never kills):
+- D-194's training-log lines.
+- KILL-NO-SHARE: the pair-court feeder share over iterations 100-300 is below the parent d1s3 run's share at the same iterations (0.131) + 0.05.
+- KILL-SLOWED / KILL-NO-ARRIVE on model_31760 against the parent.
+
+**Endpoint lines:**
+
+| line | rule |
+|---|---|
+| F-UP | pairs feeder legal >= parent + 0.05, with the bootstrap low above the parent's point |
+| F-BIN | D-172: the 0-1 launch bin's feeder legal on the paired dose runs >= parent + 0.05; F-UP requires both |
+| F-BAND | k = 0 matched-band contact >= parent + 0.03 |
+| REFEED3 | 3-s refeed feeder legal >= parent - 0.01 |
+| P5-KEPT | P(5+) open >= parent - 0.01 |
+| K3-KEPT | k >= 3 legal >= parent - 0.01 |
+| AGILE-KEPT | as before |
+| rally | d1s2-gate against the parent, labelled |
+| ABS-F | feeder legal >= 0.80 |
+
+**Control:** d1s3 continued without the cap, training seed 193. It runs only if the child is F-UP.
+
+**Verdicts, in this order of precedence:**
+
+| verdict | next step |
+|---|---|
+| KILL | panel |
+| INVALID | panel |
+| NO-SHARE | panel |
+| MIX (F-UP without F-BAND) | panel |
+| MORE-TIME (F-UP against the parent but not the control) | panel |
+| CAP-PASS (all lines) | new parent |
+| CAP-F (CAP-PASS without ABS-F and the rally gate) | new feeder parent |
+| CAP-FAIL | panel |
+
+**Seeds:** as above (ledgered); training 193-194.

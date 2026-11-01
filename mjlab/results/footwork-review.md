@@ -419,3 +419,38 @@ Brief: footwork-round64-brief.md.
 **Not coded** (reported reads deferred, stated here): motion's FROZEN guard (pelvis displacement in the 0.5 s after the fire) and coach's time-to-first-step after the fire. They need a new tally field. The Measure60 first step is reported instead.
 
 **Decision:** D-199.
+
+## Round 65 (2026-11-02): d1s4 reads NO-DOSE
+
+Brief: footwork-round65-brief.md.
+
+**Correction checks**
+- **The D-199 design was wrong** (coach, motion, RL). It paid readiness at partner contacts, which outnumber fires 3.5:1 in this run's own log (830,874 hand-offs vs 235,820 fires). That rewarded planted feet at the moment a split-step should load the first step, and fits the left / back loss. Read it as NO-DOSE with harm: no later term pays readiness at partner contacts.
+- **D-200 omits two guard breaches** (experiment design): backhand -10.4 and fast -6.0.
+- **The "22b" label in d1s2_gate is wrong:** the reference is the parent. The code label is now fixed.
+- **"The gain came from hand-offs" is inferred, not measured.** The ready log does not split by event type.
+- **The policy does not observe parked, court_dead, the refeed timer or the next receiver** (RL, architecture). The brief's "the robot sees itself parked" was wrong. The fire comes exactly 0.5 s after the later robot parks.
+- **recovery_reward pays only after the robot's own legal hit** (architecture). A robot that just missed is paid nothing to recover.
+- **Feeder share in d1s4 training was 22 %** overall (pair courts 11 %, drill courts 81 %).
+- **The D-199 addendum-2 lesson was not yet coded** (experiment design). It is now: windows use the first rows at or after their edges, keep their length, and need at least 1,000 events, otherwise NO-DATA, never a kill. Replaying d1s4's logs reproduces the aligned values.
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| Coach | (c) `pair_rally_cap` = 5 |
+| Motion | (b) parked readiness while the court is dead |
+| Experiment design | (c), with lines and seeds |
+| RL | (d) observe parked / countdown / next receiver |
+| Architecture | (b), with busy and young exclusions |
+
+**No majority:** (c) 2, (b) 2, (d) 1. By the tie rule, the least new code wins: **(c)**, which needs no new task code. Experiment design's lines are used.
+- KILL-EVENTS is dropped, since it would fire by design. KILL-NO-SHARE replaces it.
+- D-172's per-bin premise is added as F-BIN.
+
+**Caveats on record:**
+- RL and architecture: D-172 found the cap's earlier gain was launch mix.
+- RL: the robot cannot see the restart.
+- These keep (b) and (d) queued.
+
+**Decision:** D-201.

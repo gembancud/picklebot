@@ -286,17 +286,29 @@ def s3_agility_kept(read: dict, z_read: dict, spec_sectors: list[dict]) -> tuple
 STEPS_PER_IT = 24
 
 
+def _row_from(rows: list[dict], step: int) -> dict | None:
+    """D-200 addendum (the D-199 addendum-2 lesson): the first logged row at or after `step` (windows are built from rows
+    that exist, never from an edge no row covers)."""
+    after = [r for r in rows if r["step"] >= step]
+    return min(after, key=lambda r: r["step"]) if after else None
+
+
+MIN_WINDOW_EVENTS = 1000
+
+
 def _ready_window(rows: list[dict], it_lo: int, it_hi: int, start_it: int = 0) -> tuple[float, float, int]:
-    """(mean, SE, events) of the per-event ready value between iterations it_lo-1 and it_hi after the resume at start_it
-    (cumulative rows; the env step counter continues from start_it x STEPS_PER_IT on a resume)."""
-    def at(it):
-        s = (start_it + it) * STEPS_PER_IT
-        prev = [r for r in rows if r["step"] <= s]
-        return prev[-1]["ready"] if prev else [0.0, 0.0, 0.0, 0.0]
-    a, b = at(it_lo - 1), at(it_hi)
-    sm, n, sq = b[0] - a[0], b[1] - a[1], b[3] - a[3]
-    if n <= 0:
+    """(mean, SE, events) of the per-event ready value between the first logged rows at or after iterations it_lo - 1 and
+    it_hi after the resume at start_it (cumulative rows; the env step counter continues from start_it x STEPS_PER_IT on a
+    resume). Fewer than MIN_WINDOW_EVENTS events -> (nan, nan, n): the caller reports NO-DATA, never a kill."""
+    ra = _row_from(rows, (start_it + it_lo - 1) * STEPS_PER_IT)
+    rb = None if ra is None else _row_from(rows, max((start_it + it_hi) * STEPS_PER_IT,
+                                                      ra["step"] + (it_hi - it_lo + 1) * STEPS_PER_IT))
+    if ra is None or rb is None or rb["step"] <= ra["step"]:
         return float("nan"), float("nan"), 0
+    a, b = ra["ready"], rb["ready"]
+    sm, n, sq = b[0] - a[0], b[1] - a[1], b[3] - a[3]
+    if n < MIN_WINDOW_EVENTS:
+        return float("nan"), float("nan"), int(n)
     mean = sm / n
     var = max(sq / n - mean * mean, 0.0)
     return mean, (var / n) ** 0.5, int(n)
@@ -305,18 +317,17 @@ def _ready_window(rows: list[dict], it_lo: int, it_hi: int, start_it: int = 0) -
 def s4_dose_kill(rows: list[dict], start_it: int = 0) -> tuple[str, str]:
     m0, se0, n0 = _ready_window(rows, 1, 20, start_it)
     m1, _, n1 = _ready_window(rows, 341, 360, start_it)
-    ok = n0 > 0 and n1 > 0 and m1 > m0 + 2 * se0
+    if n0 < MIN_WINDOW_EVENTS or n1 < MIN_WINDOW_EVENTS:
+        return "NO-DATA", f"ready windows hold {n0} / {n1} events (< {MIN_WINDOW_EVENTS}): NO-DATA (not a kill)"
+    ok = m1 > m0 + 2 * se0
     v = "CONTINUE" if ok else "KILL-NO-DOSE"
     return v, (f"ready per-event mean +1-20 {m0:.4f} (SE {se0:.4f}, n {n0}) -> +341-360 {m1:.4f} (n {n1}); "
                f"kill unless above +1-20 + 2 SE = {m0 + 2 * se0:.4f} -> {v}")
 
 
 def _feeder_rate(pair_rows: list[dict], it_lo: int, it_hi: int, start_it: int = 0) -> float:
-    def at(it):
-        s = (start_it + it) * STEPS_PER_IT
-        prev = [r for r in pair_rows if r["step"] <= s]
-        return prev[-1] if prev else None
-    a, b = at(it_lo), at(it_hi)
+    a = _row_from(pair_rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(pair_rows, max((start_it + it_hi) * STEPS_PER_IT, a["step"] + (it_hi - it_lo) * STEPS_PER_IT))
     if a is None or b is None or b["step"] <= a["step"]:
         return float("nan")
     return (b["feeder"] - a["feeder"]) / (b["step"] - a["step"])
@@ -326,7 +337,9 @@ def s4_events_kill(child_pairs: list[dict], parent_pairs: list[dict], child_star
                    parent_start: int = 0) -> tuple[str, str]:
     c = _feeder_rate(child_pairs, 100, 300, child_start)
     p = _feeder_rate(parent_pairs, 100, 300, parent_start)
-    ok = c == c and p == p and c <= 1.10 * p
+    if c != c or p != p:
+        return "NO-DATA", f"feeder-rate windows have no rows (child {c}, parent {p}): NO-DATA (not a kill)"
+    ok = c <= 1.10 * p
     v = "CONTINUE" if ok else "KILL-EVENTS"
     return v, f"feeder fires per env step, iterations 100-300: child {c:.4f} vs parent {p:.4f} (kill > 1.10 x) -> {v}"
 
@@ -356,3 +369,66 @@ def s4_verdict(killed: bool, valid: bool, dose: bool, fup_parent: bool, fup_cont
     if fup_parent and agile and k3:
         return "READY-F"
     return "READY-FAIL"
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-201 d1s5 (panel round 65): the d1s3 child trained with pair_rally_cap 5. Kill at +360: KILL-NO-SHARE when the feeder
+# share of balls started on pair courts over iterations 100-300 is not >= the parent d1s3 run's share at the same
+# iterations + 0.05 (PICKLEBOT_PAIR_LOG rows: split[0] = [pair-court feeder fires, pair-court hand-offs]). Endpoint F-BIN
+# (D-172: feeder premises within launch bins): the 0-1 launch bin's feeder legal on the paired LR-0 dose runs (pair log
+# "launch" outcome_feeds_legal, second half) >= parent + 0.05.
+F_BIN_GAIN, SHARE_GAIN = 0.05, 0.05
+
+
+def _pair_share(rows: list[dict], it_lo: int, it_hi: int, start_it: int) -> tuple[float, int]:
+    a = _row_from(rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(rows, max((start_it + it_hi) * STEPS_PER_IT, a["step"] + (it_hi - it_lo) * STEPS_PER_IT))
+    if a is None or b is None or b["step"] <= a["step"]:
+        return float("nan"), 0
+    f = b["split"][0][0] - a["split"][0][0]
+    h = b["split"][0][1] - a["split"][0][1]
+    return (f / (f + h) if f + h else float("nan")), int(f + h)
+
+
+def s5_share_kill(child_rows: list[dict], parent_rows: list[dict], child_start: int, parent_start: int) -> tuple[str, str]:
+    c, nc = _pair_share(child_rows, 100, 300, child_start)
+    p, npar = _pair_share(parent_rows, 100, 300, parent_start)
+    if c != c or p != p or min(nc, npar) < MIN_WINDOW_EVENTS:
+        return "NO-DATA", f"pair-court feeder share windows: child {c} (n {nc}), parent {p} (n {npar}): NO-DATA (not a kill)"
+    v = "CONTINUE" if c >= p + SHARE_GAIN else "KILL-NO-SHARE"
+    return v, f"pair-court feeder share, iterations 100-300: child {c:.4f} vs parent {p:.4f} (kill unless >= +{SHARE_GAIN}) -> {v}"
+
+
+def _bin01(path: str) -> tuple[float, int]:
+    import json
+    rows = [json.loads(line) for line in open(path)]
+    rows = [r for r in rows if "launch" in r]
+    if len(rows) < 2:
+        return float("nan"), 0
+    s0, s1 = rows[0]["step"], rows[-1]["step"]
+    mid = min(rows, key=lambda r: abs(r["step"] - (s0 + 0.5 * (s1 - s0))))
+    a, b = mid["launch"]["outcome_feeds_legal"][0], rows[-1]["launch"]["outcome_feeds_legal"][0]
+    feeds, legal = b[0] - a[0], b[1] - a[1]
+    return (legal / feeds if feeds else float("nan")), int(feeds)
+
+
+def f_bin(child_path: str, parent_path: str) -> tuple[bool, str]:
+    c, nc = _bin01(child_path)
+    p, npar = _bin01(parent_path)
+    ok = c == c and p == p and min(nc, npar) >= 200 and c >= p + F_BIN_GAIN
+    return ok, f"0-1 launch bin feeder legal {c:.4f} (n {nc}) vs {p:.4f} (n {npar}): >= +{F_BIN_GAIN} (n >= 200) -> {'F-BIN' if ok else 'not'}"
+
+
+def s5_verdict(fup: bool, fband: bool, fup_control: bool | None, abs_f: bool, rally: bool, agile: bool, k3: bool,
+               p5_kept: bool, refeed3: bool) -> str:
+    """After KILL / INVALID / NO-SHARE (handled by the driver): MIX -> MORE-TIME -> CAP-PASS -> CAP-F -> CAP-FAIL."""
+    if fup and not fband:
+        return "MIX"
+    if fup and fup_control is False:
+        return "MORE-TIME"
+    kept = agile and k3 and p5_kept and refeed3
+    if fup and fband and kept and abs_f and rally:
+        return "CAP-PASS"
+    if fup and fband and kept:
+        return "CAP-F"
+    return "CAP-FAIL"

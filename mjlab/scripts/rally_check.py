@@ -378,7 +378,7 @@ def r19_gate(prefix: str, tag: str) -> bool:
     return ok
 
 
-def d1s2_gate(prefix: str, tag: str) -> bool:
+def d1s2_gate(prefix: str, tag: str, ref_name: str = "22b") -> bool:
     """D-193 stage-2 run verdict (22b's residual re-climbed on the d1 base): paired against the parent 22b model_30200 read
     on the same seeds (PREFIX-parent-early-{pairs,dir}.json, its own base): P(5+) open >= parent + 2.0 with a Wilson low
     above the parent's point; partner-ball legal >= parent - 1.5; feeder-ball legal >= parent - 1.0; sides within 3; court
@@ -396,10 +396,10 @@ def d1s2_gate(prefix: str, tag: str) -> bool:
     gap = abs(P["sides"]["A"] - P["sides"]["B"])
     falls = json.load(open(f"results/stage5f-{tag}-summary.json"))["falls_court"]
     g = r19_guards(j["per_family"], json.load(open(f"{prefix}-endpoint-dir.json"))["directions"],
-                   ref=f"{prefix}-parent-early", cross_ref=f"{prefix}-parent-early-pairs.json", name="22b", cross_name="22b")
+                   ref=f"{prefix}-parent-early", cross_ref=f"{prefix}-parent-early-pairs.json", name=ref_name, cross_name=ref_name)
     ok = (q1 >= q0 + 0.02 and q1ci[0] > q0 and own >= own0 - 0.015 and fed >= fed0 - 0.01 and gap <= 0.03
           and falls <= 0.04 and g)
-    print(f"d1 stage-2 run verdict: P(5+) open {q1:.4f} {q1ci} (>= 22b {q0:.4f} + 0.02, low above {q0:.4f}); partner legal "
+    print(f"d1 stage-2 run verdict: P(5+) open {q1:.4f} {q1ci} (>= {ref_name} {q0:.4f} + 0.02, low above {q0:.4f}); partner legal "
           f"{own:.4f} (>= {own0 - 0.015:.4f}); feeder legal {fed:.4f} (>= {fed0 - 0.01:.4f}); gap {100 * gap:.1f} (<= 3); "
           f"falls {falls} (<= 0.04): {'PASS' if ok else 'not met'}")
     return ok
@@ -548,7 +548,7 @@ def _main() -> None:
     if mode == "r19-gate":
         sys.exit(0 if r19_gate(prefix, sys.argv[3]) else 1)
     if mode == "d1s2-gate":
-        sys.exit(0 if d1s2_gate(prefix, sys.argv[3]) else 1)
+        sys.exit(0 if d1s2_gate(prefix, sys.argv[3], *(sys.argv[4:5])) else 1)  # optional 4th: the parent's label
     if mode == "early-sched":
         sys.exit(0 if early_sched(prefix) else 1)
     if mode == "sched-gate":
