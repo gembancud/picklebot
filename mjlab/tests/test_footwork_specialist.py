@@ -337,3 +337,35 @@ def test_rally_fastmove_only_changes_move_speed_reward():
     new, old = fs.rally_fast_track_lin_vel(env), md.move_track_lin_vel(env)
     assert torch.allclose(new[2:], old[2:])  # outside move episodes (zero here: no walk mask) identical
     assert float(old[0]) < 0.05 and float(new[0]) > 0.75  # 1.9 m/s toward a 3-m spot: 22b pays 0.04, d1s3 0.79
+
+
+def test_rally_ready_adds_only_the_ready_term_and_pays_once_per_event():
+    """D-199: the ready task equals d1s3's (Rally22b-FastMove) except the ball class (same field values) and one added
+    reward term; the latch marks the envs given a ball (fire | receive); the term pays exp(-(v/0.3)^2) exp(-(d/0.5)^2)
+    on the next reward step only."""
+    import dataclasses as dc
+    import math
+    from types import SimpleNamespace
+    import torch
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+    from picklebot_mj.tasks import footwork_specialist as fs
+    a, b = load_env_cfg(fs.TASK_RALLY_FASTMOVE), load_env_cfg(fs.TASK_RALLY_READY)
+    assert type(b.actions["ball"]) is fs.ReadyBallActionCfg
+    assert dc.asdict(a.actions["ball"]) == dc.asdict(b.actions["ball"])
+    assert list(b.rewards) == list(a.rewards) + ["ready_at_event"]
+    assert all(a.rewards[k] == b.rewards[k] for k in a.rewards)
+    assert b.rewards["ready_at_event"].weight == fs.READY_W and b.rewards["ready_at_event"].func is fs.ready_at_event
+    n = 4
+    pairs = SimpleNamespace(step=lambda *a, **k: (torch.tensor([True, False, False, False]), torch.tensor([False, True, False, False])))
+    data = SimpleNamespace(root_link_lin_vel_w=torch.tensor([[0.0, 0, 0], [0.3, 0, 0], [0.0, 0, 0], [0.0, 0, 0]]))
+    t = SimpleNamespace(pairs=pairs, ready_due=torch.zeros(n, dtype=torch.bool), _entity=SimpleNamespace(data=data),
+                        recover_xy=torch.tensor([[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [0.5, 0.0]]),
+                        pelvis_xy=lambda: torch.zeros(n, 2))
+    fs.install_ready_latch(t)
+    t.pairs.step()
+    t.pairs.step()  # a second physics substep: the latch holds
+    env = SimpleNamespace(action_manager=SimpleNamespace(get_term=lambda name: t))
+    r = fs.ready_at_event(env)
+    assert abs(float(r[0]) - 1.0) < 1e-6 and abs(float(r[1]) - math.exp(-1.0)) < 1e-6 and float(r[2]) == 0.0
+    assert float(fs.ready_at_event(env).sum()) == 0.0  # paid once: the latch is cleared

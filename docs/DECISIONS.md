@@ -5443,3 +5443,32 @@ Reported: the C child's pairs read at refeed 0.5 s and 3 s (dev 4220305).
 **Seeds.**
 - Used: dev 4220303-4220305.
 - Reserved for the follow-up run: dev 4220306-4220324 and training 191-192.
+
+### D-198 result (2026-11-01): FEED-STATE
+
+scripts/diag/ballidx63.sh; mjlab/results/ballidx63-summary.txt. Config was valid in all three arms, base_checkpoint included.
+
+**Feeder ball** (k = 0):
+
+| | C (d1s3, dev 4220303) | C2 (d1s3, dev 4220304) | P (22b, dev 4220303) |
+|---|---|---|---|
+| feeder legal / contact | 0.714 / 0.798 | 0.711 / 0.789 | 0.728 / 0.807 |
+| feeder balls in the matched band | 1,047 | 978 | 1,271 |
+| matched-band contact, k = 0 vs k >= 3 | 0.882 vs 0.996 | 0.857 vs 0.994 | 0.904 vs 0.995 |
+
+**Rule, on C:**
+- **Contact gap:** +0.114, against a noise of 0.047.
+- **State at the feeder fire, by tercile:**
+
+| state variable | p50 at the fire | failure by tercile | rule |
+|---|---|---|---|
+| pelvis speed | 0.28 m/s | 0.092 / 0.175 / 0.371 | PASS |
+| recovery distance | 0.94 m | 0.048 / 0.213 / 0.352 | PASS |
+| yaw | — | — | FAIL |
+| idle | — | — | FAIL |
+
+- **VERDICT: FEED-STATE.** The receiver is not yet set when the feeder fires.
+
+**Reported:** the C child's pairs read (dev 4220305), refeed 0.5 s against 3 s: feeder 0.624 vs 0.739, P(5+) open 0.366 vs 0.514.
+
+**Next, by D-198:** a readiness lever at rally start. Drafted as D-199 and reviewed by panel round 64 before launch.

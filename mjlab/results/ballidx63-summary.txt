@@ -1,0 +1,29 @@
+arm C: 20 rows; config missing []; base /mnt/f/dev/picklebot-mjlab/mjlab/artifacts/train/logs/picklebot_return_stand/2026-10-31_18-24-20_s5c-d1-fw1bS/model_32854.pt (ok)
+arm P: 20 rows; config missing []; base /mnt/f/dev/picklebot-mjlab/mjlab/artifacts/train/logs/picklebot_return_stand/2026-10-16_05-35-35_s5c-18-merge17/model_32874.pt (ok)
+arm C2: 20 rows; config missing []; base /mnt/f/dev/picklebot-mjlab/mjlab/artifacts/train/logs/picklebot_return_stand/2026-10-31_18-24-20_s5c-d1-fw1bS/model_32854.pt (ok)
+C: feeder balls 3866 legal 0.714 contact 0.798; matched band n 1047 contact 0.882 legal 0.798; k>=3 band contact 0.996 (n 11807); k=1 legal 0.680 contact 0.794; k=2 legal 0.851 contact 0.911; k=3+ legal 0.959 contact 0.981
+   k=0 pelvis_speed  p50 0.281 fail 0.202 | T1 0.0..0.2 n 414 fail 0.092  T2 0.2..0.5 n 315 fail 0.175  T3 0.5..2.5 n 318 fail 0.371
+   k=0 recover_dist  p50 0.937 fail 0.202 | T1 0.0..0.7 n 358 fail 0.048  T2 0.7..1.2 n 348 fail 0.213  T3 1.2..4.0 n 341 fail 0.352
+   k=0 yaw_err       p50 17.299 fail 0.202 | T1 0.0..13.5 n 407 fail 0.219  T2 13.5..27.0 n 322 fail 0.165  T3 27.0..103.5 n 318 fail 0.217
+   k=0 idle          p50 2.222 fail 0.202 | T1 0.0..1.7 n 345 fail 0.162  T2 1.7..2.7 n 383 fail 0.201  T3 2.7..4.6 n 319 fail 0.244
+P: feeder balls 4718 legal 0.728 contact 0.807; matched band n 1271 contact 0.904 legal 0.840; k>=3 band contact 0.995 (n 9535); k=1 legal 0.695 contact 0.796; k=2 legal 0.830 contact 0.897; k=3+ legal 0.930 contact 0.966
+   k=0 pelvis_speed  p50 0.252 fail 0.160 | T1 0.0..0.2 n 553 fail 0.070  T2 0.2..0.4 n 291 fail 0.141  T3 0.4..2.3 n 427 fail 0.288
+   k=0 recover_dist  p50 0.835 fail 0.160 | T1 0.0..0.6 n 460 fail 0.035  T2 0.6..1.1 n 396 fail 0.164  T3 1.1..3.8 n 415 fail 0.294
+   k=0 yaw_err       p50 20.073 fail 0.160 | T1 0.0..13.5 n 404 fail 0.183  T2 13.5..27.0 n 432 fail 0.120  T3 27.0..76.5 n 435 fail 0.177
+   k=0 idle          p50 2.276 fail 0.160 | T1 0.0..1.9 n 442 fail 0.111  T2 1.9..2.7 n 409 fail 0.161  T3 2.7..4.7 n 420 fail 0.209
+C2: feeder balls 3663 legal 0.711 contact 0.789; matched band n 978 contact 0.857 legal 0.792; k>=3 band contact 0.994 (n 12064); k=1 legal 0.683 contact 0.779; k=2 legal 0.857 contact 0.912; k=3+ legal 0.962 contact 0.983
+   k=0 pelvis_speed  p50 0.266 fail 0.208 | T1 0.0..0.2 n 398 fail 0.096  T2 0.2..0.4 n 231 fail 0.177  T3 0.4..2.0 n 349 fail 0.355
+   k=0 recover_dist  p50 0.859 fail 0.208 | T1 0.0..0.6 n 323 fail 0.053  T2 0.6..1.1 n 311 fail 0.167  T3 1.1..3.7 n 344 fail 0.390
+   k=0 yaw_err       p50 17.468 fail 0.208 | T1 0.0..9.0 n 267 fail 0.251  T2 9.0..27.0 n 406 fail 0.180  T3 27.0..81.0 n 305 fail 0.207
+   k=0 idle          p50 2.271 fail 0.208 | T1 0.0..1.8 n 323 fail 0.136  T2 1.8..2.6 n 314 fail 0.236  T3 2.6..5.7 n 341 fail 0.249
+rule (C, matched band, noise arm C2):
+  contact (matched band): k>=3 0.9956 - k=0 0.8816 = +0.1140 (C2 +0.1374; noise 2 x |C - C2| = 0.0468); >= 0.1 and > noise -> yes
+  state pelvis_speed (b) at k=0: worst-tercile failure 0.371 >= 2 x best 0.092, spread above 2 x |C - C2| -> PASS
+  state recover_dist (b) at k=0: worst-tercile failure 0.352 >= 2 x best 0.048, spread above 2 x |C - C2| -> PASS
+  state yaw_err (b) at k=0: worst-tercile failure 0.219 >= 2 x best 0.165, spread above 2 x |C - C2| -> FAIL
+  state idle (b) at k=0: worst-tercile failure 0.244 >= 2 x best 0.162, spread above 2 x |C - C2| -> FAIL
+  state variables fired: ['pelvis_speed', 'recover_dist']; |gap| <= 0.05: False -> FEED-STATE
+reported C - P: feeder legal -0.0139, contact -0.0090
+reported C pairs refeed05: P(5+) open 0.3661; feeder legal 0.6244; partner 0.9901
+reported C pairs refeed3: P(5+) open 0.5141; feeder legal 0.7389; partner 0.9937
+VERDICT: FEED-STATE

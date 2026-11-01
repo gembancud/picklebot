@@ -452,3 +452,76 @@ def rally_fastmove(cfg):
 register_mjlab_task(task_id=TASK_RALLY_FASTMOVE, env_cfg=rally_fastmove(load_env_cfg(ag.SRC_22B)),
                     play_env_cfg=rally_fastmove(load_env_cfg(ag.SRC_22B, play=True)), rl_cfg=load_rl_cfg(ag.SRC_22B),
                     runner_cls=load_runner_cls(ag.SRC_22B))
+
+
+# D-199 (D-198's FEED-STATE route; motion's ready_at_handoff, panel rounds 63-64): the d1s3 task (Rally22b-FastMove) plus
+# one reward term for being set at the moment a ball is put in play for this env: the feeder fire or the partner's
+# contact (the contact hand-off). ballidx63: at the feeder fire the receiver is still moving (pelvis speed p50 0.28 m/s)
+# and about 0.9 m from its recovery spot; failures 0.09 -> 0.37 across pelvis-speed terciles and 0.05 -> 0.35 across
+# recovery-distance terciles; refeed 3 s instead of 0.5 s lifts feeder legal 0.62 -> 0.74. The term pays
+# exp(-(|v_xy| / 0.3)^2) exp(-(|pelvis - recover_xy| / 0.5)^2) on the control step after the event only (latched from
+# PairCourts.step, which runs every physics substep), never while the ball is in flight; weight READY_W as paddle_contact
+# (an event term: weight x dt per event). The ball term's class changes only to add the latch (field values unchanged).
+TASK_RALLY_READY = "Picklebot-Rally22b-FastMove-Ready-G1"
+READY_W, READY_V_STD, READY_D_STD = 50.0, 0.3, 0.5
+
+
+from picklebot_mj.tasks import return_stand as _rs  # noqa: E402
+
+
+@dataclass(kw_only=True)
+class ReadyBallActionCfg(_rs.BallPhysicsActionCfg):
+    def build(self, env) -> "ReadyBallAction":
+        return ReadyBallAction(self, env)
+
+
+class ReadyBallAction(_rs.BallPhysicsAction):
+    def __init__(self, cfg, env):
+        super().__init__(cfg, env)
+        assert self.pairs is not None, "the ready latch hooks PairCourts.step (pair mode)"
+        self.ready_due = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+        install_ready_latch(self)
+
+    def reset(self, env_ids=None) -> None:
+        super().reset(env_ids)
+        if env_ids is None:
+            self.ready_due[:] = False
+        else:
+            self.ready_due[env_ids] = False
+
+
+def install_ready_latch(term) -> None:
+    """Wrap term.pairs.step so the envs given a ball this physics step (feeder fire | partner contact) are latched."""
+    orig = term.pairs.step
+
+    def step(*args, **kwargs):
+        fire, recv = orig(*args, **kwargs)
+        term.ready_due |= fire | recv
+        return fire, recv
+
+    term.pairs.step = step
+
+
+def ready_at_event(env, v_std: float = READY_V_STD, d_std: float = READY_D_STD) -> torch.Tensor:
+    t = env.action_manager.get_term("ball")
+    m = t.ready_due
+    data = t._entity.data
+    v = data.root_link_lin_vel_w[:, :2].norm(dim=-1)
+    d = (t.pelvis_xy() - t.recover_xy).norm(dim=-1)
+    out = torch.exp(-(v / v_std) ** 2) * torch.exp(-(d / d_std) ** 2) * m.float()
+    t.ready_due = torch.zeros_like(m)
+    return out
+
+
+def rally_ready(cfg):
+    cfg = rally_fastmove(cfg)
+    b = cfg.actions["ball"]
+    assert type(b) is _rs.BallPhysicsActionCfg
+    cfg.actions["ball"] = ReadyBallActionCfg(**{f.name: getattr(b, f.name) for f in dataclasses.fields(b) if f.init})
+    cfg.rewards["ready_at_event"] = RewardTermCfg(func=ready_at_event, weight=READY_W)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_READY, env_cfg=rally_ready(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_ready(load_env_cfg(ag.SRC_22B, play=True)), rl_cfg=load_rl_cfg(ag.SRC_22B),
+                    runner_cls=load_runner_cls(ag.SRC_22B))
