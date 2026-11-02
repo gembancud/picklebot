@@ -13,7 +13,7 @@ set -uo pipefail
 cd /mnt/f/dev/picklebot-mjlab/mjlab; source ~/envs/picklebot-mj/bin/activate; export PYTHONWARNINGS=ignore
 unset PICKLEBOT_LAM_R PICKLEBOT_RES_BASE PICKLEBOT_LEG_R PICKLEBOT_TEACHER PICKLEBOT_TEACHER_GAIN PICKLEBOT_CONTROLLER PICKLEBOT_READY_LOG \
   PICKLEBOT_RESTART_OBS PICKLEBOT_RESTART_OBS_FREEZE
-while [ ! -f artifacts/train/diag68.done ]; do sleep 60; done
+while pgrep -f "bash scripts/diag/diag68.sh" > /dev/null || [ ! -f artifacts/train/diag68.done ]; do sleep 60; done  # the D-204 driver itself (a stale diag68.done from its first launch exists)
 sleep 30
 pgrep -f "run-name |kickstart_h4|stage2_eval|footwork_eval|feeder_speed" > /dev/null && { echo "GPU busy: not started"; exit 1; }
 RUN=rally-d1s8; L=artifacts/train/logs/picklebot_return_stand; R=results/d1s8; RC=results/d1s3ctl; TAG=d1s8
