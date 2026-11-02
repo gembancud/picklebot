@@ -5890,3 +5890,16 @@ Panel round 69: 5 of 5 for (a). Run: scripts/diag/d1_stage8.sh (watcher d1s8_wat
 **Not adopted:** RL's NO-GAP gate (one vote; new code). Recorded risk: the unpaid stratum (about half of the k = 1 receivers) may be too small to move the median.
 
 **Seeds (ledgered):** training 199-200; dev paired reuse only.
+
+### D-204 result (iii) (2026-11-02): the drift control reads DRIFT
+
+rally-d1s3ctlb (model_31399 continued 1,200 iterations on its own task, no change, seed 197) trained clean (+360: falls 1.18, legal_return 0.840). Guard reads pooled over 4 seeds:
+- **GUARD-N: not needed.** The parent's single read is within the guards against its pooled read.
+- **DRIFT:** the control breaches r19_guards against the pooled parent: reach_backhand -6.6, reach_deep -5.1, cross_forehand -3.9. Mean family shift -1.93 points.
+- **Reported, on 4220306:** control P(5+) 0.371 vs 0.387, feeder 0.601 vs 0.629.
+
+The base continuation recipe erodes contact families on its own. Later children are also reported against the control. Summary: mjlab/results/d1s3ctl-summary.json.
+
+### D-205 result (2026-11-02): d1s8 reads SMOKE-FAIL - nothing trained
+
+The smoke (seed 200) read 4.696 falls per 1,000 env-s against the line 4.157. Half-split (reported): 7.56 / 2.39. Exit 0, std 0.1065, config ok. The first-half transient is the largest of the series; the second half is in the parents' range. Training seed 199 was not used. Panel round 70 is called (mjlab/results/footwork-round70-brief.md).

@@ -19,3 +19,20 @@ RESTART (reported) r30: failure k=1 / 2 / 3+ = 0.295 (n 2309) / 0.161 (n 1619) /
 VERDICT (i): STATE
 
 Note (D-204 addendum): the first block above (the 939-ball INVALID, the first launch's control exit 2 and its ENDPOINT-MISMATCH) is superseded by the block from '0.5-s read: seeds 4220332 + 4220337 summed'; results/diag68-summary.json is authoritative. The 3.0-s RESTART line is one seed (4220333).
+control training: {"run": "rally-d1s3ctlb", "exit_code": 0, "finished": "2026-11-02T19:47:42+08:00"}
++341-360: falls per 1,000 env-s 1.18 (kill > 2 x 22b 1.57); legal_return 0.8395 (kill < 22b 0.7549 - 0.05) -> CONTINUE; reported +241-260: falls 1.29, legal_return 0.8691
+control endpoint artifacts/train/logs/picklebot_return_stand/2026-11-02_17-23-37_rally-d1s3ctlb/model_32598.pt
+GUARD-N: the parent's single read (4220306) against its own pooled read:
+guard: worst family contact vs parent pooled -2.8 (low; kill below -5); cross_forehand 0.7487 vs parent pooled 0.7561 (kill below -3)
+guard: left + back feeder contact 0.4366 vs parent pooled 0.4557 (-1.9; kill below -5)
+GUARD-N: not needed (single read within the guards)
+DRIFT: the control (pooled) against the parent (pooled):
+guard: reach_backhand contact 0.5378 < parent pooled 0.6035 - 0.05 (KILL)
+guard: reach_deep contact 0.1125 < parent pooled 0.1631 - 0.05 (KILL)
+guard: cross_forehand contact 0.7173 < parent pooled 0.7561 - 0.03 (KILL)
+guard: worst family contact vs parent pooled -6.6 (reach_backhand; kill below -5); cross_forehand 0.7173 vs parent pooled 0.7561 (kill below -3)
+guard: left + back feeder contact 0.4237 vs parent pooled 0.4557 (-3.2; kill below -5)
+mean family contact shift, control - parent (pooled): -1.93 points (DRIFT at <= -2.0)
+parent on 4220306 (reported): P(5+) open 0.3873; feeder 0.6285; partner 0.9917; failure by shot position 0.382, 0.287, 0.082, 0.028, 0.010
+control on 4220306 (reported): P(5+) open 0.3707; feeder 0.6014; partner 0.9923; failure by shot position 0.409, 0.287, 0.094, 0.023, 0.006
+VERDICT (iii): DRIFT
