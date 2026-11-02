@@ -1,0 +1,23 @@
+D-206: drift onset on rally-d1s3ctlb, then (if LATE) rally-d1s3lr (LR 3e-5)
+ctl400 (pooled) against the parent (pooled):
+guard: worst family contact vs parent pooled -3.6 (fast; kill below -5); cross_forehand 0.7511 vs parent pooled 0.7561 (kill below -3)
+guard: left + back feeder contact 0.4360 vs parent pooled 0.4557 (-2.0; kill below -5)
+ctl400: mean family shift -1.48 points; pooled feeder 0.6189 (parent 0.6353, control 0.6041); pooled P(5+) 0.3784 (parent 0.3812, control 0.3751)
+RESULT PARTIAL True -0.01484
+ctl800 (pooled) against the parent (pooled):
+guard: reach_deep contact 0.0781 < parent pooled 0.1631 - 0.05 (KILL)
+guard: cross_forehand contact 0.7145 < parent pooled 0.7561 - 0.03 (KILL)
+guard: worst family contact vs parent pooled -8.5 (reach_deep; kill below -5); cross_forehand 0.7145 vs parent pooled 0.7561 (kill below -3)
+guard: left + back feeder contact 0.4259 vs parent pooled 0.4557 (-3.0; kill below -5)
+ctl800: mean family shift -2.38 points; pooled feeder 0.6000 (parent 0.6353, control 0.6041); pooled P(5+) 0.3702 (parent 0.3812, control 0.3751)
+RESULT STILL-DRIFT False -0.02379
+stage A onset at +400: LATE (EARLY-DRIFT: a breach or mean shift <= -2.0 at +400)
+training: {"run": "rally-d1s3lr", "exit_code": 0, "finished": "2026-11-03T05:43:53+08:00"}
++341-360: falls per 1,000 env-s 1.29 (kill > 2 x 22b 1.57); legal_return 0.8599 (kill < 22b 0.7549 - 0.05) -> CONTINUE; reported +241-260: falls 1.22, legal_return 0.9129
+lr (pooled) against the parent (pooled):
+guard: backhand contact 0.5828 < parent pooled 0.6385 - 0.05 (KILL)
+guard: worst family contact vs parent pooled -5.6 (backhand; kill below -5); cross_forehand 0.7402 vs parent pooled 0.7561 (kill below -3)
+guard: left + back feeder contact 0.4347 vs parent pooled 0.4557 (-2.1; kill below -5)
+lr: mean family shift -2.21 points; pooled feeder 0.6323 (parent 0.6353, control 0.6041); pooled P(5+) 0.4024 (parent 0.3812, control 0.3751)
+RESULT STILL-DRIFT False -0.02207
+VERDICT: STILL-DRIFT (rally-d1s3lr, LR 3e-5)

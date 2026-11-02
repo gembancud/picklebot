@@ -5926,3 +5926,21 @@ Panel round 70 (mjlab/results/footwork-review.md): 5 of 5 for (iii). d1s8's SMOK
     - otherwise PARTIAL -> panel.
 
 **Seeds (ledgered):** paired reuse only; training 201.
+
+### D-206 result (2026-11-03): onset LATE; rally-d1s3lr (LR 3e-5) reads STILL-DRIFT, with pooled P(5+) +2.1
+
+**Stage A, the drift control's onset.**
+
+| checkpoint | guards | mean shift | pooled feeder | pooled P(5+) |
+|---|---|---|---|---|
+| +400 | no breach | -1.48 | 0.619 | 0.378 |
+| +800 | reach_deep breach | -2.38 | 0.600 | 0.370 |
+
+The +400 read is LATE, so stage B ran.
+
+**Stage B, rally-d1s3lr** (LR_PEAK 3e-5, seed 201). Training clean; +360 falls 1.29, legal_return 0.860.
+- Pooled against the parent: backhand breach -5.6 (line -5); mean family shift -2.21.
+- **Verdict STILL-DRIFT.**
+- Not part of the verdict: pooled feeder 0.632 (parent 0.635, control 0.604); pooled P(5+) 0.402 (parent 0.381, control 0.375).
+
+D-206's route is the anchor next. Panel round 71 is called (mjlab/results/footwork-round71-brief.md) because the lower LR kept feeder and gained P(5+) while still breaching one guard. d1s3 model_31399 stays the parent.
