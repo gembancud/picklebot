@@ -1,0 +1,46 @@
+parent artifacts/train/logs/picklebot_return_stand/2026-11-01_12-07-09_rally-d1s3/model_31399.pt widened to artifacts/train/logs/picklebot_return_stand/2026-11-02_12-00-00_rally-d1s7-init/model_31399.pt (restart obs, 5 zero columns) on the d1 base /mnt/f/dev/picklebot-mjlab/mjlab/artifacts/train/logs/picklebot_return_stand/2026-10-31_18-24-20_s5c-d1-fw1bS/model_32854.pt; task Picklebot-Rally22b-FastMove-G1
+expanded actor -> 129, critic -> 144: artifacts/train/logs/picklebot_return_stand/2026-11-02_12-00-00_rally-d1s7-init/model_31399.pt
+INVALID check: widened checkpoint equals the parent on the old columns, new columns zero / (0, 1) -> ok
+smoke exit 0 ok
+smoke no traceback ok
+smoke falls per 1,000 env-seconds 1.203 ok
+smoke std min 0.106 outputs with no gradient [] ok
+smoke actor new columns: Adam second moment sum 1.081e-04, weight norm 0.1127
+smoke critic new columns: Adam second moment sum 7.760e-05, weight norm 0.1590
+smoke new columns get a gradient in actor and critic ok
+smoke config check: missing []; d1 base True; fast move term, restart obs in actor + critic, no ready terms True -> ok
+smoke falls half-split (reported): first half 1.522, second half 0.916
+training: {"run": "rally-d1s7", "exit_code": 0, "finished": "2026-11-02T12:43:34+08:00"}
++341-360: falls per 1,000 env-s 1.14 (kill > 2 x 22b 1.57); legal_return 0.8491 (kill < 22b 0.7549 - 0.05) -> CONTINUE; reported +241-260: falls 1.33, legal_return 0.8937
+mean rally length, iterations 100-300: child 3.801 vs parent 3.258 (kill below 0.9 x) -> CONTINUE
++360 Measure60 read: sustained L/B 1.6274/1.7875 vs parent 1.6063/1.7652 (kill below parent - 0.15); falls 2.82 (kill > 2 x parent 3.37); worst untimed arrival 0.973 (kill < 0.80); fallen + censored 0.087 (kill > 0.15) -> CONTINUE
++360 new-column weight norms (reported): actor 0.6729 critic 7.8268
+endpoint artifacts/train/logs/picklebot_return_stand/2026-11-02_10-08-55_rally-d1s7/model_32598.pt
+guard: backhand contact 0.5856 < d1s3 child (parent) 0.6750 - 0.05 (KILL)
+guard: fast contact 0.4525 < d1s3 child (parent) 0.5138 - 0.05 (KILL)
+guard: worst family contact vs d1s3 child (parent) -8.9 (backhand; kill below -5); cross_forehand 0.7978 vs d1s3 child (parent) 0.7487 (kill below -3)
+guard: left + back feeder contact 0.4161 vs d1s3 child (parent) 0.4366 (-2.1; kill below -5)
+d1 stage-2 run verdict: P(5+) open 0.3955 [0.3771, 0.4142] (>= d1s3 child (parent) 0.3873 + 0.02, low above 0.3873); partner legal 0.9930 (>= 0.9767); feeder legal 0.6194 (>= 0.6185); gap 0.6 (<= 3); falls 0.0651 (<= 0.04): not met
+DOSE: pelvis speed p50 at the feeder fire 0.2613 vs parent 0.2777 (<= -0.05) or recovery distance p50 0.8508 vs 0.8933 (<= -0.1) -> NO-DOSE
+USE: pelvis_speed: child 0.2613 vs parent 0.2777 (no DOSE on this dimension); recover_dist: child 0.8508 vs parent 0.8933 (no DOSE on this dimension) -> NO-USE
+parent dose retest on 4220330 (reported): pelvis speed p50 0.2878 vs 0.2777, recovery distance p50 0.8549 vs 0.8933
+guard: backhand contact 0.5856 < parent 0.6750 - 0.05 (KILL)
+guard: fast contact 0.4525 < parent 0.5138 - 0.05 (KILL)
+guard: worst family contact vs parent -8.9 (backhand; kill below -5); cross_forehand 0.7978 vs parent 0.7487 (kill below -3)
+guard: left + back feeder contact 0.4161 vs parent 0.4366 (-2.1; kill below -5)
+GUARDS vs parent: False
+F-UP vs parent (pairs): feeder legal 0.6194 (low 0.6028) vs 0.6285: >= +0.05 and low above -> not
+F-BIN vs parent (0-1 launch bin): 0-1 launch bin feeder legal 0.7247 (n 1914) vs 0.7505 (n 2128): >= +0.05 (n >= 200) -> not
+ABS-F: feeder legal 0.6194 >= 0.80 -> False
+F-BAND: k=0 matched-band contact 0.9006 vs parent 0.905 (need >= +0.03) -> False
+K3-KEPT: k>=3 legal 0.9669 vs parent 0.9585 -> True
+AGILE-KEPT vs parent: AGILE-KEPT; R_LB 0.832 vs parent 0.824 (need >= parent - 0.03); first step left 1.4046 vs parent 1.4163 s (need <= parent + 0.05); first step back 1.2898 vs parent 1.2969 s (need <= parent + 0.05)
+P5-KEPT: 0.3955 vs 0.3873 -> True; REFEED3: feeder legal at 3 s 0.7546 vs 0.7562 -> True
+opening-exchange failure rate by shot position 0-4 (reported), parent: 0.382, 0.287, 0.082, 0.028, 0.010
+opening-exchange failure rate by shot position 0-4 (reported), child: 0.387, 0.296, 0.063, 0.008, 0.011
+parent: P(5+) open 0.3873; feeder 0.6285; partner 0.9917
+child: P(5+) open 0.3955; feeder 0.6194; partner 0.9930
+22b (reported): P(5+) open 0.3903; feeder 0.6457; partner 0.9902
+h5f court falls parent: 0.062
+h5f court falls child: 0.0651
+VERDICT: NO-DOSE

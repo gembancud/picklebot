@@ -5780,3 +5780,24 @@ Panel round 67 (mjlab/results/footwork-review.md): 5 of 5 for (i). Run: scripts/
 **Seeds:** training 197 (run and control), 198 (smoke); paired dev reads 4220306-4220327; 4220330 for the parent retest (ledgered).
 
 **Raised with the user, not changed:** the frozen target read refeeds 0.5 s after a rally ends (coach).
+
+### D-203 result (2026-11-02): d1s7 reads NO-DOSE - the feeder premise ends (stop rule)
+
+Run: scripts/diag/d1_stage7.sh. Endpoint rally-d1s7 model_32598. Summary: mjlab/results/d1s7-summary.txt (and .json).
+
+**The run was clean:**
+- INVALID ok; smoke falls 1.20, with gradient on the new columns;
+- +360: falls 1.14, legal_return 0.849, rally length 3.80 vs 3.26, speed kept;
+- new-column norms at +360: actor 0.67, critic 7.83.
+
+**Endpoint vs the parent:**
+- **DOSE fails:** pelvis-speed p50 at the fire 0.261 vs 0.278; recovery distance 0.851 vs 0.893. The parent retest on 4220330 read 0.288 / 0.855, so the distance change is within test-retest noise.
+- **NO-USE also holds:** no DOSE dimension passed.
+- **Feeder lines fail:** F-UP 0.619 vs 0.629; F-BIN 0.725 vs 0.751; F-BAND 0.901 vs 0.905.
+- **Kept:** P5 0.396 vs 0.387; REFEED3 0.755 vs 0.756; K3 0.967 vs 0.959; AGILE (R_LB 0.832 vs 0.824).
+- **GUARDS breached:** backhand -8.9, fast -6.1; left + back -2.1 is within the guard.
+- **h5f court falls:** 6.5 % vs 6.2 %. **Rally gate:** not met.
+
+**Verdict NO-DOSE.** By D-203's stop rule this ends the feeder premise: d1s4, d1s5, d1s6 and d1s7 all failed to change the state at the feeder fire.
+
+d1s3 model_31399 stays the parent. Every d1s3 continuation so far breaches backhand and/or fast contact; no pure continuation control has been run. Panel round 68 is called (mjlab/results/footwork-round68-brief.md).
