@@ -623,3 +623,52 @@ Brief: footwork-round68-brief.md.
 - **RL's alternative** (an unconditional control inside the next lever) is kept for the lever after this.
 
 **Decision:** D-204.
+
+
+## Round 69 (2026-11-02): diag68 routes STATE; the lever
+
+Brief: footwork-round69-brief.md.
+
+**diag68 (D-204 (i)):** STATE, on the 0.5-s read with seeds 4220332 + 4220337 summed (1,917 k = 1 balls in the band).
+- **STATE fires on both state variables.** k = 1 top - bottom tercile failure gap: pelvis speed 0.179, recovery distance 0.138. The same gaps at k >= 3: 0.016 and 0.023.
+- **BALL does not fire.** The share of the k = 1 excess removed by reweighting: bounce_depth 0.327, angle 0.138, net_clear 0.082, spin -0.055.
+- **Each seed fires STATE on its own** (architecture). So does the 3.0-s read (reported, one seed).
+
+**Correction checks**
+- **The INVALID extension was legitimate** (experiment design, RL, architecture). It was added blind to the outcome, with the rule unchanged and the seed named beforehand.
+  - Lesson, coded from now on: INVALID -> add pre-named seeds in one block, then the panel.
+- **STATE is a correlation** (experiment design, RL). The k >= 3 flatness test is close to automatic at a 0.02-0.04 base rate, and bounce_depth alone removes 33 % of the excess. The lever run is the causal test.
+- **The brief misstated the reward** (all five):
+  - std is 1.5 m, not 0.5.
+  - hit_done is cleared only at the env's next feed or a reset (return_stand.py:661, :517). So a robot whose last ball was its own legal hit is already paid while it waits.
+  - Only robots after a no-contact miss, or a reset, are unpaid: about half of the k = 1 receivers.
+- **The brief omitted D-177 idlerec53** (RL, motion, architecture): spot_progress while parked, k = 1 +0.79 pt, a non-test with no dose line. RL: at the same weight, (a)'s incentive is no larger than that lever's. This run has a dose line and a climb kill.
+- **The 3.0-s read** (motion): k = 1 pelvis-speed p90 falls 0.75 -> 0.44 m/s, but recovery distance barely moves (p50 0.70 -> 0.59). Robots settle where they stand; they do not walk back. So pay distance, not stillness.
+  - It contradicts round 68's restart share: 2.5 s more removes only about 10 % of the excess here, against "a third to a half" there. The two instruments must be reconciled before restart time is cited again (experiment design, coach).
+- **Ceiling** (architecture): the bottom tercile still fails 0.115-0.13. At best the lever removes about a third of the k = 1 excess, about 5 points.
+- **diag68-summary.txt** kept the superseded first block. A note now says so; the .json is authoritative.
+
+**Votes:** 5 of 5 for (a).
+
+| reviewer | vote |
+|---|---|
+| Coach | mask hit_done or parked; stop at the partner's contact; no stillness pay |
+| Experiment design | (a); KILL-NO-CLIMB; DOSE and HAZARD against the parent and the control; training 197 to match the control |
+| RL | (a), with a NO-GAP gate read before training (paid vs unpaid k = 1 receivers) |
+| Motion | (a), one change; DOSE 0.10 m; if NO-DOSE, the next change is std 0.5 |
+| Architecture | (a); code given; a new task, return_stand.py untouched |
+
+**Run D-205 d1s8** (scripts/diag/d1_stage8.sh).
+- **Task** Picklebot-Rally22b-FastMove-IdleRec-G1: recovery_reward also pays while parked on a pair court and not busy. Distance only, std 1.5, weight 1.0; one change. Tested on a real PairCourts.
+- **Training seed:** 199, smoke 200 (3 of 4 who named one). rally-d1s3ctlb (seed 197) serves as the unconditional control.
+- **Kill at +360:** D-194's lines, KILL-FARM, KILL-NO-CLIMB (newly paid value +0.05 from iterations 0-60 to 300-360), KILL-SLOWED / NO-ARRIVE.
+- **DOSE:** k = 1 recover_dist p50 at the hand-off (all bands) <= parent - 0.10 and <= control - 0.10. The parent reads 0.705 m.
+- **HAZARD, primary:** matched-band k = 1 failure <= parent - 0.03 and <= control - 0.03, with k >= 3 <= parent + 0.01. The parent reads 0.1805 / 0.0213.
+  - Threshold: RL and motion said 0.03, experiment design 0.04, coach 0.05. Majority: 0.03.
+- **GUARDS:** pooled 4-seed reads against the static parent; the control's breaches are reported for attribution. P5-KEPT; F-UP reported.
+- **Order:** KILL -> INVALID -> NO-DOSE -> NO-HAZARD -> GUARD-BREACH -> P5-LOSS -> REC-PASS.
+  - NO-DOSE -> panel: std 0.5 (motion, architecture) or end readiness rewards (experiment design).
+  - NO-HAZARD -> STATE falsified -> the falls lever.
+- **Not adopted:** RL's NO-GAP gate (1 vote; it needs new tally code). It waits for the drift control and is recorded as a risk: the unpaid stratum may be too small to move the k = 1 median.
+
+**Decision:** D-205.

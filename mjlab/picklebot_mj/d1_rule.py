@@ -650,3 +650,78 @@ def sum_counters(a, b):
     if isinstance(a, (int, float)) and isinstance(b, (int, float)) and not isinstance(a, bool):
         return a + b
     return a
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-205 d1s8 (panel round 69): recovery pay while parked (Picklebot-Rally22b-FastMove-IdleRec-G1). Training seed 199,
+# smoke 200; rally-d1s3ctlb (seed 197, same parent / task family / length / settings) is the unconditional control.
+# Kill at +360: D-194's lines; KILL-FARM (s6_farm_kill); KILL-NO-CLIMB (experiment design): the windowed mean value of
+# the newly paid branch over iterations 300-360 must be >= its iterations 0-60 value + 0.05 (NO-DATA under 1,000 steps).
+# Endpoint, LR-0 split reads at 0.5 s on dev 4220332 + 4220337 summed (paired with the parent's diag68 reads), pair
+# courts, second half:
+#   INVALID: < 1,000 k = 1 balls in the matched band in any arm (parent, control, child).
+#   DOSE: k = 1 recover_dist p50 at the hand-off (all distance bands) <= parent - 0.10 m and <= control - 0.10 m.
+#   HAZARD (primary): matched-band k = 1 failure <= parent - 0.03 and <= control - 0.03; k >= 3 failure <= parent + 0.01.
+#   GUARDS: r19_guards on pooled 4-seed reads against the static parent (the control's breaches reported, attribution).
+#   P5-KEPT: P(5+) open on 4220306 >= parent - 0.01. F-UP reported.
+# Verdicts: KILL -> INVALID -> NO-DOSE -> NO-HAZARD -> GUARD-BREACH -> P5-LOSS -> REC-PASS. NO-DOSE -> panel (std 0.5 or
+# end readiness rewards); NO-HAZARD (dose without the hazard) falsifies STATE -> the falls lever.
+CLIMB_GAIN, S8_DOSE_D, S8_HAZ, S8_K3 = 0.05, 0.10, 0.03, 0.01
+ALL_BANDS = (0, 40)
+
+
+def k1_state(c: dict, g: int = 0) -> dict:
+    from picklebot_mj import ballidx_rule as br
+    from picklebot_mj.tasks.ball_index import SPLIT_VARS
+    spec = {name: (lo, w, nb) for name, lo, w, nb in SPLIT_VARS}
+    out = {}
+    for name in ("recover_dist", "pelvis_speed"):
+        out[name] = br.var_stats(*br.band_hist(c, g, 0, name, band=ALL_BANDS), *spec[name])["p50"]
+    m1 = br.var_stats(*br.band_hist(c, g, 0, "pelvis_speed"), *spec["pelvis_speed"])
+    m3 = br.var_stats(*br.band_hist(c, g, 2, "pelvis_speed"), *spec["pelvis_speed"])
+    out.update({"k1_n": m1["balls"], "k1_fail": m1["failure"], "k3_fail": m3["failure"]})
+    return out
+
+
+def _idlerec_window(rows: list[dict], it_lo: int, it_hi: int, start_it: int) -> tuple[float, int]:
+    rows = [r for r in rows if "idlerec" in r]
+    a = _row_from(rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(rows, max((start_it + it_hi) * STEPS_PER_IT, a["step"] + (it_hi - it_lo) * STEPS_PER_IT))
+    if a is None or b is None or b["step"] <= a["step"]:
+        return float("nan"), 0
+    s, n = b["idlerec"][0] - a["idlerec"][0], b["idlerec"][1] - a["idlerec"][1]
+    return (s / n if n else float("nan")), int(n)
+
+
+def s8_climb_kill(rows: list[dict], start_it: int) -> tuple[str, str]:
+    lo, nlo = _idlerec_window(rows, 0, 60, start_it)
+    hi, nhi = _idlerec_window(rows, 300, 360, start_it)
+    if lo != lo or hi != hi or min(nlo, nhi) < MIN_WINDOW_EVENTS:
+        return "NO-DATA", f"newly paid recovery windows: {lo} (n {nlo}), {hi} (n {nhi}): NO-DATA (not a kill)"
+    v = "CONTINUE" if hi >= lo + CLIMB_GAIN else "KILL-NO-CLIMB"
+    return v, f"newly paid recovery value, iterations 0-60 {lo:.4f} -> 300-360 {hi:.4f} (kill below +{CLIMB_GAIN}) -> {v}"
+
+
+def s8_lines(child: dict, parent: dict, control: dict) -> dict:
+    inv = min(child["k1_n"], parent["k1_n"], control["k1_n"]) < DIAG_MIN_K1
+    dose = (None not in (child["recover_dist"], parent["recover_dist"], control["recover_dist"])
+            and child["recover_dist"] <= parent["recover_dist"] - S8_DOSE_D and child["recover_dist"] <= control["recover_dist"] - S8_DOSE_D)
+    haz = (None not in (child["k1_fail"], parent["k1_fail"], control["k1_fail"], child["k3_fail"], parent["k3_fail"])
+           and child["k1_fail"] <= parent["k1_fail"] - S8_HAZ and child["k1_fail"] <= control["k1_fail"] - S8_HAZ
+           and child["k3_fail"] <= parent["k3_fail"] + S8_K3)
+    return {"invalid": inv, "dose": dose, "hazard": haz}
+
+
+def s8_verdict(invalid: bool, dose: bool, hazard: bool, guards: bool, p5_kept: bool) -> str:
+    """After KILL (the driver): INVALID -> NO-DOSE -> NO-HAZARD -> GUARD-BREACH -> P5-LOSS -> REC-PASS."""
+    if invalid:
+        return "INVALID"
+    if not dose:
+        return "NO-DOSE"
+    if not hazard:
+        return "NO-HAZARD"
+    if not guards:
+        return "GUARD-BREACH"
+    if not p5_kept:
+        return "P5-LOSS"
+    return "REC-PASS"

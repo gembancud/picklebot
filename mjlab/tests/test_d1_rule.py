@@ -265,3 +265,34 @@ def test_sum_counters():
     a = {"split": {"x": [[1, 2], [3, 4]]}, "n": 5, "meta": "m"}
     b = {"split": {"x": [[10, 20], [30, 40]]}, "n": 1, "meta": "m"}
     assert dr.sum_counters(a, b) == {"split": {"x": [[11, 22], [33, 44]]}, "n": 6, "meta": "m"}
+
+
+def test_stage8_climb_lines_and_verdicts():
+    start = 31399
+    rows = [{"step": (start + it) * 24, "idlerec": [0.30 * 2000 * k + (0.08 * 2000 if it >= 300 else 0) * 0, 2000 * k, 0, 0]}
+            for k, it in enumerate((0, 60, 300, 360))]
+    assert dr.s8_climb_kill(rows, start)[0] == "KILL-NO-CLIMB"  # flat 0.30
+    rows2 = [{"step": r["step"], "idlerec": [0.30 * 2000 * k if k < 3 else 0.30 * 2000 * 2 + 0.40 * 2000, 2000 * k, 0, 0]}
+             for k, r in enumerate(rows)]
+    assert dr.s8_climb_kill(rows2, start)[0] == "CONTINUE"  # 0.30 -> 0.40
+    assert dr.s8_climb_kill([], start)[0] == "NO-DATA"
+    st = lambda d, f1, f3=0.03, n=2000: {"recover_dist": d, "pelvis_speed": 0.2, "k1_n": n, "k1_fail": f1, "k3_fail": f3}  # noqa: E731
+    L = dr.s8_lines(st(0.55, 0.14), st(0.70, 0.18), st(0.68, 0.18))
+    assert L == {"invalid": False, "dose": True, "hazard": True}
+    assert not dr.s8_lines(st(0.62, 0.14), st(0.70, 0.18), st(0.68, 0.18))["dose"]
+    assert not dr.s8_lines(st(0.55, 0.16), st(0.70, 0.18), st(0.68, 0.18))["hazard"]
+    assert dr.s8_lines(st(0.55, 0.14, n=900), st(0.70, 0.18), st(0.68, 0.18))["invalid"]
+    v = dr.s8_verdict
+    assert [v(True, 1, 1, 1, 1), v(0, 0, 1, 1, 1), v(0, 1, 0, 1, 1), v(0, 1, 1, 0, 1), v(0, 1, 1, 1, 0), v(0, 1, 1, 1, 1)] == \
+        ["INVALID", "NO-DOSE", "NO-HAZARD", "GUARD-BREACH", "P5-LOSS", "REC-PASS"]
+
+
+def test_k1_state_reads_the_parent_diag68_counters():
+    import os
+    if not os.path.exists("results/diag68-r05.jsonl"):
+        return
+    from picklebot_mj import agility_rule as ar
+    c = dr.sum_counters(ar.window(ar.read_rows("results/diag68-r05.jsonl"), "ballidx", 0.5, 1.0),
+                        ar.window(ar.read_rows("results/diag68-r05b.jsonl"), "ballidx", 0.5, 1.0))
+    s = dr.k1_state(c)
+    assert s["k1_n"] == 1917 and 0.3 < s["recover_dist"] < 1.2 and 0.1 < s["k1_fail"] < 0.3 and s["k3_fail"] < 0.06

@@ -474,3 +474,55 @@ def test_parked_mask_needs_both_robots_idle():
     assert fs.parked_mask(env).all()
     pc.parked[2] = False  # env 2 (court 0's side B) still has a ball in play
     assert fs.parked_mask(env).tolist() == [False, True, False, True]
+
+
+def test_rally_idlerec_changes_only_the_recovery_function():
+    """D-205: the IdleRec task equals FastMove except recovery's function (same weight, same std)."""
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+    from picklebot_mj.tasks import footwork_specialist as fs
+    from picklebot_mj.tasks import return_stand as rs
+    a, b = load_env_cfg(fs.TASK_RALLY_FASTMOVE), load_env_cfg(fs.TASK_RALLY_IDLEREC)
+    assert list(a.rewards) == list(b.rewards) and type(a.actions["ball"]) is type(b.actions["ball"])
+    for k in a.rewards:
+        if k == "recovery":
+            assert a.rewards[k].func is rs.recovery_reward and b.rewards[k].func is fs.rally_recovery_reward
+            assert a.rewards[k].weight == b.rewards[k].weight and a.rewards[k].params == b.rewards[k].params
+        else:
+            assert a.rewards[k] == b.rewards[k]
+
+
+def test_idle_recovery_on_a_real_pair_court():
+    """D-205: paid after a reset (parked), the fired env unpaid once its feed is in play, the receiver unpaid from the
+    hand-off, hit_done envs paid as before, busy envs unpaid; distance only."""
+    import math
+    from types import SimpleNamespace
+    import torch
+    from picklebot_mj.pairs import PairCourts
+    from picklebot_mj.tasks import footwork_specialist as fs
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    pc = PairCourts(4, "cpu", handoff="contact")
+    move = torch.zeros(4, dtype=torch.bool)
+    t = SimpleNamespace(pairs=pc, hit_done=torch.zeros(4, dtype=torch.bool), drill=SimpleNamespace(move_ep=move), shadow=None,
+                        recover_xy=torch.zeros(4, 2), pelvis_xy=lambda: torch.tensor([[0.0, 0.0], [1.5, 0.0], [0.0, 0.0], [0.0, 0.0]]))
+    env = SimpleNamespace(action_manager=SimpleNamespace(get_term=lambda name: t), common_step_counter=1)
+    pc.on_reset(torch.arange(4))
+    r = fs.rally_recovery_reward(env, std=1.5)
+    assert r.tolist()[0] == 1.0 and abs(r[1] - math.exp(-1.0)) < 1e-6 and r[2] == 1.0 and r[3] == 1.0  # parked: paid by distance
+    move[3] = True
+    assert fs.rally_recovery_reward(env, std=1.5)[3] == 0.0  # busy: unpaid
+    move[3] = False
+    fire = Z
+    for _ in range(30):
+        fire, _ = pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=Z)
+        if fire.any():
+            break
+    a = int(fire.nonzero()[0])
+    b = (a + 2) % 4
+    r = fs.rally_recovery_reward(env, std=1.5)
+    assert r[a] == 0.0 and r[b] > 0.0  # the fed env has its ball in play; its partner waits parked
+    _, recv = pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(a))  # a's legal contact hands the ball to b
+    t.hit_done[a] = True
+    r = fs.rally_recovery_reward(env, std=1.5)
+    assert bool(recv[b]) and r[b] == 0.0 and r[a] > 0.0  # b receives: unpaid; a hit: paid as before

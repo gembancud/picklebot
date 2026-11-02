@@ -5847,3 +5847,46 @@ No thresholds change. The static parent stays the promotion reference.
 - Reported, not part of the rule: k = 1 / 2 / 3+ failure 0.327 / 0.153 / 0.038 at 0.5 s, and 0.295 / 0.161 / 0.042 at 3.0 s (all bands).
 
 **(iii):** rally-d1s3ctl exited 2 at task lookup, before any training. The driver did not export PICKLEBOT_TRAIN_ENTRY=scripts/diag/footwork_train.py, which registers the FastMove task. Fixed. The control is relaunched as rally-d1s3ctlb with the same training seed 197 (unused, since nothing trained) and the same settings and lines. No files were deleted.
+
+### D-204 result (i) (2026-11-02): diag68 reads STATE
+
+On the summed 0.5-s read (seeds 4220332 + 4220337, 1,917 k = 1 balls in the band), STATE fires on both state variables:
+
+| variable | k = 1 tercile gap | k >= 3 tercile gap |
+|---|---|---|
+| pelvis speed | 0.179 | 0.016 |
+| recovery distance | 0.138 | 0.023 |
+
+- BALL does not fire. The best shot variable, bounce_depth, removes 0.327 of the k = 1 excess.
+- Parent k = 1 baseline: recover_dist p50 0.705 m; matched-band failure 0.1805 (k >= 3: 0.0213).
+- Reported: all-band failure k = 1 / 2 / 3+ is 0.323 / 0.156 / 0.039 at 0.5 s, and 0.295 / 0.161 / 0.042 at 3.0 s (one seed).
+- Route: recovery to ready at rally start / after misses. (iii), the drift control rally-d1s3ctlb, is still training.
+
+Round 69 correction: the mechanism is narrower than D-204 stated. hit_done is cleared only at the env's next feed or a reset, so only robots after a no-contact miss, or a reset, go unpaid while waiting (about half of the k = 1 receivers).
+
+## D-205 (2026-11-02): d1s8 - recovery also paid while parked
+
+Panel round 69: 5 of 5 for (a). Run: scripts/diag/d1_stage8.sh (watcher d1s8_watch.py); it starts after D-204's driver is done.
+
+**One change:** the d1s3 child (model_31399, d1 base) trains 1,200 iterations on Picklebot-Rally22b-FastMove-IdleRec-G1.
+- d1s3's task, except recovery_reward's mask: it also pays while parked on a pair court and not busy.
+- Distance only, std 1.5, weight 1.0.
+- D-203 settings; training seed 199, smoke 200.
+- rally-d1s3ctlb (seed 197) is the unconditional control. It must have finished unkilled, else CONTROL-UNAVAILABLE.
+
+**Kill at +360:** D-194's lines, KILL-FARM, KILL-NO-CLIMB (the newly paid value must rise +0.05 from iterations 0-60 to 300-360), KILL-SLOWED / NO-ARRIVE.
+
+**Endpoint** (LR-0 split reads at 0.5 s, dev 4220332 + 4220337 summed, paired with the parent's diag68 reads):
+- **INVALID:** < 1,000 k = 1 balls in any arm.
+- **DOSE:** k = 1 recover_dist p50 <= parent - 0.10 m and <= control - 0.10 m.
+- **HAZARD (primary):** matched-band k = 1 failure <= parent - 0.03 and <= control - 0.03; k >= 3 failure <= parent + 0.01.
+- **GUARDS:** pooled 4-seed reads against the static parent; against the control, reported only.
+- **P5-KEPT:** P(5+) on 4220306 >= parent - 0.01.
+
+**Order:** KILL, INVALID, NO-DOSE, NO-HAZARD, GUARD-BREACH, P5-LOSS, REC-PASS.
+- NO-DOSE -> panel: std 0.5, or end readiness rewards.
+- NO-HAZARD falsifies STATE -> the falls lever.
+
+**Not adopted:** RL's NO-GAP gate (one vote; new code). Recorded risk: the unpaid stratum (about half of the k = 1 receivers) may be too small to move the median.
+
+**Seeds (ledgered):** training 199-200; dev paired reuse only.

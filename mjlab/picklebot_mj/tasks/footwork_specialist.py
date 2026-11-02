@@ -623,3 +623,62 @@ def rally_parked(cfg):
 register_mjlab_task(task_id=TASK_RALLY_PARKED, env_cfg=rally_parked(load_env_cfg(ag.SRC_22B)),
                     play_env_cfg=rally_parked(load_env_cfg(ag.SRC_22B, play=True)), rl_cfg=load_rl_cfg(ag.SRC_22B),
                     runner_cls=load_runner_cls(ag.SRC_22B))
+
+
+# D-205 d1s8 (panel round 69, 5 of 5 for (a); diag68 routed STATE): d1s3's task with one change, recovery_reward's mask.
+# return_stand.recovery_reward pays exp(-(d / std)^2) to recover_xy only while hit_done (this env's last ball was its own
+# legal hit; cleared at its next feed or a reset), so a robot whose last ball ended without a legal contact, or one just
+# reset, is unpaid while it waits; it is the k = 1 receiver diag68 found off its spot. Here the term also pays while the
+# env is parked on a pair court (no ball in play in it) and not busy (a move or ghost-swing episode, whose recover_xy is
+# the drill spot). Same std (1.5 m in this task) and weight 1.0: distance only (d1s6 paid stopping through a speed
+# factor); receiving clears parked and a feed clears hit_done, so nothing is paid at or after this env's own contact
+# (d1s4 planted the feet there). PICKLEBOT_READY_LOG (report only, the KILL-NO-CLIMB read) appends cumulative [value on
+# newly paid steps, newly paid steps, value on hit_done steps, hit_done steps] every READY_LOG_EVERY steps.
+TASK_RALLY_IDLEREC = "Picklebot-Rally22b-FastMove-IdleRec-G1"
+
+
+def idle_recovery_mask(t) -> torch.Tensor:
+    pc = getattr(t, "pairs", None)
+    if pc is None:
+        return torch.zeros_like(t.hit_done)
+    m = pc.parked.clone()
+    dr = getattr(t, "drill", None)
+    if dr is not None:
+        m = m & ~dr.move_ep
+    sh = getattr(t, "shadow", None)
+    if sh is not None:
+        m = m & ~sh.swing_ep
+    return m
+
+
+def rally_recovery_reward(env, std: float = _rs.RECOVERY_STD) -> torch.Tensor:
+    t = env.action_manager.get_term("ball")
+    d = (t.pelvis_xy() - t.recover_xy).norm(dim=-1)
+    v = torch.exp(-(d / std) ** 2)
+    new = idle_recovery_mask(t) & ~t.hit_done
+    out = v * (t.hit_done | new).float()
+    log = os.environ.get("PICKLEBOT_READY_LOG")
+    if log:
+        if not hasattr(t, "idlerec_stats"):
+            t.idlerec_stats, t._idlerec_last = torch.zeros(4, device=out.device), -1
+        t.idlerec_stats += torch.stack([(v * new).sum(), new.sum().float(), (v * t.hit_done).sum(), t.hit_done.sum().float()])
+        step = int(env.common_step_counter)
+        if step % READY_LOG_EVERY == 0 and step != t._idlerec_last:
+            t._idlerec_last = step
+            import json
+            with open(log, "a") as f:
+                f.write(json.dumps({"step": step, "idlerec": [round(x, 4) for x in t.idlerec_stats.tolist()]}) + "\n")
+    return out
+
+
+def rally_idlerec(cfg):
+    cfg = rally_fastmove(cfg)
+    r = cfg.rewards["recovery"]
+    assert r.func is _rs.recovery_reward, r.func
+    cfg.rewards["recovery"] = dataclasses.replace(r, func=rally_recovery_reward)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_IDLEREC, env_cfg=rally_idlerec(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_idlerec(load_env_cfg(ag.SRC_22B, play=True)), rl_cfg=load_rl_cfg(ag.SRC_22B),
+                    runner_cls=load_runner_cls(ag.SRC_22B))

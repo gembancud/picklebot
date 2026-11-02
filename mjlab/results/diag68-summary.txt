@@ -1,0 +1,21 @@
+parent artifacts/train/logs/picklebot_return_stand/2026-11-01_12-07-09_rally-d1s3/model_31399.pt on the d1 base /mnt/f/dev/picklebot-mjlab/mjlab/artifacts/train/logs/picklebot_return_stand/2026-10-31_18-24-20_s5c-d1-fw1bS/model_32854.pt
+k=1 balls in the band 939 < 1000
+RESTART (reported) r05: failure k=1 / 2 / 3+ = 0.327 (n 2654) / 0.153 (n 1787) / 0.038 (n 24975)
+RESTART (reported) r30: failure k=1 / 2 / 3+ = 0.295 (n 2309) / 0.161 (n 1619) / 0.042 (n 20737)
+VERDICT (i): INVALID
+control training: {"run": "rally-d1s3ctl", "exit_code": 2, "finished": "2026-11-02T16:58:13+08:00"}
+training ended before the +360 check
+control endpoint 
+VERDICT (iii): ENDPOINT-MISMATCH
+0.5-s read: seeds 4220332 + 4220337 summed (D-204 addendum)
+STATE pelvis_speed: k=1 top - bottom tercile failure 0.17899999999999996 (>= 0.1), k>=3 0.016 (<= 0.05) -> True
+STATE recover_dist: k=1 top - bottom tercile failure 0.138 (>= 0.1), k>=3 0.0228 (<= 0.05) -> True
+BALL bounce_depth: k=1 failure 0.1779, matched to k>=3 balls 0.1266, k>=3 0.0211: share of the excess removed 0.327 (>= 0.5) -> False
+BALL net_clear: k=1 failure 0.1788, matched to k>=3 balls 0.1659, k>=3 0.0212: share of the excess removed 0.082 (>= 0.5) -> False
+BALL angle: k=1 failure 0.1805, matched to k>=3 balls 0.1585, k>=3 0.0213: share of the excess removed 0.138 (>= 0.5) -> False
+BALL spin: k=1 failure 0.1805, matched to k>=3 balls 0.1893, k>=3 0.0213: share of the excess removed -0.055 (>= 0.5) -> False
+RESTART (reported) r05: failure k=1 / 2 / 3+ = 0.323 (n 5265) / 0.156 (n 3552) / 0.039 (n 50036)
+RESTART (reported) r30: failure k=1 / 2 / 3+ = 0.295 (n 2309) / 0.161 (n 1619) / 0.042 (n 20737)
+VERDICT (i): STATE
+
+Note (D-204 addendum): the first block above (the 939-ball INVALID, the first launch's control exit 2 and its ENDPOINT-MISMATCH) is superseded by the block from '0.5-s read: seeds 4220332 + 4220337 summed'; results/diag68-summary.json is authoritative. The 3.0-s RESTART line is one seed (4220333).
