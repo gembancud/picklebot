@@ -222,3 +222,40 @@ def test_open_hazards_reproduce_p5_open():
     for x in hz:
         surv *= 1 - x
     assert abs(surv - rc.p5_open(p)[0]) < 0.002
+
+
+def test_diag68_matched_failure_and_route_shapes():
+    # k = 1 fails 0.5 in bin 0 and 0.1 in bin 1; k >= 3 balls sit 10 / 90 -> matched 0.14
+    assert abs(dr.matched_failure([100, 100], [50, 90], [10, 90]) - 0.14) < 1e-9
+    assert dr.matched_failure([0, 0], [0, 0], [5, 5]) is None
+    from picklebot_mj import ballidx_rule as br
+    from picklebot_mj.tasks.ball_index import SPLIT_VARS
+    import random
+    rnd = random.Random(0)
+    rows = br.N_KBINS * 40 * 2  # groups x k bins x distance bins
+    c = {"split": {}, "split_legal": {}}
+    for name, lo, w, nb in SPLIT_VARS:
+        h = [[0] * (nb + 1) for _ in range(rows)]
+        lg = [[0] * (nb + 1) for _ in range(rows)]
+        for k in range(br.N_KBINS):
+            for d in range(*br.MATCHED_BAND):
+                r = k * 40 + d
+                for b in range(nb):
+                    n = rnd.randint(5, 20)
+                    fail = 0.3 if k == 0 else 0.03
+                    h[r][b] = n
+                    lg[r][b] = int(round(n * (1 - fail)))
+        c["split"][name], c["split_legal"][name] = h, lg
+    v, lines = dr.diag68_route(c)
+    assert v == "NEITHER" and len(lines) == 6  # flat failure inside each k: no state gap, nothing explained by the ball
+
+
+def test_pool_reads_and_mean_shift(tmp_path):
+    import json
+    for i, (c, n) in enumerate(((0.5, 100), (0.7, 300))):
+        json.dump({"per_family": {"fast": {"contact": c, "episodes": n}}}, open(tmp_path / f"p{i}.json", "w"))
+        json.dump({"directions": {"left": {"contact": c, "feeds": n}, "back": {"contact": c, "feeds": n}}}, open(tmp_path / f"d{i}.json", "w"))
+    pf, pd = dr.pool_reads([str(tmp_path / "p0.json"), str(tmp_path / "p1.json")], [str(tmp_path / "d0.json"), str(tmp_path / "d1.json")])
+    assert abs(pf["per_family"]["fast"]["contact"] - 0.65) < 1e-9 and pf["per_family"]["fast"]["episodes"] == 400
+    assert abs(pd["directions"]["left"]["contact"] - 0.65) < 1e-9 and pd["directions"]["back"]["feeds"] == 400
+    assert abs(dr.mean_family_shift({"a": {"contact": 0.4}, "b": {"contact": 0.5}}, {"a": {"contact": 0.45}, "b": {"contact": 0.5}}) + 0.025) < 1e-9

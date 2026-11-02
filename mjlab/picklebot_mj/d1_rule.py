@@ -544,3 +544,98 @@ def open_hazards(p: dict, kmax: int = 4) -> list[float]:
         reached = sum(h[k:]) + sum(oh[k:])
         out.append(h[k] / reached if reached else float("nan"))
     return out
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-204 diag68 (panel round 68, 3 of 5 for (i) first, all 5 for (i) and (iii) before any lever): the first handed ball.
+# Parent d1s3 model_31399, two LR-0 reads with the ball-index split tally (the TF task), refeed 0.5 s (dev 4220332) and
+# 3.0 s (dev 4220333); pair courts, the matched distance band, second half. Lines (0.5-s read):
+#   INVALID if fewer than 1,000 k = 1 balls in the band.
+#   STATE (motion): for pelvis_speed or recover_dist, k = 1 failure top tercile - bottom tercile >= 0.10 while the
+#     same gap at k >= 3 is <= 0.05.
+#   BALL (coach, as a share): for a shot variable (bounce_depth, net_clear, angle, spin), k = 1 failure reweighted to
+#     the k >= 3 balls' bin shares removes >= half of the k = 1 excess over k >= 3.
+#   Route: STATE only -> recovery to ready at rally start / after misses; BALL only -> the returner's feed-return
+#   quality or the pair-court mix; BOTH -> panel; NEITHER -> the falls lever (RL). RESTART (reported): k = 1 failure
+#   at 3.0 s vs 0.5 s.
+DIAG_MIN_K1, STATE_GAP, STATE_FLAT, BALL_SHARE = 1000, 0.10, 0.05, 0.5
+DIAG_STATE_VARS = ("pelvis_speed", "recover_dist")
+DIAG_SHOT_VARS = ("bounce_depth", "net_clear", "angle", "spin")
+
+
+def matched_failure(h1: list[int], l1: list[int], h3: list[int]) -> float | None:
+    """k = 1 failure with its bins reweighted to the k >= 3 balls' shares (bins without k = 1 balls dropped)."""
+    pairs = [(1 - a / b, c) for b, a, c in zip(h1, l1, h3) if b > 0 and c > 0]
+    w = sum(c for _, c in pairs)
+    return sum(f * c for f, c in pairs) / w if w else None
+
+
+def diag68_route(c: dict, g: int = 0) -> tuple[str, list[str]]:
+    from picklebot_mj import ballidx_rule as br
+    from picklebot_mj.tasks.ball_index import SPLIT_VARS
+    spec = {name: (lo, w, nb) for name, lo, w, nb in SPLIT_VARS}
+    lines = []
+    h1_any, _ = br.band_hist(c, g, 0, "pelvis_speed")
+    n1 = sum(h1_any)
+    if n1 < DIAG_MIN_K1:
+        return "INVALID", [f"k=1 balls in the band {n1} < {DIAG_MIN_K1}"]
+    state = []
+    for name in DIAG_STATE_VARS:
+        nb = spec[name][2]
+        g1 = br.var_stats(*br.band_hist(c, g, 0, name), *spec[name])
+        g3 = br.var_stats(*br.band_hist(c, g, 2, name), *spec[name])
+        t1, t3 = g1["terciles"], g3["terciles"]
+        d1 = None if None in (t1[2]["failure"], t1[0]["failure"]) else t1[2]["failure"] - t1[0]["failure"]
+        d3 = None if None in (t3[2]["failure"], t3[0]["failure"]) else t3[2]["failure"] - t3[0]["failure"]
+        ok = d1 is not None and d3 is not None and d1 >= STATE_GAP and d3 <= STATE_FLAT
+        if ok:
+            state.append(name)
+        lines.append(f"STATE {name}: k=1 top - bottom tercile failure {d1} (>= {STATE_GAP}), k>=3 {d3} (<= {STATE_FLAT}) -> {ok}")
+    ball = []
+    for name in DIAG_SHOT_VARS:
+        nb = spec[name][2]
+        h1, l1 = br.band_hist(c, g, 0, name)
+        h3, l3 = br.band_hist(c, g, 2, name)
+        h1, l1, h3, l3 = h1[:nb], l1[:nb], h3[:nb], l3[:nb]
+        f1 = 1 - sum(l1) / sum(h1) if sum(h1) else None
+        f3 = 1 - sum(l3) / sum(h3) if sum(h3) else None
+        m1 = matched_failure(h1, l1, h3)
+        share = None if None in (f1, f3, m1) or f1 <= f3 else (f1 - m1) / (f1 - f3)
+        ok = share is not None and share >= BALL_SHARE
+        if ok:
+            ball.append(name)
+        lines.append(f"BALL {name}: k=1 failure {f1 and round(f1, 4)}, matched to k>=3 balls {m1 and round(m1, 4)}, k>=3 "
+                     f"{f3 and round(f3, 4)}: share of the excess removed {share and round(share, 3)} (>= {BALL_SHARE}) -> {ok}")
+    v = "BOTH" if state and ball else ("STATE" if state else ("BALL" if ball else "NEITHER"))
+    return v, lines
+
+
+# D-204 control (panel round 68, experiment design): the pure d1s3 continuation rally-d1s3ctl (no change, training seed
+# 197) as the drift reference. Guard reads pooled over 4 seeds per checkpoint (family contact weighted by episodes,
+# direction contact by feeds). GUARD-N: the parent's single-seed read (4220306) breaches r19_guards against its own pooled
+# read -> later guard reads use >= 4 seeds. DRIFT: the control breaches r19_guards against the pooled parent, or its mean
+# family contact shift is <= -2.0 points -> later children are also reported against the control. Thresholds unchanged.
+DRIFT_MEAN = -0.02
+
+
+def pool_reads(pairs_paths: list[str], dir_paths: list[str]) -> tuple[dict, dict]:
+    import json
+    fam, dirs = {}, {}
+    for p in pairs_paths:
+        for k, v in json.load(open(p))["per_family"].items():
+            a = fam.setdefault(k, [0.0, 0])
+            a[0] += v["contact"] * v["episodes"]
+            a[1] += v["episodes"]
+    for p in dir_paths:
+        for k, v in json.load(open(p))["directions"].items():
+            a = dirs.setdefault(k, [0.0, 0])
+            a[0] += v["contact"] * v["feeds"]
+            a[1] += v["feeds"]
+    pf = {k: {"contact": a[0] / a[1] if a[1] else 0.0, "episodes": a[1]} for k, a in fam.items()}
+    pd = {k: {"contact": a[0] / a[1] if a[1] else 0.0, "feeds": a[1]} for k, a in dirs.items()}
+    return {"per_family": pf}, {"directions": pd}
+
+
+def mean_family_shift(child_fam: dict, ref_fam: dict) -> float:
+    ks = [k for k in ref_fam if k in child_fam]
+    return sum(child_fam[k]["contact"] - ref_fam[k]["contact"] for k in ks) / max(len(ks), 1)

@@ -5801,3 +5801,39 @@ Run: scripts/diag/d1_stage7.sh. Endpoint rally-d1s7 model_32598. Summary: mjlab/
 **Verdict NO-DOSE.** By D-203's stop rule this ends the feeder premise: d1s4, d1s5, d1s6 and d1s7 all failed to change the state at the feeder fire.
 
 d1s3 model_31399 stays the parent. Every d1s3 continuation so far breaches backhand and/or fast contact; no pure continuation control has been run. Panel round 68 is called (mjlab/results/footwork-round68-brief.md).
+
+### D-203 addendum (2026-11-02, panel round 68): corrections to the D-203 result
+
+- NO-USE is "not applicable" for d1s7: it applies only after DOSE passes. It does not "also hold".
+- "d1s4, d1s5, d1s6 and d1s7 all failed" is wrong. d1s5 never trained (SMOKE-FAIL), so three feeder levers were tested and the rally cap is untested. The stop rests on d1s7's own NO-DOSE and stands.
+- The guard breaches cannot be attributed from single-seed reads. Each family has n of about 150-225, so the SE of a difference is about 5 points, and the same parent fails its own fast guard across two seed sets (-5.6). d1s7's backhand -8.9 sits at about -1.8 SE.
+
+## D-204 (2026-11-02): the first-handed-ball diagnostic, then the drift control
+
+Panel round 68 (mjlab/results/footwork-review.md): all five want (i) and (iii) before any new lever; 3 of 5 want (i) first. Run: scripts/diag/diag68.sh.
+
+**(i) diag68:** the parent d1s3 model_31399, LR-0 reads with the existing ball-index split tally:
+- refeed 0.5 s on dev 4220332;
+- refeed 3.0 s on dev 4220333 (reported only);
+- second half, pair courts, matched band.
+
+**Rules** (picklebot_mj/d1_rule.diag68_route, committed before the reads):
+- **INVALID:** fewer than 1,000 k = 1 balls.
+- **STATE:** for pelvis speed or recovery distance, k = 1 failure top - bottom tercile >= 0.10 while k >= 3 stays <= 0.05.
+- **BALL:** a shot variable whose reweighting of k = 1 to the k >= 3 bins removes >= half the k = 1 excess.
+
+**Routes:**
+- STATE only -> recovery to ready at rally start / after misses;
+- BALL only -> feed-return quality or the pair-court mix;
+- BOTH -> panel;
+- NEITHER -> the falls lever.
+
+**(iii) rally-d1s3ctl:** the parent continued 1,200 iterations on its own task with no change.
+- Training seed 197, D-203 settings, no smoke (no code change), D-194 kill lines only.
+- Guard reads are pooled over 4 seeds per checkpoint: pairs 4220306, 4220328, 4220329, 4220331; direction 4220307, 4220334, 4220335, 4220336.
+- **GUARD-N:** the parent's single read breaches against its pooled read -> later guard reads use >= 4 seeds.
+- **DRIFT:** the control breaches r19_guards against the pooled parent, or its mean family shift <= -2.0 points -> later children are also reported against the control. Otherwise NO-DRIFT.
+
+No thresholds change. The static parent stays the promotion reference.
+
+**Seeds (ledgered):** dev 4220328-4220336 as above; training 197.

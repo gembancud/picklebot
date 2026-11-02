@@ -572,3 +572,54 @@ Brief: footwork-round67-brief.md.
 - d1 + --recover; d1b; Fast4 floor; H1''.
 
 **Decision:** D-203.
+
+
+## Round 68 (2026-11-02): d1s7 reads NO-DOSE; the feeder premise ends
+
+Brief: footwork-round68-brief.md.
+
+**Correction checks**
+- **NO-DOSE is robust** (all five). Against the parent retest on 4220330, the child moved -0.027 m/s and -0.004 m, against required changes of -0.05 and -0.10.
+- **No code defect** (architecture). The flag, the term in both networks, and the freeze were confirmed in each run's params and .env files. The indexing matches PairCourts.
+- **The actor barely uses the input.** Its new-column norms are 0.29-0.76, against an old-column median of 3.75. The critic's are 3.0-5.8.
+  - Raw norms across networks are not comparable (RL).
+  - The actor's use grew from 0.11 to 0.67 while dose did not move, so information was not the limit (RL).
+- **Brief errors:**
+  - NO-USE is "not applicable" (it applies only after DOSE), not "also holds" (experiment design).
+  - d1s5 never trained (SMOKE-FAIL), so three levers were tested and the rally cap is untested. The stop stands on d1s7's own NO-DOSE (RL, experiment design).
+  - Ball 4 fails at 0.010; 0.003 is ball 5 on (coach, experiment design).
+  - The rally length 3.80 is a training window, not a read (coach).
+  - d1s7's gains were at balls 2-3 (0.082 -> 0.063, 0.028 -> 0.008), not at the opening (coach).
+  - The receiver state by handed-ball index was already logged (ballidx52 / 63, the dose logs). It needs no new code (architecture).
+- **Restart share** (motion, CPU). At a 3-s refeed the first handed ball fails 0.191 (parent) and 0.162 (child), against 0.287 / 0.296. So about a third to a half of the ball-1 excess is the restart state.
+- **Guards** (experiment design).
+  - Each family has n of about 150-225, so the SE of a difference is about 5 points, the size of the slack. With 16 families, the worst one lands near -8.5 points by chance.
+  - The same parent read on two seed sets fails its own fast guard (-5.6). RL: fast 0.457 vs 0.514.
+  - d1s7's backhand -8.9 (z -1.8, mean shift -1.0) looks like noise. d1s4 (mean -3.3) and d1s6 (mean -2.65) look like real erosion.
+  - The static parent stays the promotion reference (never loosened). Attribution needs more seeds and a control.
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| Coach | (i) diagnostic (ball vs body), then (iii) |
+| RL | (i) plus a guard retest, then a lever with an unconditional control |
+| Motion | (i) diagnostic (state / ball / restart), then (iii) |
+| Experiment design | (iii) modified (pooled 4-seed guard reads), then (i); no lever until both |
+| Architecture | (iii) on the GPU now, (i) CPU-built alongside |
+
+**All five want (i) and (iii) before any new lever; 3 of 5 want (i) first.** Run D-204 (scripts/diag/diag68.sh): (i) then (iii) in one driver.
+- **(i)** One parent LR-0 read with the existing split tally per refeed delay: 0.5 s (dev 4220332) and 3.0 s (dev 4220333, the RESTART report).
+- **Lines (d1_rule.diag68_route), set before the read:**
+  - **INVALID:** fewer than 1,000 k = 1 balls.
+  - **STATE** (motion): pelvis speed or recovery distance, with k = 1 failure top - bottom tercile >= 0.10 while k >= 3 stays <= 0.05.
+  - **BALL** (coach's matching, as a share): a shot variable whose reweighting of k = 1 to k >= 3's bins removes >= half the k = 1 excess.
+  - **Route:** STATE only -> recovery to ready at rally start / after misses (motion's untested mechanism: recovery_reward pays only after the robot's own hit); BALL only -> feed-return quality or pair-court mix; BOTH -> panel; NEITHER -> the falls lever (RL).
+  - Architecture's miss / fault split is not coded (least code). The existing tally already separates contact from legal.
+- **(iii) rally-d1s3ctl** (experiment design's form): the parent continued 1,200 iterations with no change, training seed 197, no smoke, D-194 kill lines only.
+  - Guard reads are pooled over 4 seeds per checkpoint.
+  - **GUARD-N:** the parent's single read breaches against its pooled read -> later guard reads use >= 4 seeds.
+  - **DRIFT:** the control breaches r19_guards against the pooled parent, or its mean family shift <= -2.0 points -> later children are also reported against the control. Otherwise **NO-DRIFT**.
+- **RL's alternative** (an unconditional control inside the next lever) is kept for the lever after this.
+
+**Decision:** D-204.
