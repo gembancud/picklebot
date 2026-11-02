@@ -1298,6 +1298,35 @@ def teacher_contact_obs(env) -> torch.Tensor:
     return out * (t.tc_found & ~t.tc_pending & ~t.hit_done & ~t.rules.dead).unsqueeze(-1).float()
 
 
+def restart_obs(env) -> torch.Tensor:
+    """D-203 (d): the pair-court restart state, which the policy could not see before: this robot parked, its partner
+    parked, the court dead, the next feeder ball's receiver on a dead court (+1 this robot, -1 the partner, 0 on a live
+    court; PairCourts' parity with its busy override) and the refeed countdown (1 -> 0 while the timer runs, else 0).
+    Zeros without pair courts (single-robot tasks). PICKLEBOT_RESTART_OBS_FREEZE=1 (the D-203 NO-USE ablation read)
+    holds the live-court values (all zero) throughout."""
+    t = _term(env)
+    pc = getattr(t, "pairs", None)
+    out = torch.zeros(env.num_envs, 5, device=env.device)
+    if pc is None or os.environ.get("PICKLEBOT_RESTART_OBS_FREEZE") == "1":
+        return out
+    dead = pc.court_dead.repeat(2)
+    pick_b = (pc.rally_idx % 2).bool()
+    if getattr(t.cfg, "pair_respect_moves", False):  # as PairCourts.step: never to a busy robot
+        busy = torch.zeros_like(pc.parked)
+        if t.drill is not None:
+            busy = busy | t.drill.move_ep
+        if t.shadow is not None:
+            busy = busy | t.shadow.swing_ep
+        pick_b = torch.where(busy[: pc.h], torch.ones_like(pick_b), torch.where(busy[pc.h:], torch.zeros_like(pick_b), pick_b))
+    mine = pc.side == pick_b.long().repeat(2)
+    out[:, 0] = pc.parked.float()
+    out[:, 1] = pc.parked[pc.partner].float()
+    out[:, 2] = dead.float()
+    out[:, 3] = torch.where(mine, 1.0, -1.0) * dead.float()
+    out[:, 4] = (pc.timer.clamp(min=0.0) / max(float(t.cfg.refeed_delay_s), 1e-6)).clamp(max=1.0).repeat(2)
+    return out
+
+
 def recovery_reward(env, std: float = RECOVERY_STD) -> torch.Tensor:
     """Be near the recovery spot between the hit and the next feed (never before the hit)."""
     t = _term(env)

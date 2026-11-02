@@ -500,3 +500,47 @@ def s6_verdict(dose: bool, guards: bool, fup: bool, fband: bool, fup_control: bo
     if fup and fband and kept:
         return "PARK-F"
     return "PARK-FAIL"
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-203 d1s7 (panel round 67, 5 of 5: (d) alone): the d1s3 child with return_stand.restart_obs as a trailing actor and
+# critic input (zero columns), on d1s3's own task. NO-USE (experiment design; applies only after DOSE passes): on the
+# paired dose read with the new inputs frozen at live-court values (PICKLEBOT_RESTART_OBS_FREEZE), the ablated child
+# takes back at least half of the DOSE gain on a DOSE dimension that passed; otherwise the inputs are not what moved it.
+USE_FRACTION = 0.5
+
+
+def s7_use(child_vars: dict, parent_vars: dict, ablated_vars: dict) -> tuple[bool, str]:
+    lines, used = [], False
+    for k, line in (("pelvis_speed", DOSE_V), ("recover_dist", DOSE_D)):
+        c, p, a = child_vars[k]["p50"], parent_vars[k]["p50"], ablated_vars[k]["p50"]
+        if None in (c, p, a) or not c <= p - line:
+            lines.append(f"{k}: child {c} vs parent {p} (no DOSE on this dimension)")
+            continue
+        back = (a - c) / (p - c)
+        used |= back >= USE_FRACTION
+        lines.append(f"{k}: child {c} vs parent {p}, frozen inputs {a}: takes back {back:.2f} of the gain (USED if >= {USE_FRACTION})")
+    return used, "USE: " + "; ".join(lines) + f" -> {'USED' if used else 'NO-USE'}"
+
+
+def s7_verdict(dose: bool, used: bool, guards: bool, fup: bool, fband: bool, fup_control: bool | None, abs_f: bool,
+               rally: bool, agile: bool, k3: bool, p5_kept: bool, refeed3: bool) -> str:
+    """After KILL / INVALID (the driver): NO-DOSE -> NO-USE -> GUARD-BREACH -> MIX -> MORE-TIME -> OBS-PASS -> OBS-F -> OBS-FAIL.
+    Stop rule (round 67): NO-DOSE or NO-USE ends the feeder premise (no fourth feeder lever)."""
+    if not dose:
+        return "NO-DOSE"
+    if not used:
+        return "NO-USE"
+    v = s6_verdict(True, guards, fup, fband, fup_control, abs_f, rally, agile, k3, p5_kept, refeed3)
+    return v.replace("PARK-", "OBS-")
+
+
+def open_hazards(p: dict, kmax: int = 4) -> list[float]:
+    """Report only (round 67 diagnosis): the share of rallies that reach shot position k (open rallies counted) and end
+    there, for k = 0 (the feeder ball) .. kmax. The opening exchange, not the steady per-ball rate, holds P(5+) down."""
+    h, oh = p["len_hist"], p["open_len_hist"]
+    out = []
+    for k in range(kmax + 1):
+        reached = sum(h[k:]) + sum(oh[k:])
+        out.append(h[k] / reached if reached else float("nan"))
+    return out

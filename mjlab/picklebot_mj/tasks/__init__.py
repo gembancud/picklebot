@@ -1049,6 +1049,19 @@ def _residualize(cfg, lam_r: float = 1.0, base: str | None = None):
         _leg_residual(cfg, float(os.environ["PICKLEBOT_LEG_R"]))
     if os.environ.get("PICKLEBOT_TEACHER") == "1":  # D-156: evaluation tasks for teacher checkpoints
         _teacher(cfg, float(os.environ.get("PICKLEBOT_TEACHER_GAIN", "1")))  # D-157: the gain the checkpoint trained with
+    if os.environ.get("PICKLEBOT_RESTART_OBS") == "1":  # D-203: training and evaluation tasks for restart-obs checkpoints
+        _restart_obs(cfg)
+    return cfg
+
+
+def _restart_obs(cfg):
+    """D-203 (d): return_stand.restart_obs (5 columns) as a trailing input to the actor and the critic; the frozen base
+    reads only its own leading columns. The parent is widened by scripts/expand_checkpoint.py (zero columns)."""
+    from mjlab.managers.observation_manager import ObservationTermCfg
+    from picklebot_mj.tasks.return_stand import restart_obs
+    for group in ("actor", "critic"):
+        if "restart" not in cfg.observations[group].terms:
+            cfg.observations[group].terms["restart"] = ObservationTermCfg(func=restart_obs)
     return cfg
 
 

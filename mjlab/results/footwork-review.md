@@ -510,3 +510,65 @@ Brief: footwork-round66-brief.md.
 - d1 + --recover; d1b; Fast4 floor test; H1''.
 
 **Decision:** D-202.
+
+
+## Round 67 (2026-11-02): d1s6 reads NO-DOSE
+
+Brief: footwork-round67-brief.md.
+
+**Correction checks**
+- **The brief misread the dose log** (experiment design, RL, motion). PICKLEBOT_READY_LOG keeps running totals.
+  - Taken window by window, the value per paid step is 0.27-0.29 from the first 10 iterations and flat to the end. The 0.10 was the resume transient.
+  - The paid share falls 13.4 % -> 8.1 % and then stays flat.
+  - The term was never climbed. Future logs record windowed values.
+- **The DOSE and GUARDS reads are valid** (all five).
+  - The parent dose file is byte-identical to d1s5's: same task, seed and base, and the dose-tally code is unchanged since 11-01.
+  - The fire state is read before `_refeed`, against the same recover_xy that was paid.
+  - The parent's two dose reads on 4220326 (D-200: 0.296 / 0.866; d1s5: 0.278 / 0.893) differ by about 0.02 m/s and 0.03 m. That is test-retest noise, smaller than the 0.05 / 0.10 lines, and the child is worse than both reads.
+- **No code defect** (architecture). Rewards run after the decimation loop, so the fire step is not paid.
+- **Design flaw** (architecture, coach). The value is sharp in speed and soft in distance, so inside a 0.5 s window stopping where you are pays more than moving to the spot. Training launch bins, previous rally 0-1:
+  - d < 0.3 m at the fire: d1s3 20.4 %, d1s6 15.1 %;
+  - v < 0.25 m/s: 52.0 % -> 53.8 %.
+- **Unobservable state** (RL). To the robot, "parked on a dead court" looks the same as "parked, waiting for the partner's shot", where the right move is to load the first step. Paying stillness there likely cost the fast / left / back contact.
+- **The guard breach may be partly drift** (motion). The control only runs on F-UP.
+- **Coach's arithmetic gap, diagnosed** (CPU, read-only). Feeder 0.63 x partner 0.99^4 = 0.61, yet P(5+) is 0.39.
+  - No accounting bug: PairCourts alone with fixed per-ball rates reproduces 0.596.
+  - The 0.99 own-ball rate is shot-weighted: 974 of 1,024 courts are still open at the 64-shot cap.
+  - Failure rate by shot position (parent): feeder 0.383, first handed ball 0.287, second 0.082, third 0.028, fourth 0.010, later about 0.003. Their product gives exactly 0.387.
+  - On a log scale, the feeder ball is 51 % of the P(5+) shortfall and the first handed ball 36 %.
+  - The read ran without `--audit-fixes`: about 900 early-volley returns are not counted. That is small.
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| Coach | (i), smallest form (time-to-fire, receive-next); keep the feeder premise |
+| Motion | (i), observation only |
+| Experiment design | (i), (d) alone; adds NO-USE and a stop rule |
+| RL | (i), (d) alone |
+| Architecture | (i) on d1s3's task, no parked_ready; code given |
+
+**5 of 5 for (i): run d1s7, the restart state as an input, with no reward change.** Taken into the code:
+- **Inputs:** architecture's / RL's five trailing columns in actor and critic: parked, partner parked, court dead, next receiver (+1 / -1 on a dead court, PairCourts' parity with its busy override), refeed countdown 1 -> 0.
+  - Switched by PICKLEBOT_RESTART_OBS=1 in `_residualize`. Tested: last term in every stage and h5f task, and absent when off.
+- **Warm-start:** expand_checkpoint.py on model_31399, giving zero columns, a (0, 1) normalizer prior and zero Adam moments.
+  - INVALID: before training, the widened checkpoint equals the parent on the old columns (verified on CPU).
+  - Smoke: the new columns get a gradient in both networks.
+- **NO-USE** (experiment design's form; others proposed variants): the child's dose read with the inputs frozen at live-court values must take back >= half of the DOSE gain.
+  - It is paired on 4220326, not ED's proposed 4220329, because the measured test-retest noise between seeds (0.02 / 0.03) is half the size of the line.
+- **Stop rule** (experiment design): NO-DOSE or NO-USE ends the feeder premise, with no fourth feeder lever.
+- **Reported only:** the parent dose retest on 4220330; failure rates at each opening position (round 67 diagnosis).
+- **Not adopted:**
+  - coach's FIRST-STEP line, which needs new measurement code (queued);
+  - motion's always-on control (one vote; D-202's control-only-if-F-UP kept).
+- **Seeds:** training 197, smoke 198; paired reads 4220306-4220327 as before; dev 4220330 for the parent retest.
+
+**For the user** (coach): the frozen target read refeeds 0.5 s after a rally ends, which no real rally does. A 3-s refeed lifts feeder legal 0.63 -> 0.76 and P(5+) 0.39 -> 0.55. The panel does not change the target. This is raised with the user.
+
+**Queued:**
+- the first handed ball (29 % hazard) as its own lever, if (d) does not cover it;
+- the falls lever;
+- FIRST-STEP;
+- d1 + --recover; d1b; Fast4 floor; H1''.
+
+**Decision:** D-203.

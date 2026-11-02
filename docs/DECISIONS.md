@@ -5723,3 +5723,60 @@ Panel round 66: 5 of 5 for (i), i.e. round 65's runner-up (b). Run: scripts/diag
 - Reads use dev 4220306-4220327, paired with the reused parent references: D-199's reads, and D-201's parent dose read on 4220326.
 - Training seeds 195 (run and control) and 196 (smoke).
 - Dev 4220328-4220335 is reserved for new reads. All are ledgered.
+
+### D-202 result (2026-11-02): d1s6 reads NO-DOSE - parked readiness did not change the feeder-fire state
+
+Run: scripts/diag/d1_stage6.sh. Endpoint rally-d1s6 model_32598. Summary: mjlab/results/d1s6-summary.txt (and .json).
+
+**The run was clean:**
+- smoke 2.82 falls (half-split 5.26 -> 0.92);
+- every +360 line CONTINUE: falls 1.60, legal_return 0.804;
+- mean rally length 3.64 vs the parent's 3.26, so no farming;
+- speed kept: sustained left / back 1.62 / 1.79 vs 1.61 / 1.77.
+
+**Training dose log:** the paid value rose from about 0.10 to 0.29, but the paid share of dead-court env steps fell from 13.5 % to 8.6 %.
+
+**Endpoint vs the parent d1s3 child, same dev seeds:**
+- **DOSE fails:** pelvis-speed p50 at the feeder fire 0.284 vs 0.278; recovery distance p50 0.997 vs 0.893.
+- **GUARDS breached:** fast contact -12.5, easy_forehand -8.3, left + back feeder contact -5.2.
+- **Feeder lines fail:** F-UP 0.6076 vs 0.6285; F-BIN 0.691 vs 0.751; F-BAND 0.892 vs 0.905.
+- **Not kept:** P5 0.3716 vs 0.3873; REFEED3 0.727 vs 0.756.
+- **Kept:** K3 0.968 vs 0.959; AGILE (R_LB 0.847 vs 0.824).
+- **h5f court falls:** 5.19 % vs 6.2 %.
+- **Rally gate:** not met.
+
+**Verdict NO-DOSE** (first in precedence; GUARD-BREACH also holds). Three feeder levers have now failed: d1s4, d1s5 and d1s6. Panel round 67 is called (mjlab/results/footwork-round67-brief.md). d1s3 model_31399 stays the parent.
+
+## D-203 (2026-11-02): d1s7 - the restart state as an input (d), no reward change
+
+Panel round 67 (mjlab/results/footwork-review.md): 5 of 5 for (i). Run: scripts/diag/d1_stage7.sh (watcher d1s7_watch.py).
+
+**Correction to the D-202 result:** the dose log is cumulative. The windowed paid value was flat at 0.27-0.29 from iteration 10. The term was never climbed.
+
+**Two diagnoses (CPU, existing logs):**
+- **The parked value rewarded stopping, not reaching the spot.** Share of feeder fires with d < 0.3 m at the fire: 20.4 % -> 15.1 % in training.
+- **P(5+) is held down by the opening exchange.** Failure rate by shot position (parent): feeder 0.383, first handed ball 0.287, second 0.082, later about 0.003 or less. Their product equals P(5+) 0.387, and there is no accounting bug. The own-ball 0.99 is shot-weighted toward courts that never stop.
+
+**One change:** the parent d1s3 child (model_31399, d1 base) gets return_stand.restart_obs as a trailing actor and critic input (PICKLEBOT_RESTART_OBS=1):
+- five columns: parked, partner parked, court dead, next receiver, refeed countdown;
+- widened by scripts/expand_checkpoint.py (zero columns), so its outputs equal the parent's exactly;
+- trained 1,200 iterations on d1s3's own task (Picklebot-Rally22b-FastMove-G1), no reward change, same settings; endpoint model_32598.
+
+**INVALID** (before training, CPU): the widened checkpoint equals the parent on the old columns, and the new columns are zero / (0, 1).
+
+**Smoke:** D-202's checks, the restart term in actor and critic, and a gradient on the new columns.
+
+**Kill at +360:** D-194's lines, KILL-FARM, KILL-SLOWED / KILL-NO-ARRIVE.
+
+**Endpoint:**
+- D-202's lines, unchanged.
+- **NO-USE** (applies after DOSE passes): the child's dose read with the inputs frozen at live-court values (PICKLEBOT_RESTART_OBS_FREEZE=1, paired on 4220326) must take back >= half of the DOSE gain on a passing DOSE dimension.
+- Reported only: the parent dose retest on 4220330, and failure rates by opening position.
+
+**Verdicts:** KILL, INVALID, NO-DOSE, NO-USE, GUARD-BREACH, MIX, MORE-TIME, OBS-PASS, OBS-F, OBS-FAIL.
+
+**Stop rule:** NO-DOSE or NO-USE ends the feeder premise.
+
+**Seeds:** training 197 (run and control), 198 (smoke); paired dev reads 4220306-4220327; 4220330 for the parent retest (ledgered).
+
+**Raised with the user, not changed:** the frozen target read refeeds 0.5 s after a rally ends (coach).

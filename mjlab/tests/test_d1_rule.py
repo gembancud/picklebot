@@ -189,3 +189,36 @@ def test_stage6_farm_dose_and_verdicts(tmp_path):
     assert v(True, True, True, True, None, True, True, True, True, True, True) == "PARK-PASS"
     assert v(True, True, True, True, None, False, False, True, True, True, True) == "PARK-F"
     assert v(True, True, False, True, None, False, False, True, True, True, True) == "PARK-FAIL"
+
+
+def test_stage7_use_and_verdicts():
+    var = lambda v, d: {"pelvis_speed": {"p50": v}, "recover_dist": {"p50": d}}  # noqa: E731
+    parent, child = var(0.28, 0.90), var(0.20, 0.88)  # DOSE on speed only
+    assert dr.s7_use(child, parent, var(0.25, 0.80))[0]  # takes back 0.05 / 0.08 of the speed gain
+    assert not dr.s7_use(child, parent, var(0.22, 0.95))[0]  # 0.25 of it; distance had no DOSE
+    assert not dr.s7_use(var(0.27, 0.9), parent, var(0.28, 0.9))[0]  # no DOSE at all
+    v = dr.s7_verdict
+    assert v(False, True, True, True, True, None, True, True, True, True, True, True) == "NO-DOSE"
+    assert v(True, False, True, True, True, None, True, True, True, True, True, True) == "NO-USE"
+    assert v(True, True, False, True, True, None, True, True, True, True, True, True) == "GUARD-BREACH"
+    assert v(True, True, True, True, True, None, True, True, True, True, True, True) == "OBS-PASS"
+    assert v(True, True, True, True, True, None, False, False, True, True, True, True) == "OBS-F"
+    assert v(True, True, True, False, True, None, False, False, True, True, True, True) == "OBS-FAIL"
+
+
+def test_open_hazards_reproduce_p5_open():
+    import json
+    import os
+    import sys
+    path = "results/d1s6-parent-pairs.json"
+    if not os.path.exists(path):
+        return
+    sys.path.insert(0, "scripts")
+    import rally_check as rc
+    p = json.load(open(path))["pairs"]
+    hz = dr.open_hazards(p)
+    assert abs(hz[0] - 0.383) < 0.002 and abs(hz[1] - 0.287) < 0.002
+    surv = 1.0
+    for x in hz:
+        surv *= 1 - x
+    assert abs(surv - rc.p5_open(p)[0]) < 0.002
