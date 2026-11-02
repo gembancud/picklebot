@@ -296,3 +296,16 @@ def test_k1_state_reads_the_parent_diag68_counters():
                         ar.window(ar.read_rows("results/diag68-r05b.jsonl"), "ballidx", 0.5, 1.0))
     s = dr.k1_state(c)
     assert s["k1_n"] == 1917 and 0.3 < s["recover_dist"] < 1.2 and 0.1 < s["k1_fail"] < 0.3 and s["k3_fail"] < 0.06
+
+
+def test_pooled_pairs_and_drift_verdict(tmp_path):
+    import json
+    for i, (fl, f) in enumerate(((60, 100), (70, 100))):
+        json.dump({"pairs": {"court_counts": [[0, 0, f, fl]], "len_hist": [5, 0, 0, 0, 0, 1], "open_len_hist": [0, 0, 0, 0, 0, 4]}},
+                  open(tmp_path / f"p{i}.json", "w"))
+    q = dr.pooled_pairs([str(tmp_path / "p0.json"), str(tmp_path / "p1.json")])
+    assert abs(q["feeder"] - 0.65) < 1e-9 and abs(q["p5"] - 10 / 20) < 1e-9
+    v = dr.drift_verdict
+    assert v(False, 0.0, 0.6, 0.6, 0.4, 0.4) == "STILL-DRIFT" and v(True, -0.021, 0.6, 0.6, 0.4, 0.4) == "STILL-DRIFT"
+    assert v(True, -0.005, 0.60, 0.605, 0.40, 0.405) == "FIXED"
+    assert v(True, -0.015, 0.60, 0.60, 0.40, 0.40) == "PARTIAL" and v(True, 0.0, 0.58, 0.60, 0.40, 0.40) == "PARTIAL"

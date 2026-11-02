@@ -672,3 +672,52 @@ Brief: footwork-round69-brief.md.
 - **Not adopted:** RL's NO-GAP gate (1 vote; it needs new tally code). It waits for the drift control and is recorded as a risk: the unpaid stratum may be too small to move the k = 1 median.
 
 **Decision:** D-205.
+
+
+## Round 70 (2026-11-02): the drift control reads DRIFT; d1s8 reads SMOKE-FAIL
+
+Brief: footwork-round70-brief.md.
+
+**Correction checks**
+- **DRIFT is valid as pre-registered** (all five). It fires on the breach branch: reach_backhand -6.6, reach_deep -5.1, cross_forehand -3.9. The -1.93 mean plays no part.
+  - Each breach is about 2.5 SE (pooled n of about 640-750 per family). 13 of 17 families moved down, and the control is below the parent on all 4 seeds for the three breached families (experiment design, architecture).
+  - Caveat: one training seed (197).
+- **The brief overstated the P(5+) effect.** Pooled over 4 seeds, P(5+) is 0.381 for the parent and 0.375 for the control (-0.6 points, overlapping CIs), so "does not improve", not "erodes".
+  - The feeder loss is real: -3.1 points pooled, -2.7 to -4.1 on every seed (experiment design).
+  - Coach: grooved later shots held (positions 3-4 slightly better) while the rare, hard families faded.
+- **SMOKE-FAIL is valid; no instrument defect** (all five).
+  - falls_by_length reads only termination counts. All smokes log the same terms; episode length and env count match.
+  - Architecture: d1s8's time_out reads 1.2 / 1.4 in iterations 0-1; at 1.0 the smoke is still 4.385.
+- **The resume-shock reading was wrong.**
+  - The value-loss spike is in every smoke (RL, motion). d1s8's early KL is inside d1s4-d1s7's range (architecture).
+  - By quarter, d1s8 reads 11.5 / 3.9 / 3.5 / 1.4 falls per 1,000 env-s, against d1s7's 1.1 / 1.5 / 0.9 / 0.8 from the same parent (RL). In iterations 0-9 that is about 56 falls against about 5.
+  - Motion: the front-loaded new reward pays robots about 1.5 m off their spot. A distance-only pull speeds them up, which is the state diag68 found hazardous.
+- **New finding** (architecture): at 1,024 envs the KL guard trips on every update. In 12,288-env training it never trips (KL 0.013 mean), so "KL 0.05" is no constraint in training, and the smoke tests another optimizer regime. Recorded only; nothing is loosened.
+- **Why the control drifts** (RL): KL is flat at 0.013 and the guard never trips. Nothing anchors the policy to the parent, so 1,200 steps go to the frequent rewarded events and the rarely rewarded families erode.
+  - A lower LR or shorter run also cuts any lever's dose by the same factor.
+- **The critic warm-up is a second change against the control, not a re-roll** (experiment design, architecture). The knob lives in CriticWarmupRunner (tasks/__init__.py), not sched_ppo.py.
+- **Ledger:** training seed 199 was never trained; it is retired unused.
+- **Process:** RL reported writing and at once deleting a scratch file F:\dev\q.py, despite read-only instructions. Confirmed absent.
+
+**Votes:** 5 of 5 for (iii).
+
+| reviewer | vote |
+|---|---|
+| Coach | (iii) onset read, then COURT_MIX_WEAK; then (a) with a warm-up |
+| Motion | (iii) onset read, then LR 5e-5 or 600 iterations; (a) closed in this form |
+| Experiment design | (iii): onset read (EARLY / LATE), then LR 3e-5 if LATE; (a) parked |
+| RL | (iii): onset read, then a reference anchor (new code); LR 5e-5 fallback |
+| Architecture | (iii): LR 3e-5 now; the anchor if it still drifts |
+
+**Run D-206** (scripts/diag/drift70.sh).
+- **Stage A (4 of 5):** read the control's model_31800 / model_32200 on the pooled seeds.
+  - EARLY-DRIFT (experiment design's rule) at +400 -> panel (the anchor is new code). Otherwise LATE -> stage B.
+- **Stage B:** rally-d1s3lr, LR_PEAK 3e-5 (experiment design and architecture; motion and RL said 5e-5; experiment design's position breaks the tie), 1,200 iterations, seed 201, no smoke (a knob only).
+  - Read on the same pooled seeds (paired reuse, architecture and RL; experiment design proposed fresh seeds).
+  - **FIXED:** no breach, mean shift >= -1.0, pooled feeder and P(5+) >= parent - 0.01.
+  - **STILL-DRIFT:** a breach or mean <= -2.0 -> the anchor next.
+  - **PARTIAL** -> panel.
+- **(a) is parked**, not closed (experiment design, architecture, coach). It is re-tested on whichever recipe passes; motion's speed-hazard objection is recorded for that design.
+- **Not adopted:** COURT_MIX_WEAK (coach only); the warm-up (a second change).
+
+**Decision:** D-206.

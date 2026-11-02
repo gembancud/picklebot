@@ -725,3 +725,38 @@ def s8_verdict(invalid: bool, dose: bool, hazard: bool, guards: bool, p5_kept: b
     if not p5_kept:
         return "P5-LOSS"
     return "REC-PASS"
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-206 (panel round 70, 5 of 5 for (iii): fix the drift first). Stage A (reads only): the drift control's model_31800
+# (+400) and model_32200 (+800) on D-204's pooled guard seeds. EARLY-DRIFT (experiment design's rule): +400 breaches
+# r19_guards against the pooled parent or its mean family shift <= -2.0 -> a lower LR or a shorter run cannot fix it; the
+# anchored recipe (new code) goes to the panel. Otherwise LATE -> stage B: rally-d1s3lr, the parent on d1s3's task with
+# one change, LR_PEAK 1e-4 -> 3e-5, 1,200 iterations, training seed 201, read on the same pooled seeds. FIXED: no
+# r19_guards breach, mean shift >= -1.0, pooled feeder legal and pooled P(5+) >= parent - 0.01; STILL-DRIFT: a breach or
+# mean shift <= -2.0; otherwise PARTIAL -> panel.
+FIXED_MEAN, POOL_SLACK = -0.01, 0.01
+
+
+def pooled_pairs(paths: list[str]) -> dict:
+    """Pooled feeder legal (court_counts columns 3 / 2) and P(5+) with open rallies (summed histograms)."""
+    import json
+    cc = [0, 0, 0, 0]
+    h, oh = None, None
+    for p in paths:
+        q = json.load(open(p))["pairs"]
+        for row in q["court_counts"]:
+            for i in range(4):
+                cc[i] += row[i]
+        h = list(q["len_hist"]) if h is None else [a + b for a, b in zip(h, q["len_hist"])]
+        oh = list(q["open_len_hist"]) if oh is None else [a + b for a, b in zip(oh, q["open_len_hist"])]
+    k, n = sum(h[5:]) + sum(oh[5:]), sum(h) + sum(oh[5:])
+    return {"feeder": cc[3] / cc[2] if cc[2] else float("nan"), "p5": k / n if n else float("nan"), "rallies": n}
+
+
+def drift_verdict(guards_ok: bool, mean_shift: float, feeder: float, feeder_ref: float, p5: float, p5_ref: float) -> str:
+    if not guards_ok or mean_shift <= DRIFT_MEAN:
+        return "STILL-DRIFT"
+    if mean_shift >= FIXED_MEAN and feeder >= feeder_ref - POOL_SLACK and p5 >= p5_ref - POOL_SLACK:
+        return "FIXED"
+    return "PARTIAL"

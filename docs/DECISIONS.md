@@ -5903,3 +5903,26 @@ The base continuation recipe erodes contact families on its own. Later children 
 ### D-205 result (2026-11-02): d1s8 reads SMOKE-FAIL - nothing trained
 
 The smoke (seed 200) read 4.696 falls per 1,000 env-s against the line 4.157. Half-split (reported): 7.56 / 2.39. Exit 0, std 0.1065, config ok. The first-half transient is the largest of the series; the second half is in the parents' range. Training seed 199 was not used. Panel round 70 is called (mjlab/results/footwork-round70-brief.md).
+
+## D-206 (2026-11-02): fix the drift first - onset read, then LR 3e-5 if late
+
+Panel round 70 (mjlab/results/footwork-review.md): 5 of 5 for (iii). d1s8's SMOKE-FAIL stands, with no instrument defect. Lever (a) is parked, to be re-tested on a recipe that passes.
+
+**Round 70 corrections:**
+- The drift control does not erode P(5+): pooled over 4 seeds it reads 0.375 vs 0.381. Feeder legal does fall: -3.1 points pooled, and down on every seed.
+- d1s8's spike is not a generic resume transient. In iterations 0-9 it had about 56 falls against d1s7's 5, from the same parent.
+- At 1,024 envs the KL guard trips on every update; in 12,288-env training it never trips (KL 0.013). Recorded, not changed.
+- Training seed 199 is retired unused.
+
+**Run:** scripts/diag/drift70.sh.
+- **Stage A (reads only):** the control's model_31800 (+400) and model_32200 (+800), on D-204's pooled guard seeds.
+  - EARLY-DRIFT if +400 breaches r19_guards against the pooled parent, or its mean shift is <= -2.0. Then stop: the anchored recipe (new code) goes to the panel.
+  - Otherwise LATE -> stage B.
+- **Stage B:** rally-d1s3lr, model_31399 on d1s3's task with one change, PICKLEBOT_LR_PEAK 1e-4 -> 3e-5.
+  - 1,200 iterations, training seed 201, no smoke (a knob only, as the control); kill at +360 on D-194's lines.
+  - Read on the same pooled seeds (d1_rule.drift_verdict):
+    - FIXED: no breach, mean shift >= -1.0, pooled feeder and P(5+) >= parent - 0.01;
+    - STILL-DRIFT: a breach or mean shift <= -2.0 -> the anchor next;
+    - otherwise PARTIAL -> panel.
+
+**Seeds (ledgered):** paired reuse only; training 201.
