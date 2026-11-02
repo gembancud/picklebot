@@ -5837,3 +5837,13 @@ Panel round 68 (mjlab/results/footwork-review.md): all five want (i) and (iii) b
 No thresholds change. The static parent stays the promotion reference.
 
 **Seeds (ledgered):** dev 4220328-4220336 as above; training 197.
+
+### D-204 addendum (2026-11-02): (i) INVALID on n, extended by one seed; (iii) relaunched after a task-entry fault
+
+**(i):** the 0.5-s read (dev 4220332) had 939 k = 1 balls in the matched band, under the 1,000 floor, so diag68_route returned INVALID. It returned before computing any STATE or BALL line, so no verdict has been seen.
+- INVALID is a sample-size gate, not a result.
+- One more 0.5-s read of the parent on dev 4220337 is added. Its counters are summed with 4220332's, and the same rule (unchanged) is applied to the sum.
+- If the sum is still under 1,000, INVALID stands and goes to the panel.
+- Reported, not part of the rule: k = 1 / 2 / 3+ failure 0.327 / 0.153 / 0.038 at 0.5 s, and 0.295 / 0.161 / 0.042 at 3.0 s (all bands).
+
+**(iii):** rally-d1s3ctl exited 2 at task lookup, before any training. The driver did not export PICKLEBOT_TRAIN_ENTRY=scripts/diag/footwork_train.py, which registers the FastMove task. Fixed. The control is relaunched as rally-d1s3ctlb with the same training seed 197 (unused, since nothing trained) and the same settings and lines. No files were deleted.

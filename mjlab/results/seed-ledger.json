@@ -1588,6 +1588,14 @@
    ],
    "purpose": "D-204 (scripts/diag/diag68.sh). (i) diag68 parent LR-0 ball-index reads: 4220332 (refeed 0.5 s), 4220333 (refeed 3.0 s). (iii) drift control rally-d1s3ctl (training seed 197, D-203's control seed, first used here) guard reads pooled over 4 seeds: pairs 4220306 (reused) + 4220328, 4220329, 4220331; direction 4220307 (reused) + 4220334, 4220335, 4220336; parent and control on the same seeds. 4220330 used by D-203. Free after this: dev from 4220337 (4220337-4220340 held by round 68 for re-reads); training from 199.",
    "date": "2026-11-02"
+  },
+  {
+   "seeds": [
+    4220337,
+    4220337
+   ],
+   "purpose": "D-204 addendum: a second 0.5-s diag68 read of the parent (the first, 4220332, had 939 < 1,000 k = 1 balls in the band: INVALID on n); counters summed with 4220332, same rule. Training seed 197 relaunched as rally-d1s3ctlb (the first launch, rally-d1s3ctl, failed at task lookup before any training). Free after this: dev from 4220338 (4220338-4220340 held for re-reads); training from 199.",
+   "date": "2026-11-02"
   }
  ],
  "retired": {

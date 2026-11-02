@@ -259,3 +259,9 @@ def test_pool_reads_and_mean_shift(tmp_path):
     assert abs(pf["per_family"]["fast"]["contact"] - 0.65) < 1e-9 and pf["per_family"]["fast"]["episodes"] == 400
     assert abs(pd["directions"]["left"]["contact"] - 0.65) < 1e-9 and pd["directions"]["back"]["feeds"] == 400
     assert abs(dr.mean_family_shift({"a": {"contact": 0.4}, "b": {"contact": 0.5}}, {"a": {"contact": 0.45}, "b": {"contact": 0.5}}) + 0.025) < 1e-9
+
+
+def test_sum_counters():
+    a = {"split": {"x": [[1, 2], [3, 4]]}, "n": 5, "meta": "m"}
+    b = {"split": {"x": [[10, 20], [30, 40]]}, "n": 1, "meta": "m"}
+    assert dr.sum_counters(a, b) == {"split": {"x": [[11, 22], [33, 44]]}, "n": 6, "meta": "m"}

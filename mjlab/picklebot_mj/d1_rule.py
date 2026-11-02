@@ -639,3 +639,14 @@ def pool_reads(pairs_paths: list[str], dir_paths: list[str]) -> tuple[dict, dict
 def mean_family_shift(child_fam: dict, ref_fam: dict) -> float:
     ks = [k for k in ref_fam if k in child_fam]
     return sum(child_fam[k]["contact"] - ref_fam[k]["contact"] for k in ks) / max(len(ks), 1)
+
+
+def sum_counters(a, b):
+    """D-204 addendum: element-wise sum of two windowed ball-index counter trees (dicts / lists of numbers)."""
+    if isinstance(a, dict):
+        return {k: sum_counters(a[k], b[k]) if k in b else a[k] for k in a}
+    if isinstance(a, list):
+        return [sum_counters(x, y) for x, y in zip(a, b)]
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)) and not isinstance(a, bool):
+        return a + b
+    return a

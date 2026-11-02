@@ -14,7 +14,8 @@ cd /mnt/f/dev/picklebot-mjlab/mjlab; source ~/envs/picklebot-mj/bin/activate; ex
 unset PICKLEBOT_LAM_R PICKLEBOT_RES_BASE PICKLEBOT_LEG_R PICKLEBOT_TEACHER PICKLEBOT_TEACHER_GAIN PICKLEBOT_CONTROLLER PICKLEBOT_READY_LOG \
   PICKLEBOT_RESTART_OBS PICKLEBOT_RESTART_OBS_FREEZE
 pgrep -f "run-name |kickstart_h4|stage2_eval|footwork_eval|feeder_speed" > /dev/null && { echo "GPU busy: not started"; exit 1; }
-R=results/diag68; RC=results/d1s3ctl; CTRL=rally-d1s3ctl; L=artifacts/train/logs/picklebot_return_stand
+R=results/diag68; RC=results/d1s3ctl; CTRL=rally-d1s3ctlb;  # D-204 addendum: b = the relaunch after the task-entry fault (no training ran in rally-d1s3ctl)
+ L=artifacts/train/logs/picklebot_return_stand
 BASE=/mnt/f/dev/picklebot-mjlab/mjlab/$L/2026-10-31_18-24-20_s5c-d1-fw1bS/model_32854.pt
 PRUN=2026-11-01_12-07-09_rally-d1s3; PCK=model_31399.pt; P=$L/$PRUN/$PCK
 T=Picklebot-Rally22b-FastMove-G1; TF=Picklebot-Agility-BallIdx-Feeder-ReadCfg-LamR2-G1
@@ -23,6 +24,7 @@ ALG="--agent.algorithm.class-name picklebot_mj.rl.sched_ppo:ScheduledPPO"
 B=--env.actions.ball
 ov() { local o="$B.court-feed-prob 1.0 $B.refeed-delay-s $1 $B.recovery-mode fixed $B.planner-mode off $B.target-mode A"
   for f in backhand reach-backhand cross-backhand fast drop low reach-deep short high reach-forehand; do o="$o $B.feed-mix.weights.$f 1.0"; done; echo "$o"; }
+export PICKLEBOT_TRAIN_ENTRY=scripts/diag/footwork_train.py  # registers Picklebot-Rally22b-FastMove-G1 (missing in the first launch)
 TRAINENV="PICKLEBOT_CRITIC_WARMUP=0 PICKLEBOT_STD_MIN=0.1 PICKLEBOT_LR_PEAK=1e-4 PICKLEBOT_LR_WARMUP=0 PICKLEBOT_KL_GUARD=0.05 PICKLEBOT_LR_TOTAL=0"
 PA="--task Picklebot-Latent-Court-Res-G1 --move-prob 0.0 --swing-prob 0.0 --families every --target A --no-hint --rally --pairs --pair-handoff contact --envs 2048 --seconds 120"
 onbase() { PICKLEBOT_RES_BASE=$BASE PICKLEBOT_LAM_R=2 "$@"; }
@@ -38,13 +40,17 @@ diag() {  # name, refeed delay, seed
 }
 diag r05 0.5 4220332
 diag r30 3.0 4220333
+diag r05b 0.5 4220337  # D-204 addendum: the 0.5-s read had 939 < 1,000 k = 1 balls in the band; one more seed, counters summed, same rule
 python - <<'PY' | tee -a $R-summary.txt
 import json, os
 from picklebot_mj import agility_rule as ar, ballidx_rule as br, d1_rule as dr
 c = {}
-for arm in ("r05", "r30"):
+for arm in ("r05", "r30", "r05b"):
     p = f"results/diag68-{arm}.jsonl"
     c[arm] = ar.window(ar.read_rows(p), "ballidx", 0.5, 1.0) if os.path.exists(p) and os.path.getsize(p) else None
+if c["r05"] is not None and c["r05b"] is not None:  # D-204 addendum: the two 0.5-s seeds summed (4220332 + 4220337)
+    c["r05"] = dr.sum_counters(c["r05"], c["r05b"])
+    print("0.5-s read: seeds 4220332 + 4220337 summed (D-204 addendum)")
 if c["r05"] is None:
     print("VERDICT (i): EVAL-FAIL (no 0.5-s read)")
 else:
@@ -65,7 +71,7 @@ if [ ! -f artifacts/train/$CTRL.exit.json ]; then
 import os, sys, time
 sys.path.insert(0, ".")
 from picklebot_mj import d1_rule as dr
-LOG, EXIT = "artifacts/train/rally-d1s3ctl.log", "artifacts/train/rally-d1s3ctl.exit.json"
+LOG, EXIT = "artifacts/train/rally-d1s3ctlb.log", "artifacts/train/rally-d1s3ctlb.exit.json"
 k = None
 while k is None:
     if os.path.exists(EXIT):
@@ -77,7 +83,7 @@ while k is None:
         pass
 print(k[1], flush=True)
 if k[0].startswith("KILL"):
-    os.system("pkill -f 'run-name rally-d1s3ctl '")
+    os.system("pkill -f 'run-name rally-d1s3ctlb '")
 PY
   ) &
   env $TRAINENV PICKLEBOT_RES_BASE=$BASE PICKLEBOT_PAIR_LOG=$RC-train-share.jsonl PICKLEBOT_SCHED_LOG=$RC-train.jsonl \
