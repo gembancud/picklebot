@@ -1,0 +1,19 @@
+D-208: rally-d1s3anc03 = LR 3e-5 + anchor to artifacts/train/logs/picklebot_return_stand/2026-11-01_12-07-09_rally-d1s3/model_31399.pt, coef 0.3 constant
+training: {"run": "rally-d1s3anc03", "exit_code": 0, "finished": "2026-11-03T16:20:52+08:00"}
++341-360: falls per 1,000 env-s 1.66 (kill > 2 x 22b 1.57); legal_return 0.7586 (kill < 22b 0.7549 - 0.05) -> CONTINUE; reported +241-260: falls 1.53, legal_return 0.8876
+pull-back (reported), first 10 updates: [0.0039, 0.0091, 0.0123, 0.0145, 0.017, 0.021, 0.0232, 0.0252, 0.0247, 0.0257] coef 0.3
+pull-back (reported) at update 100: 0.03342888653278351, KL mean 0.0039
+pull-back (reported) at update 360: 0.035443229228258134, KL mean 0.0039
+pull-back (reported) at update 1200: 0.03530634418129921, KL mean 0.0038
+rally-d1s3anc03 (pooled) against the parent (pooled):
+guard: worst family contact vs parent pooled -3.1 (reach_backhand; kill below -5); cross_forehand 0.7567 vs parent pooled 0.7561 (kill below -3)
+guard: left + back feeder contact 0.4591 vs parent pooled 0.4557 (+0.3; kill below -5)
+mean family shift -0.39 points; backhand 0.6180 (parent 0.6385); pooled feeder 0.6315 (parent 0.6353); pooled P(5+) 0.3832 (parent 0.3812)
+GAIN: pooled P(5+) +0.20 points (>= +1); per-seed -0.53, -0.36, +0.48, +1.16; lower 95 % CI -1.06 (> 0) -> no gain
+mechanism (reported) parent: ready 0.153, falls/1000 hits 1.68, WRONG_SIDE share 0.259, recovery median 0.375 m
+mechanism (reported) d1s3lr: ready 0.318, falls/1000 hits 0.94, WRONG_SIDE share 0.220, recovery median 0.325 m
+mechanism (reported) anchor 1.0: ready 0.151, falls/1000 hits 1.74, WRONG_SIDE share 0.253, recovery median 0.375 m
+mechanism (reported) anchor 0.3: ready 0.150, falls/1000 hits 1.58, WRONG_SIDE share 0.248, recovery median 0.375 m
+drift FIXED; gain False
+RESULT HELD-NO-GAIN
+VERDICT: HELD-NO-GAIN

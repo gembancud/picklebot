@@ -6006,3 +6006,19 @@ Panel round 72 (mjlab/results/footwork-review.md): 5 of 5 for (i), a weaker anch
 - the parent's fresh pooled read against its D-204 pooled read is reported as a calibration.
 
 **Seeds (ledgered):** training 204; dev 4220341-4220348 if CONFIRM.
+
+### D-208 result (2026-11-03): rally-d1s3anc03 (anchor coef 0.3) reads HELD-NO-GAIN
+
+Training seed 204, clean. +360 falls 1.66, legal_return 0.759. The pull-back settled at 0.035 by about update 100 (3.2x the coef-1.0 plateau).
+
+**Pooled read against the parent:**
+- drift FIXED: no breach, mean family shift -0.39, backhand 0.618 vs 0.639;
+- feeder 0.632 vs 0.635;
+- GAIN fails: P(5+) +0.20 points, per seed -0.53 / -0.36 / +0.48 / +1.16, lower 95 % CI -1.06.
+- **Route HELD-NO-GAIN.**
+
+**Mechanism (reported):**
+- ready stance 0.150 (parent 0.153, d1s3lr 0.318);
+- falls per 1,000 hits 1.58 (parent 1.68, d1s3lr 0.94).
+
+The anchor holds the posture change that carried d1s3lr's P(5+) gain at the parent's values, at coef 0.3 as at 1.0. No confirmation ran (dev 4220341-4220348 unused). d1s3 model_31399 stays the parent. Panel round 73 is called (mjlab/results/footwork-round73-brief.md).
