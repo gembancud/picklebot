@@ -862,3 +862,46 @@ Brief: footwork-round73-brief.md.
 - **Queued:** the arm-share anchor (motion / architecture, new code); the backhand-weight run (coach).
 
 **Decision:** D-209.
+
+
+## Round 74 (2026-11-04): rally-d1s3lr2 (the d1s3lr replicate) reads NOT-REPLICATED
+
+Brief: footwork-round74-brief.md.
+
+**Correction checks**
+- **NOT-REPLICATED and PARTIAL are valid as pre-registered** (all five recomputed them).
+- **The GAIN CI was the wrong replication test** (all five; experiment design: its own design).
+  - About 2,600 rallies per seed give a binomial SD of about 1.3 points per per-seed difference, which is the whole observed spread (1.24).
+  - The t-3df interval re-estimates a known variance and pays t = 3.18. Its power at a true +1.5-1.8 point effect is about 10-40 %. It also never measures training-seed variance.
+  - So the result reads "gain not shown (test underpowered)", not "a seed effect".
+- **"8 of 8 positive" is inflated** (coach, motion, experiment design, architecture). Both children are compared with the same parent reads; the parent's low seed 4220331 gives both children their largest differences.
+- **"The posture replicates closely" overstates it** (motion).
+  - Falls (0.94 / 0.94), recovery (0.325 m) and the WRONG_SIDE drop replicate.
+  - The replicate widened its stance (ready 0.259) but lost the loading dip (dip 0.157 vs d1s3lr 0.26, parent 0.32; ready-and-dip 0.052 vs 0.097).
+  - It is not an agility gain: feeder direction contact and peak feeder speed are unchanged or slightly lower; right side about -2.5.
+- **Post hoc** (architecture): against the LR-1e-4 control, the lower CI is +0.61 (d1s3lr) and +0.07 (d1s3lr2). The static-parent comparison mixes "more training" with "LR".
+- **Labels:** falls units are mixed (+360 per 1,000 env-s, tables per 1,000 hits). The rep73 files are named `anc-` but hold the replicate. Recovery "median" is a mean of per-seed medians.
+
+**Votes:** 5 of 5 for (ii), LR 3e-5 as the recipe base with no promotion.
+
+| reviewer | lever | control seed |
+|---|---|---|
+| Coach | lever (a) | 205 (reuse lr2) |
+| RL | backhand weights | 206 (C doubles as a 3rd replicate) |
+| Architecture | backhand weights | 205 (reuse) |
+| Motion | lever (a) | 206 |
+| Experiment design | leans backhand weights | 206 |
+
+Lever: backhand weights, 3 to 2. Control: fresh seed 206, 3 to 2.
+
+**Run D-210** (scripts/diag/lev74.sh), training seed 206, no smoke (knobs only):
+- **C** = rally-d1s3lr3: d1s3lr's recipe.
+- **L** = rally-d1s3bh: C + backhand / reach-backhand / cross-backhand feeder weights 2.0.
+- **New GAIN2 statistic** (experiment design, prospective only): pooled difference >= +1 point and pooled difference - 1.96 x max(binomial SE, per-seed SE) > 0.
+- **RECIPE (C vs parent):** GAIN2 + ready >= 0.25 + falls <= 1.3. Confirmatory on seed-206 data only.
+- **LEVER (L vs C):** GAIN2 + r19_guards against the parent. A pass -> CONFIRM (pooled, fresh dev 4220341-48, parent / C / L re-read); else panel.
+- **Reported, never a verdict:** the 3-training-seed estimate. The 8 historical comparisons stay as history (no re-reads of the parent, d1s3lr or lr2).
+- **Calibration note:** on the historical reads, GAIN2 gives d1s3lr +0.82 and lr2 +0.15 lower bounds. It is used prospectively only.
+- **Queued:** lever (a) (coach, motion) on the same base.
+
+**Decision:** D-210.

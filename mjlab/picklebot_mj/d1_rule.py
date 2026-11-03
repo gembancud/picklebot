@@ -815,3 +815,39 @@ REP_READY, REP_FALLS = 0.25, 1.3
 
 def replicated(gain: bool, mech: dict) -> bool:
     return bool(gain) and mech["ready"] >= REP_READY and mech["falls_per_1000_hits"] <= REP_FALLS
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-210 (panel round 74, 5 of 5 for (ii): LR 3e-5 as the recipe base, no promotion). Two runs on training seed 206:
+# C = rally-d1s3lr3 (d1s3lr's recipe) and L = rally-d1s3bh (C + backhand-family feeder weights 2.0, coach; 3 of 5 for the
+# lever, 3 of 5 for a fresh matched control). New GAIN statistic (experiment design, prospective only): pooled P(5+)
+# difference >= +1 point and diff - 1.96 x max(binomial SE, empirical per-seed SE) > 0. RECIPE (C vs parent): GAIN2 plus
+# ready >= 0.25 and falls <= 1.3 (confirmatory on seed-206 data only). LEVER (L vs C): GAIN2, r19_guards against the
+# parent unchanged. LEVER pass + guards -> CONFIRM; else panel. The 3-training-seed estimate is reported, never a verdict.
+def gain2(child_paths: list[str], ref_paths: list[str]) -> tuple[bool, float, float, str]:
+    import json
+    import statistics
+    import sys
+    sys.path.insert(0, "scripts")
+    import rally_check as rc
+    qc, qr = pooled_pairs(child_paths), pooled_pairs(ref_paths)
+    diff = qc["p5"] - qr["p5"]
+    se_b = (qc["p5"] * (1 - qc["p5"]) / qc["rallies"] + qr["p5"] * (1 - qr["p5"]) / qr["rallies"]) ** 0.5
+    d = [rc.p5_open(json.load(open(c))["pairs"])[0] - rc.p5_open(json.load(open(r))["pairs"])[0] for c, r in zip(child_paths, ref_paths)]
+    se_e = statistics.stdev(d) / len(d) ** 0.5 if len(d) > 1 else float("inf")
+    lo = diff - 1.96 * max(se_b, se_e)
+    ok = diff >= GAIN_MIN and lo > 0
+    return ok, diff, lo, (f"GAIN2: pooled P(5+) {100 * diff:+.2f} points (>= +{100 * GAIN_MIN:.0f}); binomial SE {100 * se_b:.2f}, "
+                          f"per-seed SE {100 * se_e:.2f}; lower bound {100 * lo:+.2f} (> 0); per-seed "
+                          f"{', '.join(f'{100 * x:+.2f}' for x in d)} -> {'GAIN' if ok else 'no gain'}")
+
+
+def seed_estimate(diffs: list[float]) -> str:
+    """Reported only: the mean of per-training-seed pooled differences with a t interval (n - 1 df)."""
+    import statistics
+    t = {1: 12.706, 2: 4.303, 3: 3.182}
+    m = statistics.mean(diffs)
+    if len(diffs) < 2:
+        return f"training-seed estimate {100 * m:+.2f} (one seed)"
+    h = t.get(len(diffs) - 1, 2.0) * statistics.stdev(diffs) / len(diffs) ** 0.5
+    return f"training-seed estimate (reported) {100 * m:+.2f} points, 95 % CI {100 * (m - h):+.2f} to {100 * (m + h):+.2f} over {len(diffs)} training seeds"

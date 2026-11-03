@@ -336,3 +336,20 @@ def test_replicated():
     assert not dr.replicated(False, {"ready": 0.30, "falls_per_1000_hits": 1.0})
     assert not dr.replicated(True, {"ready": 0.20, "falls_per_1000_hits": 1.0})
     assert not dr.replicated(True, {"ready": 0.30, "falls_per_1000_hits": 1.5})
+
+
+def test_gain2_and_seed_estimate(tmp_path):
+    import json
+
+    def pairs(path, k, n=2000):
+        json.dump({"pairs": {"court_counts": [[0, 0, 10, 6]], "len_hist": [n - k, 0, 0, 0, 0, k], "open_len_hist": [0] * 6}},
+                  open(path, "w"))
+    c, r = [], []
+    for i, (kc, kr) in enumerate(((860, 800), (870, 800), (850, 800), (880, 800))):  # +3.0 .. +4.0 points
+        pairs(tmp_path / f"c{i}.json", kc); pairs(tmp_path / f"r{i}.json", kr)
+        c.append(str(tmp_path / f"c{i}.json")); r.append(str(tmp_path / f"r{i}.json"))
+    ok, diff, lo, _ = dr.gain2(c, r)
+    assert ok and abs(diff - 0.0325) < 1e-9 and lo > 0
+    ok, diff, lo, _ = dr.gain2(r, c)
+    assert not ok and diff < 0
+    assert "over 3 training seeds" in dr.seed_estimate([0.021, 0.0145, 0.01])

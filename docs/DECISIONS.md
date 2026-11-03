@@ -6059,3 +6059,24 @@ Training seed 205, clean. +360: falls 1.49, legal_return 0.873.
 Post hoc, not used for any verdict: all 8 eval-seed P(5+) differences across the two training seeds are positive (mean +1.79), and the posture change replicates.
 
 d1s3 model_31399 stays the parent. Panel round 74 is called (mjlab/results/footwork-round74-brief.md).
+
+## D-210 (2026-11-04): LR 3e-5 as the recipe base; backhand feeder weights against a matched control
+
+Panel round 74 (mjlab/results/footwork-review.md): 5 of 5 for (ii), LR 3e-5 as the recipe base with no promotion. Lever: backhand weights, 3 of 5 (lever (a) 2). Control: a fresh seed-206 run, 3 of 5. Run: scripts/diag/lev74.sh.
+
+**Round 74 findings:**
+- D-209's GAIN CI was underpowered: t at 3 df over 4 eval seeds of one training seed has about 10-40 % power at a true +1.5 point effect. The verdict reads "gain not shown", not "a seed effect".
+- Falls and recovery replicate (0.94 / 0.94 falls per 1,000 hits). The posture differs: the replicate's stance is wide but its loading dip is lower.
+
+**Runs** (training seed 206, no smoke, kill at +360 on D-194's lines):
+- **C** = rally-d1s3lr3: rally-d1s3lr's recipe (model_31399, d1s3's task, LR 3e-5, ScheduledPPO, no anchor, 1,200 iterations).
+- **L** = rally-d1s3bh: C + one change, feeder weights backhand / reach-backhand / cross-backhand 1.0 -> 2.0.
+
+**Statistic GAIN2** (d1_rule.gain2, prospective only): pooled P(5+) difference >= +1 point, and difference - 1.96 x max(binomial SE, per-seed SE) > 0.
+
+**Lines:**
+- **RECIPE** (C vs parent): GAIN2, ready stance >= 0.25 and falls per 1,000 hits <= 1.3.
+- **LEVER** (L vs C): GAIN2, plus r19_guards (pooled) against the parent. A pass -> CONFIRM on fresh dev 4220341-4220348 (parent, C and L re-read, pooled). CONFIRM-FAIL on an L breach against the parent, or L P(5+) < C. Otherwise -> panel.
+- **Reported only:** the 3-training-seed estimate (d1s3lr, d1s3lr2, C), and the backhand-family contact of L vs C. No re-reads of the parent, d1s3lr or lr2.
+
+**Seeds (ledgered):** training 206; dev 4220341-4220348 if CONFIRM (released from D-208/D-209 by a ledger note).
