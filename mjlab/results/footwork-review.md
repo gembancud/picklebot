@@ -721,3 +721,53 @@ Brief: footwork-round70-brief.md.
 - **Not adopted:** COURT_MIX_WEAK (coach only); the warm-up (a second change).
 
 **Decision:** D-206.
+
+
+## Round 71 (2026-11-03): rally-d1s3lr (LR 3e-5) reads STILL-DRIFT, with a P(5+) gain
+
+Brief: footwork-round71-brief.md.
+
+**Correction checks**
+- **STILL-DRIFT is valid as pre-registered** (all five). Both branches fire.
+  - The backhand breach (-5.6) is below the parent on all 4 seeds: -6.2, -6.8, -3.1, -6.5.
+  - The mean shift is -2.21 (SE 0.54); 16 of 17 families are down.
+  - RL: with 17 families at SE 1.5-2.7, some family falls below -5 about 20-25 % of the time even with no true drift, so FIXED can fail with a working anchor. Recorded only; the line is not loosened.
+- **The P(5+) gain is real for this checkpoint across eval seeds.**
+  - Per seed: +2.7, +1.6, +1.5, +2.8 (4 of 4). Pooled +2.12, SE 0.66, 95 % CI +0.8 to +3.4. Against the control: +1.4 to +4.3 per seed.
+  - Experiment design: one training seed, a non-pre-registered metric, and seeds reused five times make it a hypothesis, not a result.
+  - Motion: about 1,020 of 1,024 courts per seed end in an open rally of 64+, so the unit of independence is the court. The gain is about 15 % fewer failed rallies per court before lock-in.
+- **Brief errors:**
+  - n is 10,353 (d1s3lr) / 11,421 (parent), not about 11,000.
+  - "Paired" is by seed only.
+- **What 3e-5 changed in play** (motion, pooled pairs, parent -> lr):
+  - falls per 1,000 shots 1.63 -> 0.92;
+  - WRONG_SIDE endings -27 %;
+  - ready stance 0.153 -> 0.318;
+  - a more cautious mover: fast -4.6, topspin -4.2, paddle speed 5.73 -> 5.56.
+  - Against the control, lr held reach_backhand / reach_deep / cross_forehand.
+- **The backhand fade is rally-only** (coach). Feeder-drill backhand held: lr 0.639 vs parent 0.633. The 1e-4 control also loses pairs backhand (-4.8, 4 of 4 seeds), so it is the task, not the LR. Coach withdraws COURT_MIX_WEAK.
+- **LR does not limit the drift** (RL): mean shift -2.21 at 3e-5 vs -1.95 at 1e-4, with per-update KL 2.4x smaller. The objective pulls it, so (iii) is out.
+- **No code defects** in drift70.sh / pool_reads / pooled_pairs / drift_verdict (architecture). The pooled parent files recompute exactly.
+
+**Votes:** 5 of 5 for (i), the anchor on the LR 3e-5 base.
+
+| reviewer | vote |
+|---|---|
+| Coach | (i) on 3e-5; KL to the parent actor, coef 1.0 constant |
+| Motion | (i) on 3e-5; coef 1.0 constant; KEPT-GAIN reported |
+| RL | (i) on 3e-5; mean-KL with the reference std; coef 1.0 constant; against (ii) a moving baseline, against (iii) |
+| Experiment design | (i) on 3e-5, reference rally-d1s3lr; FIXED -> confirmation on fresh seeds |
+| Architecture | (i) on 3e-5; code given; coef 0.1 |
+
+Coefficient: 1.0 (4 of 5).
+
+**Run D-207** (scripts/diag/anchor71.sh): rally-d1s3anc.
+- **Change:** AnchoredScheduledPPO (a new subclass in sched_ppo.py, reusing RegPPO's _RefRegulariser; tests in tests/test_anchored_ppo.py).
+  - The reference is the parent model_31399's actor. The coefficient is held constant at 1.0, with no warm-up.
+  - LR 3e-5; training seed 202, smoke 203.
+- **Smoke:** the D-170 line, plus the pull-back wired (first update <= 0.01, nonzero by update 10).
+- **Kill at +360:** D-194's lines.
+- **Endpoint:** drift_verdict against the pooled parent, lines unchanged; reported against rally-d1s3lr (the one-change effect) and the control.
+- **If FIXED:** a confirmation read on fresh dev 4220338 / 4220339. A breach, or P(5+) below the parent -> panel, no promotion.
+
+**Decision:** D-207.

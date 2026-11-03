@@ -5944,3 +5944,27 @@ The +400 read is LATE, so stage B ran.
 - Not part of the verdict: pooled feeder 0.632 (parent 0.635, control 0.604); pooled P(5+) 0.402 (parent 0.381, control 0.375).
 
 D-206's route is the anchor next. Panel round 71 is called (mjlab/results/footwork-round71-brief.md) because the lower LR kept feeder and gained P(5+) while still breaching one guard. d1s3 model_31399 stays the parent.
+
+## D-207 (2026-11-03): the anchor on the LR 3e-5 recipe (rally-d1s3anc)
+
+Panel round 71 (mjlab/results/footwork-review.md): 5 of 5 for (i). Run: scripts/diag/anchor71.sh.
+
+**Round 71 findings:**
+- The LR 3e-5 P(5+) gain (+2.1 pooled, 4 of 4 seeds) is real for that checkpoint but rests on one training seed: a hypothesis.
+- LR does not limit the drift: per-update KL was 2.4x smaller, but the mean shift was -2.21 vs -1.95.
+- The backhand fade is rally-only: the feeder-drill backhand held.
+
+**One change:** picklebot_mj.rl.sched_ppo.AnchoredScheduledPPO on rally-d1s3lr's recipe.
+- The model_31399 parent on d1s3's task, LR_PEAK 3e-5, 1,200 iterations.
+- A fixed pull-back to the parent's frozen actor: RegPPO's mean-only Gaussian KL with the reference std, coef 1.0 constant (4 of 5; architecture said 0.1), no decay, no warm-up.
+- Training seed 202, smoke 203.
+
+**Smoke:** the D-170 falls line, plus the pull-back wired (first update <= 0.01, nonzero by update 10).
+
+**Kill at +360:** D-194's lines.
+
+**Endpoint:** d1_rule.drift_verdict against the pooled parent on D-204's seeds (FIXED / PARTIAL / STILL-DRIFT, lines unchanged). Reported against rally-d1s3lr and rally-d1s3ctlb.
+
+**If FIXED:** a confirmation read of parent and child on fresh dev 4220338 (pairs) / 4220339 (direction). A breach there, or the child's P(5+) below the parent's -> CONFIRM-FAIL, panel, no promotion.
+
+**Seeds (ledgered):** training 202-203; dev 4220338-4220339 if FIXED.

@@ -102,7 +102,42 @@ class ScheduledPPO(PPO):
                    "top_share": {str(i): round(float(share[i]), 4) for i in top},
                    "std_min": float(self._raw_actor.output_std[0].min()),
                    "at_floor": int((self._raw_actor.output_std[0] <= self.floor * 1.001).sum())}
+            if out.get("symmetry") is not None:  # D-207: the anchor's pull-back loss (AnchoredScheduledPPO)
+                row["pullback"] = float(out["symmetry"])
+                row["pullback_coef"] = float(self.symmetry.mirror_loss_coeff)
             with open(self.log, "a") as f:
                 f.write(json.dumps(row) + "\n")
         self.learning_rate = self._lr
+        return out
+
+
+class AnchoredScheduledPPO(ScheduledPPO):
+    """D-207 (panel round 71): ScheduledPPO plus a fixed pull-back to a frozen reference actor, RegPPO's term
+    (picklebot_mj.rl.reg_ppo._RefRegulariser): loss += coef * 0.5 * sum(((mu - mu_ref) / sigma_ref)^2), the mean-only
+    KL with the reference std. The coefficient is constant (PICKLEBOT_REF_COEF; no decay) and there is no critic
+    warm-up: start_update is never called, so the actor is never frozen and the rate schedule is left alone. The
+    reference is PICKLEBOT_REF_CKPT's actor with its own (frozen) observation normaliser. The anchor uses the same
+    optimizer step, so the schedule, the KL guard and the std floor apply to it as to the PPO loss. Logged as
+    "pullback" (rsl_rl's symmetry slot) and in the PICKLEBOT_SCHED_LOG row."""
+
+    def __init__(self, actor, critic, storage, *args, **kwargs):
+        super().__init__(actor, critic, storage, *args, **kwargs)
+        import copy
+
+        from picklebot_mj.rl.reg_ppo import _RefRegulariser
+        assert self.symmetry is None, "the anchor uses rsl_rl's symmetry slot"
+        ref = copy.deepcopy(self._raw_actor)
+        sd = torch.load(os.environ["PICKLEBOT_REF_CKPT"], map_location=self.device, weights_only=False)["actor_state_dict"]
+        ref.load_state_dict(sd, strict=True)
+        ref.eval()
+        for p in ref.parameters():
+            p.requires_grad_(False)
+        c = float(os.environ["PICKLEBOT_REF_COEF"])
+        self.ref_actor = ref
+        self.symmetry = _RefRegulariser(self, ref, c, c, 1, 0)
+
+    def update(self):
+        out = super().update()
+        out["pullback"] = out.pop("symmetry", None)
+        out["pullback_coef"] = self.symmetry.mirror_loss_coeff
         return out

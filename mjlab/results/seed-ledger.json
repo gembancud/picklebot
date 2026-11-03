@@ -1612,6 +1612,14 @@
    ],
    "purpose": "D-206 (scripts/diag/drift70.sh): paired reuse only. Stage A reads of rally-d1s3ctlb model_31800 and model_32200, and (if LATE) stage B reads of rally-d1s3lr, on D-204's pooled guard seeds (pairs 4220306/328/329/331, direction 4220307/334/335/336). Training seed 201 (rally-d1s3lr, LR 3e-5; no smoke). Training seed 199 (D-205's d1s8, never trained: SMOKE-FAIL on smoke seed 200) is retired unused, not to be reused. Free after this: dev from 4220338 (4220338-4220340 held for re-reads); training from 202.",
    "date": "2026-11-02"
+  },
+  {
+   "seeds": [
+    4220306,
+    4220339
+   ],
+   "purpose": "D-207 (scripts/diag/anchor71.sh): rally-d1s3anc (LR 3e-5 + anchor) training seed 202, smoke 203. Guard reads on D-204's pooled seeds (paired reuse). If FIXED: confirmation reads of parent and child on fresh dev 4220338 (pairs) and 4220339 (direction). 4220340 stays held. Free after this: dev from 4220341 (4220340 held); training from 204.",
+   "date": "2026-11-03"
   }
  ],
  "retired": {
