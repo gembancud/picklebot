@@ -6043,3 +6043,19 @@ Panel round 73 (mjlab/results/footwork-review.md): no majority - (iv) replicate 
 **Confirmation** (CONFIRM only): pooled on dev 4220341-4220348 (reserved in D-208, never read, released by a ledger note). Lines unchanged.
 
 **Seeds (ledgered):** training 205.
+
+### D-209 result (2026-11-04): rally-d1s3lr2 reads NOT-REPLICATED (posture replicates, the P(5+) gain fails the CI)
+
+Training seed 205, clean. +360: falls 1.49, legal_return 0.873.
+
+**Pooled read against the parent:**
+- No guard breach (worst reach_backhand -4.4; backhand -2.0).
+- Mean family shift -1.40; feeder 0.624 vs 0.635. drift_verdict PARTIAL.
+- **GAIN fails:** P(5+) +1.45 points pooled; per seed +0.34 / +0.88 / +1.38 / +3.19; lower 95 % CI -0.52.
+- **Mechanism passes:** ready stance 0.259 (bar 0.25; d1s3lr 0.318); falls per 1,000 hits 0.94 (bar 1.3; d1s3lr 0.94); recovery median 0.325 m.
+
+**Verdict NOT-REPLICATED.** Per D-209, the gain is read as a seed effect and the anchor line closes.
+
+Post hoc, not used for any verdict: all 8 eval-seed P(5+) differences across the two training seeds are positive (mean +1.79), and the posture change replicates.
+
+d1s3 model_31399 stays the parent. Panel round 74 is called (mjlab/results/footwork-round74-brief.md).
