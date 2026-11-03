@@ -804,3 +804,14 @@ def anchor_route(drift: str, gain: bool) -> str:
     if drift == "STILL-DRIFT" and gain:
         return "TRADE-OFF"
     return drift
+
+
+# D-209 (panel round 73; no majority: (iv) 2, (i) 2, (iii) 1; the least-new-code options (iv) and (iii) tie at none, so
+# experiment design's position decides: (iv)). rally-d1s3lr2 replicates rally-d1s3lr with one change, training seed
+# 201 -> 205. REPLICATED (experiment design) = GAIN and the mechanism moved as in d1s3lr: pooled ready stance >= 0.25
+# and falls per 1,000 hits <= 1.3. Not replicated -> the d1s3lr gain was a seed effect; the anchor line closes (panel).
+REP_READY, REP_FALLS = 0.25, 1.3
+
+
+def replicated(gain: bool, mech: dict) -> bool:
+    return bool(gain) and mech["ready"] >= REP_READY and mech["falls_per_1000_hits"] <= REP_FALLS

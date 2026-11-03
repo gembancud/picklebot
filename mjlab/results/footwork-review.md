@@ -820,3 +820,45 @@ Brief: footwork-round72-brief.md.
 - **Queued:** the arms-only anchor (motion) if 0.3 drifts; RL's 0.1 if 0.3 still binds.
 
 **Decision:** D-208.
+
+
+## Round 73 (2026-11-03): rally-d1s3anc03 (anchor coef 0.3) reads HELD-NO-GAIN
+
+Brief: footwork-round73-brief.md.
+
+**Correction checks**
+- **HELD-NO-GAIN is valid as pre-registered** (all five). Architecture re-ran gain_line: d1s3lr passes as a positive control (+2.12, CI +1.01).
+- **The coefficient model was wrong** (all five).
+  - The logged pull-back is the raw KL, and its plateau scales about 1/coef (0.011 -> 0.035, 3.2x), not 1/coef^2. That fits a noise-driven equilibrium: the anchored policy jitters around the parent rather than being pulled part-way toward d1s3lr.
+  - Coef 0.1 predicts about 0.11. A CPU proxy puts d1s3lr at KL about 28.5 from the parent, against 0.25 for anchor 0.3, so (ii) would pin the posture again.
+  - Ready stance did not move between coef 1.0 and 0.3, so posture is not a smooth function of the KL (experiment design).
+- **The brief misstated the action layout** (all five). The actor has 35 outputs: 0-31 latent dims through the frozen whole-body decoder, 32-34 right-wrist residuals; leg_r is 0, so there are no leg outputs.
+  - A clean arms-only mask is not defined. Decoder-Jacobian probes:
+    - motion: no latent dim is more than 0.89 legs; the median is 0.38;
+    - architecture: 12 dims mostly arms, 6 mostly legs, 14 mixed.
+  - The posture change and the backhand drift share outputs 14 / 25 / 30, and the wrist outputs carry about 2 % of d1s3lr's deviation (RL).
+- **Unstated:** legal_return fell 0.888 (+241-260) -> 0.759 (+360), inside the kill line (experiment design). The brief's falls units were mixed: +360 is per 1,000 env-s, the table per 1,000 hits (coach).
+- **The bigger issue** (experiment design, RL): d1s3lr's gain rests on one training seed, and two anchor runs have now been spent protecting it.
+- **Process:** RL and motion each wrote throwaway CPU scripts in the session scratchpad despite the write-no-files instruction. The repo was untouched.
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| Experiment design | (iv) replicate d1s3lr, training seed 205; second (ii) |
+| RL | (iv) replicate d1s3lr |
+| Motion | (i) a hard approximate arm mask (12 outputs) at coef 0.3; second (iii) |
+| Architecture | (i) a soft arm-share mask at coef 0.3 |
+| Coach | (iii) d1s3lr's recipe with backhand-family feeder weights 2.0 |
+
+**No majority:** (iv) 2, (i) 2, (iii) 1. By the tie rule, the least-new-code options are (iv) and (iii) (none each). They tie, so experiment design's position decides: **(iv)**.
+
+**Run D-209** (scripts/diag/rep73.sh): rally-d1s3lr2, rally-d1s3lr's recipe with one change, training seed 201 -> 205.
+- No smoke; kill at +360 on D-194's lines.
+- **Endpoint:** D-208's lines (drift_verdict + GAIN + routes) plus **REPLICATED** = GAIN, pooled ready stance >= 0.25 and falls per 1,000 hits <= 1.3.
+  - Not replicated -> NOT-REPLICATED: d1s3lr's gain was a seed effect and the anchor line closes (panel).
+  - Replicated -> D-208's routes; a TRADE-OFF goes to the panel with a base proven on two seeds.
+- **Confirmation** (CONFIRM only): pooled on dev 4220341-4220348. These were reserved in D-208, never read, and released by a ledger note.
+- **Queued:** the arm-share anchor (motion / architecture, new code); the backhand-weight run (coach).
+
+**Decision:** D-209.

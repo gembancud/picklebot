@@ -329,3 +329,10 @@ def test_gain_line_mechanism_and_route(tmp_path):
     r = dr.anchor_route
     assert [r("FIXED", True), r("FIXED", False), r("STILL-DRIFT", True), r("STILL-DRIFT", False), r("PARTIAL", True)] == \
         ["CONFIRM", "HELD-NO-GAIN", "TRADE-OFF", "STILL-DRIFT", "PARTIAL"]
+
+
+def test_replicated():
+    assert dr.replicated(True, {"ready": 0.30, "falls_per_1000_hits": 1.0})
+    assert not dr.replicated(False, {"ready": 0.30, "falls_per_1000_hits": 1.0})
+    assert not dr.replicated(True, {"ready": 0.20, "falls_per_1000_hits": 1.0})
+    assert not dr.replicated(True, {"ready": 0.30, "falls_per_1000_hits": 1.5})

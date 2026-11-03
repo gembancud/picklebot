@@ -6022,3 +6022,24 @@ Training seed 204, clean. +360 falls 1.66, legal_return 0.759. The pull-back set
 - falls per 1,000 hits 1.58 (parent 1.68, d1s3lr 0.94).
 
 The anchor holds the posture change that carried d1s3lr's P(5+) gain at the parent's values, at coef 0.3 as at 1.0. No confirmation ran (dev 4220341-4220348 unused). d1s3 model_31399 stays the parent. Panel round 73 is called (mjlab/results/footwork-round73-brief.md).
+
+## D-209 (2026-11-03): replicate rally-d1s3lr on a new training seed before building on its gain
+
+Panel round 73 (mjlab/results/footwork-review.md): no majority - (iv) replicate 2, (i) an arm-masked anchor 2, (iii) backhand feeder weights 1. The least-new-code options, (iv) and (iii), tie at no new code, so experiment design's position decides: **(iv)**. Run: scripts/diag/rep73.sh.
+
+**Round 73 findings:**
+- The anchor's plateau scales about 1/coef: a noise-driven jitter around the parent, not a part-way pull toward d1s3lr. A CPU proxy puts d1s3lr about 100x further out than anchor 0.3, so coef 0.1 would pin the posture again.
+- The actor's 35 outputs are 32 whole-body latent dims plus 3 wrist residuals, with no leg outputs. A clean arms-only mask is not defined.
+- d1s3lr's P(5+) gain rests on one training seed.
+
+**One change:** rally-d1s3lr2 = rally-d1s3lr's recipe (model_31399, d1s3's task, LR 3e-5, ScheduledPPO, no anchor, 1,200 iterations) with training seed 201 -> 205. No smoke. Kill at +360: D-194's lines.
+
+**Endpoint** on D-204's pooled seeds:
+- D-208's drift_verdict + GAIN + routes, unchanged;
+- plus REPLICATED (d1_rule.replicated) = GAIN and pooled ready stance >= 0.25 and falls per 1,000 hits <= 1.3.
+- Not replicated -> NOT-REPLICATED: the gain was a seed effect and the anchor line closes (panel).
+- Replicated -> D-208's routes (CONFIRM / HELD-NO-GAIN / TRADE-OFF / STILL-DRIFT / PARTIAL).
+
+**Confirmation** (CONFIRM only): pooled on dev 4220341-4220348 (reserved in D-208, never read, released by a ledger note). Lines unchanged.
+
+**Seeds (ledgered):** training 205.
