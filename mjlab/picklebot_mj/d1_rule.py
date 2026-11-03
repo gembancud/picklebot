@@ -760,3 +760,47 @@ def drift_verdict(guards_ok: bool, mean_shift: float, feeder: float, feeder_ref:
     if mean_shift >= FIXED_MEAN and feeder >= feeder_ref - POOL_SLACK and p5 >= p5_ref - POOL_SLACK:
         return "FIXED"
     return "PARTIAL"
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-208 (panel round 72, 5 of 5 for (i)): the anchor at coef 0.3 (3 of 5; RL 0.1, architecture probe / 0.5). FIXED stays
+# as D-206 (unchanged) and a GAIN line is added (experiment design): pooled P(5+) >= parent + 0.01 and the lower 95 % CI
+# (t, 3 df) of the per-seed paired P(5+) difference above 0. Routes: FIXED + GAIN -> confirmation; FIXED without GAIN ->
+# HELD-NO-GAIN; STILL-DRIFT + GAIN -> TRADE-OFF; otherwise the drift verdict -> panel. Confirmation pooled over 4 fresh
+# seeds with the parent re-read on them; CONFIRM-FAIL on a breach or child P(5+) < parent (as D-207).
+GAIN_MIN, T3_975 = 0.01, 3.182
+
+
+def gain_line(child_paths: list[str], parent_paths: list[str]) -> tuple[bool, str]:
+    import json
+    import statistics
+    import sys
+    sys.path.insert(0, "scripts")
+    import rally_check as rc
+    d = [rc.p5_open(json.load(open(c))["pairs"])[0] - rc.p5_open(json.load(open(p))["pairs"])[0]
+         for c, p in zip(child_paths, parent_paths)]
+    pooled = pooled_pairs(child_paths)["p5"] - pooled_pairs(parent_paths)["p5"]
+    lo = statistics.mean(d) - T3_975 * statistics.stdev(d) / len(d) ** 0.5 if len(d) > 1 else float("nan")
+    ok = pooled >= GAIN_MIN and lo > 0
+    return ok, (f"GAIN: pooled P(5+) {100 * pooled:+.2f} points (>= +{100 * GAIN_MIN:.0f}); per-seed "
+                f"{', '.join(f'{100 * x:+.2f}' for x in d)}; lower 95 % CI {100 * lo:+.2f} (> 0) -> {'GAIN' if ok else 'no gain'}")
+
+
+def mechanism(paths: list[str]) -> dict:
+    """Reported (motion, round 72): pooled ready stance, falls per hit, WRONG_SIDE share of endings, recovery median."""
+    import json
+    js = [json.load(open(p)) for p in paths]
+    w = sum(j["ready"]["feeds_scored"] for j in js)
+    ends = sum(sum(j["rally_endings"].values()) for j in js)
+    return {"ready": sum(j["ready"]["ready"] * j["ready"]["feeds_scored"] for j in js) / max(w, 1),
+            "falls_per_1000_hits": 1000 * sum(j["falls"] for j in js) / max(sum(j["hits"] for j in js), 1),
+            "wrong_side_share": sum(j["rally_endings"].get("WRONG_SIDE", 0) for j in js) / max(ends, 1),
+            "recovery_median_m": sum(j["recovery"]["error_median_m"] for j in js) / len(js)}
+
+
+def anchor_route(drift: str, gain: bool) -> str:
+    if drift == "FIXED":
+        return "CONFIRM" if gain else "HELD-NO-GAIN"
+    if drift == "STILL-DRIFT" and gain:
+        return "TRADE-OFF"
+    return drift

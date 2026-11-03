@@ -771,3 +771,52 @@ Coefficient: 1.0 (4 of 5).
 - **If FIXED:** a confirmation read on fresh dev 4220338 / 4220339. A breach, or P(5+) below the parent -> panel, no promotion.
 
 **Decision:** D-207.
+
+
+## Round 72 (2026-11-03): rally-d1s3anc reads FIXED pooled, then CONFIRM-FAIL
+
+Brief: footwork-round72-brief.md.
+
+**Correction checks**
+- **FIXED and CONFIRM-FAIL are valid as pre-registered** (all five). No promotion.
+- **The single-seed confirmation was a weak design** (experiment design: its own round-71 design).
+  - With a family SE of about 5 points on one seed and about 17 families, a child with no true drift breaches about 90 % of the time. The strict P(5+) >= parent test fails about half the time.
+  - The -5.7 backhand breach is likely noise: about 1.2 SE; pooled over all 5 seeds it is about -1.8. On the same confirmation, the feeder read has the anchor's backhand higher (0.686 vs 0.660) (motion).
+  - Fixed from now on: pool confirmations over 4 fresh seeds, plus a calibration read of the parent.
+- **The brief misstated the anchor's strength** (all five). The pull-back (0.011, the distance from the parent) and the per-update KL (a step size) are different quantities.
+  - The pull-back was 0.0023 at update 1, 0.0099 at update 10, and flat at 0.011 from about update 20 to 1200. The policy hit the leash at once and practised in place (coach, RL).
+- **Design gap** (experiment design, RL, architecture): FIXED has no learning requirement, so a policy that barely moves passes. A GAIN line is added (a tightening).
+- **What the anchor erased** (motion, pooled pairs):
+
+  | measure | parent | d1s3lr | anchor |
+  |---|---|---|---|
+  | ready stance | 0.153 | 0.318 | 0.151 |
+  | falls per 1,000 hits | 1.68 | 0.94 | 1.74 |
+  | WRONG_SIDE share | 0.259 | 0.220 | 0.253 |
+  | recovery median | 0.375 m | 0.325 m | 0.375 m |
+
+  d1s3lr's P(5+) gain came with a whole-body posture change, and the anchor kept none of it.
+- **Where the anchor binds** (RL): it weights outputs by 1/sigma_ref^2. The parent's lowest-std outputs (14, 25, 30) are also PPO's top KL-share outputs, so it holds hardest where learning happens. A CPU proxy puts d1s3lr hundreds of times further from the parent than the anchored run.
+- **Partial correction** (motion): "the backhand fade is rally-only" is not quite right. d1s3lr's pooled feeder reach_backhand also fell (0.661 vs 0.699).
+- **(iii) has no knob** (architecture): hand-offs are already 78 % of training balls, and the feed mix reaches only feeder balls.
+
+**Votes:** 5 of 5 for (i).
+
+| reviewer | coefficient |
+|---|---|
+| Coach | 0.3 |
+| Experiment design | 0.3, plus GAIN and routes |
+| Motion | 0.3; the mechanism read; next an arms-only anchor if 0.3 drifts |
+| RL | 0.1 (the settled distance scales about 1/coef^2) |
+| Architecture | probe-calibrated, default 0.5 |
+
+**Run D-208** (scripts/diag/anchor72.sh): rally-d1s3anc03, coef 0.3 (3 of 5), training seed 204.
+- No smoke: a knob on code already smoked in D-207 (experiment design and architecture).
+- The pull-back is reported at the first 10 updates, +100, +360 and the end.
+- **Endpoint:** drift_verdict (unchanged) + GAIN (pooled P(5+) >= parent + 1.0 point, lower 95 % CI of the per-seed paired difference > 0).
+- **Routes:** CONFIRM / HELD-NO-GAIN / TRADE-OFF / STILL-DRIFT / PARTIAL.
+- **The mechanism read**, reported (motion's ready-stance bar of 0.23 noted, not gating).
+- **Confirmation** pooled over 4 fresh seeds (4220341-44 pairs, 4220345-48 direction) with a parent calibration read. CONFIRM-FAIL on a breach or child P(5+) < parent (as D-207).
+- **Queued:** the arms-only anchor (motion) if 0.3 drifts; RL's 0.1 if 0.3 still binds.
+
+**Decision:** D-208.

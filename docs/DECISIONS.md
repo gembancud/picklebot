@@ -5980,3 +5980,29 @@ Training seed 202. Smoke clean, with the pull-back wired. +360 CONTINUE (falls 1
 The single-seed confirmation guard is weak (round 68: family SE about 5 points on one seed); this is recorded, not used to overturn the result.
 
 The anchor at coef 1.0 stopped the drift and also the learning. d1s3 model_31399 stays the parent. Panel round 72 is called (mjlab/results/footwork-round72-brief.md).
+
+## D-208 (2026-11-03): the anchor at coef 0.3, with a GAIN line and a pooled confirmation
+
+Panel round 72 (mjlab/results/footwork-review.md): 5 of 5 for (i), a weaker anchor. Coefficient 0.3 (3 of 5; RL 0.1, architecture probe / 0.5). Run: scripts/diag/anchor72.sh.
+
+**Round 72 findings:**
+- At coef 1.0 the pull-back reached 0.011 by about update 20 and stayed flat, so the policy was pinned.
+- It erased d1s3lr's posture change: ready stance 0.318 -> 0.151, falls per 1,000 hits 0.94 -> 1.74.
+- D-207's single-seed confirmation was underpowered (a no-drift child breaches about 90 % of the time); its backhand breach is likely noise.
+- FIXED had no learning requirement.
+
+**One change:** rally-d1s3anc03 = rally-d1s3anc's recipe with PICKLEBOT_REF_COEF 1.0 -> 0.3.
+- Training seed 204. No smoke (a knob only, on code smoked in D-207).
+- Kill at +360: D-194's lines.
+
+**Endpoint** on D-204's pooled seeds:
+- d1_rule.drift_verdict, lines unchanged;
+- plus GAIN (d1_rule.gain_line): pooled P(5+) >= parent + 0.01 and the lower 95 % CI (t, 3 df) of the per-seed paired difference > 0.
+- **Routes** (d1_rule.anchor_route): FIXED + GAIN -> CONFIRM; FIXED without GAIN -> HELD-NO-GAIN; STILL-DRIFT + GAIN -> TRADE-OFF; otherwise the drift verdict; all but CONFIRM -> panel.
+- Reported: the pull-back trajectory, and the mechanism read (ready stance, falls per hit, WRONG_SIDE share, recovery error).
+
+**Confirmation** (CONFIRM only), pooled over 4 fresh seeds (pairs 4220341-4220344, direction 4220345-4220348), parent and child:
+- CONFIRM-FAIL on an r19_guards breach or child P(5+) < parent;
+- the parent's fresh pooled read against its D-204 pooled read is reported as a calibration.
+
+**Seeds (ledgered):** training 204; dev 4220341-4220348 if CONFIRM.

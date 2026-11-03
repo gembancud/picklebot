@@ -309,3 +309,23 @@ def test_pooled_pairs_and_drift_verdict(tmp_path):
     assert v(False, 0.0, 0.6, 0.6, 0.4, 0.4) == "STILL-DRIFT" and v(True, -0.021, 0.6, 0.6, 0.4, 0.4) == "STILL-DRIFT"
     assert v(True, -0.005, 0.60, 0.605, 0.40, 0.405) == "FIXED"
     assert v(True, -0.015, 0.60, 0.60, 0.40, 0.40) == "PARTIAL" and v(True, 0.0, 0.58, 0.60, 0.40, 0.40) == "PARTIAL"
+
+
+def test_gain_line_mechanism_and_route(tmp_path):
+    import json
+
+    def pairs(path, p5_k, n=100, ready=0.2, falls=1):
+        json.dump({"pairs": {"court_counts": [[0, 0, 10, 6]], "len_hist": [n - p5_k, 0, 0, 0, 0, p5_k], "open_len_hist": [0] * 6},
+                   "ready": {"ready": ready, "feeds_scored": 100}, "rally_endings": {"WRONG_SIDE": 2, "OUT": 8},
+                   "falls": falls, "hits": 1000, "recovery": {"error_median_m": 0.3}}, open(path, "w"))
+    c, p = [], []
+    for i, (kc, kp) in enumerate(((42, 40), (43, 41), (41, 39), (44, 42))):
+        pairs(tmp_path / f"c{i}.json", kc); pairs(tmp_path / f"p{i}.json", kp)
+        c.append(str(tmp_path / f"c{i}.json")); p.append(str(tmp_path / f"p{i}.json"))
+    assert dr.gain_line(c, p)[0]  # +2 points on every seed
+    assert not dr.gain_line(p, c)[0]
+    m = dr.mechanism(c)
+    assert abs(m["ready"] - 0.2) < 1e-9 and abs(m["falls_per_1000_hits"] - 1.0) < 1e-9 and abs(m["wrong_side_share"] - 0.2) < 1e-9
+    r = dr.anchor_route
+    assert [r("FIXED", True), r("FIXED", False), r("STILL-DRIFT", True), r("STILL-DRIFT", False), r("PARTIAL", True)] == \
+        ["CONFIRM", "HELD-NO-GAIN", "TRADE-OFF", "STILL-DRIFT", "PARTIAL"]
