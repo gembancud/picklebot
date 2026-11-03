@@ -5968,3 +5968,15 @@ Panel round 71 (mjlab/results/footwork-review.md): 5 of 5 for (i). Run: scripts/
 **If FIXED:** a confirmation read of parent and child on fresh dev 4220338 (pairs) / 4220339 (direction). A breach there, or the child's P(5+) below the parent's -> CONFIRM-FAIL, panel, no promotion.
 
 **Seeds (ledgered):** training 202-203; dev 4220338-4220339 if FIXED.
+
+### D-207 result (2026-11-03): rally-d1s3anc reads FIXED pooled, then CONFIRM-FAIL - no promotion
+
+Training seed 202. Smoke clean, with the pull-back wired. +360 CONTINUE (falls 1.68, legal_return 0.813). Pull-back 0.011 per sample throughout.
+
+**Pooled 4-seed read** against the pooled parent: no guard breach (worst reach_forehand -2.2); mean family shift -0.56 (d1s3lr -2.21); backhand 0.631 vs 0.639; feeder 0.630 vs 0.635. P(5+) 0.381 vs 0.381: d1s3lr's 0.402 gain is erased, and the anchor reads below d1s3lr on all 4 seeds. **Verdict FIXED.**
+
+**Confirmation** on fresh dev 4220338 / 4220339: backhand 0.531 vs 0.588 (-5.7, breach); P(5+) 0.3825 vs 0.3869. **CONFIRM-FAIL.** By D-207: panel, no promotion.
+
+The single-seed confirmation guard is weak (round 68: family SE about 5 points on one seed); this is recorded, not used to overturn the result.
+
+The anchor at coef 1.0 stopped the drift and also the learning. d1s3 model_31399 stays the parent. Panel round 72 is called (mjlab/results/footwork-round72-brief.md).

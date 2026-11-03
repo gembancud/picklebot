@@ -1,0 +1,28 @@
+D-207: rally-d1s3anc = LR 3e-5 + anchor to artifacts/train/logs/picklebot_return_stand/2026-11-01_12-07-09_rally-d1s3/model_31399.pt (coef 1.0, constant)
+smoke exit 0 ok
+smoke no traceback ok
+smoke falls per 1,000 env-seconds 2.752 ok
+smoke std min 0.1038 outputs with no gradient [] ok
+smoke config check: algorithm AnchoredScheduledPPO True -> ok
+smoke pull-back wired: first 0.0052305620754339085, max of updates 1-10 0.01573512740433216, coef 1.0 -> ok
+training: {"run": "rally-d1s3anc", "exit_code": 0, "finished": "2026-11-03T10:34:40+08:00"}
++341-360: falls per 1,000 env-s 1.68 (kill > 2 x 22b 1.57); legal_return 0.8129 (kill < 22b 0.7549 - 0.05) -> CONTINUE; reported +241-260: falls 1.63, legal_return 0.7860
+pull-back (reported) at update 360: 0.011015471071004868, KL mean 0.0026
+pull-back (reported) at update 1200: 0.01086848396807909, KL mean 0.0028
+rally-d1s3anc (pooled) against the parent (pooled):
+guard: worst family contact vs parent pooled -2.2 (reach_forehand; kill below -5); cross_forehand 0.7585 vs parent pooled 0.7561 (kill below -3)
+guard: left + back feeder contact 0.4474 vs parent pooled 0.4557 (-0.8; kill below -5)
+mean family shift -0.56 points (rally-d1s3lr -2.21); backhand 0.6309 (parent 0.6385, rally-d1s3lr 0.5828)
+pooled feeder 0.6299 (parent 0.6353, d1s3lr 0.6323, control 0.6041); pooled P(5+) 0.3811 (parent 0.3812, d1s3lr 0.4024, control 0.3751)
+seed 4220306 (reported): P(5+) anchor 0.3921 vs d1s3lr 0.4140
+seed 4220328 (reported): P(5+) anchor 0.3826 vs d1s3lr 0.4000
+seed 4220329 (reported): P(5+) anchor 0.3811 vs d1s3lr 0.3958
+seed 4220331 (reported): P(5+) anchor 0.3695 vs d1s3lr 0.4004
+RESULT FIXED
+confirmation (dev 4220338 / 4220339): the child against the parent re-read on the same seeds:
+guard: backhand contact 0.5308 < parent (confirm) 0.5882 - 0.05 (KILL)
+guard: worst family contact vs parent (confirm) -5.7 (backhand; kill below -5); cross_forehand 0.7661 vs parent (confirm) 0.7843 (kill below -3)
+guard: left + back feeder contact 0.4695 vs parent (confirm) 0.4622 (+0.7; kill below -5)
+confirmation P(5+) 0.3825 vs parent 0.3869; guards False -> CONFIRM-FAIL
+RESULT CONFIRM-FAIL
+VERDICT: CONFIRM-FAIL
