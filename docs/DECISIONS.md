@@ -6122,3 +6122,21 @@ Panel round 75 (mjlab/results/footwork-review.md): 5 of 5 for (i). Run: scripts/
 - **If CONFIRMED:** C becomes the parent. Later family guards stay referenced to the original parent's pooled D-204 reads (RL; stricter, not a loosening).
 
 **Seeds (ledgered):** dev 4220341-4220348. Training 207 stays next.
+
+### D-211 result (2026-11-04): CONFIRMED - rally-d1s3lr3 model_32598 becomes the parent
+
+16 fresh reads (dev 4220341-4220348), parent model_31399 and C model_32598.
+- **GAIN2 passes:** P(5+) 0.4117 vs 0.3818, +2.99 points; per seed +2.00 / +2.86 / +2.85 / +4.29; binomial SE 0.67, per-seed SE 0.47; lower bound +1.68.
+- **Guards pass** (C fresh pooled vs parent fresh pooled): worst family fast -4.4 (kill below -5); cross_forehand 0.738 vs 0.750 (-1.2); left + back 0.468 vs 0.461 (+0.7).
+- **Mechanism passes:** ready 0.295 (parent 0.154); falls per 1,000 hits 0.84 (parent 1.86); WRONG_SIDE 0.231 (0.255); recovery 0.275 m (0.375 m).
+- **Reported:**
+  - feeder legal 0.639 vs 0.634;
+  - mean family shift -0.93;
+  - drift_verdict FIXED;
+  - calibration: the parent's fresh P(5+) 0.3818 vs its D-204 read 0.3812, and C's 0.4117 vs 0.4115 (no shrinkage).
+
+**Verdict CONFIRMED.** rally-d1s3lr3 model_32598 (run 2026-11-04_00-06-34_rally-d1s3lr3) is the new parent.
+- Its reference reads are lev74-C (D-204 seeds) and conf75-C (dev 4220341-4220348).
+- Per round 75 (RL), later family guards stay referenced to the original parent's pooled D-204 reads (results/d1s3ctl-parent-pooled*). This is stricter.
+
+Distance to the target: P(5+) 0.41 against 0.80; feeder legal 0.64 against M1's 85 %. Panel round 76 is called (mjlab/results/footwork-round76-brief.md).
