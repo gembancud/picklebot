@@ -925,3 +925,36 @@ def fast4_check(t: dict, w: dict) -> tuple[str, list[str]]:
              f"FIRST-STEP: p50 {g('first_step_p50')} s (each <=) -> {fs}",
              f"FASTER: sustained p50 {g('sustained_p50')} m/s (each >= +{F4_FASTER}), falls <= -> {faster}"]
     return ("D1B-OK" if valid and arrive and settle and fs and faster else "TEACHER-NOT-READY"), lines
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-214 (panel round 78; (i) 4 of 5, (iii) pre-bounce approach_far 1). R = rally-d1s3idle: C model_32598 on
+# Picklebot-Rally22b-FastMove-IdleRec-G1 (D-205's recovery pay while parked), LR 3e-5. Endpoint lines against C (lev74-C)
+# on D-204's pooled seeds, besides gain2 / r19_guards / the mechanism bars: H1 (pooled k = 1 hazard <= C's - S8_HAZ),
+# FEEDER (pooled feeder legal >= C's - FEEDER_SLACK), K3-KEPT (late failure share <= C's + K3_SLACK, as D-212).
+# Reported (round 77): the late split into endings at shots 3-4 over reached 3, and endings at 5+ over reached 5.
+def late_splits(paths: list[str]) -> tuple[float, float]:
+    import json
+    h, oh = None, None
+    for p in paths:
+        q = json.load(open(p))["pairs"]
+        h = list(q["len_hist"]) if h is None else [a + b for a, b in zip(h, q["len_hist"])]
+        oh = list(q["open_len_hist"]) if oh is None else [a + b for a, b in zip(oh, q["open_len_hist"])]
+    s34 = sum(h[3:5]) / max(sum(h[3:]) + sum(oh[3:]), 1)
+    s5 = sum(h[5:]) / max(sum(h[5:]) + sum(oh[5:]), 1)
+    return s34, s5
+
+
+def rec78_lines(child_paths: list[str], ref_paths: list[str]) -> tuple[bool, list[str]]:
+    c, r = pooled_hazards(child_paths), pooled_hazards(ref_paths)
+    fc, fr = pooled_pairs(child_paths)["feeder"], pooled_pairs(ref_paths)["feeder"]
+    h1 = c["h"][1] <= r["h"][1] - S8_HAZ
+    fd = fc >= fr - FEEDER_SLACK
+    k3 = c["late"] <= r["late"] + K3_SLACK
+    (c34, c5), (r34, r5) = late_splits(child_paths), late_splits(ref_paths)
+    lines = [f"H1: k = 1 hazard {c['h'][1]:.4f} vs {r['h'][1]:.4f} (<= -{S8_HAZ}) -> {h1}",
+             f"FEEDER: feeder legal {fc:.4f} vs {fr:.4f} (>= -{FEEDER_SLACK}) -> {fd}",
+             f"K3-KEPT: late failure share {c['late']:.4f} vs {r['late']:.4f} (<= +{K3_SLACK}) -> {k3}",
+             f"(reported) late splits: shots 3-4 {c34:.4f} vs {r34:.4f}; 5+ ended {c5:.4f} vs {r5:.4f}",
+             "(reported) hazards h0-h4 child " + " / ".join(f"{x:.3f}" for x in c["h"]) + "; ref " + " / ".join(f"{x:.3f}" for x in r["h"])]
+    return h1 and fd and k3, lines

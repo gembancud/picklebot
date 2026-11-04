@@ -1010,3 +1010,48 @@ Brief: footwork-round77-brief.md.
 Stage B and the base gate are D-192's, unchanged (4 of 4).
 
 **Decision:** D-213.
+
+
+## Round 78 (2026-11-04): D-213 TEACHER-NOT-READY
+
+Brief: footwork-round78-brief.md.
+
+**Correction checks**
+- **TEACHER-NOT-READY is valid** (all five recomputed it). FASTER decides it alone.
+  - FIRST-STEP's left miss (0.012 s) is inside one 0.05-s bin: a tie at the instrument's resolution (experiment design, coach, motion).
+  - "Fast4 falls less" is 0 falls against 3, not a measurable difference (experiment design).
+  - "Settles more" holds only in sectors 2-6 (RL).
+- **The instrument answered D-213's question** (does the kickstart's copy get faster on its own spots), not "is Fast4 faster" (all five).
+- **Labels** (coach, motion): "first step" is the time to close 1.5 m. It is a short-distance speed measure, not a reaction time. "VERDICT: VOID" in the log comes from bodyspeed_rule and is not cited.
+- **The brief's "IdleRec coded"** (architecture): d1s8_watch.py hard-codes run, start and checkpoint, so the run needs lev76's inline watcher from 32598.
+
+**What we learned**
+- **The court-scale limit is the task and acceleration** (all five).
+  - Both teachers match an effective acceleration of about 1.0-1.5 m/s^2 (motion's point-mass fit). The time to 1.5 m stays at 1.3-1.4 s in every geometry.
+  - 3-4 m/s needs more than 5 m to reach and stop. At court scale, agility is acceleration, braking and an earlier start.
+- **Motion withdrew its round-77 under-use claim.** The rally policy's peak p90 (about 2.0 m/s) matches the teachers' court-scale p90 (1.85-2.05).
+- **The feeder ball is a scramble ball** (coach): 52 % launch with the robot more than 1.2 m off its spot, legal 0.60. The first return is the STATE ball (D-204), the "get set while your partner hits" cue.
+- **R3** (experiment design, architecture): pairs episodes reset only on falls, so the per-episode rate reads 1.0.
+  - On falls / (falls + envs), C reads about 5 %, which fails 4.0 % on that unit.
+  - The target's R3 is the h5f court read, which has not been read on C.
+  - Architecture: do not change the field (hitting() gates on it); add reporting.
+
+**Votes**
+
+| reviewer | vote | lines |
+|---|---|---|
+| RL | (i) | gain2 vs C, guards, bars, H1 <= C - 0.03, K3-KEPT + FEEDER vs C; withdraws (ii) |
+| Experiment design | (i) | split reads 4220365-66 for DOSE / HAZARD, guards, bars, GAIN2; R3 reporting line |
+| Coach | (i) | H1 <= C - 0.03 and h0 <= C + 0.01, LATE two splits, GAIN2, guards, bars, FEEDER; approach_far next |
+| Architecture | (i) | lev76 copy, climb + farm kills from 32598, lever_lines vs lev74-C, bars; R3 court read on 4220365 |
+| Motion | (iii) | pre-bounce horizontal approach_far, LEFT +0.05, BACK guard |
+
+(i) wins 4 of 5. Lines by majority among the four:
+- gain2, guards and bars (3-4 of 4);
+- H1 (3 of 4; the pooled form 2 of 3);
+- FEEDER (3 of 4);
+- K3-KEPT in lever_lines' form (2 of 4), with both splits reported.
+
+Experiment design's split reads (1 of 4) are not adopted.
+
+**Decision:** D-214.

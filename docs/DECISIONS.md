@@ -6261,3 +6261,45 @@ Stage A, paired on dev 4220357 (Measure60-Court, 0.5-3 m spots, mean actions, 1,
 - Reported: on these spots both teachers peak at about 1.3-1.5 m/s (peak p50) and sustain about 1.0-1.1 m/s in every sector. Fast4's 4-6 m gain (D-191, +0.22 m/s) does not show at court scale. Fast4 settles more and falls less.
 
 Verdict TEACHER-NOT-READY. No smoke, no kickstart; training seeds 209 and 210 and dev 4220358-4220364 unused (released). Panel round 78 is called (mjlab/results/footwork-round78-brief.md).
+
+## D-214 (2026-11-04): IdleRec on C - recovery also paid while parked, at LR 3e-5
+
+Panel round 78 (mjlab/results/footwork-review.md): (i) 4 of 5 (RL, experiment design, coach, architecture); (iii) pre-bounce approach_far 1 (motion). Run: scripts/diag/rec78.sh.
+
+**Round 78 findings:**
+- TEACHER-NOT-READY is valid; FASTER fails on its own. The left first step is 0.012 s slower, inside one 0.05-s bin, so it is a tie at the instrument's resolution.
+- The court-scale read was the right instrument for d1b (the kickstart copies these spots). It does not test what the teacher can do in general.
+- **The limit is the task and acceleration, not the teacher.**
+  - Both teachers match an effective acceleration of about 1.0-1.5 m/s^2 on 0.5-3 m spots (motion's fit).
+  - The time to close 1.5 m stays at 1.3-1.4 s in every geometry.
+  - 3-4 m/s is not reachable on a 0.5-3 m move.
+  - At court scale, agility means acceleration, braking and an earlier start. Proposed metric: the time to 1.5 m. Top speed stays a 4-6 m measure for the user's agility goal.
+- **Motion withdrew its round-77 read:** the rally policy's peak p90 (about 2.0 m/s) equals the teachers' court-scale peak p90 (1.85-2.05). The policy is not under-using the body.
+- Teacher swaps and base rebuilds are closed for the rally target; d1 + --recover is withdrawn (RL).
+- **Court falls (R3).**
+  - Under --rally, stage2_eval sets episode_length to seconds + 1, so a pairs episode ends only on a fall. robot_episodes counts falls, and the per-episode rate reads 1.0 (stage2_eval.py:149, 328-330; return_stand.py:480-481).
+  - On falls / (falls + envs), C reads about 5 % per 120-s pairs episode.
+  - The target's R3 is the h5f court read (stage5f falls_court). The field is not changed, because d1_rule.hitting gates on it.
+  - Reported from now on: the pairs rate on falls + envs, and a single court read.
+
+**Run:** R = rally-d1s3idle, C model_32598 on Picklebot-Rally22b-FastMove-IdleRec-G1 (D-205's task, unchanged). LR 3e-5, ScheduledPPO, no anchor, 1,200 iterations, endpoint model_33797. Training seed 211, smoke 212.
+
+**Smoke:** D-205's checks unchanged, including the idle-recovery term check (falls line 4.157; half-split reported). D-205 failed at LR 1e-4; K's smoke on C at LR 3e-5 read 1.88.
+
+**Kill at +360**, from start 32598: D-194's lines; KILL-NO-CLIMB (s8_climb_kill); KILL-FARM (s6_farm_kill against C2's share log).
+
+**Lines** (D-204 pooled seeds, against C = lev74-C; d1_rule.rec78_lines):
+- gain2;
+- r19_guards against the original parent's reads on the same seeds;
+- ready >= 0.25 and falls per 1,000 hits <= 1.3;
+- H1: k = 1 hazard <= C's - 0.03 (3 of 4 named an h1 line; the pooled form 2 of 3);
+- FEEDER: >= C's - 0.01 (3 of 4);
+- K3-KEPT: <= C's + 0.005 (lever_lines' form, 2 of 4).
+
+All pass -> CONFIRM on dev 4220349-4220356 (C re-read; D-212's CONFIRMED lines). Otherwise the panel. Next queued: pre-bounce approach_far (motion; coach's next if IdleRec fails).
+
+**Reported:** gain2 against C2; the late splits; recovery; R3 pairs rate; a court read of C and R on Picklebot-Latent-Court-Res-G1 (2,048 envs, 24 s, dev 4220365).
+
+**Recorded before reading:** an h1 drop of 0.03 is worth about +1.7-1.8 points of P(5+). GAIN2's power at that effect is about 60 %.
+
+**Seeds (ledgered):** training 211, smoke 212; dev 4220365; dev 4220349-4220356 (CONFIRM only). Released unused (D-213): training 209-210, dev 4220358-4220364. Next free: training 213, dev 4220366.
