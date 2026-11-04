@@ -6178,3 +6178,36 @@ Panel round 76 (mjlab/results/footwork-review.md): (ii) 3 of 5 (motion, coach, R
 - Compounding alone cannot reach 0.80: it needs feeder legal of about 0.90 and k = 1 legal of about 0.92. The panel named feeder-ball reach (footwork) and the opening exchange as the larger levers.
 
 **Seeds (ledgered):** training 207, smoke 208; dev 4220248; dev 4220349-4220356 (CONFIRM only). Next free: training 209, dev 4220357.
+
+### D-212 result (2026-11-04): NO-CANDIDATE - C2 does not compound; K improves the opening but fails K3-KEPT and the ready bar
+
+Stage 0 (reported): Fast4 floor **FLOOR-PASS**. Legs explained 0.966 at lam 3 and 0.989 at lam 5 (line 0.85).
+
+**Training:**
+- C2 clean. +360: falls 1.06, legal_return 0.915.
+- K smoke passed: falls 1.882 against the line 4.157 (half-split 3.195 / 0.750). Its other checks passed too.
+- K clean. +360: falls 1.10, legal_return 0.714 (line 0.705). Pair-court feeder share 0.273 vs C2 0.088.
+
+**COMPOUND (C2 vs C): FAIL.**
+- GAIN2 -1.22 points; per seed -0.31 / -1.42 / -2.61 / -0.52; lower bound -2.57.
+- Guards pass (worst low -4.2; left + back -2.1).
+- Ready 0.285; falls per 1,000 hits 0.87; recovery 0.425 m (C 0.275 m).
+- P(5+) 0.3993; feeder legal 0.635.
+
+**LEVER (K vs C2): FAIL.**
+- GAIN2 +2.09 points; per seed +1.41 / +1.84 / +2.73 / +2.35; lower bound +0.75 -> GAIN.
+- Guards pass (worst backspin -3.4; cross_forehand -1.7; left + back +0.7).
+- **Ready 0.211 (bar 0.25): FAIL.** Falls per 1,000 hits 1.05; WRONG_SIDE 0.215; recovery 0.175 m.
+- OPEN 0.472 vs 0.442 -> pass. FEEDER 0.649 vs 0.635 -> pass.
+- **K3-KEPT: late failure share 0.094 vs 0.040 -> FAIL.**
+- Hazards h0-h4: K 0.361 / 0.262 / 0.080 / 0.022 / 0.008; C2 0.376 / 0.292 / 0.072 / 0.021 / 0.005; C 0.373 / 0.273 / 0.077 / 0.018 / 0.004.
+
+Candidate none -> no CONFIRM (dev 4220349-4220356 stay unread). C stays the parent.
+
+**Post hoc, not a verdict:**
+- K vs C: GAIN2 +0.87 points, lower bound -0.48 (no gain). P(5+) 0.4202 vs 0.4115.
+- K's late failures: 288 rallies ended at 5 or more shots, against 48 for C and 55 for C2 (about 4,090 rallies run to the timeout in each).
+  - This is consistent with the cap: no pair-court rally in training ran past 5 shots.
+  - These endings do not lower P(5+), but they are the long-rally loss K3-KEPT was set to catch.
+
+Panel round 77 is called (mjlab/results/footwork-round77-brief.md).
