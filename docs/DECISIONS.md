@@ -6211,3 +6211,41 @@ Candidate none -> no CONFIRM (dev 4220349-4220356 stay unread). C stays the pare
   - These endings do not lower P(5+), but they are the long-rally loss K3-KEPT was set to catch.
 
 Panel round 77 is called (mjlab/results/footwork-round77-brief.md).
+
+## D-213 (2026-11-04): d1b - Fast4 court-scale teacher read, then the base rebuilt with Fast4 as the move teacher
+
+Panel round 77 (mjlab/results/footwork-review.md): (ii) 4 of 5 (coach, experiment design, motion, RL); (iii) IdleRec 1 (architecture). Run: scripts/diag/d1b.sh.
+
+**Round 77 findings:**
+- NO-CANDIDATE is valid; K's ready 0.211 fails on its own.
+- K3-KEPT as coded mixes endings at shots 3-4 (K 0.0296 vs C2 0.0265, which would pass) with endings past shot 5 (K 6.6 % of rallies reaching 5, vs C2 1.3 %).
+  - It is not re-scored: that would be a post hoc loosening.
+  - The long-rally loss is real: most of K's late endings come past shot 10, in states the cap removed from training.
+  - Future entries report both splits.
+- K's opening gain is half C2's regression. Against C, OPEN is +0.016 (< 0.02) and GAIN2 +0.87 (lower bound -0.48).
+- The cap's extra feeder balls were mostly easy restarts: legal 0.911 after a capped end, against 0.703 after a long rally (RL).
+- The plain LR 3e-5 continuation is closed: no more plain continuations. One seed at -1.22 is within noise, so this is "not worth another run", not "exhausted".
+- The rally policy uses about 2 m/s of a body whose specialist reaches 2.6-2.8 m/s p90 (motion). Misses on the left, deep and fast balls peak at 1.6-1.8 m/s.
+- The Fast4 floor (D-212) was read on Fast4's own 2-6 m spots, not the kickstart's 0.5-3 m spots.
+
+**Stage A (reads only):** Fast4 model_18099 and fw1b-S model_16600 on Picklebot-Footwork-Measure60-Court-G1, mean actions, 1,024 envs, 120 s, paired on dev 4220357 (d1_rule.fast4_check). Lines by majority, with experiment design's wording where the forms differed:
+- VALID (D-188);
+- ARRIVE: worst arrival >= 0.95 and >= fw1b-S's - 0.02;
+- SETTLE (5 of 5; no slack, 3 of 5): left and back settled share each >= fw1b-S's;
+- FIRST-STEP (3 of 5): left and back p50 each <= fw1b-S's;
+- FASTER (3 of 5): left and back sustained p50 each >= fw1b-S's + 0.10 m/s, and falls <= fw1b-S's.
+
+All pass -> D1B-OK. Otherwise TEACHER-NOT-READY: no rebuild, panel (RL: d1 + --recover; architecture: IdleRec).
+
+**Stage B (D1B-OK only):** D-192's kickstart with one change, `--teacher` fw-fast4-01/model_18099. Run s5c-d1b-fast4, training seed 209, smoke 210 (args must equal d1's except the free keys). Kill unchanged: kick_kill over rows 300-360.
+
+**Stage C, base gate unchanged** (agility_verdict, retention, base_verdict), paired against the d1 base s5c-d1-fw1bS model_32854:
+- agility on Measure60-L3Base, dev 4220358;
+- the D-086 battery, dev 4220359-4220364.
+
+**Recorded before reading:**
+- A BASE-PASS is not a rally claim and nothing is promoted. The rally re-climb on a d1b base is its own entry.
+- Its rally line will be gain2 against C on the D-204 seeds. If it fails, the speed-base route closes for the rally target (RL, experiment design).
+- Cost if it runs through: about 4 GPU h here, plus about 10-14 h for the re-climb (architecture).
+
+**Seeds (ledgered):** training 209, smoke 210; dev 4220357-4220364. Next free: training 211, dev 4220365 (4220349-4220356 stay reserved unread for a CONFIRM).

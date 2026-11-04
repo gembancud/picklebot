@@ -371,3 +371,17 @@ def test_lev76_hazard_lines_and_candidate(tmp_path):
     pairs(tmp_path / "low.json", [36, 28, 5, 1, 0, 0], [0, 0, 0, 0, 0, 30], fl=55)  # feeder 0.55 vs 0.60
     assert not dr.lever_lines([str(tmp_path / "low.json")], [str(tmp_path / "r.json")])[0]
     assert [dr.lev76_candidate(*a) for a in ((True, True), (False, True), (True, False), (False, False))] == ["K", "K", "C2", "none"]
+
+
+def test_fast4_check():
+    def ag(sus, fs, st, arr=0.97, falls=0.2, fc=0.02):
+        return {"falls": falls, "worst_arrival": arr, "fallen_censored_share": fc, "sustained_p50": sus,
+                "first_step_p50": fs, "settled": st, "peak_p50": sus}
+    w = ag([2.0] * 6, [1.2] * 6, [0.3] * 6)
+    t = ag([2.2] * 6, [1.1] * 6, [0.35] * 6, falls=0.15)
+    assert dr.fast4_check(t, w)[0] == "D1B-OK"
+    assert dr.fast4_check(ag([2.05] * 6, [1.1] * 6, [0.35] * 6, falls=0.15), w)[0] == "TEACHER-NOT-READY"  # +0.05 only
+    assert dr.fast4_check(ag([2.2] * 6, [1.3] * 6, [0.35] * 6, falls=0.15), w)[0] == "TEACHER-NOT-READY"  # slower first step
+    assert dr.fast4_check(ag([2.2] * 6, [1.1] * 6, [0.29] * 6, falls=0.15), w)[0] == "TEACHER-NOT-READY"  # settles less
+    assert dr.fast4_check(ag([2.2] * 6, [1.1] * 6, [0.35] * 6, arr=0.94, falls=0.15), w)[0] == "TEACHER-NOT-READY"
+    assert dr.fast4_check(ag([2.2] * 6, [1.1] * 6, [0.35] * 6, falls=0.3), w)[0] == "TEACHER-NOT-READY"  # more falls

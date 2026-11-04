@@ -972,3 +972,41 @@ Brief: footwork-round76-brief.md.
 - Next routes named: the pre-bounce intercept (motion), restart-state starts (coach, if the cap fails twice), and Fast4 -> d1b if the floor passes (RL, experiment design).
 
 **Decision:** D-212.
+
+
+## Round 77 (2026-11-04): D-212 NO-CANDIDATE
+
+Brief: footwork-round77-brief.md.
+
+**Correction checks**
+- **NO-CANDIDATE is valid** (all five recomputed it). K fails on ready (0.211) alone.
+- **K3-KEPT as coded mixed two things** (all five; coach owned the loose wording).
+  - Endings at shots 3-4: K 0.0296 vs C2 0.0265, which would pass.
+  - Endings past shot 5: 6.6 % of K's rallies that reached 5, vs C2 1.3 % and C 1.2 %. Most are past shot 10.
+  - Re-scoring now would be a loosening (experiment design), so it is not done. Both splits are reported from now on.
+- **Misstated by omission** (all five): the opening gain is measured against C2, which regressed. Against C, h0 and h1 move about -1.2 points each, OPEN is +0.016 (< 0.02), and GAIN2 is +0.87 (lower bound -0.48).
+- **The cap's extra feeder balls were mostly easy restarts** (RL): legal 0.911 after a capped end vs 0.703 after a long rally.
+- **"Does not compound" rests on one seed** (motion, architecture). Close the plain continuation; don't call it exhausted.
+- **The Fast4 floor was read on 2-6 m spots**, not the kickstart's 0.5-3 m (motion).
+
+**Motion's direction table** (contact / peak p90 / miss distance): no arm moved speed by more than 0.06 m/s. The rally policy uses about 2 m/s of a body that reaches 2.6-2.8 m/s.
+
+**Votes**
+
+| reviewer | vote | stage A lines |
+|---|---|---|
+| Coach | (ii) | ARRIVE >= 0.90; SETTLE >= fw - 0.03; SPEED L/B sustained +0.2 |
+| Experiment design | (ii) | ARRIVE >= 0.95 and >= fw - 0.02; SETTLE L/B >= fw - 0.03; FASTER min(L,B) +0.10, falls <= fw |
+| Motion | (ii) | ARRIVAL >= 0.90; SETTLE L/B >= fw; FIRST-STEP <= fw; DOSE peak L/B +0.10 |
+| RL | (ii) | ARRIVE >= fw; SETTLE L/B >= fw; FIRST-STEP <= fw; stop rule gain2 vs C |
+| Architecture | (iii) IdleRec on C | reported tail: SETTLE >= fw; FIRST-STEP <= fw + 0.05 |
+
+(ii) wins 4 of 5. The lines were taken by majority per line, using experiment design's form where the forms differed:
+- SETTLE (5 of 5) with no slack (3 of 5);
+- FIRST-STEP (3 of 5) with no slack (2 of 3);
+- FASTER (3 of 5);
+- ARRIVE (4 of 4 who named it).
+
+Stage B and the base gate are D-192's, unchanged (4 of 4).
+
+**Decision:** D-213.

@@ -892,3 +892,36 @@ def lever_lines(child_paths: list[str], ref_paths: list[str]) -> tuple[bool, lis
 def lev76_candidate(compound: bool, lever: bool) -> str:
     """The checkpoint taken to the fresh confirmation: K if LEVER, else C2 if COMPOUND, else none (panel)."""
     return "K" if lever else ("C2" if compound else "none")
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-213 (panel round 77; (ii) 4 of 5, (iii) IdleRec 1). Stage A, reads only: Fast4 (fw-fast4-01 model_18099) against
+# d1's teacher fw1b-S model_16600 on Picklebot-Footwork-Measure60-Court-G1 (the kickstart's 0.5-3 m geometry), mean
+# actions, paired on dev 4220357. Lines by majority (experiment design's wording where the forms differed):
+#   VALID (D-188): falls <= 2 x fw1b-S's, worst arrival >= 0.80, (fallen + censored) / spots <= 0.15;
+#   ARRIVE: worst-sector untimed arrival >= 0.95 and >= fw1b-S's - 0.02;
+#   SETTLE (5 of 5; no slack 3 of 5): settled share in left and back each >= fw1b-S's;
+#   FIRST-STEP (3 of 5; no slack 2 of 3): first-step p50 in left and back each <= fw1b-S's;
+#   FASTER (3 of 5): sustained p50 in left and back each >= fw1b-S's + 0.10 m/s, and falls <= fw1b-S's.
+# All pass -> D1B-OK (the D-192 kickstart with the teacher swapped to Fast4); else TEACHER-NOT-READY (panel).
+F4_ARRIVE, F4_ARRIVE_SLACK, F4_FASTER = 0.95, 0.02, 0.10
+
+
+def fast4_check(t: dict, w: dict) -> tuple[str, list[str]]:
+    """t, w: agility() of Fast4 and fw1b-S on the same seed."""
+    lr = (LEFT, BACK)
+    valid = t["falls"] <= 2 * w["falls"] and t["worst_arrival"] >= 0.80 and t["fallen_censored_share"] <= 0.15
+    arrive = t["worst_arrival"] >= F4_ARRIVE and t["worst_arrival"] >= w["worst_arrival"] - F4_ARRIVE_SLACK
+    settle = all(t["settled"][i] >= w["settled"][i] for i in lr)
+    fs = all(t["first_step_p50"][i] is not None and w["first_step_p50"][i] is not None
+             and t["first_step_p50"][i] <= w["first_step_p50"][i] for i in lr)
+    faster = all(t["sustained_p50"][i] is not None and w["sustained_p50"][i] is not None
+                 and t["sustained_p50"][i] >= w["sustained_p50"][i] + F4_FASTER for i in lr) and t["falls"] <= w["falls"]
+    g = lambda k: f"L/B {t[k][LEFT]}/{t[k][BACK]} vs {w[k][LEFT]}/{w[k][BACK]}"  # noqa: E731
+    lines = [f"VALID: falls {t['falls']:.3f} vs {w['falls']:.3f} (<= 2x), worst arrival {t['worst_arrival']:.3f} (>= 0.80), "
+             f"fallen+censored {t['fallen_censored_share']:.3f} (<= 0.15) -> {valid}",
+             f"ARRIVE: worst arrival {t['worst_arrival']:.3f} vs {w['worst_arrival']:.3f} (>= {F4_ARRIVE} and >= -{F4_ARRIVE_SLACK}) -> {arrive}",
+             f"SETTLE: settled {g('settled')} (each >=) -> {settle}",
+             f"FIRST-STEP: p50 {g('first_step_p50')} s (each <=) -> {fs}",
+             f"FASTER: sustained p50 {g('sustained_p50')} m/s (each >= +{F4_FASTER}), falls <= -> {faster}"]
+    return ("D1B-OK" if valid and arrive and settle and fs and faster else "TEACHER-NOT-READY"), lines
