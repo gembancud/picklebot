@@ -44,7 +44,7 @@ F = rally-d1s3cfs: C model_32598 + court_feed_stance with the planner off (launc
 
 **Where things stand:**
 - P(5+) 0.41 against 0.80. Feeder legal 0.64 against M1's 85 %. R3 about 5.6 % against 4.0 %.
-- In the D-169 climb (since 2026-10-28) P(5+) rose from about 0.26 to 0.41, mostly through C's recipe step.
+- On the current pooled pairs read, P(5+) went from 0.381 (d1s3) to 0.41 (C). Earlier figures such as run 18b's 25.8 % came from other read protocols and are not directly comparable.
 - Every lever since then has read within noise of the plain continuation.
 
 The GPU is idle. Training seeds next 215; dev next free 4220366 (4220349-4220356 reserved unread for a CONFIRM).
