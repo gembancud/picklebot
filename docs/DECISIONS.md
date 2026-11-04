@@ -6364,3 +6364,22 @@ All pass -> CONFIRM on dev 4220349-4220356 (D-212's CONFIRMED lines). Otherwise 
 **Reported:** gain2 against C2; direction contact (motion's BACK +0.05 / FWD -0.03 lines, reported only); R3 pairs rate; F's court read.
 
 **Seeds (ledgered):** training 213, smoke 214; dev 4220365 (reserved by D-214, never read); dev 4220349-4220356 (CONFIRM only). Next free: training 215, dev 4220366.
+
+### D-215 result (2026-11-05): NO-CANDIDATE - the stance-target fix reads the same as the plain continuation
+
+Stage 0 (reported): the R3 court read of C (24 s, dev 4220365) is 0.0556 robot falls per episode, failing R3's 4.0 %.
+
+Smoke (seed 214) passed: falls 2.005 against 4.157 (half-split 2.880 / 1.147); config showed both stance flags true. Training (seed 213) was clean. +360: falls 1.03, legal_return 0.883; mean rally length 4.13 vs C2's 4.22.
+
+**Endpoint, F vs C (D-204 pooled seeds):**
+- **GAIN2:** -1.17 points; per seed -0.82 / -1.06 / -2.63 / -0.14; lower bound -2.52 -> no gain. P(5+) 0.3998 vs 0.4115.
+- **Guards: breach.** backspin 0.644 vs the original parent's 0.694 (-5.1; kill below -5). cross_forehand -1.7; left + back -0.4.
+- **Mechanism passes:** ready 0.293; falls per 1,000 hits 0.67 (C 0.89); recovery 0.225 m.
+- **H0 fails:** feeder-ball hazard 0.3735 vs 0.3725. FEEDER and K3-KEPT pass (late splits: shots 3-4 0.0223 vs 0.0217; 5+ ended 0.0051 vs 0.0116).
+
+**Reported:**
+- F vs C2: +0.05 points (per seed -0.51 / +0.36 / -0.02 / +0.38). F reads as the plain continuation.
+- Direction contact F / C: forward 0.920 / 0.918, left 0.389 / 0.407, back 0.599 / 0.584, right 0.774 / 0.777. Back is +1.5, short of motion's +5 line.
+- R3: pairs falls / (falls + envs) F 0.042, C 0.052, C2 0.055. Court read F 0.0558 vs C 0.0556.
+
+Candidate none; dev 4220349-4220356 stay unread. C stays the parent. Retargeting launcher feeds' stance did not move the feeder ball. Against C, C2 and F each read about -1.2 points on P(5+), and K +0.87 (lower bound -0.48): no child of C has beaten it. Panel round 80 is called (mjlab/results/footwork-round80-brief.md).

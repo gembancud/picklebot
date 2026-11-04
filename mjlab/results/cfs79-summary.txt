@@ -1,0 +1,32 @@
+D-215: parent C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt; F = rally-d1s3cfs on Picklebot-Rally22b-FastMove-G1 + court_feed_stance(_unplanned); training seed 213, smoke 214
+(reported) R3 court read C (24 s, dev 4220365): robot falls per episode 0.0556
+smoke exit 0 ok
+smoke no traceback ok
+smoke falls per 1,000 env-seconds 2.005 ok
+smoke std min 0.1 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + stance_progress, no other new terms True -> ok
+smoke falls half-split (reported): first half 2.880, second half 1.147
+training: {"run": "rally-d1s3cfs", "exit_code": 0, "finished": "2026-11-05T03:16:44+08:00"}
++341-360: falls per 1,000 env-s 1.03 (kill > 2 x 22b 1.57); legal_return 0.8825 (kill < 22b 0.7549 - 0.05) -> CONTINUE; reported +241-260: falls 1.11, legal_return 0.9235
+mean rally length, iterations 100-300: child 4.131 vs parent 4.221 (kill below 0.9 x) -> CONTINUE
+R vs C GAIN2: pooled P(5+) -1.17 points (>= +1); binomial SE 0.69, per-seed SE 0.53; lower bound -2.52 (> 0); per-seed -0.82, -1.06, -2.63, -0.14 -> no gain
+(reported) R vs C2 GAIN2: pooled P(5+) +0.05 points (>= +1); binomial SE 0.68, per-seed SE 0.21; lower bound -1.28 (> 0); per-seed -0.51, +0.36, -0.02, +0.38 -> no gain
+R (pooled) against the original parent (pooled, same seeds):
+guard: backspin contact 0.6438 < parent pooled 0.6944 - 0.05 (KILL)
+guard: worst family contact vs parent pooled -5.1 (backspin; kill below -5); cross_forehand 0.7388 vs parent pooled 0.7561 (kill below -3)
+guard: left + back feeder contact 0.4522 vs parent pooled 0.4557 (-0.4; kill below -5)
+mechanism R: ready 0.293 (>= 0.25), falls/1000 hits 0.67 (<= 1.3), WRONG_SIDE 0.229, recovery 0.225 m
+H0: feeder-ball hazard 0.3735 vs 0.3725 (<= -0.03) -> False
+FEEDER: feeder legal 0.6357 vs 0.6382 (>= -0.01) -> True
+K3-KEPT: late failure share 0.0273 vs 0.0331 (<= +0.005) -> True
+(reported) late splits: shots 3-4 0.0223 vs 0.0217; 5+ ended 0.0051 vs 0.0116
+(reported) hazards h0-h4 child 0.373 / 0.289 / 0.082 / 0.017 / 0.005; ref 0.373 / 0.273 / 0.077 / 0.018 / 0.004
+(reported) R: P(5+) 0.3998, feeder 0.6357; R3 pairs falls / (falls + envs) 0.0418
+(reported) C: P(5+) 0.4115, feeder 0.6382; R3 pairs falls / (falls + envs) 0.0515
+(reported) C2: P(5+) 0.3993, feeder 0.6352; R3 pairs falls / (falls + envs) 0.0546
+(reported) R3 court read C (24 s, dev 4220365): robot falls per episode 0.0556
+(reported) R3 court read F (24 s, dev 4220365): robot falls per episode 0.0558
+(reported) R direction contact: forward 0.920, left 0.389, back 0.599, right 0.774
+(reported) C direction contact: forward 0.918, left 0.407, back 0.584, right 0.777
+RESULT NO-CANDIDATE
+VERDICT: NO-CANDIDATE (panel)
