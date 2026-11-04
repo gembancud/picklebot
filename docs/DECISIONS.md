@@ -6249,3 +6249,15 @@ All pass -> D1B-OK. Otherwise TEACHER-NOT-READY: no rebuild, panel (RL: d1 + --r
 - Cost if it runs through: about 4 GPU h here, plus about 10-14 h for the re-climb (architecture).
 
 **Seeds (ledgered):** training 209, smoke 210; dev 4220357-4220364. Next free: training 211, dev 4220365 (4220349-4220356 stay reserved unread for a CONFIRM).
+
+### D-213 result (2026-11-04): TEACHER-NOT-READY - on court-scale spots Fast4 is not faster than fw1b-S; no rebuild
+
+Stage A, paired on dev 4220357 (Measure60-Court, 0.5-3 m spots, mean actions, 1,024 envs, 120 s), Fast4 vs fw1b-S:
+- **VALID pass:** falls 0.000 vs 0.024; worst arrival 0.997; fallen + censored 0.049.
+- **ARRIVE pass:** 0.997 vs 0.970.
+- **SETTLE pass:** left / back 0.304 / 0.398 vs 0.272 / 0.197.
+- **FIRST-STEP fail:** left 1.374 vs 1.362 s (0.012 s slower); back 1.315 vs 1.411 s (faster).
+- **FASTER fail:** sustained p50 left 1.095 vs 1.071 (+0.024), back 1.072 vs 0.989 (+0.082); the line is +0.10 each.
+- Reported: on these spots both teachers peak at about 1.3-1.5 m/s (peak p50) and sustain about 1.0-1.1 m/s in every sector. Fast4's 4-6 m gain (D-191, +0.22 m/s) does not show at court scale. Fast4 settles more and falls less.
+
+Verdict TEACHER-NOT-READY. No smoke, no kickstart; training seeds 209 and 210 and dev 4220358-4220364 unused (released). Panel round 78 is called (mjlab/results/footwork-round78-brief.md).

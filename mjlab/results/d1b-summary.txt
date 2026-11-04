@@ -1,0 +1,9 @@
+fast4 {'falls': 0.0, 'worst_arrival': 0.997, 'fallen_censored_share': 0.049, 'sustained_p50': [1.0431, 1.0546, 1.0954, 1.0714, 1.0718, 1.0567, 1.0683, 1.0161], 'peak_p50': [1.4033, 1.4345, 1.5127, 1.4613, 1.4376, 1.4332, 1.445, 1.3643], 'first_step_p50': [1.4371, 1.4218, 1.3744, 1.3326, 1.3149, 1.3073, 1.4111, 1.4446], 'settled': [0.175, 0.229, 0.304, 0.38, 0.398, 0.463, 0.328, 0.21]}
+fw1b-S {'falls': 0.024, 'worst_arrival': 0.97, 'fallen_censored_share': 0.055, 'sustained_p50': [1.0422, 1.0506, 1.0713, 1.0231, 0.9894, 1.0034, 1.078, 1.0416], 'peak_p50': [1.3747, 1.4478, 1.5281, 1.385, 1.3037, 1.3509, 1.4806, 1.4487], 'first_step_p50': [1.405, 1.3765, 1.362, 1.3728, 1.4111, 1.3591, 1.3741, 1.3808], 'settled': [0.197, 0.264, 0.272, 0.264, 0.197, 0.276, 0.327, 0.263]}
+VALID: falls 0.000 vs 0.024 (<= 2x), worst arrival 0.997 (>= 0.80), fallen+censored 0.049 (<= 0.15) -> True
+ARRIVE: worst arrival 0.997 vs 0.970 (>= 0.95 and >= -0.02) -> True
+SETTLE: settled L/B 0.304/0.398 vs 0.272/0.197 (each >=) -> True
+FIRST-STEP: p50 L/B 1.3744/1.3149 vs 1.362/1.4111 s (each <=) -> False
+FASTER: sustained p50 L/B 1.0954/1.0718 vs 1.0713/0.9894 m/s (each >= +0.1), falls <= -> False
+TEACHER: TEACHER-NOT-READY
+VERDICT: TEACHER-NOT-READY
