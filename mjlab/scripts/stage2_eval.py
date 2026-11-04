@@ -46,6 +46,7 @@ def main():
     ap.add_argument("--checkpoint", required=True)
     ap.add_argument("--envs", type=int, default=512)
     ap.add_argument("--seconds", type=float, default=9.0)
+    ap.add_argument("--stochastic", action="store_true", help="D-216: sample actions (training noise) instead of the mean")
     ap.add_argument("--seed", type=int, default=seeds.DEV_EVAL_SEEDS[0])
     ap.add_argument("--video", default=None)
     ap.add_argument("--families", default="easy_forehand",
@@ -277,7 +278,7 @@ def main():
         first, best, best_len = [], [], -1
     with torch.inference_mode():
         for step_i in range(steps):
-            obs, _, dones, _ = venv.step(policy(obs))
+            obs, _, dones, _ = venv.step(policy(obs, stochastic_output=True) if args.stochastic else policy(obs))
             if args.video:
                 frames.append(env.render())
             if args.pair_video and step_i % 2 == 0:  # 25 frames per second

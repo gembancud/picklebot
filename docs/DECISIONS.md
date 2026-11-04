@@ -6383,3 +6383,45 @@ Smoke (seed 214) passed: falls 2.005 against 4.157 (half-split 2.880 / 1.147); c
 - R3: pairs falls / (falls + envs) F 0.042, C 0.052, C2 0.055. Court read F 0.0558 vs C 0.0556.
 
 Candidate none; dev 4220349-4220356 stay unread. C stays the parent. Retargeting launcher feeds' stance did not move the feeder ball. Against C, C2 and F each read about -1.2 points on P(5+), and K +0.87 (lower bound -0.48): no child of C has beaten it. Panel round 80 is called (mjlab/results/footwork-round80-brief.md).
+
+## D-216 (2026-11-05): read feeder-ball legal by launch distance before the next lever
+
+Panel round 80 and its correction round 80b (mjlab/results/footwork-review.md; mjlab/results/footwork-round80b-brief.md). Run: scripts/diag/dist80.sh.
+
+**Round 80b correction (by the agent, before launch):**
+- Round 80's tie went to coach's zero-code form of (iii), pair_drill_court_frac 0. In code (return_stand.py:126-130, 332-336) that setting only confines move and swing episodes to a fraction of courts. At 0 it spreads them over every court again (D-162's busy-partner problem), so it would not make every court live.
+- The D-165 launch log already counts only the live courts. So the practice-vs-read gap (28 % vs 51 % of receivers more than 1.2 m off spot; feeder legal about 0.72 vs 0.60-0.64) is not explained by drill courts.
+- All five confirmed this in code; coach withdrew the form.
+
+**Re-vote:** (vi) 2 (coach, experiment design); (i) std floor 0.2, 1 (architecture); (iii-RL) random rally ends, 1 (RL); (iv) the D-063 fall penalty, 1 (motion, who would accept (vi) as a first step). No majority. Least new code ((i), none) and fewest moving parts ((vi), reads only, about 1 GPU h) disagree, so experiment design's position decides: **(vi)**.
+
+**Round 80 findings:**
+- NO-CANDIDATE is valid; GAIN2 and H0 fail on their own.
+- The backspin breach is about 2 SE of noise. Children's worst families move between -3.4 and -5.1, with a different family each time.
+- The brief's "std at its 0.1 floor" was wrong: 3 of 35 outputs are at the floor; the median is about 0.155-0.16 and mean action std is 0.20.
+- KL is 0.0054 and flat in every run, with the guard never tripping.
+- Training reward plateaus by about +300.
+- Entropy falls steadily.
+- F cut stance_progress pay from 0.085 to 0.004 per episode and moved nothing in P(5+). It did cut pair-play falls by 20 % (0.363 vs 0.453 per 1,000 env-s).
+- C is the best of three recipe seeds, so any resume regresses about 1 point (selection).
+- About 96 % of feeder balls follow a 0-1-shot rally. Feeder legal there is 0.59-0.60 in every arm, and 51-53 % of receivers are more than 1.2 m off spot.
+- R3 (motion):
+  - falls are torso tilt above 70 deg;
+  - 69 % happen during long-move feeds on the court battery;
+  - C's task has no fall term.
+- The cfs79 summary and files label F as "R" (copied from rec78). This is a labelling slip only; the artifacts are not renamed.
+
+**Code (reporting only, additive; no existing field changes):**
+- return_stand.py: launch_summary adds outcome_by_d, the feeder-ball feeds and legal returns by launch-distance bin (LAUNCH_D_EDGES).
+- stage2_eval.py: an opt-in --stochastic flag samples actions (training noise).
+- Checked on GPU on dev 4220368 (code check, 256 envs, 20 s): outcome_by_d sums equal outcome_feeds_legal in both modes.
+
+**Reads:** C model_32598, pairs (2,048 envs, 120 s) on dev 4220366-4220367 at mean actions, plus the same seeds with --stochastic (reported; tests the noise explanation).
+
+**Route** (d1_rule.dist_route, on the pooled mean-action reads):
+- **RESTART-BINDS:** legal(d <= 0.3 m) >= 0.80, and legal(d <= 0.3) - legal(d > 1.2) >= 0.20, with Wilson 95 % intervals apart. -> (iii-RL), random rally ends on half the live courts, coded in its own entry. Training seed 215, smoke 216; round 80's lines plus RL's KILL-NO-DOSE.
+- **SHOT-BINDS:** legal(d <= 0.3) < 0.75. -> STOP under D-169 to the next phase, a rally fine-tune with the d1 base unfrozen. The panel sets that phase's gate.
+- **Otherwise:** the panel.
+- **Reported:** coach's route (legal(d <= 1.2) >= 0.70 and far <= near - 0.10).
+
+**Seeds (ledgered):** dev 4220366-4220367 (reads), dev 4220368 (code check). Training 215-216 stay reserved for the routed run. Next free: dev 4220369.

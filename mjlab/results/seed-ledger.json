@@ -1695,6 +1695,15 @@
    ],
    "purpose": "D-215 (scripts/diag/cfs79.sh): training seed 213 (rally-d1s3cfs, C + court_feed_stance with the planner off) and smoke 214. Release note: D-214 was killed at +368 (KILL-NO-CLIMB); its dev 4220365 (R3 court read) and 4220349-4220356 (CONFIRM) were never read and are released to D-215 for the same uses. Free after this: dev from 4220366 (4220340 held); training from 215.",
    "date": "2026-11-05"
+  },
+  {
+   "seeds": [
+    4220366,
+    4220367,
+    4220368
+   ],
+   "purpose": "D-216 (scripts/diag/dist80.sh): dev 4220366-4220367 pairs reads of C (mean actions and --stochastic) for feeder legal by launch distance; dev 4220368 a code check of outcome_by_d and --stochastic (256 envs, 20 s; not a read of record). Training 215-216 stay reserved for the routed (iii-RL) run. Free after this: dev from 4220369 (4220340 held; 4220349-4220356 reserved unread); training from 215.",
+   "date": "2026-11-05"
   }
  ],
  "retired": {

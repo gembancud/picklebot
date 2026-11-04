@@ -411,3 +411,14 @@ def test_cfs79_lines(tmp_path):
     ok, lines = dr.cfs79_lines([str(tmp_path / "c.json")], [str(tmp_path / "r.json")])
     assert ok and lines[0].startswith("H0") and lines[0].endswith("True")
     assert not dr.cfs79_lines([str(tmp_path / "r.json")], [str(tmp_path / "c.json")])[0]
+
+
+def test_dist_route():
+    restart = [[300, 260], [300, 255], [300, 250], [300, 220], [300, 200], [300, 180], [900, 450]]  # near 0.85, far 0.50
+    assert dr.dist_route(restart)[0] == "RESTART-BINDS"
+    shot = [[300, 210], [300, 200], [300, 210], [300, 200], [300, 190], [300, 180], [900, 450]]  # near 0.69
+    assert dr.dist_route(shot)[0] == "SHOT-BINDS"
+    mid = [[300, 240], [300, 230], [300, 235], [300, 220], [300, 200], [300, 180], [900, 600]]  # near 0.78
+    assert dr.dist_route(mid)[0] == "PANEL"
+    lo, hi = dr.wilson(50, 100)
+    assert abs(lo - 0.4038) < 1e-3 and abs(hi - 0.5962) < 1e-3

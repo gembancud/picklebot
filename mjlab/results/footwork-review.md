@@ -1096,3 +1096,36 @@ No majority (2 / 2 / 1). Least new code: the stance fix in architecture's form (
 - Motion's BACK / FWD lines are reported.
 
 **Decision:** D-215.
+
+
+## Round 80 and 80b (2026-11-05): D-215 NO-CANDIDATE; a correction before launch
+
+Brief: footwork-round80-brief.md; correction footwork-round80b-brief.md.
+
+**Correction checks (round 80)**
+- **NO-CANDIDATE is valid** (all five). GAIN2 and H0 fail on their own.
+  - The backspin breach is about 2 SE of noise (coach, experiment design). Children's worst family moves each time (C fast -4.6, C2 low -4.2, K backspin -3.4, F backspin -5.1).
+- **"Std at its 0.1 floor" was wrong** (RL, motion, architecture): 3 of 35 outputs are at the floor; mean action std is 0.20.
+- **"Five changes on C" was wrong again** (experiment design, coach): only K, R and F were levers on C.
+- **Labels:** cfs79 labels F as "R" (RL, coach, experiment design, architecture).
+- **F's loss sits at h1 +1.6, not h0** (coach).
+
+**What we learned (round 80)**
+- **Optimizer:** KL is 0.0054 and flat; value loss is flat; training reward plateaus by +300; entropy falls (RL, architecture). C is the best of three recipe seeds, so resumes regress about 1 point (RL, architecture).
+- **F cut stance_progress pay to about 0** and P(5+) did not move. F cut pair-play falls 20 % (motion).
+- **Opening states:** about 96 % of feeder balls follow a 0-1-shot rally; legal 0.59-0.60 in every arm; 51-53 % of receivers more than 1.2 m off spot (experiment design).
+- **Practice is easier than the read:** 28 % off-spot in training vs 51 % at read; feeder legal 0.72 vs 0.60-0.64 (coach).
+- **R3:** falls are torso tilt above 70 deg; 69 % happen during long-move feeds on the court battery; C's task has no fall term (motion).
+
+**Votes (round 80):** (iii) 2 (coach: pair_drill_court_frac 0; RL: random rally ends); (i) std floor 0.2 (architecture); (vi) launch-distance read (experiment design); (iv) the D-063 fall penalty (motion).
+
+**Round 80b correction (the agent):**
+- Coach's zero-code form spreads drills over every court (D-162 reversed), not "every court live".
+- The launch log already counts only the live courts.
+- All five confirmed this; coach withdrew the form.
+
+**Re-votes (round 80b):** (vi) 2 (coach, experiment design, the latter amended with a noise-on read); (i) 1 (architecture); (iii-RL) 1 (RL, plus KILL-NO-DOSE); (iv) 1 (motion, accepting (vi) as a first step).
+- No majority. Least code ((i)) and fewest moving parts ((vi)) disagree, so experiment design's position decides: (vi).
+- Routes are experiment design's lines; coach's route is reported.
+
+**Decision:** D-216.

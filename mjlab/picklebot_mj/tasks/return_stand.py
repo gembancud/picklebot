@@ -342,6 +342,9 @@ class BallPhysicsAction(ActionTerm):
         self._ls_v = torch.zeros(3, len(LAUNCH_V_EDGES) + 1, dtype=torch.long, device=dev)
         self._ls_out = torch.zeros(3, 2, dtype=torch.long, device=dev)
         self._fbin = torch.zeros(n, dtype=torch.long, device=dev)
+        # D-216 (reporting only): the same feeder-ball outcomes (feeds, legal) by the launch-distance bin (d_edges)
+        self._ls_out_d = torch.zeros(len(LAUNCH_D_EDGES) + 1, 2, dtype=torch.long, device=dev)
+        self._fdbin = torch.zeros(n, dtype=torch.long, device=dev)
         self._ls_de = torch.tensor(LAUNCH_D_EDGES, device=dev)
         self._ls_ve = torch.tensor(LAUNCH_V_EDGES, device=dev)
         self.drill = None
@@ -1128,13 +1131,17 @@ class BallPhysicsAction(ActionTerm):
         self._ls_d.view(-1).index_add_(0, b * nd + torch.bucketize(d, self._ls_de), f)
         self._ls_v.view(-1).index_add_(0, b * nv + torch.bucketize(v, self._ls_ve), f)
         self._fbin = torch.where(fire, b, self._fbin)
+        self._fdbin = torch.where(fire, torch.bucketize(d, self._ls_de), self._fdbin)
         done = over & ~h0 & keep  # a feeder ball finished this step
         self._ls_out.view(-1).index_add_(0, self._fbin * 2, done.long())
         self._ls_out.view(-1).index_add_(0, self._fbin * 2 + 1, (done & self.return_done).long())
+        self._ls_out_d.view(-1).index_add_(0, self._fdbin * 2, done.long())
+        self._ls_out_d.view(-1).index_add_(0, self._fdbin * 2 + 1, (done & self.return_done).long())
 
     def launch_summary(self) -> dict:
         return {"prev_len_bins": ["0-1", "2-4", "5+"], "d_edges": list(LAUNCH_D_EDGES), "v_edges": list(LAUNCH_V_EDGES),
-                "d_hist": self._ls_d.tolist(), "v_hist": self._ls_v.tolist(), "outcome_feeds_legal": self._ls_out.tolist()}
+                "d_hist": self._ls_d.tolist(), "v_hist": self._ls_v.tolist(), "outcome_feeds_legal": self._ls_out.tolist(),
+                "outcome_by_d": self._ls_out_d.tolist()}
 
     def _credit_early(self, recv: torch.Tensor) -> torch.Tensor:
         """Pair mode: an env receives its partner's return while its own copy of the ball is still in flight (the

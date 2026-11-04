@@ -972,3 +972,45 @@ def cfs79_lines(child_paths: list[str], ref_paths: list[str]) -> tuple[bool, lis
     ok, lines = rec78_lines(child_paths, ref_paths)
     fd_k3 = lines[1].endswith("True") and lines[2].endswith("True")
     return h0 and fd_k3, [f"H0: feeder-ball hazard {c['h'][0]:.4f} vs {r['h'][0]:.4f} (<= -{S8_HAZ}) -> {h0}"] + lines[1:]
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-216 (panel round 80 / 80b; (vi) 2 of 5 (coach, experiment design), (i), (iii-RL), (iv) 1 each; least code vs fewest
+# moving parts unclear, so experiment design's position: (vi)). Reads only: feeder-ball legal by launch distance
+# (launch_state["outcome_by_d"], bins on LAUNCH_D_EDGES 0.1 / 0.2 / 0.3 / 0.5 / 0.8 / 1.2 m), C at mean actions.
+#   RESTART-BINDS: legal(d <= 0.3) >= 0.80 and legal(d <= 0.3) - legal(d > 1.2) >= 0.20 with non-overlapping Wilson 95 %
+#     intervals -> (iii-RL), random rally ends on half the live courts (coded in its own entry).
+#   SHOT-BINDS: legal(d <= 0.3) < 0.75 -> STOP (D-169: to the next phase, a rally fine-tune with the d1 base unfrozen).
+#   Otherwise PANEL. Coach's routes (near d <= 1.2 >= 0.70 and far <= near - 0.10) are reported.
+D216_NEAR, D216_GAP, D216_SHOT = 0.80, 0.20, 0.75
+
+
+def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    if n == 0:
+        return float("nan"), float("nan")
+    p = k / n
+    d = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / d
+    h = z * (p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5 / d
+    return c - h, c + h
+
+
+def dist_route(out_by_d: list[list[int]]) -> tuple[str, list[str]]:
+    """out_by_d: [[feeds, legal]] per launch-distance bin (7 bins)."""
+    near = [sum(x[0] for x in out_by_d[:3]), sum(x[1] for x in out_by_d[:3])]
+    far = out_by_d[6]
+    wide = [sum(x[0] for x in out_by_d[:6]), sum(x[1] for x in out_by_d[:6])]
+    pn, pf = near[1] / max(near[0], 1), far[1] / max(far[0], 1)
+    (nlo, nhi), (flo, fhi) = wilson(near[1], near[0]), wilson(far[1], far[0])
+    pw = wide[1] / max(wide[0], 1)
+    restart = pn >= D216_NEAR and pn - pf >= D216_GAP and nlo > fhi
+    shot = pn < D216_SHOT
+    v = "RESTART-BINDS" if restart else "SHOT-BINDS" if shot else "PANEL"
+    coach = pw >= 0.70 and pf <= pw - 0.10
+    lines = [f"legal(d <= 0.3) {pn:.4f} (n {near[0]}, Wilson {nlo:.3f}-{nhi:.3f}); legal(d > 1.2) {pf:.4f} (n {far[0]}, Wilson "
+             f"{flo:.3f}-{fhi:.3f}); gap {pn - pf:+.4f}",
+             f"RESTART-BINDS: near >= {D216_NEAR} and gap >= {D216_GAP} and intervals apart -> {restart}; "
+             f"SHOT-BINDS: near < {D216_SHOT} -> {shot}",
+             f"(reported) coach's route: legal(d <= 1.2) {pw:.4f} >= 0.70 and far <= near - 0.10 -> {coach}",
+             "(reported) legal by bin: " + ", ".join(f"{x[1] / max(x[0], 1):.3f} (n {x[0]})" for x in out_by_d)]
+    return v, lines
