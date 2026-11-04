@@ -905,3 +905,33 @@ Lever: backhand weights, 3 to 2. Control: fresh seed 206, 3 to 2.
 - **Queued:** lever (a) (coach, motion) on the same base.
 
 **Decision:** D-210.
+
+
+## Round 75 (2026-11-04): D-210 reads RECIPE pass, LEVER-FAIL
+
+Brief: footwork-round75-brief.md.
+
+**Correction checks**
+- **RECIPE PASS and LEVER-FAIL are valid as pre-registered** (all five recomputed them). The 3-training-seed estimate checks out (+2.12 / +1.45 / +3.03, SD 0.79).
+- **GAIN2's per-seed SE measures eval noise only** (all five). It tests "this checkpoint beats the parent", not "the recipe works". Here the binomial SE (0.67) set the bound, so max() should stay. The training-seed SD (about 0.8 points per run) is in neither term.
+- **"C is a matched control at no extra cost" overstates it** (experiment design, RL, architecture). L and C diverge from update 1, so L vs C carries about 1.1 points of training-seed SD. Cost-free, yes; matched, no.
+- **LEVER-FAIL is "no gain over C", not harm** (experiment design, coach, architecture). L against the parent alone would pass GAIN2 (+2.57). The cross_forehand breach (-3.4) is about 1.3-1.4 sigma among 17 families; it stands as pre-registered. L's falls rise (418 vs 328 on about 370k hits, z about 3.3) looks real (coach).
+- **Left out of the brief** (motion): C's ready 0.291 is a wide stance without the loading dip (dip 0.139 vs parent 0.321). C is slightly slower (feeder peak p99 2.71 vs 2.77 m/s; right contact 0.777 vs 0.795). Recovery p90 improved, 0.675 to 0.525 m. C's gain is steadier positioning and fewer falls, not agility.
+
+**Backhand weights:** they reached cross_backhand (+6 points, about 2 sigma) but act only on the feeder ball, a zero-sum share of reps. By arithmetic, +6 on three of 17 feeder families is at most about +0.6 points of P(5+) (architecture). Close or park; do not re-dose (all five).
+
+**Votes:** 5 of 5 for (i), CONFIRM C on fresh dev 4220341-4220348 (reads only).
+
+| reviewer | gain line | mechanism bars | extra |
+|---|---|---|---|
+| Experiment design | GAIN2 | yes | prospective training-seed term for lever reads |
+| RL | GAIN2 | yes | later guards stay on the original parent's reads |
+| Coach | GAIN2 | yes | feeder >= parent - 0.01 |
+| Motion | P(5+) >= parent | yes | Fast4 floor test next |
+| Architecture | P(5+) >= parent | no | after CONFIRMED, pair C-continued with C + lever on seed 207 |
+
+Lines: GAIN2 (3 of 5) + r19_guards + mechanism bars (4 of 5). Coach's feeder line is reported only.
+
+**Next if CONFIRMED** (for round 76): C becomes the parent. Two proposals are on the table: C continued plus C + one lever on seed 207 (RL, architecture, coach), and the Fast4 floor test for the speed ceiling (motion).
+
+**Decision:** D-211.

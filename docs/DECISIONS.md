@@ -6080,3 +6080,45 @@ Panel round 74 (mjlab/results/footwork-review.md): 5 of 5 for (ii), LR 3e-5 as t
 - **Reported only:** the 3-training-seed estimate (d1s3lr, d1s3lr2, C), and the backhand-family contact of L vs C. No re-reads of the parent, d1s3lr or lr2.
 
 **Seeds (ledgered):** training 206; dev 4220341-4220348 if CONFIRM (released from D-208/D-209 by a ledger note).
+
+### D-210 result (2026-11-04): RECIPE passes, LEVER fails (rally-d1s3lr3 GAIN2 +3.03; backhand weights no gain, cross_forehand breach)
+
+Both runs trained clean on seed 206. +360: C falls 1.29, legal_return 0.853; L falls 1.69, legal_return 0.796.
+
+**RECIPE (C = rally-d1s3lr3 model_32598 vs the parent, pooled D-204 seeds): PASS.**
+- GAIN2: P(5+) 0.4115 vs 0.3812, +3.03 points; per seed +2.40 / +3.12 / +3.49 / +3.09; binomial SE 0.67, per-seed SE 0.23; lower bound +1.72.
+- Ready stance 0.291 (bar 0.25); falls per 1,000 hits 0.89 (bar 1.3); WRONG_SIDE 0.224; recovery 0.275 m.
+
+**LEVER (L = rally-d1s3bh vs C): FAIL.**
+- GAIN2: -0.46 points; per seed -0.84 / -0.49 / -1.57 / +1.08; lower bound -1.81.
+- r19_guards against the pooled parent: cross_forehand 0.7219 vs 0.7561 (-3.4, KILL below -3). Worst other family reach_forehand -1.8; left + back +3.1.
+- Backhand-family contact (reported), L vs C: backhand 0.625 vs 0.606; reach_backhand 0.613 vs 0.614; cross_backhand 0.485 vs 0.425.
+- Falls per 1,000 hits 1.13 (C 0.89). No CONFIRM ran; dev 4220341-4220348 stay unread.
+
+**Reported only:** the training-seed estimate over d1s3lr, d1s3lr2 and C is +2.20 points (95 % CI +0.22 to +4.17, 3 seeds).
+
+**Post hoc, not a verdict:**
+- C against the pooled parent: no guard breach (worst fast -4.6; cross_forehand -0.2; left + back +0.1); mean family shift -0.93; feeder 0.638 vs 0.635. drift_verdict would read FIXED.
+- L: drift_verdict STILL-DRIFT (the breach).
+
+Verdict LEVER-FAIL with RECIPE True. Nothing is promoted; d1s3 model_31399 stays the parent. Panel round 75 is called (mjlab/results/footwork-round75-brief.md).
+
+## D-211 (2026-11-04): CONFIRM rally-d1s3lr3 on fresh dev seeds before promoting it
+
+Panel round 75 (mjlab/results/footwork-review.md): 5 of 5 for (i). Run: scripts/diag/conf75.sh.
+
+**Round 75 findings:**
+- RECIPE PASS and LEVER-FAIL are valid as pre-registered (recomputed).
+- GAIN2's per-seed SE measures eval noise for one checkpoint, so it tests "this checkpoint beats the parent", not "the recipe works". The training-seed SD over the three recipe runs is about 0.8 points.
+- The brief's "matched control at no extra cost" overstates it: L and C diverge from update 1, so L vs C still carries about 1.1 points of training-seed SD. LEVER-FAIL means no gain over C plus a marginal breach, not harm. L against the parent alone would pass GAIN2 (+2.57).
+- Family reweighting moves feed share without adding capacity. It reached cross_backhand (+6 points) but cannot reach the P(5+) floor via the feeder ball alone. Parked, not re-dosed.
+- Motion: C's ready 0.291 is a wide stance without the loading dip (dip 0.139 vs parent 0.321). Feeder peak speed is slightly lower (p99 2.71 vs 2.77 m/s). C's gain is steadier positioning and fewer falls, not agility.
+
+**Lines** (gain line: GAIN2 3 of 5 - experiment design, RL, coach; motion and architecture would use P(5+) >= parent. Mechanism bars 4 of 5. Coach's feeder >= parent - 0.01 is 1 of 5, reported only):
+- Reads, no training: parent model_31399 and C model_32598 on pairs 4220341-4220344 and direction 4220345-4220348.
+- **CONFIRMED** = d1_rule.gain2(C, parent) on the fresh seeds, and r19_guards (C fresh pooled vs parent fresh pooled) with no breach, and d1_rule.replicated's mechanism bars (ready >= 0.25, falls per 1,000 hits <= 1.3).
+- Otherwise **CONFIRM-FAIL**: no promotion, panel. EVAL-FAIL if any of the 16 reads is missing.
+- **Reported only:** drift_verdict; feeder legal; P(5+) C vs parent; the parent's fresh vs D-204 P(5+) (0.3812) and C's fresh vs D-204 P(5+) (0.4115; shrinkage). Recorded before reading: the 17-family guard breaches by chance about 30 % of the time with no true drift (coach), so a breach goes to the panel with family SEs; GAIN2's power at +2.2 is about 75-90 %.
+- **If CONFIRMED:** C becomes the parent. Later family guards stay referenced to the original parent's pooled D-204 reads (RL; stricter, not a loosening).
+
+**Seeds (ledgered):** dev 4220341-4220348. Training 207 stays next.
