@@ -1,0 +1,12 @@
+D-214: parent C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt; R = rally-d1s3idle on Picklebot-Rally22b-FastMove-IdleRec-G1; training seed 211, smoke 212
+smoke exit 0 ok
+smoke no traceback ok
+smoke falls per 1,000 env-seconds 1.992 ok
+smoke std min 0.1 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + idle recovery, no other new terms True -> ok
+smoke falls half-split (reported): first half 2.606, second half 1.446
+training: {"run": "rally-d1s3idle", "exit_code": 143, "finished": "2026-11-04T23:47:41+08:00"}
++341-360: falls per 1,000 env-s 1.17 (kill > 2 x 22b 1.57); legal_return 0.9066 (kill < 22b 0.7549 - 0.05) -> CONTINUE; reported +241-260: falls 0.93, legal_return 0.9530
+mean rally length, iterations 100-300: child 4.074 vs parent 4.221 (kill below 0.9 x) -> CONTINUE
+newly paid recovery value, iterations 0-60 0.5254 -> 300-360 0.5155 (kill below +0.05) -> KILL-NO-CLIMB
+VERDICT: KILL (KILL-NO-CLIMB)

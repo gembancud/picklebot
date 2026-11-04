@@ -6303,3 +6303,14 @@ All pass -> CONFIRM on dev 4220349-4220356 (C re-read; D-212's CONFIRMED lines).
 **Recorded before reading:** an h1 drop of 0.03 is worth about +1.7-1.8 points of P(5+). GAIN2's power at that effect is about 60 %.
 
 **Seeds (ledgered):** training 211, smoke 212; dev 4220365; dev 4220349-4220356 (CONFIRM only). Released unused (D-213): training 209-210, dev 4220358-4220364. Next free: training 213, dev 4220366.
+
+### D-214 result (2026-11-05): KILL-NO-CLIMB at +360 - the newly paid recovery value did not rise
+
+Smoke (seed 212) passed: falls 1.992 against the line 4.157 (half-split 2.606 / 1.446). The other checks passed too, including the idle-recovery term.
+
+Training seed 211 was killed at +368 by the pre-registered line:
+- **KILL-NO-CLIMB:** the newly paid recovery value went from 0.5254 (iterations 0-60) to 0.5155 (300-360). The line needed +0.05.
+- **D-194's lines** passed: falls 1.17, legal_return 0.907.
+- **KILL-FARM** passed: mean rally length 4.07 vs C2's 4.22 (line 0.9x).
+
+Not reported against any endpoint. C stays the parent. The newly paid branch started at about 0.53 and did not move. Recovery while parked is not being learned at this dose and LR. Dev 4220365 and 4220349-4220356 stay unread. Panel round 79 is called (mjlab/results/footwork-round79-brief.md).
