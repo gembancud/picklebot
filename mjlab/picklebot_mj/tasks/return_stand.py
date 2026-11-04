@@ -343,8 +343,10 @@ class BallPhysicsAction(ActionTerm):
         self._ls_out = torch.zeros(3, 2, dtype=torch.long, device=dev)
         self._fbin = torch.zeros(n, dtype=torch.long, device=dev)
         # D-216 (reporting only): the same feeder-ball outcomes (feeds, legal) by the launch-distance bin (d_edges)
-        self._ls_out_d = torch.zeros(len(LAUNCH_D_EDGES) + 1, 2, dtype=torch.long, device=dev)
-        self._fdbin = torch.zeros(n, dtype=torch.long, device=dev)
+        # D-216 fix: a reset feed never passes through _launch_log (no launch distance), so it goes to a last
+        # "not recorded" bucket (index len(LAUNCH_D_EDGES) + 1), set at reset, instead of defaulting to bin 0
+        self._ls_out_d = torch.zeros(len(LAUNCH_D_EDGES) + 2, 2, dtype=torch.long, device=dev)
+        self._fdbin = torch.full((n,), len(LAUNCH_D_EDGES) + 1, dtype=torch.long, device=dev)
         self._ls_de = torch.tensor(LAUNCH_D_EDGES, device=dev)
         self._ls_ve = torch.tensor(LAUNCH_V_EDGES, device=dev)
         self.drill = None
@@ -524,6 +526,8 @@ class BallPhysicsAction(ActionTerm):
         for f in (self.hit_done, self.hit_now, self.return_done, self.return_now, self.lost_now, self._prev_dead,
                   self.tallied):
             f[env_ids] = False
+        if hasattr(self, "_fdbin"):  # D-216 fix: a reset feed has no recorded launch distance
+            self._fdbin[env_ids] = len(LAUNCH_D_EDGES) + 1
         if hasattr(self, "rally_streak"):
             self.rally_streak[env_ids] = 0
         if self.pairs is not None and getattr(self.cfg, "pair_reset_parks", False):  # audit: keep the reset env parked

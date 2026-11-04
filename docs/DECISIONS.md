@@ -6425,3 +6425,18 @@ Panel round 80 and its correction round 80b (mjlab/results/footwork-review.md; m
 - **Reported:** coach's route (legal(d <= 1.2) >= 0.70 and far <= near - 0.10).
 
 **Seeds (ledgered):** dev 4220366-4220367 (reads), dev 4220368 (code check). Training 215-216 stay reserved for the routed run. Next free: dev 4220369.
+
+### D-216 first read (2026-11-05): INVALID - an instrument defect in outcome_by_d; fixed and re-read
+
+The first read (results/dist80-summary.txt) routed SHOT-BINDS: legal(d <= 0.3) 0.5845 (n 2,171) vs legal(d > 1.2) 0.4212 (n 1,783).
+
+**The defect (the agent, checked before acting on the route):** bin 0 (d < 0.1 m) held about 890 feeds per read, while d_hist recorded only 30-40 feeder-ball launches at d < 0.1 per read.
+- A reset feed (the first ball after an env reset) never passes through _launch_log, so it has no recorded launch distance. The new per-env bin defaulted to 0, so about 890 reset feeds per read (legal 0.516) were counted as "d < 0.1".
+- The real launches at 0.1-0.3 m read 0.910 (n 177) and 0.901 (n 203).
+
+**The fix (return_stand.py):** reset feeds go to a last "not recorded" bucket. It is initialised there and set there at every reset, so it is no longer bin 0.
+- GPU check on dev 4220368 (code check): outcome_by_d sums still equal outcome_feeds_legal. Bin 0 now holds 1 feed (d_hist: 2 launches); the reset bucket holds 107 feeds, legal 0.40.
+
+**Verdict:** the first read is INVALID (instrument). The route and its lines are unchanged. The same seeds are re-read into results/dist80b-* (scripts/diag/dist80b.sh); the first read's files are kept.
+
+**Reported, not a verdict:** reset feeds (the ball after spawn) are about a third of the read's feeder balls and are returned legal only about 0.40-0.52 of the time. The existing outcome_feeds_legal "0-1" bin has always included them (D-165), and the frozen target read includes them too. This is recorded for the panel.
