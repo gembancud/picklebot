@@ -422,3 +422,19 @@ def test_dist_route():
     assert dr.dist_route(mid)[0] == "PANEL"
     lo, hi = dr.wilson(50, 100)
     assert abs(lo - 0.4038) < 1e-3 and abs(hi - 0.5962) < 1e-3
+
+
+def test_cut81_kills():
+    def row(it, feeds, hands, far, near, cf, cl):
+        return {"step": it * dr.STEPS_PER_IT, "split": [[feeds, hands], [0, 0]],
+                "launch": {"d_hist": [[near, 0, 0, 0, 0, 0, far]], "outcome_after_cut": [cf, cl]}}
+    start = 32598
+    ok = [row(start + 30, 0, 0, 0, 0, 0, 0), row(start + 90, 0, 0, 0, 0, 2000, 1400),
+          row(start + 300, 1000, 1000, 1000, 1000, 2000, 1400), row(start + 360, 3000, 6000, 2000, 1500, 2500, 1700)]
+    v = [x[0] for x in dr.cut81_kills(ok, start)]
+    assert v == ["CONTINUE", "CONTINUE", "CONTINUE"], v
+    bad = [row(start + 30, 0, 0, 0, 0, 0, 0), row(start + 90, 0, 0, 0, 0, 2000, 1900),
+           row(start + 300, 1000, 1000, 1000, 1000, 2000, 1900), row(start + 360, 1500, 15000, 1200, 2800, 2500, 2300)]
+    v = [x[0] for x in dr.cut81_kills(bad, start)]
+    assert v == ["KILL-NO-SHARE", "KILL-NO-DOSE", "KILL-EASY"], v
+    assert all(x[0] == "NO-DATA" for x in dr.cut81_kills([], start))

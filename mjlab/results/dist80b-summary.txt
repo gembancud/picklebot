@@ -1,0 +1,9 @@
+D-216 (re-read after the not-recorded-bucket fix): launch-distance read of C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt on dev 4220366-4220367 (mean actions; --stochastic reported)
+legal(d <= 0.3) 0.9014 (n 436, Wilson 0.870-0.926); legal(d > 1.2) 0.4223 (n 1724, Wilson 0.399-0.446); gap +0.4791
+RESTART-BINDS: near >= 0.8 and gap >= 0.2 and intervals apart -> True; SHOT-BINDS: near < 0.75 -> False
+(reported) coach's route: legal(d <= 1.2) 0.8220 >= 0.70 and far <= near - 0.10 -> True
+(reported) legal by bin: 0.923 (n 65), 0.928 (n 152), 0.877 (n 219), 0.858 (n 471), 0.811 (n 609), 0.755 (n 664), 0.422 (n 1724)
+(reported) mean actions: off-spot share (d > 1.2) at launch 0.5045; feeder legal 0.6455
+(reported) noise on: off-spot share 0.4755; feeder legal 0.6557; legal(d <= 0.3) 0.9071 (n 538, Wilson 0.880-0.929); legal(d > 1.2) 0.4207 (n 1859, Wilson 0.398-0.443); gap +0.4864
+RESULT RESTART-BINDS
+VERDICT: RESTART-BINDS

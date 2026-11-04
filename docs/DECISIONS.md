@@ -6440,3 +6440,57 @@ The first read (results/dist80-summary.txt) routed SHOT-BINDS: legal(d <= 0.3) 0
 **Verdict:** the first read is INVALID (instrument). The route and its lines are unchanged. The same seeds are re-read into results/dist80b-* (scripts/diag/dist80b.sh); the first read's files are kept.
 
 **Reported, not a verdict:** reset feeds (the ball after spawn) are about a third of the read's feeder balls and are returned legal only about 0.40-0.52 of the time. The existing outcome_feeds_legal "0-1" bin has always included them (D-165), and the frozen target read includes them too. This is recorded for the panel.
+
+### D-216 result (2026-11-05): RESTART-BINDS - C returns the feeder ball when set and loses it when scrambling
+
+Re-read with the fixed instrument (results/dist80b-summary.txt), dev 4220366-4220367, mean actions:
+- legal(d <= 0.3 m) 0.901 (n 436, Wilson 0.870-0.926); legal(d > 1.2 m) 0.422 (n 1,724, Wilson 0.399-0.446). Gap +0.479; intervals apart.
+- RESTART-BINDS true; SHOT-BINDS false. Coach's route agrees: legal(d <= 1.2) 0.822.
+- **By bin:**
+
+  | d (m) | < 0.1 | 0.1-0.2 | 0.2-0.3 | 0.3-0.5 | 0.5-0.8 | 0.8-1.2 | > 1.2 |
+  |---|---|---|---|---|---|---|---|
+  | legal | 0.923 | 0.928 | 0.877 | 0.858 | 0.811 | 0.755 | 0.422 |
+  | n | 65 | 152 | 219 | 471 | 609 | 664 | 1,724 |
+
+- **Reset feeds** (the first ball after spawn, now in their own bucket): 1,781 feeds, legal 0.501.
+- **Noise on (--stochastic, reported):** off-spot share 0.476 vs 0.505; feeder legal 0.656 vs 0.646; near 0.907, far 0.421. Exploration noise does not explain the practice-vs-read gap.
+
+Route: (iii-RL), D-217.
+
+## D-217 (2026-11-05): random rally ends on half the live pair courts (RL's form of restart-state starts)
+
+**One change:** X = rally-d1s3cut, C model_32598 on d1s3's task with the new training-only pair_cut_prob 0.33.
+- On half the live pair courts (odd court index among courts without drills), a received hand-off is cut with probability 0.33, at a random 0.2-0.6 s (PAIR_CUT_T) after it is received, if the receiver has not hit it.
+- The ball is lost (a miss) and the rally ends. The feeder ball follows after refeed_delay_s (0.5 s) with the robots mid-scramble: the read's restart state.
+- The cut uses its own random stream, so other random draws are unchanged. Default 0 (off) in every task and read.
+- Logging: launch_summary adds outcome_after_cut and cuts.
+- **The agent's parameter choice:** p 0.33 and the 0.2-0.6 s window are not panel-set. They were chosen so that, by the agent's estimate, the dose meets the panel's own kill lines: on cut courts rallies average about 3 shots, so the feeder share is about 0.25-0.3 there and above 0.18 overall.
+- LR 3e-5, ScheduledPPO, no anchor, 1,200 iterations, endpoint model_33797. Training seed 215, smoke 216.
+
+**Tests:**
+- tests/test_pair_cut.py (GPU): with forced hand-offs, cuts occur, only on cut courts, and feeder balls follow them.
+- The off-by-default config test passes.
+- tests/test_d1_rule.py: 29 pass (incl. cut81_kills).
+
+**Smoke:** D-201's checks unchanged (falls line 4.157, half-split reported). The config check requires pair_cut_prob 0.33.
+
+**Kill at +360**, from start 32598:
+- D-194's lines;
+- KILL-FARM (against C2's share log);
+- d1_rule.cut81_kills:
+  - KILL-NO-SHARE: live-court feeder share over 300-360 < 0.18;
+  - KILL-NO-DOSE: off-spot (d > 1.2 m) share of feeder launches over 300-360 < 0.40;
+  - KILL-EASY: feeder legal after a cut over 30-90 > 0.85.
+
+**Lines** (D-204 pooled seeds, against lev74-C; unchanged from D-215):
+- gain2;
+- r19_guards against the original parent's reads on the same seeds;
+- ready >= 0.25 and falls per 1,000 hits <= 1.3;
+- cfs79_lines: H0 <= C - 0.03, FEEDER >= C - 0.01, K3-KEPT <= C + 0.005 (both splits reported).
+
+All pass -> CONFIRM on dev 4220349-4220356 (D-212's CONFIRMED lines). If the dose arrives but H0 does not move, the next round is a STOP vote to the architecture / unfrozen-base phase (RL, coach).
+
+**Reported:** gain2 against C2 and against F; launch-distance legal for X (C: dist80b); R3 pairs rate; X's court read on dev 4220365 (C's is cfs79-court-C).
+
+**Seeds (ledgered):** training 215, smoke 216; dev 4220365 (X's court read, paired with C's); dev 4220349-4220356 (CONFIRM only). Next free: training 217, dev 4220369.

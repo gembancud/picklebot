@@ -1014,3 +1014,50 @@ def dist_route(out_by_d: list[list[int]]) -> tuple[str, list[str]]:
              f"(reported) coach's route: legal(d <= 1.2) {pw:.4f} >= 0.70 and far <= near - 0.10 -> {coach}",
              "(reported) legal by bin: " + ", ".join(f"{x[1] / max(x[0], 1):.3f} (n {x[0]})" for x in out_by_d)]
     return v, lines
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-217 (D-216 routed RESTART-BINDS -> (iii-RL), RL's form): random rally ends (pair_cut_prob, half the live courts).
+# Kill at +360 besides D-194's lines and KILL-FARM, from the PICKLEBOT_PAIR_LOG rows (windows from rows that exist):
+#   KILL-NO-SHARE: live-court feeder share over iterations 300-360 < CUT_SHARE_MIN;
+#   KILL-NO-DOSE: off-spot (d > 1.2 m) share of live-court feeder-ball launches over 300-360 < CUT_DOSE_MIN;
+#   KILL-EASY: feeder legal after a cut over iterations 30-90 > CUT_EASY_MAX (round 43's premise, measured in training).
+CUT_SHARE_MIN, CUT_DOSE_MIN, CUT_EASY_MAX = 0.18, 0.40, 0.85
+
+
+def _launch_window(rows: list[dict], it_lo: int, it_hi: int, start_it: int):
+    rows = [r for r in rows if "launch" in r]
+    a = _row_from(rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(rows, max((start_it + it_hi) * STEPS_PER_IT, a["step"] + (it_hi - it_lo) * STEPS_PER_IT))
+    if a is None or b is None or b["step"] <= a["step"]:
+        return None
+    da = [sum(r[i] for r in a["launch"]["d_hist"]) for i in range(len(a["launch"]["d_hist"][0]))]
+    db = [sum(r[i] for r in b["launch"]["d_hist"]) for i in range(len(b["launch"]["d_hist"][0]))]
+    d = [y - x for x, y in zip(da, db)]
+    ca, cb = a["launch"].get("outcome_after_cut", [0, 0]), b["launch"].get("outcome_after_cut", [0, 0])
+    return {"far": d[-1], "launches": sum(d), "cut_feeds": cb[0] - ca[0], "cut_legal": cb[1] - ca[1]}
+
+
+def cut81_kills(rows: list[dict], start_it: int) -> list[tuple[str, str]]:
+    out = []
+    s, ns = _pair_share(rows, 300, 360, start_it)
+    if s != s or ns < MIN_WINDOW_EVENTS:
+        out.append(("NO-DATA", f"KILL-NO-SHARE: live-court feeder share 300-360 {s} (n {ns}): NO-DATA (not a kill)"))
+    else:
+        v = "CONTINUE" if s >= CUT_SHARE_MIN else "KILL-NO-SHARE"
+        out.append((v, f"KILL-NO-SHARE: live-court feeder share 300-360 {s:.4f} (n {ns}; kill below {CUT_SHARE_MIN}) -> {v}"))
+    w = _launch_window(rows, 300, 360, start_it)
+    if w is None or w["launches"] < MIN_WINDOW_EVENTS:
+        out.append(("NO-DATA", f"KILL-NO-DOSE: off-spot launch share 300-360: NO-DATA (not a kill) {w}"))
+    else:
+        f = w["far"] / w["launches"]
+        v = "CONTINUE" if f >= CUT_DOSE_MIN else "KILL-NO-DOSE"
+        out.append((v, f"KILL-NO-DOSE: off-spot (d > 1.2) launch share 300-360 {f:.4f} (n {w['launches']}; kill below {CUT_DOSE_MIN}) -> {v}"))
+    e = _launch_window(rows, 30, 90, start_it)
+    if e is None or e["cut_feeds"] < MIN_WINDOW_EVENTS:
+        out.append(("NO-DATA", f"KILL-EASY: feeder legal after a cut 30-90: NO-DATA (not a kill) {e}"))
+    else:
+        g = e["cut_legal"] / e["cut_feeds"]
+        v = "CONTINUE" if g <= CUT_EASY_MAX else "KILL-EASY"
+        out.append((v, f"KILL-EASY: feeder legal after a cut 30-90 {g:.4f} (n {e['cut_feeds']}; kill above {CUT_EASY_MAX}) -> {v}"))
+    return out

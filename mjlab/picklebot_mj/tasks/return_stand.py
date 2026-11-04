@@ -61,6 +61,7 @@ FEED_Y_MAX = court.HALF_WIDTH - 0.15  # anchored feeds are clamped inside the si
 RECOVERY_BOX = ((-6.2, -5.0), (-1.5, 1.5))  # training: sampled per feed (x range, y range)
 LAUNCH_D_EDGES = (0.1, 0.2, 0.3, 0.5, 0.8, 1.2)  # D-165: m from the recovery spot at a feeder-ball launch
 LAUNCH_V_EDGES = (0.25, 0.5, 1.0, 1.5, 2.0)  # m/s pelvis ground speed at launch
+PAIR_CUT_T = (0.2, 0.6)  # D-217: s after the hand-off is received
 RECOVERY_FIXED = (-5.6, 0.0)  # evaluation: baseline centre
 RECOVERY_STD = 0.5  # reward exp(-(d / std)^2)
 RECOVERY_BIN = 0.05  # error histogram bin width (m), 100 bins
@@ -123,6 +124,11 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # leaves it off). PICKLEBOT_PAIR_LOG: append the cumulative feeder-ball / hand-off counts every
     # PICKLEBOT_PAIR_LOG_EVERY (default 2,400) env steps (a host sync each time).
     pair_rally_cap: int = 0
+    # D-217 (training only; 0 = off, as in every read): on half of the live pair courts (odd court index among the
+    # courts without drills), a received hand-off is cut with this probability at a random time PAIR_CUT_T s after it
+    # is received, if the receiver has not hit it yet: the ball is lost (a miss), the rally ends, and the feeder ball
+    # follows after refeed_delay_s with the robots mid-scramble (the read's restart state). Own random stream.
+    pair_cut_prob: float = 0.0
     # D-162 (training only; 0 = off): in pair mode, move-to-spot and ghost-ball swing episodes happen only on the first
     # pair_drill_court_frac of courts (both envs), at move_prob / frac and swing_prob / frac, so the overall amount of
     # each is unchanged; the other courts never have a busy robot and play live rallies, as the pairs read does. With
@@ -347,6 +353,19 @@ class BallPhysicsAction(ActionTerm):
         # "not recorded" bucket (index len(LAUNCH_D_EDGES) + 1), set at reset, instead of defaulting to bin 0
         self._ls_out_d = torch.zeros(len(LAUNCH_D_EDGES) + 2, 2, dtype=torch.long, device=dev)
         self._fdbin = torch.full((n,), len(LAUNCH_D_EDGES) + 1, dtype=torch.long, device=dev)
+        # D-217: cut state (pair_cut_prob > 0 only), and feeder-ball outcomes after a cut (feeds, legal; logging)
+        self._cut_court = None
+        if float(getattr(cfg, "pair_cut_prob", 0.0)) > 0.0 and getattr(cfg, "pair_mode", False):
+            court = torch.arange(n, device=dev) % (n // 2)
+            live_c = torch.ones(n, dtype=torch.bool, device=dev) if self.drill_scale is None else self.drill_scale == 0
+            self._cut_court = live_c & (court % 2 == 1)
+            self.gen_cut = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 314159)  # own stream
+        self._cut_armed = torch.zeros(n, dtype=torch.bool, device=dev)
+        self._cut_t = torch.zeros(n, device=dev)
+        self._after_cut = torch.zeros(n // 2 if n % 2 == 0 else n, dtype=torch.bool, device=dev)  # per court
+        self._fcut = torch.zeros(n, dtype=torch.bool, device=dev)  # this env's feeder ball followed a cut
+        self._out_cut = torch.zeros(2, dtype=torch.long, device=dev)
+        self.cut_count = torch.zeros((), dtype=torch.long, device=dev)
         self._ls_de = torch.tensor(LAUNCH_D_EDGES, device=dev)
         self._ls_ve = torch.tensor(LAUNCH_V_EDGES, device=dev)
         self.drill = None
@@ -528,6 +547,9 @@ class BallPhysicsAction(ActionTerm):
             f[env_ids] = False
         if hasattr(self, "_fdbin"):  # D-216 fix: a reset feed has no recorded launch distance
             self._fdbin[env_ids] = len(LAUNCH_D_EDGES) + 1
+        if hasattr(self, "_cut_armed"):  # D-217
+            self._cut_armed[env_ids] = False
+            self._fcut[env_ids] = False
         if hasattr(self, "rally_streak"):
             self.rally_streak[env_ids] = 0
         if self.pairs is not None and getattr(self.cfg, "pair_reset_parks", False):  # audit: keep the reset env parked
@@ -1033,6 +1055,16 @@ class BallPhysicsAction(ActionTerm):
             self.recover_hist_tm.index_add_(0, (gap.nan_to_num(1e3) / RECOVERY_BIN).clamp(0, nb).long(), due.long())
             self.gap_hist.index_add_(0, (self.rec_gap0.nan_to_num(1e3) / RECOVERY_BIN).clamp(0, nb).long(), due.long())
             self.rec_scored = self.rec_scored | due
+        if self._cut_court is not None and self.pairs is not None:  # D-217: cut an armed hand-off at its time
+            self._cut_t = torch.where(self._cut_armed, self._cut_t - dt, self._cut_t)
+            cut = self._cut_armed & (self._cut_t <= 0) & ~self.hit_done & ~self.rules.dead & ~self.tallied
+            self._cut_armed &= ~(cut | self.hit_done | self.rules.dead)
+            self.rules.lost(cut)
+            self.lost_now |= cut
+            self.cut_count += cut.sum()
+            self._cut_now = cut
+            h = self.pairs.h
+            self._after_cut |= cut[:h] | cut[h:]
         # Feeding machine: count the finished rally, wait, then feed the next ball (no robot reset).
         over = (self.rules.dead | self.return_done) & ~self.tallied
         if not hasattr(self, "rally_streak"):
@@ -1058,6 +1090,19 @@ class BallPhysicsAction(ActionTerm):
                 self._share_split += torch.stack([torch.stack([(fire & ~dc).sum(), (recv & ~dc).sum()]),
                                                   torch.stack([(fire & dc).sum(), (recv & dc).sum()])])
             self._launch_log(fire, over, h0, data)
+            if self._cut_court is not None:  # D-217: arm received hand-offs; feeder balls after a cut
+                h = self.pairs.h
+                done_f = over & ~h0 & self._fcut
+                self._out_cut += torch.stack([done_f.sum(), (done_f & self.return_done).sum()])
+                self._fcut = torch.where(over & ~h0, torch.zeros_like(self._fcut), self._fcut)
+                ac = self._after_cut.repeat(2)
+                self._fcut = torch.where(fire, ac, self._fcut)
+                self._after_cut &= ~(fire[:h] | fire[h:])
+                draw = torch.rand(self.num_envs, generator=self.gen_cut, device=self.device)
+                tdraw = torch.rand(self.num_envs, generator=self.gen_cut, device=self.device)
+                arm = recv & self._cut_court & (draw < float(self.cfg.pair_cut_prob))
+                self._cut_armed = torch.where(recv | fire, arm, self._cut_armed)
+                self._cut_t = torch.where(arm, PAIR_CUT_T[0] + (PAIR_CUT_T[1] - PAIR_CUT_T[0]) * tdraw, self._cut_t)
             handed = mirror_ball_states(torch.cat([self.ball.pos, self.ball.vel, self.ball.spin], -1))[self.pairs.partner]
             early = self._credit_early(recv)
             if os.environ.get("PICKLEBOT_PAIR_LOG") and self._env.common_step_counter % int(os.environ.get("PICKLEBOT_PAIR_LOG_EVERY", "2400")) == 0:
@@ -1145,7 +1190,8 @@ class BallPhysicsAction(ActionTerm):
     def launch_summary(self) -> dict:
         return {"prev_len_bins": ["0-1", "2-4", "5+"], "d_edges": list(LAUNCH_D_EDGES), "v_edges": list(LAUNCH_V_EDGES),
                 "d_hist": self._ls_d.tolist(), "v_hist": self._ls_v.tolist(), "outcome_feeds_legal": self._ls_out.tolist(),
-                "outcome_by_d": self._ls_out_d.tolist()}
+                "outcome_by_d": self._ls_out_d.tolist(), "outcome_after_cut": self._out_cut.tolist(),
+                "cuts": int(self.cut_count)}
 
     def _credit_early(self, recv: torch.Tensor) -> torch.Tensor:
         """Pair mode: an env receives its partner's return while its own copy of the ball is still in flight (the
