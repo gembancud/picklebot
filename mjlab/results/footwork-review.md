@@ -935,3 +935,40 @@ Lines: GAIN2 (3 of 5) + r19_guards + mechanism bars (4 of 5). Coach's feeder lin
 **Next if CONFIRMED** (for round 76): C becomes the parent. Two proposals are on the table: C continued plus C + one lever on seed 207 (RL, architecture, coach), and the Fast4 floor test for the speed ceiling (motion).
 
 **Decision:** D-211.
+
+
+## Round 76 (2026-11-04): D-211 CONFIRMED; next step after promotion
+
+Brief: footwork-round76-brief.md.
+
+**Correction checks**
+- **CONFIRMED is valid as pre-registered** (all five recomputed it).
+  - Pooled P(5+) from the summed histograms is 0.4115 vs 0.3805 (coach); the brief's 0.4117 / 0.3818 are rally-weighted per-seed figures. The difference is immaterial; it is labelled from now on.
+- **Guard reference** (RL, experiment design): round 75's "stricter" original-parent reference holds only on the same seeds. On other seeds it measures the seed change (parent low -5.3 against itself). RL withdrew its own round-75 claim. Guards now use same-seed references.
+- **The brief's misstatements:**
+  - the Fast4 floor test was not coded (motion, experiment design, architecture);
+  - the hazards were from older parents (coach: on C, k = 3 is about 0.02);
+  - court falls cannot come from the pairs reads, because robot_episodes equals robot_falls (motion, coach, RL).
+- **A defect** (experiment design, architecture): lev74's +360 kill hard-coded start 31399, so a resume from C would never fire it.
+- **Missing** (motion, reported): an agility read on C. C is slower in every direction on the fresh direction reads (peak p90 back 2.09 -> 1.97, right 2.16 -> 2.06 m/s).
+- **Risk** (architecture): C sits at fast -4.6 against the original parent, about a 40 % chance of a noise breach on any child.
+
+**Votes**
+
+| reviewer | vote | lever / note |
+|---|---|---|
+| Motion | (ii) | approach_far paid before the bounce (new code); Fast4 deferred |
+| Coach | (ii) | pair_rally_cap 5 (coded), smoke 208; OPEN / K3-KEPT / FEEDER lines |
+| RL | (ii) | IdleRec with a critic warm-up; Fast4 floor read first |
+| Experiment design | (i) | C2 only; the Fast4 floor read alongside |
+| Architecture | (i) | C2 only; the Fast4 floor read as a tail; IdleRec needs new watcher code |
+
+(ii) wins 3 of 5. The lever has no majority (1 / 1 / 1); least new code: the cap. Three of five want the Fast4 floor read, so it runs first (reads only).
+
+**The larger lever (all five):**
+- P(5+) is bounded by the opening: roughly (1 - h0)(1 - h1). Reaching 0.80 needs h0 of about 0.10 and h1 of about 0.08. Compounding alone needs about 13 steps, and the guards would stop it sooner.
+- The feeder-ball limit is reach on the left / back and deep / fast / low families. Motion and coach read it as first-step commitment, not top speed.
+- 97 % of pair-court experience is past the opening (architecture), so the k = 1 ball is starved of practice. That is the cap's premise.
+- Next routes named: the pre-bounce intercept (motion), restart-state starts (coach, if the cap fails twice), and Fast4 -> d1b if the floor passes (RL, experiment design).
+
+**Decision:** D-212.

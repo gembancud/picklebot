@@ -6140,3 +6140,41 @@ Panel round 75 (mjlab/results/footwork-review.md): 5 of 5 for (i). Run: scripts/
 - Per round 75 (RL), later family guards stay referenced to the original parent's pooled D-204 reads (results/d1s3ctl-parent-pooled*). This is stricter.
 
 Distance to the target: P(5+) 0.41 against 0.80; feeder legal 0.64 against M1's 85 %. Panel round 76 is called (mjlab/results/footwork-round76-brief.md).
+
+### D-211 addendum (2026-11-04, panel round 76 corrections; nothing re-decided)
+
+- **Guard reference.** Round 75's "family guards stay referenced to the original parent's D-204 reads (stricter)" holds only when the child is read on the D-204 seeds. Across seed sets the guards measure the seed change: the parent against itself moves low -5.3 and reach_deep +5.6 between D-204 and 4220341-48. From D-212, guards against the original parent use its reads on the child's own seeds; fresh confirmations guard against the reference re-read on the fresh seeds.
+- **Agility read on C (motion, reported, not pre-registered).** Fresh direction reads (4220345-48): C is slower in every direction. Peak p90 parent -> C: forward 2.00 -> 1.96, left 2.07 -> 2.03, back 2.09 -> 1.97, right 2.16 -> 2.06 m/s. Right legal 0.715 -> 0.693; right-miss closest distance 0.43 -> 0.65 m.
+- **Court falls (R3) cannot be read from the pairs reads.** robot_episodes equals robot_falls on all 16 reads, so the per-episode fall rate reads 1.0. The counter must be fixed, or the h5f battery read, before any target claim.
+- **Hazards on C (conf75, pooled):** feeder ball 0.370, k = 1 0.276, k = 2 0.077, k = 3 0.018, k = 4 0.005; parent 0.380 / 0.299 / 0.088 / 0.024 / 0.010. k = 3 is about 0.02, not the brief's 0.003. Almost all open rallies run to the 120-s timeout.
+- **The Fast4 floor test was not coded** (the brief said "coded"). It is coded in D-212.
+- **The lev74 +360 kill hard-coded start 31399.** Resumes from C would never have triggered it. D-212's driver passes 32598.
+
+## D-212 (2026-11-04): C2 (the recipe continued) and C + pair_rally_cap 5 on seed 207; the Fast4 floor read
+
+Panel round 76 (mjlab/results/footwork-review.md): (ii) 3 of 5 (motion, coach, RL), (i) 2 (experiment design, architecture). The (ii) voters each named a different lever: pre-bounce approach_far (motion, new code), pair_rally_cap 5 (coach, coded since D-161), IdleRec (RL, needs new watcher code). There is no majority, so the least-new-code option wins: **the cap**. The Fast4 floor read (reads only) runs first (RL, experiment design and architecture want it run). Run: scripts/diag/lev76.sh.
+
+**Stage 0 (reported only):** the Fast4 floor test. fw-fast4-01 model_18099 on Picklebot-Footwork-Specialist-Fast4-G1, dev 4220248, scripts/latent_reach_floor.py as fw_floor.sh. FLOOR-PASS if legs explained at lam 3 >= 0.85 (D-192's line). The settle and mean-action arrival lines go to the panel only if it passes.
+
+**Runs** (parent C = rally-d1s3lr3 model_32598; LR 3e-5, ScheduledPPO, no anchor, 1,200 iterations, endpoint model_33797, training seed 207, both runs logging the pair-court share):
+- **C2** = rally-d1s3lr4: C on d1s3's task. No smoke.
+- **K** = rally-d1s3cap: C2 + the training-only pair_rally_cap 5. The cap's only smoke failed at LR 1e-4 (D-201); C falls about half as often per hit, a new premise. Smoke seed 208 with D-201's checks unchanged (falls line 4.157, half-split reported). A SMOKE-FAIL skips K only. Coach's IdleRec fallback is not adopted: it needs new watcher code (architecture).
+
+**Kill at +360:** D-194's lines from start 32598. K also has KILL-NO-SHARE (d1_rule.s5_share_kill) against C2's share at the same iterations.
+
+**Lines** (D-204 pooled seeds; d1_rule.lever_lines / lev76_candidate):
+- **COMPOUND** (C2 vs C = lev74-C): gain2; r19_guards against the original parent's pooled reads on the same seeds; ready >= 0.25; falls per 1,000 hits <= 1.3.
+- **LEVER** (K vs C2): the same lines, plus three from coach:
+  - OPEN: (1 - h0)(1 - h1) >= C2's + 0.02;
+  - K3-KEPT: late failure share <= C2's + 0.005;
+  - FEEDER: feeder legal >= C2's - 0.01.
+- **Candidate:** K if LEVER, else C2 if COMPOUND, else panel.
+
+**CONFIRM** (candidate only) on fresh dev pairs 4220349-4220352 and direction 4220353-4220356, C and the candidate re-read. CONFIRMED = gain2 against C, r19_guards against C's fresh pooled read, and the mechanism bars. 4220341-4220348 stay reference reads only.
+
+**Recorded before reading:**
+- C already sits at fast -4.6 against the original parent, so a child has roughly a 40 % chance of a fast breach from eval noise alone. A breach goes to the panel with family SEs; the line is not loosened.
+- GAIN2's power at a true +1.5 points is about 55 %.
+- Compounding alone cannot reach 0.80: it needs feeder legal of about 0.90 and k = 1 legal of about 0.92. The panel named feeder-ball reach (footwork) and the opening exchange as the larger levers.
+
+**Seeds (ledgered):** training 207, smoke 208; dev 4220248; dev 4220349-4220356 (CONFIRM only). Next free: training 209, dev 4220357.

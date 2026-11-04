@@ -851,3 +851,44 @@ def seed_estimate(diffs: list[float]) -> str:
         return f"training-seed estimate {100 * m:+.2f} (one seed)"
     h = t.get(len(diffs) - 1, 2.0) * statistics.stdev(diffs) / len(diffs) ** 0.5
     return f"training-seed estimate (reported) {100 * m:+.2f} points, 95 % CI {100 * (m - h):+.2f} to {100 * (m + h):+.2f} over {len(diffs)} training seeds"
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-212 (panel round 76; (ii) 3 of 5 - motion, coach, RL; (i) 2). C = rally-d1s3lr3 model_32598 (the parent since D-211).
+# Two runs on training seed 207: C2 = rally-d1s3lr4 (C + 1,200 iterations, LR 3e-5) and K = rally-d1s3cap (C2's recipe +
+# the training-only pair_rally_cap 5; smoke seed 208). The lever had no majority (approach_far pre-bounce 1, the cap 1,
+# IdleRec 1); least new code: the cap (coded since D-161). COMPOUND (C2 vs C, D-204 seeds): gain2 against lev74-C,
+# r19_guards against the original parent's pooled reads on the same seeds, ready >= 0.25, falls <= 1.3. LEVER (K vs C2):
+# the same lines plus coach's OPEN ((1 - h0)(1 - h1) >= C2's + 0.02), K3-KEPT (late-rally failure share <= C2's + 0.005)
+# and FEEDER (pooled feeder legal >= C2's - 0.01). Hazards pool the rally histograms, then use open_hazards.
+OPEN_GAIN, K3_SLACK, FEEDER_SLACK = 0.02, 0.005, 0.01
+
+
+def pooled_hazards(paths: list[str], kmax: int = 4) -> dict:
+    import json
+    h, oh = None, None
+    for p in paths:
+        q = json.load(open(p))["pairs"]
+        h = list(q["len_hist"]) if h is None else [a + b for a, b in zip(h, q["len_hist"])]
+        oh = list(q["open_len_hist"]) if oh is None else [a + b for a, b in zip(oh, q["open_len_hist"])]
+    hz = open_hazards({"len_hist": h, "open_len_hist": oh}, kmax)
+    late = sum(h[3:]) / max(sum(h[3:]) + sum(oh[3:]), 1)
+    return {"h": hz, "open2": (1 - hz[0]) * (1 - hz[1]), "late": late}
+
+
+def lever_lines(child_paths: list[str], ref_paths: list[str]) -> tuple[bool, list[str]]:
+    c, r = pooled_hazards(child_paths), pooled_hazards(ref_paths)
+    fc, fr = pooled_pairs(child_paths)["feeder"], pooled_pairs(ref_paths)["feeder"]
+    o = c["open2"] >= r["open2"] + OPEN_GAIN
+    k3 = c["late"] <= r["late"] + K3_SLACK
+    fd = fc >= fr - FEEDER_SLACK
+    lines = [f"OPEN: (1-h0)(1-h1) {c['open2']:.4f} vs {r['open2']:.4f} (>= +{OPEN_GAIN}) -> {o}",
+             f"K3-KEPT: late failure share {c['late']:.4f} vs {r['late']:.4f} (<= +{K3_SLACK}) -> {k3}",
+             f"FEEDER: feeder legal {fc:.4f} vs {fr:.4f} (>= -{FEEDER_SLACK}) -> {fd}",
+             "hazards h0-h4 child " + " / ".join(f"{x:.3f}" for x in c["h"]) + "; ref " + " / ".join(f"{x:.3f}" for x in r["h"])]
+    return o and k3 and fd, lines
+
+
+def lev76_candidate(compound: bool, lever: bool) -> str:
+    """The checkpoint taken to the fresh confirmation: K if LEVER, else C2 if COMPOUND, else none (panel)."""
+    return "K" if lever else ("C2" if compound else "none")

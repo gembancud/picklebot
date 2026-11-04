@@ -353,3 +353,21 @@ def test_gain2_and_seed_estimate(tmp_path):
     ok, diff, lo, _ = dr.gain2(r, c)
     assert not ok and diff < 0
     assert "over 3 training seeds" in dr.seed_estimate([0.021, 0.0145, 0.01])
+
+
+def test_lev76_hazard_lines_and_candidate(tmp_path):
+    import json
+
+    def pairs(path, h, oh, f=100, fl=60):
+        json.dump({"pairs": {"court_counts": [[0, 0, f, fl]], "len_hist": h, "open_len_hist": oh}}, open(path, "w"))
+    pairs(tmp_path / "r.json", [40, 30, 5, 1, 0, 0], [0, 0, 0, 0, 0, 24])   # h0 0.40, h1 0.50
+    pairs(tmp_path / "c.json", [36, 28, 5, 1, 0, 0], [0, 0, 0, 0, 0, 30])   # h0 0.36, h1 0.4375
+    q = dr.pooled_hazards([str(tmp_path / "r.json")])
+    assert abs(q["h"][0] - 0.40) < 1e-9 and abs(q["h"][1] - 0.50) < 1e-9 and abs(q["open2"] - 0.30) < 1e-9
+    assert abs(q["late"] - 1 / 25) < 1e-9
+    ok, lines = dr.lever_lines([str(tmp_path / "c.json")], [str(tmp_path / "r.json")])
+    assert ok and lines[0].endswith("True")  # open2 0.36 vs 0.30
+    assert not dr.lever_lines([str(tmp_path / "r.json")], [str(tmp_path / "c.json")])[0]
+    pairs(tmp_path / "low.json", [36, 28, 5, 1, 0, 0], [0, 0, 0, 0, 0, 30], fl=55)  # feeder 0.55 vs 0.60
+    assert not dr.lever_lines([str(tmp_path / "low.json")], [str(tmp_path / "r.json")])[0]
+    assert [dr.lev76_candidate(*a) for a in ((True, True), (False, True), (True, False), (False, False))] == ["K", "K", "C2", "none"]
