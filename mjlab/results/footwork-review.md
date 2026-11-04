@@ -1055,3 +1055,44 @@ Brief: footwork-round78-brief.md.
 Experiment design's split reads (1 of 4) are not adopted.
 
 **Decision:** D-214.
+
+
+## Round 79 (2026-11-05): D-214 IdleRec on C reads KILL-NO-CLIMB
+
+Brief: footwork-round79-brief.md.
+
+**Correction checks**
+- **KILL-NO-CLIMB is valid** (all five recomputed it).
+  - The "0-60" window began at +22, and its first segment is a reset transient (0.549). The steady climb was about +0.005-0.008, so the verdict holds on any baseline.
+  - Experiment design: starting at iteration 0 would have read 0.43, a spurious +0.08 "climb" (CONTINUE). From now on, windows start at a logged row at least 30 iterations in.
+- **The line was fair** (all five): hit_done steps sit at 0.73-0.74, so there was headroom.
+- **The dose was small:** about 7 % of recovery-paid steps (RL, experiment design, coach, motion).
+- **The brief's "four levers on C" was wrong** (RL, experiment design): K and R only.
+- **R3 is a second open gate** (architecture): every h5f read on this lineage fails 4.0 % on falls_court (5.2-6.5 %).
+
+**The finding of the round: the stale stance target** (motion; verified by architecture, by the agent in code and C's params, and by a GPU test).
+- With the planner off, stance_xy stays (0, 0), the net centre.
+- stance_progress (weight 1.0) has paid pelvis speed toward the net on every live ball: walking forward is rewarded and backing up penalised.
+- Its pay is about 3x approach_far's.
+- It fits C's back 0.40 / left 0.31 vs forward 0.87 direction legal, and the late start found in round 78.
+
+**What we learned:**
+- Reward levers paid on a small slice of steps have failed five times.
+- The LR 3e-5 recipe holds C near itself (KL about 0.006, std at its floor).
+- Only K (a change in state distribution) moved the opening.
+
+**Votes**
+
+| reviewer | vote | form |
+|---|---|---|
+| RL | (i) pre-bounce approach_far | dose-climb kill; OPEN / FEEDER / K3 / gain2 |
+| Coach | (i) pre-bounce approach_far | H0 <= C - 0.02, LEFT, BACK; then restart-state starts; then STOP to shared-policy self-play |
+| Experiment design | (v) the cap on half the courts | lever_lines vs lev74-C, share / farm kills |
+| Motion | (v) BallStance: stance_xy retargeted on every fire (launcher and hand-off) | BACK +0.05, FWD guard; withdrew (i) (pre-bounce paddle-ball pulls toward the net too) |
+| Architecture | (v) court_feed_stance with the planner off (launcher only) | H0 <= C - 0.03, FEEDER, K3; R3 court read first |
+
+No majority (2 / 2 / 1). Least new code: the stance fix in architecture's form (an opt-in flag, about 3 lines).
+- Motion's hand-off extension is the next step if the feeder ball moves.
+- Motion's BACK / FWD lines are reported.
+
+**Decision:** D-215.

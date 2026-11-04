@@ -206,6 +206,10 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # stance_xy on them. True: each court feed's stance_xy is its own stance spot (privileged reward target only; the
     # spot input and observations are unchanged). False keeps the old behaviour.
     court_feed_stance: bool = False
+    # D-215 (panel round 79): with the planner off, stance_xy is never written and stays (0, 0), the net centre, so
+    # stance_progress paid speed toward the net on every live ball. True (with court_feed_stance): the D-176 retarget
+    # also runs with the planner off. Launcher feeds only (D-177). False keeps the old behaviour.
+    court_feed_stance_unplanned: bool = False
     # Self-play readiness R2 (D-116): record the post-contact ball state (pos, vel, spin) of every legal return
     # (evaluation only; read with returns_recorded()), or replay recorded returns, mirrored to the far side, as every
     # feed. Replayed balls start in the rally phase (a return may be volleyed or taken after its bounce).
@@ -1082,7 +1086,8 @@ class BallPhysicsAction(ActionTerm):
             self.ball = BallState(torch.where(m, handed[:, :3], self.ball.pos), torch.where(m, handed[:, 3:6], self.ball.vel),
                                   torch.where(m, handed[:, 6:9], self.ball.spin))
             self._handoff = torch.zeros_like(recv)
-        if getattr(self.cfg, "court_feed_stance", False) and getattr(self, "plan_on", False):
+        if getattr(self.cfg, "court_feed_stance", False) and (getattr(self, "plan_on", False)
+                                                          or getattr(self.cfg, "court_feed_stance_unplanned", False)):
             # D-176: court feeds get no planner spot (D-116), so stance_progress pointed at a stale stance_xy on them.
             # Their stance target is set from the ball actually in play. D-177 fix (panel round 50, architecture review):
             # launcher feeds only; in pair mode fire includes the hand-offs (recv), which _feed also draws court_feed for,

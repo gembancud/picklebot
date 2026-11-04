@@ -958,3 +958,17 @@ def rec78_lines(child_paths: list[str], ref_paths: list[str]) -> tuple[bool, lis
              f"(reported) late splits: shots 3-4 {c34:.4f} vs {r34:.4f}; 5+ ended {c5:.4f} vs {r5:.4f}",
              "(reported) hazards h0-h4 child " + " / ".join(f"{x:.3f}" for x in c["h"]) + "; ref " + " / ".join(f"{x:.3f}" for x in r["h"])]
     return h1 and fd and k3, lines
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-215 (panel round 79; no majority: (i) pre-bounce approach_far 2, the stance-target fix 2, the cap on half the courts
+# 1; least new code: the stance-target fix, architecture's form). F = rally-d1s3cfs: C on d1s3's task with
+# court_feed_stance + court_feed_stance_unplanned (launcher feeds' stance_xy retargeted to their own stance spot with the
+# planner off; before, stance_progress paid speed toward (0, 0), the net centre). Lines against C (lev74-C), besides
+# gain2 / r19_guards / the mechanism bars: H0 (pooled feeder-ball hazard <= C's - S8_HAZ), FEEDER and K3-KEPT as D-214.
+def cfs79_lines(child_paths: list[str], ref_paths: list[str]) -> tuple[bool, list[str]]:
+    c, r = pooled_hazards(child_paths), pooled_hazards(ref_paths)
+    h0 = c["h"][0] <= r["h"][0] - S8_HAZ
+    ok, lines = rec78_lines(child_paths, ref_paths)
+    fd_k3 = lines[1].endswith("True") and lines[2].endswith("True")
+    return h0 and fd_k3, [f"H0: feeder-ball hazard {c['h'][0]:.4f} vs {r['h'][0]:.4f} (<= -{S8_HAZ}) -> {h0}"] + lines[1:]

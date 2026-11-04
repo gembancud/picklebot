@@ -399,3 +399,15 @@ def test_rec78_lines(tmp_path):
     assert not dr.rec78_lines([str(tmp_path / "r.json")], [str(tmp_path / "c.json")])[0]
     s34, s5 = dr.late_splits([str(tmp_path / "r.json")])
     assert abs(s34 - 1 / 25) < 1e-9 and s5 == 0.0
+
+
+def test_cfs79_lines(tmp_path):
+    import json
+
+    def pairs(path, h, oh, f=100, fl=60):
+        json.dump({"pairs": {"court_counts": [[0, 0, f, fl]], "len_hist": h, "open_len_hist": oh}}, open(path, "w"))
+    pairs(tmp_path / "r.json", [40, 30, 5, 1, 0, 0], [0, 0, 0, 0, 0, 24])   # h0 0.40
+    pairs(tmp_path / "c.json", [35, 30, 5, 1, 0, 0], [0, 0, 0, 0, 0, 29])   # h0 0.35
+    ok, lines = dr.cfs79_lines([str(tmp_path / "c.json")], [str(tmp_path / "r.json")])
+    assert ok and lines[0].startswith("H0") and lines[0].endswith("True")
+    assert not dr.cfs79_lines([str(tmp_path / "r.json")], [str(tmp_path / "c.json")])[0]

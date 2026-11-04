@@ -482,3 +482,46 @@ def test_entry_point_does_not_import_the_agility_modules():
     env = dict(os.environ, CUDA_VISIBLE_DEVICES="", PYTHONWARNINGS="ignore")
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env=env, timeout=600)
     assert out.stdout.strip().splitlines()[-1] == "False True", out.stderr[-2000:]
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+def test_court_feed_stance_unplanned_retargets_with_the_planner_off():
+    """D-215: with the planner off (the rally recipe) and no hit hint, stance_xy is never written; court_feed_stance
+    alone leaves it at (0, 0). With court_feed_stance_unplanned too, every new launcher feed's stance_xy is its own
+    stance spot (hand-offs still keep theirs, D-177)."""
+    sys.path.insert(0, os.path.dirname(__file__))
+    from test_drill_v2 import LATENT, _env
+    if not LATENT.exists():
+        pytest.skip("needs the H1 latent controller")
+    from picklebot_mj.tasks.shadow_swing import stance_spot
+    task = "Picklebot-Latent-Court-V2-Res-PPO-Clean-Mix-KeepAlive-Pairs-Coop-Moves-Weak-Pace25-LamR2-G1"
+    moved, zero = {}, {}
+    for flag in (False, True):
+        env = _env(task, n=256, planner_mode="off", hit_hint=False, court_feed_prob=1.0, court_feed_stance=True,
+                   court_feed_stance_unplanned=flag)
+        t = env.action_manager.get_term("ball")
+        assert not t.plan_on and t.cfg.court_feed_stance_unplanned is flag
+        act = torch.zeros(env.num_envs, env.action_manager.total_action_dim, device=env.device)
+        n_new = n_moved = n_match = 0
+        prev_fam, prev_cf, prev_st = t.family.clone(), t.court_feed.clone(), t.stance_xy.clone()
+        with torch.inference_mode():
+            for step in range(300):
+                env.step(act)
+                new = ((t.family != prev_fam) | (t.court_feed != prev_cf)) & t.court_feed
+                if t.pairs is not None:
+                    new = new & ~t.pairs.handed
+                if step > 0 and new.any():
+                    d = (t.stance_xy[new] - prev_st[new]).norm(dim=-1)
+                    n_new += int(new.sum()); n_moved += int((d > 1e-4).sum())
+                    if flag:
+                        ref = stance_spot(t, t.cfg.hint_v2)[new]
+                        n_match += int(((t.stance_xy[new][:, 0] - ref[:, 0]).abs() < 0.15).sum())
+                prev_fam, prev_cf, prev_st = t.family.clone(), t.court_feed.clone(), t.stance_xy.clone()
+        zero[flag] = float((t.stance_xy.norm(dim=-1) < 1e-6).float().mean())
+        env.close()
+        assert n_new > 50, n_new
+        moved[flag] = n_moved / n_new
+        if flag:
+            assert n_match / n_new > 0.8, n_match / n_new
+    assert moved[False] < 0.2 and moved[True] > 0.8, moved
+    assert zero[False] > 0.9 and zero[True] < 0.5, zero

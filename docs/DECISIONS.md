@@ -6314,3 +6314,53 @@ Training seed 211 was killed at +368 by the pre-registered line:
 - **KILL-FARM** passed: mean rally length 4.07 vs C2's 4.22 (line 0.9x).
 
 Not reported against any endpoint. C stays the parent. The newly paid branch started at about 0.53 and did not move. Recovery while parked is not being learned at this dose and LR. Dev 4220365 and 4220349-4220356 stay unread. Panel round 79 is called (mjlab/results/footwork-round79-brief.md).
+
+## D-215 (2026-11-05): fix the stale stance target - stance_progress has paid speed toward the net centre
+
+Panel round 79 (mjlab/results/footwork-review.md). No majority:
+- (i) pre-bounce approach_far, 2 (RL, coach);
+- the stance-target fix, 2 (motion, architecture);
+- the cap on half the courts, 1 (experiment design).
+
+The least-new-code option is the stance-target fix in architecture's form (an opt-in flag, launcher feeds only). Run: scripts/diag/cfs79.sh.
+
+**The defect (motion, verified in code, in C's params and by a GPU test):**
+- C's recipe has planner_mode off, hit_hint false and court_feed_stance false, so stance_xy is never written and stays (0, 0), the net centre (return_stand.py:317).
+- stance_progress (weight 1.0) pays pelvis speed toward stance_xy on every live, un-hit ball. Walking forward earns up to +1/s and backing up costs up to -1/s.
+- It earns about 3x approach_far per episode (architecture).
+- D-142 found the stale target; D-176's retarget runs only with the planner on (return_stand.py:1085).
+- This fits C's direction legal: forward 0.87, back 0.40, left 0.31. It also fits round 78's finding that the limit is a late start.
+- New test test_court_feed_stance_unplanned_retargets_with_the_planner_off: with the planner off, stance_xy stays (0, 0) on more than 90 % of envs. With the new flag, more than 80 % of new launcher feeds get their own stance spot.
+
+**Round 79 corrections:**
+- KILL-NO-CLIMB is valid (all five).
+  - The "0-60" window began at the first logged row (+22) and included the reset transient. The steady climb was about +0.005-0.008, so the verdict holds on any baseline.
+  - From now on, climb windows start at a logged row at least 30 iterations in.
+- The brief's "four levers on C" was wrong: only K and R were levers on C (C2 was a continuation; d1b never trained).
+- Reward levers on a small slice of steps have now failed five times (IdleRec's new pay was about 7 % of recovery-paid steps).
+- R3: every h5f read on this lineage already fails 4.0 % on falls_court (d1s3 6.18 %, d1s4 5.64 %, d1s6 5.19 %, d1s7 6.51 %; architecture). R3 is a second open gate.
+
+**One change:** F = rally-d1s3cfs, C model_32598 on d1s3's task with court_feed_stance True and the new court_feed_stance_unplanned True.
+- The new flag is opt-in (default False), so every existing task and history stays unchanged.
+- Launcher feeds get their own stance spot; hand-offs keep theirs (D-177's scope), so a partner ball still pulls toward (0, 0). Motion's hand-off extension is the next step if this moves the feeder ball.
+- LR 3e-5, ScheduledPPO, no anchor, 1,200 iterations, endpoint model_33797. Training seed 213, smoke 214.
+
+**Stage 0 (reported):** the R3 court read of C, Picklebot-Latent-Court-Res-G1, 2,048 envs, 24 s, dev 4220365.
+
+**Smoke:** D-201's checks unchanged (falls line 4.157, half-split reported), with the config check requiring both flags true.
+
+**Kill at +360**, from start 32598: D-194's lines; KILL-FARM against C2's share log.
+
+**Lines** (D-204 pooled seeds, against lev74-C; d1_rule.cfs79_lines):
+- gain2;
+- r19_guards against the original parent's reads on the same seeds;
+- ready >= 0.25 and falls per 1,000 hits <= 1.3;
+- H0: feeder-ball hazard <= C's - 0.03 (architecture);
+- FEEDER >= C's - 0.01;
+- K3-KEPT <= C's + 0.005, both splits reported.
+
+All pass -> CONFIRM on dev 4220349-4220356 (D-212's CONFIRMED lines). Otherwise the panel. If F fails, architecture's note applies: the next round treats the recipe (LR, std floor) as the common cause.
+
+**Reported:** gain2 against C2; direction contact (motion's BACK +0.05 / FWD -0.03 lines, reported only); R3 pairs rate; F's court read.
+
+**Seeds (ledgered):** training 213, smoke 214; dev 4220365 (reserved by D-214, never read); dev 4220349-4220356 (CONFIRM only). Next free: training 215, dev 4220366.
