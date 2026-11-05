@@ -6712,3 +6712,26 @@ Panel rounds 84 and 84b (mjlab/results/footwork-review.md). The premise that cha
 **Estimates (reported, round 84):** a G1 can plausibly reach 1.0-1.2 s to 1.5 m (motion); the spawn ball needs about 1.1-1.15 s (RL, architecture). Even a perfect spawn ball gives P(5+) about 0.67 at today's h1-h4, so h1 (the partner's first ball, 0.26) must also fall (experiment design). The target is unchanged.
 
 **Seeds (ledgered):** training 220, smoke 221; dev 4220373. Next free: training 222, dev 4220374 (4220340 held; 4220349-4220356 CONFIRM only).
+
+### D-221 result (2026-11-05): KILL-NO-START at +470 - the start moved, but by less than the line (0.074 / 0.086 s vs 0.10)
+
+Smoke (seed 221, 120 iterations) passed all five lines: exit 0, no traceback, fw_first_step paid, early window readable (n 3,303 / 1,721), falls 0.595.
+
+**Training (seed 220):** the +470 watcher read quick_kill and stopped the run at 19:17 (exit 143; checkpoints to model_17000, +400). VOID-unstable never fired; falls stayed low (fell_over about 0.04-0.13 per episode against time_out about 4.2).
+
+**Training-window first-step p50, left / back (s):**
+
+| iterations | left | back | bonus per spot |
+|---|---|---|---|
+| 0-100 | 1.381 | 1.461 | 0.077 |
+| 100-200 | 1.342 | 1.434 | 0.084 |
+| 200-300 | 1.328 | 1.443 | 0.090 |
+| 300-400 | 1.306 | 1.418 | 0.097 |
+| 400-450 | 1.307 | 1.376 | 0.100 |
+
+The line needed 0.10 s faster in each; it read 0.074 (left) and 0.086 (back) -> KILL-NO-START as coded. Training seed 220 is used; dev 4220373 is unread (no endpoint).
+
+**Reading (reported, for the panel):**
+- Unlike Fast4 (flat at 1.325-1.375 s, within one bin, over 1,500 iterations), the start moved here: about 0.02 s per 100 iterations, monotone in left, and the paid dose rose 30 %. D-221's split names a fail "with a flat training window" as STOP evidence; this window was not flat, so the panel reads it.
+- The training numbers are stochastic-action numbers. fw1b-S reads 1.362 / 1.411 s at mean actions on Measure60-Court (D-213), and the run's own first window read 1.381 / 1.461 s.
+- Nothing is extended or re-scored: the kill fired as coded. Panel round 85 is called (mjlab/results/footwork-round85-brief.md). C stays the rally parent; the target is unchanged.
