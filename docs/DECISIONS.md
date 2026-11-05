@@ -6673,3 +6673,17 @@ Least new code and fewest moving parts: (iv), about 25 lines in d1_rule plus tes
 **Seeds (ledgered):** training 217, smoke 219; dev 4220365 (X's court read); dev 4220349-4220356 (CONFIRM only). Next free: training 220, dev 4220373.
 
 **D-220 driver defect (2026-11-05):** training ran clean to its endpoint (exit 0 at 15:03). The +360 watcher read CONTINUE on every line and did not stop training. But the driver's post-training check (`grep -q "KILL-"`) matched the dose line's own label "KILL-NO-DOSE:" and stopped before the endpoint reads, writing a false "VERDICT: KILL (KILL-NO-DOSE)" to ep83-summary.txt. That line is void; no kill fired. Fix: the check matches verdict tokens only (`-> KILL-`). The driver is re-run; it skips the finished smoke and training and goes on to the reads. No line or seed changes.
+
+### D-220 result (2026-11-05): NO-CANDIDATE - the dose arrived, q0 did not move; the pre-registered STOP fires and the episode-length route closes
+
+**Dose arrived:** smoke 0.465 / 0.0393 (lines 0.35 / 0.0248); at +340, 0.475 / 0.0388 (n 14,466). Training ran clean (falls 1.92 vs kill 3.14; legal_return 0.763 vs 0.705).
+
+**Endpoint (model_33797, D-204's pooled seeds 4220306/328/329/331):**
+- **GAIN2 vs C:** +0.66 points, lower bound -0.70; per-seed +1.31, +0.48, -0.65, +1.51 -> no gain. (Reported: vs C2 +1.88, GAIN.)
+- **q0 (first feeder ball converts):** X 0.266 vs C 0.252 (+0.015; the STOP line is C + 0.08 = 0.332). q1 0.520 vs 0.531.
+- **Guards vs the original parent:** fast contact 0.401 vs 0.467 (-6.6; kill below -5) KILL; cross_forehand 0.708 vs 0.756 (kill below -3) KILL; left + back feeder contact +2.5 (pass).
+- **Bars:** ready 0.425, falls/1000 hits 0.75 (pass).
+- **cfs79_lines:** H0 0.3737 vs 0.3725 (needs -0.03) fail; FEEDER 0.637 vs 0.638 pass; K3-KEPT 0.0495 vs 0.0331 fail (5+ rallies ended 0.028 vs 0.012).
+- **Reported:** P(5+) X 0.418, C 0.412; court read (24 s, dev 4220365) falls per episode X 0.0507, C 0.0556; launch-distance legal X 0.912 at d <= 0.3 m, 0.446 beyond 1.2 m (C 0.901 / 0.422).
+
+**Reading:** five times the spawn-start practice left the spawn ball's conversion where it was (0.27 vs 0.25), and far-ball legal moved 0.42 -> 0.45. With practice at the read's weight, the far ball is a capability limit of the frozen d1 base plus a lam_r 2 residual, not an exposure gap. The pre-registered STOP (all five, round 83) fires: the episode-length route closes, and the next round names the footwork-base phase. C (rally-d1s3lr3 model_32598) stays the parent. Training seed 217 and smoke 219 are used; CONFIRM seeds 4220349-4220356 stay unread. Round 84 is called (mjlab/results/footwork-round84-brief.md). The target is unchanged.
