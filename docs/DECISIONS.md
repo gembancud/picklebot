@@ -6735,3 +6735,32 @@ The line needed 0.10 s faster in each; it read 0.074 (left) and 0.086 (back) -> 
 - Unlike Fast4 (flat at 1.325-1.375 s, within one bin, over 1,500 iterations), the start moved here: about 0.02 s per 100 iterations, monotone in left, and the paid dose rose 30 %. D-221's split names a fail "with a flat training window" as STOP evidence; this window was not flat, so the panel reads it.
 - The training numbers are stochastic-action numbers. fw1b-S reads 1.362 / 1.411 s at mean actions on Measure60-Court (D-213), and the run's own first window read 1.381 / 1.461 s.
 - Nothing is extended or re-scored: the kill fired as coded. Panel round 85 is called (mjlab/results/footwork-round85-brief.md). C stays the rally parent; the target is unchanged.
+
+## D-222 (2026-11-05): a second, steeper dose of the first-step bonus (pay span 1.0 -> 0.5 s)
+
+Panel round 85 (mjlab/results/footwork-review.md).
+- **Reading of D-221 (5 of 5):** "moving", so a recipe limit, not STOP evidence. Fast4 on the same windows got slower; Q moved about two bins in each direction.
+- **Corrections (round 85):**
+  - The 0-100 early window held about 0.05 s of start-up adaptation (0-30 read 1.406 / 1.494 s), which made the coded line generous, not strict. Measured from 50-100 the gain was 0.056 / 0.069 s; from 30-60, 0.085 / 0.106. Reported only; nothing re-scored.
+  - Left had levelled off at about 1.305 s from iteration 300; back was still falling (1.418 -> 1.376). The brief's "about 0.02 s per 100 iterations" holds for back only.
+  - The dose rise was not specific: arrivals (0.27 -> 0.41), settled and deadline success rose too, so part of the gain is the new task.
+  - D-221 never gave "flat" a number (experiment design).
+  - Training numbers are stochastic-action numbers; QUICK is read at mean actions.
+
+**Vote:** (i) the steeper curve, 5 of 5 on the form. A mean-action read of model_17000 first: 2 (RL, architecture) against 3 (coach, experiment design, motion), so no premise read. The kill windows: 0-100 unchanged 3 (coach, experiment design, architecture), 60-100 1 (motion), 30-60 1 (RL); quick_kill is unchanged.
+
+**Run:** Q2 = fw-quick-02 on Picklebot-Footwork-Specialist-Quick2-G1. The one change from D-221 is the bonus's pay span: clamp((1.6 - t) / 0.5, 0, 1) x 100. It pays 0 at 1.6 s, 50 at 1.35 s, and the full 100 at 1.1 s (QUICK's level). The pay per 0.1 s doubles, and the maximum stays at the arrival bonus.
+- A fresh run from fw1b-S model_16600, not model_17000 (no extension of a killed run).
+- D-221's algorithm, 4,096 envs, 1,500 iterations; training seed 222, smoke 223. Driver: scripts/diag/qk85.sh.
+
+**Lines (unchanged from D-221):**
+- smoke's five lines;
+- VOID-unstable;
+- KILL-NO-START (400-450 each >= 0.10 s faster than 0-100);
+- quick_check paired against fw1b-S on Measure60-Court, mean actions, dev 4220374.
+
+Reported: the 30-60 and 60-100 baselines, and each window beside D-221's.
+
+**Pre-registered (4 of 5):** a fail, by kill or by QUICK, closes the start-reward sub-route. There is no third dose. It is worded "no faster start shown under a direct start reward", not a body limit. The next round names the next phase (under D-169 a STOP moves the loop on).
+
+**Seeds (ledgered):** training 222, smoke 223; dev 4220374. Dev 4220373 is released unread. Next free: training 224, dev 4220375.

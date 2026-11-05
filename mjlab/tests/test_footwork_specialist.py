@@ -579,3 +579,28 @@ def test_quick_task_changes_only_the_spots_and_adds_the_bonus():
         assert s.rewards[k].func is q.rewards[k].func and s.rewards[k].weight == q.rewards[k].weight
     assert q.episode_length_s == s.episode_length_s and not s.actions["ball"].footwork_first_bonus
     assert "fw_first_step" not in load_env_cfg(fs.TASK_FW_MEASURE_COURT).rewards
+
+
+def test_quick2_changes_only_the_pay_span():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks.footwork_specialist as fs
+    q, q2 = load_env_cfg(fs.TASK_FW_QUICK), load_env_cfg(fs.TASK_FW_QUICK2)
+    a, b = q.actions["ball"], q2.actions["ball"]
+    diff = {f.name for f in dataclasses.fields(a) if getattr(a, f.name) != getattr(b, f.name)}
+    assert diff == {"footwork_first_span"} and a.footwork_first_span == 1.0 and b.footwork_first_span == 0.5
+    assert set(q.rewards) == set(q2.rewards)
+    for k in q.rewards:
+        assert q.rewards[k].func is q2.rewards[k].func and q.rewards[k].weight == q2.rewards[k].weight
+
+
+def test_steeper_span_pays_double_and_saturates():
+    for span, t0, want in ((0.5, 1.2, 0.8), (0.5, 1.0, 1.0), (0.5, 1.7, 0.0), (1.0, 1.2, 0.4)):
+        t, dr = _drill(1, first_bonus=True, first_span=span)
+        t.shadow = None
+        t.recover_xy = torch.tensor([[-2.4, 0.0]])
+        dr.d0[:], dr.limit[:], dr.elapsed[:] = 4.0, 100.0, t0
+        t.place([[-4.8, 0.0]])
+        dr.update(0.005)
+        assert abs(float(dr.first_now[0]) - want) < 1e-4, (span, t0, float(dr.first_now[0]))

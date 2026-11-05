@@ -1250,3 +1250,25 @@ Brief: footwork-round84-brief.md.
 **Round 84b (form re-vote):** the agent verified the coach's fact (Fast4's training first step flat at 1.325-1.375 s over 1,500 iterations) and asked all five again. F2 (court spots, pay settled, deadlines unchanged, plus a first-step bonus) 5 of 5. QUICK margin -0.25 (RL, experiment design) / -0.20 (coach, architecture) / -0.15 (motion): experiment design's. Kill +0.10 s (4 of 5). Fail reading split (D-221).
 
 **Decision:** D-221.
+
+## Round 85 (2026-11-05): D-221 KILL-NO-START at +470; the start moved 0.074 / 0.086 s
+
+Brief: footwork-round85-brief.md.
+
+**Correction checks:** KILL-NO-START valid as coded (all five). The early window held start-up adaptation that made the line generous (coach, experiment design, motion, RL, architecture). Left levelled off near 1.305 s; back still falling (RL, motion, architecture, experiment design). The dose rise also reflects the new task (coach). "Flat" had no number (experiment design). Stochastic vs mean actions (RL, architecture, experiment design).
+
+**Reading:** moving -> recipe limit (5 of 5).
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| RL | (ii) read model_17000 at mean actions, then (i) or (iii) by rule |
+| Motion | (i) span 0.5; kill from 60-100 |
+| Coach | (i) span 0.5; kill unchanged |
+| Experiment design | (i) span 0.5; kill unchanged; flat = < 0.05 s |
+| Architecture | (i) span 0.5, gated on a premise read (>= 0.05 s faster at mean actions) |
+
+Form (i) 5 of 5; no premise read 3 of 5; kill unchanged 3 of 5. A fail closes the start-reward sub-route (4 of 5).
+
+**Decision:** D-222.
