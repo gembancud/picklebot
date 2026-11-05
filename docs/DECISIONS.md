@@ -6833,3 +6833,31 @@ No majority. Least new code and fewest moving parts: (ii), about 20 lines of log
 - The pre-existing failure tests/test_stage5f.py::test_court_feed_mix_shares_families_recovery_and_planner ("two extremes in a row among v2 feeds") fails without this change too, and does not use pair courts. It is noted, not touched.
 
 **Seeds (ledgered):** dev 4220375-4220376. Dev 4220374 is released unread. No training seed. Next free: training 224, dev 4220377.
+
+### D-223 result (2026-11-05): INVALID - the hand-off tally over-counts first hand-offs by about 2 %; the split is reported only
+
+**Smoke** (dev 4220376): H1-RECON VALID.
+- Own feeds and legal returns match court_counts exactly (5,325 / 5,258).
+- First hand-off legal is 0.7282 against 1 - h1 = 0.7358.
+
+**Read** (dev 4220375, 2,048 envs, 120 s): H1-RECON INVALID.
+- The totals still match court_counts exactly (90,423 / 89,839).
+- First hand-off legal is 0.7289 against 1 - h1 = 0.7425; the gap of 0.0136 is above the 0.01 line.
+- h1_route also reads INVALID-SPLIT: near first hand-offs n 176 (< 200).
+- Result INVALID as coded; no route is taken.
+
+**Why (agent's check):** the class-0 tally has 1,608 feeds and 436 misses, against 1,573 rallies that reached shot 1 (including 1,024 still open at the read's end) and 405 that ended there. So 35 extra first-class feeds and 31 extra misses.
+- Hypothesis, not tested: balls carrying a stale class, such as reset (leak) balls on envs whose `handed` flag survives pairs.on_reset (architecture's D-219 finding), or feeds ended by a fall.
+- The smoke had too few rallies to show it.
+
+**Reported, unvalidated (the class-0 rows carry the over-count):**
+
+| | n | legal | share d <= 0.3 m | share 0.8-1.2 m | share > 1.2 m | legal d <= 0.3 m | legal > 1.2 m |
+|---|---|---|---|---|---|---|---|
+| first hand-off | 1,608 | 0.729 | 0.110 | 0.223 | 0.375 | 0.84-0.88 | 0.556 |
+| later hand-offs | 88,815 | 0.998 | 0.561 | 0.012 | 0.002 | 0.998-0.999 | 0.822 |
+
+- If this holds after a fix, the first hand-off is both a position problem and a ball problem. Receivers are far from their spot (60 % beyond 0.8 m, against 1.4 % for later hand-offs), and even near receivers return it legally at about 0.85 against 0.999.
+- Reported hazards on this read: h0-h4 0.384 / 0.257 / 0.087 / 0.022 / 0.012; q0 0.264, q1 0.511.
+
+Seeds dev 4220375-4220376 are used. No training. C stays the parent; the target is unchanged. Panel round 87 is called (mjlab/results/footwork-round87-brief.md).
