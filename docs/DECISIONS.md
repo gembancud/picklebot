@@ -7165,3 +7165,16 @@ Panel round 91 (mjlab/results/footwork-review.md). All five agree on every main 
 - **What this shows:** on the unchanged task, PPO from scratch does not discover locomotion within 1,850 iterations. The deadline / settled / first-step bonuses pay nothing to a robot that never reaches a spot, and the tracking terms alone did not get it moving.
 - **What it does not show:** whether a from-scratch gait would be faster once it walks. The lineage question is still open; this route needs a locomotion curriculum or a motion prior to test it. Recorded for panel round 92.
 - Seeds 224 / 225 are used; dev 4220382 is unread (no endpoint).
+
+### D-229 premise read result (2026-11-06): effort does not bind - saturation is about 0, and x2 effort changes nothing zero-shot
+
+fw1b-S model_16600 at mean actions on Measure60-Court, dev 4220383 (reported):
+
+| limits | first-step p50 L / B (s) | falls / 1,000 env-s | saturation share hip / knee / ankle / waist (first 1.0 s of moves) |
+|---|---|---|---|
+| standard | 1.364 / 1.407 | 0.008 | 0.0000 / 0.0000 / 0.0043 / 0.0000 |
+| leg / waist / ankle effort x2 | 1.366 / 1.412 | 0.024 | 0.0000 / 0.0000 / 0.0000 / 0.0000 |
+
+- In 16.4 M hip samples, 73 were at >= 0.95 x the limit; in 5.5 M knee samples, 19. Torque never reaches the clamp during the start.
+- The x2 limit leaves the first step unchanged (+0.002 / +0.004 s, within a bin).
+- **Reading (motion's round-91 route):** the start is not bounded by the effort limits. It is set by the PD actuator (kp and the damping ratio 2.0) and by the action scale (0.25 x effort / kp: a unit action asks for about 25 % of the effort limit). D-229 pre-registered that a no-saturation result sends the damping route to the next round. fw-act2-01 runs unchanged as registered.
