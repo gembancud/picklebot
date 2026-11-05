@@ -1117,7 +1117,22 @@ class BallPhysicsAction(ActionTerm):
                                                   torch.stack([(fire & dc).sum(), (recv & dc).sum()])])
             self._launch_log(fire, over, h0, data)
             if getattr(self.cfg, "pair_drill_reset", False) and bool(self.pairs.start_now.any()):  # D-229
-                self._drill_place(self.pairs.start_now.repeat(2).nonzero().squeeze(-1))
+                # D-231 (training): only pair courts (no drill courts) and only when neither robot is busy in a
+                # move-to-spot or ghost-swing episode; placing a move-episode robot on its spot would pay
+                # move_arrival for nothing (architecture, round 92). Reads have no drill courts and no busy robots.
+                h = self.pairs.h
+                ok = self.pairs.start_now.clone()
+                if self.drill_scale is not None:
+                    ok &= self.drill_scale[:h] == 0
+                bz = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
+                if self.drill is not None:
+                    bz |= self.drill.move_ep
+                if self.shadow is not None:
+                    bz |= self.shadow.swing_ep
+                self.drill_place_skipped = getattr(self, "drill_place_skipped", 0) + int((ok & (bz[:h] | bz[h:])).sum())
+                ok &= ~(bz[:h] | bz[h:])
+                if bool(ok.any()):
+                    self._drill_place(ok.repeat(2).nonzero().squeeze(-1))
             if self._cut_court is not None:  # D-217: arm received hand-offs; feeder balls after a cut
                 h = self.pairs.h
                 done_f = over & ~h0 & self._fcut
@@ -1241,6 +1256,7 @@ class BallPhysicsAction(ActionTerm):
                 "d_hist": self._ls_d.tolist(), "v_hist": self._ls_v.tolist(), "outcome_feeds_legal": self._ls_out.tolist(),
                 "outcome_by_d": self._ls_out_d.tolist(), "outcome_after_cut": self._out_cut.tolist(),
                 "cuts": int(self.cut_count), "drill_places": int(getattr(self, "drill_places", 0)),
+                "drill_place_skipped": int(getattr(self, "drill_place_skipped", 0)),
                 "ball_by_class": {"ka_bin": BQ_KA_BIN, "v_bin": BQ_V_BIN, "w_bin": BQ_W_BIN, "rs_bin": BQ_RS_BIN,
                                   "ka": self._bq_ka.tolist(), "v": self._bq_v.tolist(), "w": self._bq_w.tolist(),
                                   "recv_speed": self._bq_rs.tolist()}}

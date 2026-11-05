@@ -1376,3 +1376,27 @@ Brief: footwork-round91-brief.md.
 **Order:** fw-scratch-01's kill read, then the premise read, the set-start baseline, then the effort run (all five).
 
 **Decision:** D-229.
+
+## Round 92 (2026-11-06): effort ruled out; C's set-start baseline 0.5645; name the next step
+
+Brief: footwork-round92-brief.md.
+
+**Correction checks:**
+- The bar on the new read needs (1-h0)(1-h1) >= about 0.87 (RL, experiment design, architecture).
+- A placed robot's feeder legal is 0.762 against the old near-spot 0.90: an unpractised start state (motion, coach, experiment design).
+- Effort is ruled out only for the clamp; actions are unclipped and the policy never asks (RL, experiment design, coach).
+- The actuator routes act under the frozen decoder and base (architecture, RL).
+- fw-scratch-01 does not settle the lineage question (motion, coach, RL).
+
+**Votes:** (d) practise the new read, 5 of 5.
+- Architecture added a required guard: never place drill-court or busy robots.
+- Kill and gate forms differed; experiment design's form was used.
+
+**Order:**
+1. (d).
+2. The damping zero-shot premise read (reported).
+3. The reference pilot once SMPL arrives.
+
+**Estimates:** (d) +3-8 points; 0.80 still needs the actuator and reference routes.
+
+**Decision:** D-231.

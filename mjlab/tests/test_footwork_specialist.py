@@ -627,3 +627,19 @@ def test_strong_tasks_double_only_leg_waist_ankle_effort_and_keep_the_action_sca
     # the shared constants are untouched (old tasks unchanged)
     q = load_env_cfg(fs.TASK_FW_QUICK2).scene.entities["robot"].articulation.actuators
     assert max(x.effort_limit for x in q) == 139.0
+
+
+def test_rally_drill_reset_task_changes_only_the_two_flags():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks.footwork_specialist as fs
+    a, b = load_env_cfg(fs.TASK_RALLY_FASTMOVE), load_env_cfg(fs.TASK_RALLY_FASTMOVE_DR)
+    ab, bb = a.actions["ball"], b.actions["ball"]
+    diff = {f.name for f in dataclasses.fields(ab) if getattr(ab, f.name) != getattr(bb, f.name)}
+    assert diff == {"pair_drill_reset", "pair_reset_parks"}, diff
+    assert bb.pair_drill_reset and bb.pair_reset_parks and not ab.pair_drill_reset
+    assert set(a.rewards) == set(b.rewards)
+    for k in a.rewards:
+        assert a.rewards[k].func is b.rewards[k].func and a.rewards[k].weight == b.rewards[k].weight
+    assert a.episode_length_s == b.episode_length_s

@@ -1374,3 +1374,53 @@ def set_start_report(paths: list[str], ref_paths: list[str]) -> list[str]:
         out.append(f"(reported) {name}: P(5+) {pp['p5']:.4f} (rallies {pp['rallies']}), feeder legal {pp['feeder']:.4f}, "
                    f"hazards h0-h4 " + " / ".join(f"{x:.3f}" for x in hz["h"]) + f", q0 {cv['q0']:.3f} q1 {cv['q1']:.3f}")
     return out
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-231 (panel round 92, (d) 5 of 5; lines by experiment design's form where they differed). R = rally-d1s3dr: C on
+# Picklebot-Rally22b-FastMove-DrillReset-G1 (C's task + the D-229 drill reset). Training windows from the pair log rows
+# (one per 20 iterations; step = iteration x STEPS_PER_IT): the pair courts' (group 0) finished rallies by length, and the
+# launch summary's placement count.
+OPEN_KILL_GAIN = 0.02          # KILL-NO-OPEN: (1 - h0)(1 - h1) over 220-340 >= the run's own 20-140 window + 0.02
+OPEN_MIN_RALLIES = 500         # a window is readable with >= 500 finished pair-court rallies
+DR_DOSE = (1.9, 2.05)          # placements per finished pair-court rally (two robots per restart)
+DR_EARLY, DR_LATE = (20, 140), (220, 340)
+
+
+def train_open(rows: list[dict], it_lo: int, it_hi: int, start_it: int):
+    rows = [r for r in rows if "len_hist_group" in r]
+    a = _row_from(rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(rows, max((start_it + it_hi) * STEPS_PER_IT, a["step"] + (it_hi - it_lo) * STEPS_PER_IT))
+    if a is None or b is None:
+        return None
+    h = [y - x for x, y in zip(a["len_hist_group"][0], b["len_hist_group"][0])]
+    n = sum(h)
+    r0 = sum(h)
+    r1 = sum(h[1:])
+    h0 = h[0] / r0 if r0 else float("nan")
+    h1 = h[1] / r1 if r1 else float("nan")
+    pa = a.get("launch", {}).get("drill_places", 0)
+    pb = b.get("launch", {}).get("drill_places", 0)
+    return {"n": n, "h0": h0, "h1": h1, "open2": (1 - h0) * (1 - h1), "places_per_rally": (pb - pa) / max(n, 1),
+            "skipped": b.get("launch", {}).get("drill_place_skipped", 0) - a.get("launch", {}).get("drill_place_skipped", 0)}
+
+
+def dr_dose(rows: list[dict], start_it: int) -> tuple[bool, str]:
+    w = train_open(rows, *DR_EARLY, start_it)
+    if w is None or w["n"] < OPEN_MIN_RALLIES:
+        return False, f"drill-reset dose over {DR_EARLY}: {w} (>= {OPEN_MIN_RALLIES} pair-court rallies) -> NO-DATA"
+    ok = DR_DOSE[0] <= w["places_per_rally"] <= DR_DOSE[1]
+    return ok, (f"drill-reset dose over {DR_EARLY}: {w['places_per_rally']:.3f} placements per pair-court rally (in {DR_DOSE}), "
+                f"n {w['n']}, skipped busy {w['skipped']}, open2 {w['open2']:.4f}")
+
+
+def open_kill(rows: list[dict], start_it: int) -> tuple[str, str]:
+    e, l = train_open(rows, *DR_EARLY, start_it), train_open(rows, *DR_LATE, start_it)
+    lab = "KILL-NO-OPEN"
+    if e is None or l is None or min(e["n"], l["n"]) < OPEN_MIN_RALLIES:
+        return "NO-DATA", f"{lab}: windows {DR_EARLY} / {DR_LATE} not readable -> NO-DATA"
+    ok = l["open2"] >= e["open2"] + OPEN_KILL_GAIN - 1e-9
+    return ("CONTINUE" if ok else lab), (
+        f"{lab}: training (1-h0)(1-h1) {e['open2']:.4f} over {DR_EARLY} -> {l['open2']:.4f} over {DR_LATE} "
+        f"(>= +{OPEN_KILL_GAIN}; n {e['n']} / {l['n']}; h0 {e['h0']:.3f} -> {l['h0']:.3f}, h1 {e['h1']:.3f} -> {l['h1']:.3f}) -> "
+        + ("CONTINUE" if ok else lab))

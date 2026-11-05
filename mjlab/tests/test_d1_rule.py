@@ -606,3 +606,20 @@ def test_scratch_kill_lines():
     slow = [base, row(1800, 24, 28)]   # back 1.425 > 1.3847
     assert dr.scratch_kill(slow)[0] == "KILL-NO-START"
     assert dr.scratch_kill([base])[0] == "NO-DATA"
+
+
+def test_open_kill_and_dose_lines():
+    def row(it, hist, places):
+        return {"step": (32598 + it) * dr.STEPS_PER_IT, "len_hist_group": [hist + [0] * (65 - len(hist)), [0] * 65],
+                "launch": {"drill_places": places, "drill_place_skipped": 0}}
+    z = row(20, [0, 0, 0], 0)
+    e = row(140, [300, 150, 550], 2000)          # h0 0.30, h1 0.214 -> open2 0.55
+    l_up = row(340, [300 + 250, 150 + 100, 550 + 650], 2000 + 2000)
+    l_flat = row(340, [300 + 300, 150 + 150, 550 + 550], 4000)
+    assert dr.open_kill([z, e, row(220, [300, 150, 550], 2000), l_up], 32598)[0] == "CONTINUE"
+    assert dr.open_kill([z, e, row(220, [300, 150, 550], 2000), l_flat], 32598)[0] == "KILL-NO-OPEN"
+    assert dr.open_kill([z, e], 32598)[0] == "NO-DATA"
+    ok, line = dr.dr_dose([z, e], 32598)
+    assert ok, line                              # 2000 placements over 1000 rallies
+    ok, line = dr.dr_dose([z, row(140, [300, 150, 550], 500)], 32598)
+    assert not ok

@@ -519,6 +519,21 @@ register_mjlab_task(task_id=TASK_RALLY_FASTMOVE, env_cfg=rally_fastmove(load_env
                     play_env_cfg=rally_fastmove(load_env_cfg(ag.SRC_22B, play=True)), rl_cfg=load_rl_cfg(ag.SRC_22B),
                     runner_cls=load_runner_cls(ag.SRC_22B))
 
+# D-231 (panel round 92, (d) 5 of 5): C's task practised on the frozen set-start read (D-229): the drill reset at
+# every pair-court rally start (pair_drill_reset, with pair_reset_parks). The only change from TASK_RALLY_FASTMOVE.
+TASK_RALLY_FASTMOVE_DR = "Picklebot-Rally22b-FastMove-DrillReset-G1"
+
+
+def rally_fastmove_dr(cfg):
+    cfg = rally_fastmove(cfg)
+    cfg.actions["ball"] = dataclasses.replace(cfg.actions["ball"], pair_drill_reset=True, pair_reset_parks=True)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR, env_cfg=rally_fastmove_dr(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_fastmove_dr(load_env_cfg(ag.SRC_22B, play=True)), rl_cfg=load_rl_cfg(ag.SRC_22B),
+                    runner_cls=load_runner_cls(ag.SRC_22B))
+
 
 # D-199 (D-198's FEED-STATE route; motion's ready_at_handoff, panel rounds 63-64): the d1s3 task (Rally22b-FastMove) plus
 # one reward term for being set at the moment a ball is put in play for this env: the feeder fire or the partner's

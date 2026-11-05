@@ -7220,3 +7220,41 @@ Smoke passed (seed 227). Training (seed 226, Quick2-Strong from fw1b-S) was stop
 - **Effort x2 changes nothing:** not zero-shot (premise read) and not in training; every window is within one 0.05-s bin of Q2. With the saturation read (about 0 at the clamp), the effort limit is ruled out as the start's binder.
 - **The candidates left at the actuator are the PD law itself and the action scale:** kp, the damping ratio 2.0, and a unit action that asks for about 25 % of effort. Panel round 92 is called.
 - Seeds 226 / 227 are used; dev 4220384 is unread.
+
+## D-231 (2026-11-06): practise the frozen set-start read - C retrained with the drill reset in training
+
+Panel round 92 (mjlab/results/footwork-review.md): (d) 5 of 5.
+
+**Corrections (round 92):**
+- **On the new read the bar needs (1 - h0)(1 - h1) >= about 0.87, not 0.886.** The later hazards there give (1 - h2)(1 - h3)(1 - h4) = 0.920 (RL, experiment design, architecture). Today: 0.614.
+- **A placed robot loses the feeder ball far more than a near-spot robot did on the old read** (feeder legal 0.762 vs about 0.90). The placement (default pose, zero velocity, feed 0.5 s later) is a state C never practised (motion, coach, experiment design).
+- **"Effort is ruled out" holds only for the clamp.** The policy never asks for the torque. No task clips actions, so larger actions are available (RL, experiment design). The specialist's action_rate_l2 (-0.1) and pose terms may hold the start as much as the PD law (architecture).
+- **fw-scratch-01 leaves the lineage question open** (motion, coach, RL).
+- **The actuator routes act under the frozen latent-07 decoder and d1 base,** so any of them needs a decoder / base / re-climb chain (about 15-20 GPU h) before P(5+) can move (architecture, RL).
+
+**Run:** R = rally-d1s3dr on the new task Picklebot-Rally22b-FastMove-DrillReset-G1. It is C's task with pair_drill_reset and pair_reset_parks on; footwork_specialist.rally_fastmove_dr changes only those two flags (test_rally_drill_reset_task_changes_only_the_two_flags).
+- **Placement guard (architecture, required):** in training, only pair courts (no drill courts) are placed, and only when neither robot is in a move-to-spot or ghost-swing episode. Placing a move-episode robot would pay move_arrival for nothing. Skips are counted (drill_place_skipped). Reads have neither drill courts nor busy robots, so the frozen read is unchanged.
+- **Parent and recipe:** C model_32598 (d1 base, lam_r 2), C's recipe (LR 3e-5, ScheduledPPO, no anchor, 1,200 iterations, endpoint model_33797). Training seed 228, smoke 229. Driver: scripts/diag/dr92.sh.
+
+**Lines** (experiment design's form where the forms differed; d1_rule.train_open / dr_dose / open_kill, tests/test_d1_rule.py::test_open_kill_and_dose_lines):
+- **Smoke** (160 iterations): D-201's lines (exit, traceback, falls <= 4.157, std, no dead outputs); config (both flags on, episode 120 s, the D-205 terms); dose: 1.9-2.05 placements per finished pair-court rally over 20-140, with >= 500 rallies.
+- **Kill at +360:**
+  - D-194's lines (s2_train_kill);
+  - KILL-NO-OPEN: training (1 - h0)(1 - h1) on the pair courts over 220-340 >= the run's own 20-140 window + 0.02;
+  - KILL-FARM is reported only.
+- **Gate,** on the new read (--pair-drill-reset), dev 4220385-4220388, against C's set-start baseline (results/sr91-set-*, P(5+) 0.5645):
+  - gain2;
+  - r19_guards against the original parent (direction reads on D-204's seeds 4220307 / 4220334-4220336);
+  - the mechanism bars;
+  - cfs79_lines with C's set-start values (H0 <= C - 0.03, FEEDER >= C - 0.01, K3-KEPT);
+  - R3: R's h5f court read on dev 4220389, <= 0.04 robot falls per episode (4 of 5 named R3 in the gate; C itself read 0.0556 on dev 4220365, so this line is binding).
+  - The old read on the same seeds is reported only (a forgetting check).
+  - All pass -> CONFIRM on dev 4220349-4220356 under the new read, with C re-read.
+
+**Queued after (round 92 order):**
+- the damping zero-shot premise read (reported only);
+- the CalTennis style pilot once SMPL arrives.
+
+**Estimates (reported):** +3-8 points, to about 0.60-0.65. If placed-start feeder legal recovered to the near-spot 0.90, about 0.67; with h1 at about 0.12 as well, about 0.74. That is still short of 0.80, so the actuator and reference-motion routes remain needed.
+
+**Seeds (ledgered):** training 228, smoke 229; dev 4220389 (court read). Next free: training 230, dev 4220390.
