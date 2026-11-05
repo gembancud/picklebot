@@ -6893,3 +6893,36 @@ Said in advance (experiment design): POSITION's |gap| <= 0.03 is close to the in
 **Estimates (round 87, reported):** if the split holds, near receivers return the first hand-off at about 0.85 against 0.999 later. Perfect reach on both opening balls would then cap P(5+) at about 0.65-0.69, below round 86's 0.73. The estimate stays about 0.45-0.55. The target is unchanged.
 
 **Seeds (ledgered):** dev 4220375 (re-read, instrument check) and 4220377. No training seed. Next free: training 224, dev 4220378.
+
+### D-224 result (2026-11-05): BALL - the first hand-off is a hard ball; even receivers on their spot return it at 0.87 against 0.999 later
+
+**Instrument check, dev 4220375 re-read: VALID.**
+- First hand-off legal 0.7375 against 1 - h1 0.7466 (gap 0.0091, within 0.01).
+- Totals are within 0.03 % of court_counts.
+- handoff_stale [20, 25]: 20 stale leak balls excluded, against the hypothesis's "about 35". The re-read is not bit-identical (totals 90,536 vs 90,423), so the counts differ.
+- 25 class-0 feeds were tallied while the court's rally length was 0 (RL's early-volley path). They are reported, not excluded.
+
+**Read, dev 4220377: VALID** (0.7124 vs 0.7184; stale [13, 23]).
+
+**Pooled: VALID** (0.7247 vs 0.7322). h1_route reads **BALL**:
+
+| | n | legal | Wilson |
+|---|---|---|---|
+| near first hand-offs (d <= 0.3 m) | 378 | 0.873 | 0.836-0.903 |
+| near later hand-offs | 98,884 | 0.9993 | 0.999-0.999 |
+
+- The gap is +0.126, and the intervals are separated.
+- POSITION does not hold: the far share of first hand-offs is 0.384, under the 0.40 line.
+
+**Reported, legal by receiver distance (m):**
+
+| | <= 0.1 | 0.1-0.2 | 0.2-0.3 | 0.3-0.5 | 0.5-0.8 | 0.8-1.2 | > 1.2 |
+|---|---|---|---|---|---|---|---|
+| first (n) | 0.880 (50) | 0.882 (152) | 0.864 (176) | 0.841 (390) | 0.851 (530) | 0.806 (665) | 0.543 (1,226) |
+| later (n) | 0.998 | 0.999 | 0.999 | 0.999 | 0.998 | 0.982 (2,085) | 0.829 (351) |
+
+- Hazards h0-h4 were 0.372 / 0.268 / 0.084 / 0.017 / 0.005; q0 0.252, q1 0.532.
+
+**Reading:** the first robot-to-robot ball is hard at every distance; even at 0-0.1 m it is legal at only 0.88. That ball is the return of the feeder ball, hit by a robot that started the rally off its spot. Position adds to it: 38 % of these receivers are beyond 1.2 m, where legal is 0.54. Both halves are real; the coded route is BALL.
+
+**Pre-registered next (D-223):** a hitter-side lever on the feeder-ball return only, as its own entry. Panel round 88 designs it (mjlab/results/footwork-round88-brief.md). C stays the parent; the target is unchanged.

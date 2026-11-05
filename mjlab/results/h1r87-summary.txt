@@ -1,0 +1,12 @@
+D-224: h1 attribution on C (fixed tally); instrument re-read dev 4220375, read dev 4220377
+4220375 H1-RECON: own feeds / legal [90536, 89993] vs court_counts [90556, 90001] (within 1%); first hand-off legal 0.7375 vs 1 - h1 0.7466 (within 0.01) -> VALID; handoff_stale [20, 25]
+4220377 H1-RECON: own feeds / legal [90502, 89893] vs court_counts [90515, 89899] (within 1%); first hand-off legal 0.7124 vs 1 - h1 0.7184 (within 0.01) -> VALID; handoff_stale [13, 23]
+pooled H1-RECON: own feeds / legal [181038, 179886] vs court_counts [181071, 179900] (within 1%); first hand-off legal 0.7247 vs 1 - h1 0.7322 (within 0.01) -> VALID
+near (d <= 0.3 m) legal: first 0.8730 (n 378, Wilson 0.836-0.903) vs later 0.9993 (n 98884, Wilson 0.999-0.999); gap +0.1263
+far share of first hand-offs (d > 1.2 m) 0.384 (POSITION needs >= 0.4)
+BALL: gap >= 0.05 and Wilson separated -> True; POSITION: |gap| <= 0.03 and far share >= 0.4 -> False
+(reported) legal by bin, first: 0.880 (n 50), 0.882 (n 152), 0.864 (n 176), 0.841 (n 390), 0.851 (n 530), 0.806 (n 665), 0.543 (n 1226)
+(reported) legal by bin, later: 0.998 (n 6479), 0.999 (n 38145), 0.999 (n 54260), 0.999 (n 58517), 0.998 (n 18012), 0.982 (n 2085), 0.829 (n 351)
+(reported) hazards h0-h4 0.372 / 0.268 / 0.084 / 0.017 / 0.005; court conversion {'q0': 0.2517106549364614, 'q1': 0.532336578581363, 'courts': 2046}
+RESULT BALL
+VERDICT: BALL
