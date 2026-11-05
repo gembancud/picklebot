@@ -1138,3 +1138,35 @@ def ep24_dose_kill(rows: list[dict], it_lo: int, it_hi: int, start_it: int) -> t
         return "NO-DATA", f"KILL-NO-DOSE: reset-feed share {it_lo}-{it_hi} {s} (n {n}): NO-DATA (not a kill)"
     v = "CONTINUE" if s >= EP_DOSE_MIN else "KILL-NO-DOSE"
     return v, f"KILL-NO-DOSE: reset-feed share of feeder-type outcomes {it_lo}-{it_hi} {s:.4f} (n {n}; kill below {EP_DOSE_MIN}) -> {v}"
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-220 (panel round 83; no majority: (ii) spawn restarts 2 (RL, motion), (i) 12-s episodes 1 (experiment design),
+# (iii) STOP 1 (coach), (iv) relaunch 24 s with the dose instrument fixed 1 (architecture); least new code / fewest
+# moving parts: (iv)). The D-219 dose line measured the leak-ball bucket, not the spawn feeder ball. The exposure is
+# already logged: rallies ended by a reset on live courts (end_reasons[0][2]) per live feeder fire (split[0][0]), and
+# resets per live env-second (live envs = envs / 2; 0.02 s per env step). C2 (120 s) reads 0.2615 / 0.0086; the D-219
+# smoke (24 s) 0.431 / 0.0388 on rows +22 / +142. Lines: share >= RESET_SHARE_MIN and rate >= RESET_RATE_MIN (3x C2).
+RESET_SHARE_MIN, RESET_RATE_MIN = 0.35, 0.0248
+
+
+def reset_dose(rows: list[dict], it_lo: int, it_hi: int, start_it: int, envs: int) -> tuple[float, float, int]:
+    rows = [r for r in rows if "end_reasons" in r and "split" in r]
+    a = _row_from(rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(rows, max((start_it + it_hi) * STEPS_PER_IT, a["step"] + (it_hi - it_lo) * STEPS_PER_IT))
+    if a is None or b is None or b["step"] <= a["step"]:
+        return float("nan"), float("nan"), 0
+    dres = b["end_reasons"][0][2] - a["end_reasons"][0][2]
+    dfire = b["split"][0][0] - a["split"][0][0]
+    dt = (b["step"] - a["step"]) * 0.02
+    return (dres / dfire if dfire else float("nan")), dres / (envs / 2 * dt), int(dfire)
+
+
+def reset_dose_kill(rows: list[dict], it_lo: int, it_hi: int, start_it: int, envs: int) -> tuple[str, str]:
+    s, r, n = reset_dose(rows, it_lo, it_hi, start_it, envs)
+    if s != s or n < MIN_WINDOW_EVENTS:
+        return "NO-DATA", f"KILL-NO-DOSE: post-reset share {it_lo}-{it_hi} {s} (n {n}): NO-DATA (not a kill)"
+    ok = s >= RESET_SHARE_MIN and r >= RESET_RATE_MIN
+    v = "CONTINUE" if ok else "KILL-NO-DOSE"
+    return v, (f"KILL-NO-DOSE: post-reset share of live feeder fires {it_lo}-{it_hi} {s:.4f} (>= {RESET_SHARE_MIN}); resets per "
+               f"live env-s {r:.5f} (>= {RESET_RATE_MIN}; n {n}) -> {v}")

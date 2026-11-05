@@ -471,3 +471,24 @@ def test_court_conv_and_ep24_dose(tmp_path):
     rows = [row(32598, 0, 0), row(32598 + 160, 100, 1900)]
     assert dr.ep24_dose_kill(rows, 0, 160, 32598)[0] == "KILL-NO-DOSE"  # 0.05
     assert dr.ep24_dose_kill([], 0, 160, 32598)[0] == "NO-DATA"
+
+
+def test_reset_dose_reproduces_the_logged_values():
+    import json
+    import os
+    p = "results/ep82-smoke-share.jsonl"
+    if not os.path.exists(p):
+        import pytest
+        pytest.skip("needs the D-219 smoke log")
+    rows = [json.loads(x) for x in open(p)]
+    s, r, n = dr.reset_dose(rows, 20, 140, 32598, 1024)
+    assert abs(s - 0.4306) < 1e-3 and abs(r - 0.03879) < 1e-4 and n > 1000
+    assert dr.reset_dose_kill(rows, 20, 140, 32598, 1024)[0] == "CONTINUE"
+    assert dr.reset_dose_kill(rows, 0, 160, 32598, 1024)[0] == "NO-DATA"  # D-219's window: no row at +182
+
+
+def test_reset_dose_kill_lines():
+    def row(it, res, fire):
+        return {"step": it * dr.STEPS_PER_IT, "end_reasons": [[0, 0, res, 0], [0, 0, 0, 0]], "split": [[fire, 0], [0, 0]]}
+    low = [row(32598 + 20, 0, 0), row(32598 + 140, 300, 2000)]  # share 0.15
+    assert dr.reset_dose_kill(low, 20, 140, 32598, 1024)[0] == "KILL-NO-DOSE"

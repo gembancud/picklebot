@@ -1199,3 +1199,34 @@ Brief: footwork-round82-brief.md.
 - Endpoint lines unchanged; q0 / q1 reported.
 
 **Decision:** D-219.
+
+
+## Round 83 (2026-11-05): D-219 SMOKE-FAIL; the dose line measured the wrong ball
+
+Brief: footwork-round83-brief.md.
+
+**Correction checks**
+- **SMOKE-FAIL is valid as coded** (all five). The window error is the agent's.
+- **The dose line measured the leak-ball bucket, not the spawn feeder ball** (all five). Experiment design owns the D-218 line. Architecture traced why only about 1 in 5 resets reaches the bucket.
+- **The spawn exposure did arrive:** 0.43 vs C2's 0.26 post-reset share; resets per live env-s 4.7x (architecture).
+- **The brief's "6 %" and "large majority" were misstated** (RL, architecture).
+- **The pair log writes each step 4 times;** _row_from takes the first copy, so no number changes (experiment design).
+
+**What we learned**
+- The spawn box reaches 4.1 m (median 2.1 m) and the ball arrives 1.6-2.2 s after spawn (motion). q0 >= 0.75 needs moving contact at about 2 m/s; the frozen base plausibly reaches q0 about 0.4-0.5.
+- Far-ball legal is 0.44 in training vs 0.42 at read (coach): a capability limit, unless the spawn state itself is the gap (RL, architecture).
+- Ceiling: 0.80 needs (1 - q0) / q1 <= 0.25 (experiment design).
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| RL | (ii) reset both envs of odd live courts at rally end (p 0.5), fresh-ball tally; STOP if q0 < C + 0.08 |
+| Motion | (ii) spawn restart after every rally on odd live courts; STOP to a base-agility retrain if q0 < C + 0.10 |
+| Experiment design | (i) 12-s episodes with a first-ball counter, q0 >= C + 0.08 gate; any failure -> STOP |
+| Coach | (iii) STOP to court-scale quickness (Fast4 on 0.5-3 m spots, fast4_check gate) |
+| Architecture | (iv) relaunch 24 s with a corrected dose line; STOP to a distil-then-PPO joint fine-tune if q0 does not move |
+
+No majority. Least new code / fewest moving parts: (iv). All five agree that a q0 miss after the dose arrives means STOP.
+
+**Decision:** D-220.

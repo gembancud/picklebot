@@ -6634,3 +6634,40 @@ Smoke (seed 218, 160 iterations, 24-s episodes):
 - Training seed 217 was not used. C stays the parent.
 
 The reset bucket counts the leak balls at each env reset, about one per episode start. With 24-s episodes it grows, but training rallies end often enough that feeder balls stay the large majority. Panel round 83 is called (mjlab/results/footwork-round83-brief.md).
+
+**D-219 correction (round 83, all five):** the dose line measured the wrong ball. The reset bucket counts leak balls; --audit-fixes zeroes them and leaves P(5+) unchanged. The q0 ball is the spawn feeder ball that follows, logged by launch distance.
+- Only about 1 in 5 resets reaches the bucket: `_refeed` overwrites the picked side's leak ball, and `pairs.on_reset` leaves `handed` set (architecture).
+- So "the premise fails either way" was misstated: the spawn-start dose was never measured.
+- Measured from the logged end_reasons (rallies ended by a reset per live feeder fire), the exposure did arrive: C2 at 120 s 0.26; the D-219 smoke at 24 s 0.43. Resets per live env-second rose 0.0086 -> 0.0388 (4.7x).
+- Also misstated in the D-219 brief: "6 % at 120 s" (a bucket figure) and "feeder balls stay the large majority" (feeder fires are 26 % of live balls).
+- Reported (experiment design, coach): the smoke's off-spot share was 0.356 (up from 0.25-0.29). Far-ball legal is 0.44 in training vs 0.42 at read.
+
+## D-220 (2026-11-05): relaunch the 24-s episodes with the dose instrument fixed
+
+Panel round 83 (mjlab/results/footwork-review.md). No majority:
+- (ii) spawn restarts on half the live courts, 2 (RL, motion);
+- (i) 12-s episodes with a first-ball counter, 1 (experiment design);
+- (iii) STOP to court-scale quickness, 1 (coach);
+- (iv) relaunch 24 s with a corrected dose line, 1 (architecture).
+
+Least new code and fewest moving parts: (iv), about 25 lines in d1_rule plus tests and no task code. The lever itself has never trained. Run: scripts/diag/ep83.sh.
+
+**Round 83 findings:**
+- **Ceiling:** 0.80 needs (1 - q0) / q1 <= 0.25, e.g. q0 >= 0.87 at today's q1 (0.53), or q0 = q1 >= 0.80. Not reachable on this route alone (experiment design, coach).
+- **Spawn box (motion):** up to 4.1 m off the spot (median 2.1 m; 81 % beyond 1.2 m), and about 1.6-2.2 s from spawn to contact.
+  - Stop-and-set at the policy's demonstrated acceleration covers 22-58 % of the box.
+  - Contact on the run at up to 2 m/s covers 49-97 %.
+  - So the ball is winnable, but q0 >= 0.75 needs moving contact at about 2 m/s, beyond today's envelope. With the frozen base, q0 can plausibly reach about 0.4-0.5.
+- **Practice and read match on far balls:** 0.44 in training vs 0.42 at read (coach). That argues the body, not exposure, is the limit. RL and architecture answer that the spawn-start state itself has not yet been trained at the read's weight.
+
+**Run:** X = rally-d1s3ep24b, D-219's recipe unchanged: C model_32598, training episode length 24 s, LR 3e-5, 1,200 iterations, endpoint model_33797. Training seed 217, smoke 219 (218 used by D-219).
+
+**Dose** (d1_rule.reset_dose / reset_dose_kill): post-reset share of live feeder fires >= 0.35 and resets per live env-s >= 0.0248 (3x C2's 0.0083).
+- Smoke window 20-140 (rows +22 / +142 exist). Dry run on the D-219 smoke log: 0.431 / 0.0388 -> CONTINUE; test reproduces it.
+- Kill window 280-340 (rows +282 / +342 exist when the +361 check runs).
+
+**Other kills and endpoint lines:** as D-219 (D-194's lines; KILL-FARM reported only; gain2, r19_guards, bars, cfs79_lines). q0 / q1 reported.
+
+**Pre-registered STOP (5 of 5 agree on a q0 trigger):** if the dose arrives and the endpoint q0 < C + 0.08, the episode-length route closes. The next round names the footwork-base phase (4 of 5 named a base rebuild for cold-start speed; architecture names a distil-then-PPO joint fine-tune). The target is unchanged.
+
+**Seeds (ledgered):** training 217, smoke 219; dev 4220365 (X's court read); dev 4220349-4220356 (CONFIRM only). Next free: training 220, dev 4220373.
