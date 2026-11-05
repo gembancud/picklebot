@@ -7258,3 +7258,9 @@ Panel round 92 (mjlab/results/footwork-review.md): (d) 5 of 5.
 **Estimates (reported):** +3-8 points, to about 0.60-0.65. If placed-start feeder legal recovered to the near-spot 0.90, about 0.67; with h1 at about 0.12 as well, about 0.74. That is still short of 0.80, so the actuator and reference-motion routes remain needed.
 
 **Seeds (ledgered):** training 228, smoke 229; dev 4220389 (court read). Next free: training 230, dev 4220390.
+
+**D-230 addendum (2026-11-06): SMPL installed.** The user signed in at smpl.is.tue.mpg.de ("signed in") and approved the download ("go ahead and download").
+- Downloaded in the built-in browser: SMPL_python_v.1.1.0.zip ("version 1.1.0 for Python 2.7, female/male/neutral, 300 shape PCs"), 330,607,275 bytes. testzip passed.
+- Copied to mjlab/artifacts/motion/body_models_download/ (git-ignored).
+- basicmodel_{neutral,m,f}_lbs_10_207_0_v1.1.0.pkl were written as GVHMR/inputs/checkpoints/body_models/smpl/SMPL_{NEUTRAL,MALE,FEMALE}.pkl (data only).
+- **GVHMR's body models are now complete.** The CalTennis pilot (D-229's reference route) needs the GPU, so it runs after D-231's training, not beside it (nothing else on the GPU while training).
