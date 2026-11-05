@@ -1,0 +1,7 @@
+D-218: C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt; 120 s / 240 s on dev 4220369-4220370; --audit-fixes 120 s on dev 4220371-4220372 (reported)
+off-spot share: first half 0.5130 (n 5084); second half undefined (n -74, off-spot -38): the 240-s read logs about as many feeder launches as the 120-s read
+(reported) 120 s: P(5+) 0.4052, feeder legal 0.6362, rallies 5082
+(reported) 240 s: P(5+) 0.4161, feeder legal 0.6378, rallies 5009
+(reported, motion) --audit-fixes 120 s: off-spot share 0.5090; P(5+) 0.4022, feeder legal 0.5854, rallies 5132; without fixes (dist80b): P(5+) 0.4106, feeder legal 0.6320, rallies 5049
+RESULT INVALID-SPLIT
+VERDICT: INVALID-SPLIT

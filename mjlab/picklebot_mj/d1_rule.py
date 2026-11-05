@@ -1080,6 +1080,9 @@ def spawn_route(first_dhist: list[int], full_dhist: list[int]) -> tuple[str, lis
     f_n, f_k = sum(first_dhist), first_dhist[-1]
     s_n, s_k = sum(second), second[-1]
     pf, ps = f_k / max(f_n, 1), s_k / max(s_n, 1)
+    if s_n < SPAWN_MIN_N or s_k < 0:  # D-218 guard: the split is undefined (checked before any interval)
+        return "INVALID-SPLIT", [f"off-spot share: first half {pf:.4f} (n {f_n}); second half undefined (n {s_n}, "
+                                  f"off-spot {s_k}): the 240-s read logs about as many feeder launches as the 120-s read"]
     (flo, fhi), (slo, shi) = wilson(f_k, f_n), wilson(s_k, s_n)
     spawn = pf >= SPAWN_FIRST and ps <= SPAWN_SECOND and flo > shi
     mid = ps >= MID_SECOND

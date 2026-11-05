@@ -6560,3 +6560,17 @@ Fewest moving parts: (iv), reads only and no code. Between the two read forms, e
 **Guard, added before the pooled verdict was read** (d1_rule.spawn_route): fewer than 200 second-half launches -> INVALID-SPLIT. The thresholds are unchanged. Test: test_spawn_route_invalid_split.
 
 **Reported:** the read's feeder balls are an early-episode phenomenon. The spawn ball, and the restarts right after it, are most of what the target's feeder line and opening hazards measure. That supports the spawn-transient reading (experiment design, architecture, motion) in a different form, for the next round.
+
+### D-218 result (2026-11-05): INVALID-SPLIT - the read's feeder balls happen early; the pair-reset leak is not the cause
+
+The summary first crashed: a negative second-half count reached the Wilson interval before the guard. The guard now runs first. The summary was re-run on the same files; no read was repeated.
+
+- **INVALID-SPLIT:** first half 0.513 off-spot (n 5,084). The 240-s reads logged about as many feeder launches as the 120-s reads, so the second half is undefined (n -74).
+- **Per read:** about 2.5 feeder balls per court (2,499-2,571 per read of 1,024 courts) at either length. The rallies that start run to the timeout. Reported: P(5+) 0.405 (120 s) / 0.416 (240 s); feeder legal 0.636 / 0.638.
+- **--audit-fixes (motion, reported):** the reset bucket goes to 0 (the leak is removed). The off-spot share is unchanged at 0.509; P(5+) 0.402 vs 0.411 without fixes; feeder legal 0.585 vs 0.632. LEAK-BINDS is false: the leak does not explain the off-spot share or P(5+).
+- **Inference, not measured:**
+  - Robots spawn across a wide box (reset pose x -0.8 to 3.2, y -2.95 to 2.25; architecture), and the first feeder ball comes 0.5 s after the courts start.
+  - If that first ball (about 1,024 of about 2,500 per read) is mostly launched off spot, it alone would carry most of the 0.51 off-spot share.
+  - The instrument does not separate a court's first feeder ball from later ones, so this is a hypothesis for the panel. A direct test is a reporting-only tally of the court's first feeder ball (pairs.started False at fire).
+
+Panel round 82 is called (mjlab/results/footwork-round82-brief.md).
