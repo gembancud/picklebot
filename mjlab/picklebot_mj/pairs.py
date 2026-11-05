@@ -71,6 +71,13 @@ class PairCourts:
         self.ho_cls = torch.zeros(n, dtype=torch.long, device=device)
         self.ho_dbin = torch.zeros(n, dtype=torch.long, device=device)
         self.ho_out = torch.zeros(2, HO_BINS, 2, dtype=torch.long, device=device)
+        # D-224 fix: the env holds a ball received in the court's current rally (set on receive; cleared for both envs
+        # at a feeder ball and on reset, and once tallied). Only these are tallied: a reset (leak) ball on an env whose
+        # `handed` survived on_reset carried a stale class (D-223 INVALID). `handed` itself is untouched.
+        self.ho_live = torch.zeros(n, dtype=torch.bool, device=device)
+        # reported only: own-ball feeds finished with no live received ball (stale `handed`), and class-0 feeds tallied
+        # while the court's rally length is still 0 (the hitter's copy not yet judged: a receiver's early volley)
+        self.ho_stale = torch.zeros(2, dtype=torch.long, device=device)
 
     def court(self, mask: torch.Tensor) -> torch.Tensor:
         """Per-env mask -> per-court mask (either env)."""
@@ -92,6 +99,7 @@ class PairCourts:
             self.side_stats_own[:, 2] += torch.stack([(fo & (self.side == k)).sum() for k in (0, 1)])
             per = torch.stack([fo, torch.zeros_like(fo), f & ~self.handed, torch.zeros_like(fo)], -1)
             self.court_counts.index_add_(0, torch.arange(self.n, device=f.device) % self.h, per.long())
+        self.ho_live &= ~m  # D-224: a reset ends what the env held
         self._end(m, reason=2)
         self.parked |= m
         self.final &= ~m
@@ -160,6 +168,7 @@ class PairCourts:
             self.ho_dbin = torch.where(receive, self.ho_dbin_now.clamp(max=HO_BINS - 1), self.ho_dbin)
             self.ho_cls = torch.where(receive, (self.ho_count > 0).long().repeat(2), self.ho_cls)
             self.ho_count = self.ho_count + self.court(receive).long()
+            self.ho_live |= receive  # D-224
         self.parked &= ~receive
         self.handed = self.handed | receive  # the feed now in play is a partner's ball
         self.n_started[1] += receive.sum()
@@ -177,6 +186,7 @@ class PairCourts:
         self.timer = torch.where(go, torch.full_like(self.timer, -1.0), self.timer)
         self.court_dead &= ~go
         self.ho_count = torch.where(go, torch.zeros_like(self.ho_count), self.ho_count)  # D-223
+        self.ho_live &= ~go.repeat(2)  # D-224: a new rally; nothing held is from it yet
         self.started |= go
         pick_b = (self.rally_idx % 2).bool()  # alternate the side that receives the feeder ball
         if busy is not None:  # D-140: never to a busy robot
@@ -210,9 +220,12 @@ class PairCourts:
         """D-223: finished own-ball feeds (and their legal returns) by hand-off class and receiver distance bin."""
         if self.ho_dbin_now is None:
             return
+        self.ho_stale[0] += (done & ~self.ho_live).sum()
+        self.ho_stale[1] += (done & self.ho_live & (self.ho_cls == 0) & (self.rally_len.repeat(2) == 0)).sum()
         k = (self.ho_cls * HO_BINS + self.ho_dbin) * 2
-        self.ho_out.view(-1).index_add_(0, k, done.long())
-        self.ho_out.view(-1).index_add_(0, k + 1, legal.long())
+        self.ho_out.view(-1).index_add_(0, k, (done & self.ho_live).long())
+        self.ho_out.view(-1).index_add_(0, k + 1, (legal & self.ho_live).long())
+        self.ho_live &= ~done  # D-224: once per received ball
 
     def summary(self) -> dict:
         h = self.len_hist.tolist()
@@ -235,4 +248,5 @@ class PairCourts:
                 "rallies": n, "p_len_ge_4": ge(4), "p_len_ge_5": ge(5), "p_len_ge_10": ge(10), "mean_len": mean,
                 "handoff": self.handoff, "sides": side, "started": {"feeder": int(self.n_started[0]),
                 "handoffs": int(self.n_started[1])}, "court_counts": self.court_counts.tolist(),
-                "sides_own_ball": side_own, "len_hist": h, "handoff_by_d": self.ho_out.tolist()}
+                "sides_own_ball": side_own, "len_hist": h, "handoff_by_d": self.ho_out.tolist(),
+                "handoff_stale": self.ho_stale.tolist()}

@@ -1294,3 +1294,15 @@ No majority (2 / 2 / 1). Least new code and fewest moving parts: (ii).
 **Estimates:** best reachable P(5+) about 0.45-0.55 (all five); 0.80 not shown reachable on this stack.
 
 **Decision:** D-223.
+
+## Round 87 (2026-11-05): D-223 INVALID (first hand-off tally over-counts about 2 %)
+
+Brief: footwork-round87-brief.md.
+
+**Correction checks:** INVALID right (all five). The over-count is the reset env's own leak ball carrying a stale `handed` / class after the court restarts (architecture traced the exact path; motion, coach, RL, experiment design concur). The arithmetic closes exactly once the 35 / 31 are removed (motion, architecture). A leak-ball miss also ends about 1 % of live rallies (coach, architecture, experiment design); reported, not re-scored. A second, untested path: early volley faults (RL).
+
+**Votes:** (i) fix and re-read, 5 of 5. Fix form: a separate ho_live flag, `handed` untouched (all five). Read size: 4 seeds (coach, RL), 3 (motion), 2 (architecture), re-read 4220375 plus 1 (experiment design). No majority; tie rule -> experiment design's.
+
+**Estimates:** unchanged at 0.45-0.55; if the split holds, the perfect-reach ceiling falls to about 0.65-0.69.
+
+**Decision:** D-224.

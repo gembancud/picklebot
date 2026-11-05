@@ -1410,3 +1410,33 @@ def test_pair_courts_handoff_outcome_by_class_and_distance():
         step(F(p), Z, Z, Z, 0.01, 0.1, contact=Z)
         if on:
             assert pc.summary()["handoff_by_d"][0][1] == [1, 0]
+
+
+def test_pair_courts_handoff_tally_skips_stale_leak_balls():
+    """D-224: a reset (leak) ball on an env whose `handed` survived on_reset, finishing after the court restarts with
+    the feeder ball on the partner side, is not tallied (it was a stale class-0 miss in D-223); court_counts is
+    unchanged by the fix (the same feed is still an own-ball feed there)."""
+    from picklebot_mj.pairs import PairCourts
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    pc = PairCourts(4, "cpu", handoff="contact")
+    pc.on_reset(torch.arange(4))
+    pc.ho_dbin_now = torch.tensor([3, 3, 3, 3])
+    fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1)[0] for _ in range(30)) if f.any()]
+    a, b = (2, 0) if fires[0][2] else (0, 2)
+    pc.step(Z, Z, Z, Z, 0.01, 0.1, contact=F(a))  # b receives its first hand-off (class 0)
+    pc.step(F(a), F(a), Z, Z, 0.01, 0.1, contact=Z)
+    assert bool(pc.handed[b]) and bool(pc.ho_live[b])
+    pc.on_reset(torch.tensor([b]), fell_open=F(b))  # b falls holding it: one class-0 miss, then b is reset
+    assert pc.summary()["handoff_by_d"][0][3] == [1, 0] and bool(pc.handed[b]) and not bool(pc.ho_live[b])
+    own0 = sum(r[0] for r in pc.summary()["court_counts"])
+    # the court restarts; force the feeder ball to a (not b), so b's stale `handed` survives `fire`
+    pc.rally_idx[:] = 0 if a < 2 else 1
+    fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1)[0] for _ in range(30)) if f.any()]
+    assert bool(fires[0][a]) and bool(pc.handed[b])
+    pc.parked[b] = False  # the task's leak ball is in play in b's env
+    pc.step(F(b), Z, Z, Z, 0.01, 0.1, contact=Z)  # the leak ball lands unplayed
+    s = pc.summary()
+    assert s["handoff_by_d"][0][3] == [1, 0]  # not tallied again
+    assert sum(r[0] for r in s["court_counts"]) == own0 + 1  # court_counts still books it (unchanged behaviour)
+    assert s["handoff_stale"][0] == 1

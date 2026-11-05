@@ -6861,3 +6861,35 @@ No majority. Least new code and fewest moving parts: (ii), about 20 lines of log
 - Reported hazards on this read: h0-h4 0.384 / 0.257 / 0.087 / 0.022 / 0.012; q0 0.264, q1 0.511.
 
 Seeds dev 4220375-4220376 are used. No training. C stays the parent; the target is unchanged. Panel round 87 is called (mjlab/results/footwork-round87-brief.md).
+
+## D-224 (2026-11-05): fix the hand-off tally and re-read h1's attribution
+
+Panel round 87 (mjlab/results/footwork-review.md): (i) fix and re-read, 5 of 5.
+
+**Correction (all five, traced in code):** D-223's over-count came from reset (leak) balls.
+1. `pairs.on_reset` parks the env but leaves `handed`, `ho_cls` and `ho_dbin` set.
+2. With `pair_reset_parks` off (reads), `return_stand.reset` makes the env's own leak ball live again (`rules.begin_from_feed`, `tallied` False).
+3. The court restarts while that ball is in flight. If `fire` picks the partner, nothing clears the env's `handed`.
+4. The leak ball finishes as a live own-ball feed with a stale class, mostly class 0 and mostly a miss.
+
+court_counts books the same feed, so the totals reconciled and only the class split did not. Removing the 35 / 31 gives 1,573 feeds against 1,573 rallies that reached shot 1, and legal about 0.745 against 1 - h1 = 0.7425.
+
+**Corollary (reported, nothing re-scored):** a missed leak ball on a live court also ends that rally through `_end`, so it reaches len_hist (mostly as h0) at about 1 % of rallies. This agrees with D-219's --audit-fixes leaving P(5+) unchanged.
+
+**RL also names a second possible path:** a receiver's early volley that faults before the hitter's copy is judged. It is reported through a counter (handoff_stale[1]: class-0 feeds tallied while the court's rally length is 0).
+
+**The fix (logging only):** PairCourts.ho_live is set on receive and cleared for both envs at a feeder ball, on reset, and once tallied. `_ho_tally` books only `done & ho_live`. Excluded feeds are counted in handoff_stale[0], reported. `handed`, court_counts, len_hist and every frozen field are unchanged.
+- Test tests/test_stage5f.py::test_pair_courts_handoff_tally_skips_stale_leak_balls reproduces the case: a fall on a class-0 ball, the court restarting with the feeder ball on the partner, and the leak ball landing unplayed. The ball is not tallied, handoff_stale[0] is 1, and court_counts still books it.
+
+**Read plan** (sizes differed: 2, 3 or 4 seeds, or a re-read plus one; no majority, so experiment design's, by the tie rule), scripts/diag/h1r87.sh:
+1. **Instrument check:** re-read dev 4220375 unchanged with the fixed tally. VALID only if H1-RECON passes at 1 % / 0.01, unchanged. handoff_stale is reported; the hypothesis predicts about 35.
+2. **Read:** dev 4220377, the standard pairs read.
+3. **Pooled:** H1-RECON and h1_route on both, with lines unchanged (BALL / POSITION / MIXED / INVALID-SPLIT, near minimum 200).
+
+Said in advance (experiment design): POSITION's |gap| <= 0.03 is close to the interval width at n about 350.
+
+**If the reconciliation still fails after the fix:** INVALID again, with no third instrument round (RL). The split is not used, and the round-86 estimate stands.
+
+**Estimates (round 87, reported):** if the split holds, near receivers return the first hand-off at about 0.85 against 0.999 later. Perfect reach on both opening balls would then cap P(5+) at about 0.65-0.69, below round 86's 0.73. The estimate stays about 0.45-0.55. The target is unchanged.
+
+**Seeds (ledgered):** dev 4220375 (re-read, instrument check) and 4220377. No training seed. Next free: training 224, dev 4220378.
