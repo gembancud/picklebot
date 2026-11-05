@@ -1232,3 +1232,65 @@ def quick_check(t: dict, w: dict) -> tuple[str, list[str]]:
              f"(reported) FASTER: sustained p50 {g('sustained_p50')} m/s"]
     v = "INVALID" if not valid else "QUICK-OK" if arrive and settle and falls and quick else "QUICK-FAIL"
     return v, lines
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-223 (panel round 86: no majority, (i) 2, (iii) 2, (ii) 1; least new code / fewest moving parts: (ii), RL's form).
+# A read-only attribution of h1 (the partner's first ball) on C: pairs.handoff_by_d[class][bin] = [own-ball feeds
+# finished, legal], class 0 = the rally's first hand-off, 1 = later; bins on LAUNCH_D_EDGES (receiver's distance from its
+# spot at the hand-off). Near = d <= 0.3 m (bins 0-2), far = d > 1.2 m (bin 6).
+H1_NEAR_BINS, H1_FAR_BIN = (0, 1, 2), 6
+H1_BALL_GAP, H1_POS_GAP, H1_POS_FAR = 0.05, 0.03, 0.40
+H1_RECON_TOT, H1_RECON_H1 = 0.01, 0.01
+
+
+def h1_split(paths: list[str]) -> dict:
+    import json
+    o = [[[0, 0] for _ in range(8)] for _ in range(2)]
+    own = [0, 0]
+    for p in paths:
+        q = json.load(open(p))["pairs"]
+        for c in (0, 1):
+            for b in range(8):
+                o[c][b][0] += q["handoff_by_d"][c][b][0]
+                o[c][b][1] += q["handoff_by_d"][c][b][1]
+        for r in q["court_counts"]:
+            own[0] += r[0]
+            own[1] += r[1]
+    near = [[sum(o[c][b][i] for b in H1_NEAR_BINS) for i in (0, 1)] for c in (0, 1)]
+    tot0 = sum(x[0] for x in o[0])
+    return {"o": o, "own": own, "near": near, "far0": o[0][H1_FAR_BIN], "first_n": tot0,
+            "first_legal": sum(x[1] for x in o[0]) / max(tot0, 1), "far_share0": o[0][H1_FAR_BIN][0] / max(tot0, 1),
+            "tot": [sum(x[0] for c in o for x in c), sum(x[1] for c in o for x in c)]}
+
+
+def h1_recon(paths: list[str]) -> tuple[bool, str]:
+    """Smoke validity (the D-216 lesson): the tally reconciles with court_counts' own-ball columns and 1 - h1."""
+    s = h1_split(paths)
+    h1 = pooled_hazards(paths)["h"][1]
+    okt = all(abs(s["tot"][i] - s["own"][i]) <= H1_RECON_TOT * max(s["own"][i], 1) for i in (0, 1))
+    okh = abs(s["first_legal"] - (1 - h1)) <= H1_RECON_H1
+    return okt and okh, (f"H1-RECON: own feeds / legal {s['tot']} vs court_counts {s['own']} (within {H1_RECON_TOT:.0%}); "
+                         f"first hand-off legal {s['first_legal']:.4f} vs 1 - h1 {1 - h1:.4f} (within {H1_RECON_H1}) -> "
+                         + ("VALID" if okt and okh else "INVALID"))
+
+
+def h1_route(paths: list[str]) -> tuple[str, list[str]]:
+    s = h1_split(paths)
+    (n0, l0), (n1, l1) = s["near"]
+    if min(n0, n1) < SPAWN_MIN_N:
+        return "INVALID-SPLIT", [f"near first / later hand-offs n {n0} / {n1} (each >= {SPAWN_MIN_N})"]
+    r0, r1 = l0 / n0, l1 / n1
+    w0, w1 = wilson(l0, n0), wilson(l1, n1)
+    ball = r1 - r0 >= H1_BALL_GAP - 1e-9 and w0[1] < w1[0]
+    pos = abs(r1 - r0) <= H1_POS_GAP + 1e-9 and s["far_share0"] >= H1_POS_FAR - 1e-9
+    v = "BALL" if ball else "POSITION" if pos else "MIXED"
+    rate = lambda c, b: f"{s['o'][c][b][1] / s['o'][c][b][0]:.3f} (n {s['o'][c][b][0]})" if s["o"][c][b][0] else "-"  # noqa: E731
+    lines = [f"near (d <= 0.3 m) legal: first {r0:.4f} (n {n0}, Wilson {w0[0]:.3f}-{w0[1]:.3f}) vs later {r1:.4f} "
+             f"(n {n1}, Wilson {w1[0]:.3f}-{w1[1]:.3f}); gap {r1 - r0:+.4f}",
+             f"far share of first hand-offs (d > 1.2 m) {s['far_share0']:.3f} (POSITION needs >= {H1_POS_FAR})",
+             f"BALL: gap >= {H1_BALL_GAP} and Wilson separated -> {ball}; POSITION: |gap| <= {H1_POS_GAP} and far share "
+             f">= {H1_POS_FAR} -> {pos}",
+             "(reported) legal by bin, first: " + ", ".join(rate(0, b) for b in range(7)),
+             "(reported) legal by bin, later: " + ", ".join(rate(1, b) for b in range(7))]
+    return v, lines

@@ -1083,6 +1083,8 @@ class BallPhysicsAction(ActionTerm):
                     busy = busy | self.drill.move_ep  # walk to a spot
                 if self.shadow is not None:
                     busy = busy | self.shadow.swing_ep  # swing at a ghost ball (round 26: it stalled the court)
+            # D-223 (logging only): the receiver's distance bin, booked by PairCourts at a hand-off
+            self.pairs.ho_dbin_now = torch.bucketize((self.pelvis_xy() - self.recover_xy).norm(dim=-1), self._ls_de)
             fire, recv = self.pairs.step(over, self.return_done, torch.zeros_like(over), crossing, dt,
                                          self.cfg.refeed_delay_s, contact=first, busy=busy)
             if self.drill_scale is not None:  # D-162: feeder balls and hand-offs started, pair vs drill courts

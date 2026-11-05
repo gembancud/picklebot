@@ -1272,3 +1272,25 @@ Brief: footwork-round85-brief.md.
 Form (i) 5 of 5; no premise read 3 of 5; kill unchanged 3 of 5. A fail closes the start-reward sub-route (4 of 5).
 
 **Decision:** D-222.
+
+## Round 86 (2026-11-05): D-222 KILL-NO-START; the start-reward sub-route closes; name the next phase
+
+Brief: footwork-round86-brief.md.
+
+**Correction checks:** the kill and the closure are valid (all five). The heading reading was confounded by the drill's 1-m yaw lock and its midpoint sampling (all five). Fast4 turned laterally on long spots without a faster start; back never turned (experiment design, RL). Forward first step is no faster than back (motion). h1 levers had been tried (coach, experiment design, RL).
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| RL | (ii) h1 attribution read on C (BALL / POSITION / MIXED) |
+| Motion | (iii) distil-then-PPO joint fine-tune |
+| Coach | (i) heading free to 0.3 m (drop step) on Q2's task |
+| Experiment design | (iii) distil-then-PPO joint fine-tune, FIDELITY gate first |
+| Architecture | (i) heading free to 0 on Q2's task, KILL-NO-TURN |
+
+No majority (2 / 2 / 1). Least new code and fewest moving parts: (ii).
+
+**Estimates:** best reachable P(5+) about 0.45-0.55 (all five); 0.80 not shown reachable on this stack.
+
+**Decision:** D-223.

@@ -545,3 +545,30 @@ def test_quick_kill_reads_the_fast4_log_as_flat():
     rows = [json.loads(x) for x in open(p)]
     v, line = dr.quick_kill(rows, 16600)
     assert v == "KILL-NO-START", line   # Fast4's first step held at 1.33-1.38 s
+
+
+def _h1_read(tmp_path, name, near0, near1, far0, h1_len=None):
+    import json
+    o = [[[0, 0] for _ in range(8)] for _ in range(2)]
+    o[0][1], o[1][1], o[0][6] = near0, near1, far0
+    own = [sum(x[0] for c in o for x in c), sum(x[1] for c in o for x in c)]
+    n0 = sum(x[0] for x in o[0])
+    l0 = sum(x[1] for x in o[0])
+    lh = h1_len or [0, n0 - l0, l0, 0, 0, 0, 0]  # rallies ending at 1 = first hand-off misses; the rest end at 2
+    p = tmp_path / name
+    json.dump({"pairs": {"handoff_by_d": o, "court_counts": [own + [0, 0]], "len_hist": [0] * 1 + lh[1:],
+                         "open_len_hist": [0] * len(lh)}}, open(p, "w"))
+    return str(p)
+
+
+def test_h1_route_lines(tmp_path):
+    ball = _h1_read(tmp_path, "b.json", [1000, 800], [3000, 2700], [1000, 300])  # 0.80 vs 0.90
+    assert dr.h1_route([ball])[0] == "BALL"
+    pos = _h1_read(tmp_path, "p.json", [1000, 880], [3000, 2700], [1500, 450])  # 0.88 vs 0.90, far 0.6
+    assert dr.h1_route([pos])[0] == "POSITION"
+    mixed = _h1_read(tmp_path, "m.json", [1000, 880], [3000, 2700], [300, 90])  # gap ok but far share low
+    assert dr.h1_route([mixed])[0] == "MIXED"
+    few = _h1_read(tmp_path, "f.json", [100, 80], [3000, 2700], [100, 30])
+    assert dr.h1_route([few])[0] == "INVALID-SPLIT"
+    ok, line = dr.h1_recon([ball])
+    assert ok, line

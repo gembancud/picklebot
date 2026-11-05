@@ -6788,3 +6788,48 @@ Smoke (seed 223) passed all five lines: pay per spot 0.164 (D-221 0.073; the cur
 **Pre-registered outcome (D-222, 4 of 5):** a fail closes the start-reward sub-route, with no third dose. It is worded **"no faster start shown under a direct start reward"**, not a body limit. Left did move past the line; the binding direction is back.
 
 Training seeds 222 and 223 are used. Dev 4220374 is unread (no endpoint). C stays the rally parent, and the target is unchanged. Panel round 86 is called to name the next phase (mjlab/results/footwork-round86-brief.md).
+
+## D-223 (2026-11-05): an h1 attribution read on C (read only), by the tie rule
+
+Panel round 86 (mjlab/results/footwork-review.md).
+
+**Correction checks:**
+- KILL-NO-START is valid, and the sub-route is closed as pre-registered (all five).
+- The brief's heading reading was overstated (all five):
+  - Mid-move heading is booked at half the start distance. On every court spot of 2 m or less that point is inside the 1-m radius, where the yaw command points at the net.
+  - Turning is penalised at court scale, not merely permitted: the yaw tracking inside 1 m, the settled hold, and fw_posture's hip-yaw tolerance (motion).
+  - On Fast4's 2-6 m spots the robot did turn in left / right (share >= 60 deg: 0.33 / 0.61), and its first step stayed at 1.34 s. Back stayed within 30 deg on 95 % even there (experiment design, RL).
+- Motion's per-sector first-step over Q2's 400-450 window: forward 1.35, back 1.385, left 1.27, right 1.30 s. Forward running is no quicker than backpedalling, so the limit is gait initiation shared by all directions, not the back move's form.
+- "Never tried: any lever aimed at h1" was wrong. Readiness (D-199), parked readiness (D-202), recovery while parked (D-205, D-214) and the stance fix (D-215) targeted the receiver's state, and run 2 (D-137) paid cooperative credit. What was never done is attributing h1 to a cause (RL).
+- Heading-table rounding: Q left late 0.918, Q back late 0.972 (experiment design).
+
+**Votes:**
+- (i) turn-and-run, 2: architecture (heading_free_m 0) and coach (0.3 m, a drop step);
+- (iii) joint fine-tune, 2: experiment design and motion;
+- (ii) h1 attribution, 1: RL.
+
+No majority. Least new code and fewest moving parts: (ii), about 20 lines of logging and one read, with no training. The same rule decided round 83.
+
+**Estimates (all five, reported):** the best reachable P(5+) on this body and stack is about 0.45-0.55.
+- Even perfect reach caps it near 0.73, because near-ball feeder legal is about 0.90 on each opening ball.
+- 0.80 needs a spawn-ball reach of about 1.1 s to 1.5 m, near and far opening legal of about 0.95 or more, and h1 of about 0.06 or less. None has been shown.
+
+**The read (scripts/diag/h1r86.sh):** C (rally-d1s3lr3 model_32598, d1 base, lam_r 2) at mean actions.
+- **Instrument:** PairCourts.handoff_by_d books every own-ball feed and its legal return by hand-off class and by the receiver's distance from its spot at the hand-off (LAUNCH_D_EDGES bins). Class 0 is the rally's first hand-off (the h1 ball); class 1 is later ones. The feeds are the same filtered ones as court_counts' own-ball columns.
+- **Smoke** (dev 4220376, 256 envs, 60 s): d1_rule.h1_recon checks that the tally is within 1 % of court_counts and that first hand-off legal is within 0.01 of 1 - h1. INVALID stops the read.
+- **Read** (dev 4220375, the standard pairs read, 2,048 envs, 120 s), d1_rule.h1_route:
+  - **BALL:** near (d <= 0.3 m) first hand-offs are legal >= 0.05 below near later ones, with Wilson intervals separated. The first return is a hard ball; next is a hitter-side lever on the feeder-ball return, in its own entry.
+  - **POSITION:** |gap| <= 0.03 and >= 40 % of first hand-offs are far (> 1.2 m). h1 then has h0's footwork limit, and no lever is left on this stack: a STOP is recorded with the estimate above, and under D-169 the loop moves to the next phase.
+  - **MIXED:** otherwise; back to the panel.
+  - **INVALID-SPLIT:** fewer than 200 near hand-offs in a class.
+
+**Code:** opt-in logging only.
+- PairCourts tallies only when the task sets ho_dbin_now; the task sets it in pair mode.
+- No reward, observation or random stream changes.
+
+**Tests:**
+- tests/test_stage5f.py::test_pair_courts_handoff_outcome_by_class_and_distance;
+- tests/test_d1_rule.py::test_h1_route_lines.
+- The pre-existing failure tests/test_stage5f.py::test_court_feed_mix_shares_families_recovery_and_planner ("two extremes in a row among v2 feeds") fails without this change too, and does not use pair courts. It is noted, not touched.
+
+**Seeds (ledgered):** dev 4220375-4220376. Dev 4220374 is released unread. No training seed. Next free: training 224, dev 4220377.

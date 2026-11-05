@@ -1366,3 +1366,47 @@ def test_d157_teacher30_differs_only_in_the_input_gain():
     assert list(ta) == list(tb) and (ta["teacher_contact"].scale, tb["teacher_contact"].scale) == (None, 30.0)
     assert all(ta[k] == tb[k] for k in ta if k != "teacher_contact") and ta["teacher_contact"].func is tb["teacher_contact"].func
     assert a.rewards == b.rewards and a.actions == b.actions and a.observations["critic"] == b.observations["critic"]
+
+
+def test_pair_courts_handoff_outcome_by_class_and_distance():
+    """D-223 (logging only): own-ball feeds are tallied by hand-off class (first of the rally / later) and by the
+    receiver's distance bin at the hand-off; totals match court_counts' own columns; off when ho_dbin_now is None."""
+    from picklebot_mj.pairs import PairCourts
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    for on in (True, False):
+        pc = PairCourts(4, "cpu", handoff="contact")
+        pc.on_reset(torch.arange(4))
+        fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1)[0] for _ in range(30)) if f.any()]
+        a, b = (2, 0) if fires[0][2] else (0, 2)
+
+        def step(*args, dbin=None, **kw):
+            if on:
+                pc.ho_dbin_now = torch.tensor(dbin if dbin is not None else [0, 0, 0, 0])
+            return pc.step(*args, **kw)
+        d = [0, 0, 0, 0]
+        d[b] = 6  # b is far (bin 6) at the first hand-off
+        step(Z, Z, Z, Z, 0.01, 0.1, contact=F(a), dbin=d)  # a hits the feeder ball -> b receives (first hand-off)
+        step(F(a), F(a), Z, Z, 0.01, 0.1, contact=Z)      # a's copy lands legally
+        d = [0, 0, 0, 0]
+        d[a] = 2
+        step(Z, Z, Z, Z, 0.01, 0.1, contact=F(b), dbin=d)  # b returns it (legal) -> a receives (later hand-off, bin 2)
+        step(F(b), F(b), Z, Z, 0.01, 0.1, contact=Z)
+        step(F(a), Z, Z, Z, 0.01, 0.1, contact=Z)          # a misses: rally of 2 ends
+        s = pc.summary()
+        own = sum(r[0] for r in s["court_counts"])
+        if on:
+            o = s["handoff_by_d"]
+            assert o[0][6] == [1, 1] and o[1][2] == [1, 0]
+            assert sum(x[0] for c in o for x in c) == own == 2
+        else:
+            assert sum(x[0] for c in s["handoff_by_d"] for x in c) == 0
+        # the next rally's first hand-off is class 0 again
+        fires = [f for f in (pc.step(Z, Z, Z, Z, 0.01, 0.1)[0] for _ in range(30)) if f.any()]
+        h = 0 if fires[0][0] else 2
+        p = 2 - h
+        step(Z, Z, Z, Z, 0.01, 0.1, contact=F(h), dbin=[1, 1, 1, 1])
+        step(F(h), F(h), Z, Z, 0.01, 0.1, contact=Z)
+        step(F(p), Z, Z, Z, 0.01, 0.1, contact=Z)
+        if on:
+            assert pc.summary()["handoff_by_d"][0][1] == [1, 0]

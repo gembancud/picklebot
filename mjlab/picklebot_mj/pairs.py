@@ -17,6 +17,7 @@ from __future__ import annotations
 import torch
 
 MAX_LEN = 64
+HO_BINS = 8  # D-223: receiver-distance bins for the hand-off outcome tally (the task's LAUNCH_D_EDGES + 1 <= 8)
 
 
 class PairCourts:
@@ -62,6 +63,14 @@ class PairCourts:
         # reset (fall or time-out), 3 the rally cap
         self.end_reasons = torch.zeros(2, 4, dtype=torch.long, device=device)
         self.last_len = torch.zeros(self.h, dtype=torch.long, device=device)  # D-165: the court's last finished rally
+        # D-223 (logging only): hand-off outcomes by class (0 = the rally's first hand-off, 1 = later) and by the
+        # receiver's distance bin at the hand-off (ho_dbin_now, set by the task each step; None = not tallied):
+        # ho_out[class, bin] = [own-ball feeds finished, legal]; the same filtered feeds as court_counts' own columns.
+        self.ho_dbin_now = None
+        self.ho_count = torch.zeros(self.h, dtype=torch.long, device=device)
+        self.ho_cls = torch.zeros(n, dtype=torch.long, device=device)
+        self.ho_dbin = torch.zeros(n, dtype=torch.long, device=device)
+        self.ho_out = torch.zeros(2, HO_BINS, 2, dtype=torch.long, device=device)
 
     def court(self, mask: torch.Tensor) -> torch.Tensor:
         """Per-env mask -> per-court mask (either env)."""
@@ -78,6 +87,7 @@ class PairCourts:
             self.side_stats[:, 2] += torch.stack([(f & (self.side == k)).sum() for k in (0, 1)])
             # D-138: a feed ended by a fall is a miss in the own-ball and per-court counts too (they used to leave it out)
             fo = f & self.handed
+            self._ho_tally(fo, torch.zeros_like(fo))
             self.side_stats_own[:, 0] += torch.stack([(fo & (self.side == k)).sum() for k in (0, 1)])
             self.side_stats_own[:, 2] += torch.stack([(fo & (self.side == k)).sum() for k in (0, 1)])
             per = torch.stack([fo, torch.zeros_like(fo), f & ~self.handed, torch.zeros_like(fo)], -1)
@@ -123,6 +133,7 @@ class PairCourts:
         cnt = lambda m: torch.stack([(m & live & (s == k)).sum() for k in (0, 1)])  # noqa: E731
         self.side_stats += torch.stack([cnt(over), cnt(over & legal), cnt(over & fell)], -1)
         own = over & self.handed
+        self._ho_tally(own & live, own & live & legal)
         self.side_stats_own += torch.stack([cnt(own), cnt(own & legal), cnt(own & fell)], -1)
         fed = over & ~self.handed
         per = torch.stack([own, own & legal, fed, fed & legal], -1) & live.unsqueeze(-1)
@@ -145,6 +156,10 @@ class PairCourts:
             receive = receive & ~self.final[self.partner]
         if busy is not None:
             receive = receive & ~busy
+        if self.ho_dbin_now is not None:  # D-223: class and receiver distance at the hand-off
+            self.ho_dbin = torch.where(receive, self.ho_dbin_now.clamp(max=HO_BINS - 1), self.ho_dbin)
+            self.ho_cls = torch.where(receive, (self.ho_count > 0).long().repeat(2), self.ho_cls)
+            self.ho_count = self.ho_count + self.court(receive).long()
         self.parked &= ~receive
         self.handed = self.handed | receive  # the feed now in play is a partner's ball
         self.n_started[1] += receive.sum()
@@ -161,6 +176,7 @@ class PairCourts:
             go = go & ~both_busy
         self.timer = torch.where(go, torch.full_like(self.timer, -1.0), self.timer)
         self.court_dead &= ~go
+        self.ho_count = torch.where(go, torch.zeros_like(self.ho_count), self.ho_count)  # D-223
         self.started |= go
         pick_b = (self.rally_idx % 2).bool()  # alternate the side that receives the feeder ball
         if busy is not None:  # D-140: never to a busy robot
@@ -183,11 +199,20 @@ class PairCourts:
         self.side_stats += torch.stack([cnt(e), cnt(e), z], -1)
         own = e & h0
         self.side_stats_own += torch.stack([cnt(own), cnt(own), z], -1)
+        self._ho_tally(own, own)
         fed = e & ~h0
         per = torch.stack([own, own, fed, fed], -1)
         self.court_counts.index_add_(0, torch.arange(self.n, device=e.device) % self.h, per.long())
         ok = e.long()
         self.rally_len += torch.where(self.court_dead, torch.zeros_like(self.rally_len), ok[: self.h] + ok[self.h:])
+
+    def _ho_tally(self, done: torch.Tensor, legal: torch.Tensor) -> None:
+        """D-223: finished own-ball feeds (and their legal returns) by hand-off class and receiver distance bin."""
+        if self.ho_dbin_now is None:
+            return
+        k = (self.ho_cls * HO_BINS + self.ho_dbin) * 2
+        self.ho_out.view(-1).index_add_(0, k, done.long())
+        self.ho_out.view(-1).index_add_(0, k + 1, legal.long())
 
     def summary(self) -> dict:
         h = self.len_hist.tolist()
@@ -210,4 +235,4 @@ class PairCourts:
                 "rallies": n, "p_len_ge_4": ge(4), "p_len_ge_5": ge(5), "p_len_ge_10": ge(10), "mean_len": mean,
                 "handoff": self.handoff, "sides": side, "started": {"feeder": int(self.n_started[0]),
                 "handoffs": int(self.n_started[1])}, "court_counts": self.court_counts.tolist(),
-                "sides_own_ball": side_own, "len_hist": h}
+                "sides_own_ball": side_own, "len_hist": h, "handoff_by_d": self.ho_out.tolist()}
