@@ -7189,3 +7189,20 @@ fw1b-S model_16600 at mean actions on Measure60-Court, dev 4220383 (reported):
   - SMPLX_{NEUTRAL,MALE,FEMALE}.pkl: GMR/assets/body_models/smplx/.
 - The browser left the original as a .tmp file in the user's Downloads; the agent did not delete it.
 - **Still needed for GVHMR:** the SMPL v1.1.0 python models from smpl.is.tue.mpg.de (a separate account the user must create). Then the CalTennis pilot on the session on disk (D-229's reference route).
+
+### D-229 baseline result (2026-11-06): C on the new set-start read - P(5+) 0.5645 (Wilson 0.553-0.576, 7,331 rallies)
+
+C = rally-d1s3lr3 model_32598 (d1 base, lam_r 2), standard pairs reads with --pair-drill-reset on dev 4220385-4220388, pooled, with the old read on the same seeds:
+
+| read | P(5+) | rallies | feeder legal | h0 / h1 / h2 / h3 / h4 | q0 / q1 |
+|---|---|---|---|---|---|
+| set start (drill reset, frozen D-229) | **0.5645** (Wilson 0.553-0.576) | 7,331 | 0.762 | 0.245 / 0.187 / 0.065 / 0.013 / 0.003 | 0.461 / 0.695 |
+| old read, same seeds | 0.4061 | 10,183 | 0.635 | 0.376 / 0.275 / 0.078 / 0.022 / 0.005 | 0.257 / 0.517 |
+
+- **Per seed P(5+):** set 0.568, 0.558, 0.582, 0.551; old 0.411, 0.414, 0.394, 0.406.
+- **Placements:** 3,642 / 3,702 / 3,576 / 3,748, two per rally start.
+- **The set start lifts C by 15.8 points on paired seeds** (+0.158; every seed agrees). The two opening hazards fall (h0 0.376 -> 0.245, h1 0.275 -> 0.187), but they still bind: (1 - h0)(1 - h1) = 0.614, against about 0.886 for the bar.
+- **This is C's baseline on the new read and the reference for every later child** (D-229); it is not a candidate.
+- **Target status:** 0.5645 against 0.80 (Wilson low 0.78). Not met.
+
+Stage 4 (fw-act2-01) smoke passed all five lines (falls 0.648; early window 1.368 / 1.478 s), and training (seed 226) is running.
