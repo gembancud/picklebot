@@ -7073,3 +7073,20 @@ Panel round 90 (mjlab/results/footwork-review.md): (b) the from-scratch controll
 - Second ask: the body or controller.
 
 **Seeds (ledgered):** dev 4220380-4220382; training 224, 225. Next free: training 226, dev 4220383.
+
+### D-227 stage A result (2026-11-05): C under a 3-s set-start hold reads P(5+) 0.607 (reported only, not a score)
+
+Pooled dev 4220380-4220381, standard pairs reads with --pair-set-start 3.0, against C's standard reads (h1r87, 4220375 + 4220377):
+
+| | P(5+) | rallies | feeder legal | h0 / h1 / h2 / h3 / h4 | q0 / q1 |
+|---|---|---|---|---|---|
+| set-start hold (3 s) | **0.607** | 3,411 | 0.792 | 0.214 / 0.163 / 0.058 / 0.018 / 0.003 | 0.607 / 0.592 |
+| standard (frozen read) | 0.412 | 5,022 | 0.639 | 0.372 / 0.268 / 0.084 / 0.017 / 0.005 | 0.252 / 0.532 |
+
+- **Releases [set, timeout]:** [76, 1,639] and [88, 1,608]. Only about 5 % of feeder balls found both robots set (within 0.3 m and below 0.3 m/s); about 95 % were released by the 3-s timeout.
+- **What this measures:** mostly a 3-s pause before every feeder ball, during which the robots move toward their spots but rarely settle on them. C does not park on its spot and stand still within 3 s.
+- **The hand-off read is VALID under the hold:** 0.8401 vs 1 - h1 0.8373. Near first hand-offs are 0.893 (n 605) against 0.9994 later, so the BALL gap persists (+0.107).
+- **Context:** the standard read's 0.5-s refeed against a 3-s refeed was raised with the user earlier (D-200s: P(5+) 0.55 at a 3-s refeed).
+- **This read is reported only.** The frozen read and the target are unchanged. Whether a set or held start belongs in the target's read is the user's decision (D-226, D-227).
+
+Stage B smoke (seed 225) passed all six lines: exit, traceback, NaN, no resume, fw_first_step present, agility rows. Falls are reported only: 610 per 1,000 env-s, as expected for a random init. fw-scratch-01 training (seed 224, 6,000 iterations) is running; the kill read is at +1,800.
