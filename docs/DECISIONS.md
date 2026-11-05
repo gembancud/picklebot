@@ -6764,3 +6764,27 @@ Reported: the 30-60 and 60-100 baselines, and each window beside D-221's.
 **Pre-registered (4 of 5):** a fail, by kill or by QUICK, closes the start-reward sub-route. There is no third dose. It is worded "no faster start shown under a direct start reward", not a body limit. The next round names the next phase (under D-169 a STOP moves the loop on).
 
 **Seeds (ledgered):** training 222, smoke 223; dev 4220374. Dev 4220373 is released unread. Next free: training 224, dev 4220375.
+
+### D-222 result (2026-11-05): KILL-NO-START at +486 - left passed the line, back did not; the start-reward sub-route closes as pre-registered
+
+Smoke (seed 223) passed all five lines: pay per spot 0.164 (D-221 0.073; the curve is wired), falls 0.825. Training (seed 222) was stopped by quick_kill at +486 (exit 143, 20:09). Falls stayed low.
+
+**Training-window first-step p50, left / back (s), Q2 against D-221's Q on the same windows:**
+
+| iterations | Q2 left | Q2 back | Q left | Q back | Q2 bonus per spot |
+|---|---|---|---|---|---|
+| 0-100 | 1.376 | 1.461 | 1.381 | 1.461 | 0.162 |
+| 100-200 | 1.321 | 1.408 | 1.342 | 1.434 | 0.190 |
+| 200-300 | 1.302 | 1.408 | 1.328 | 1.442 | 0.206 |
+| 300-400 | 1.283 | 1.410 | 1.306 | 1.418 | 0.215 |
+| 400-450 | 1.273 | 1.385 | 1.307 | 1.376 | 0.216 |
+| 450-480 | 1.263 | 1.379 | - | - | 0.226 |
+
+- **The line:** each of left and back at least 0.10 s faster over 400-450 than over 0-100. It read 0.103 for left (pass) and 0.077 for back (fail), so KILL-NO-START as coded.
+- **Left:** twice the pay bought about 0.035 s more and kept left moving (1.307 -> 1.273).
+- **Back:** it held at 1.408-1.410 from iteration 100 to 400, and its 400-450 window is no faster than D-221's (1.385 vs 1.376). Doubling the pay did not move back.
+- **Reported:** arrivals 0.335 and settled 0.108 per issued spot (cumulative); the 30-60 and 60-100 baselines are in results/qk85-summary.txt.
+
+**Pre-registered outcome (D-222, 4 of 5):** a fail closes the start-reward sub-route, with no third dose. It is worded **"no faster start shown under a direct start reward"**, not a body limit. Left did move past the line; the binding direction is back.
+
+Training seeds 222 and 223 are used. Dev 4220374 is unread (no endpoint). C stays the rally parent, and the target is unchanged. Panel round 86 is called to name the next phase (mjlab/results/footwork-round86-brief.md).
