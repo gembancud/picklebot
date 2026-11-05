@@ -1,0 +1,11 @@
+D-225: first hand-off ball quality on C; reads dev 4220378, 4220379
+4220378 H1-RECON: own feeds / legal [90607, 90043] vs court_counts [90624, 90053] (within 1%); first hand-off legal 0.7187 vs 1 - h1 0.7251 (within 0.01) -> VALID; ball_by_class present True; handoff_stale [17, 23] early by bin [1, 1, 1, 2, 2, 5, 11, 0]
+4220379 H1-RECON: own feeds / legal [90584, 90034] vs court_counts [90602, 90045] (within 1%); first hand-off legal 0.7290 vs 1 - h1 0.7365 (within 0.01) -> VALID; ball_by_class present True; handoff_stale [18, 27] early by bin [0, 1, 0, 2, 3, 6, 15, 0]
+pooled H1-RECON: own feeds / legal [181191, 180077] vs court_counts [181226, 180098] (within 1%); first hand-off legal 0.7238 vs 1 - h1 0.7308 (within 0.01) -> VALID
+keep_alive median feeder-return 0.007 vs own-ball 0.000 (BALL if <= -0.1); n [9022, 452578]
+|velocity| p50 feeder-return 9.13 vs own-ball 9.28 m/s (BALL if >= +1.0); p90 10.19 / 9.61
+(reported) |spin| p50 74.6 vs 88.0 rad/s
+receiver speed p50 at first vs later hand-offs 0.30 vs 0.24 m/s (RECEIVER if >= +0.2); p90 1.27 / 0.53; n [3539, 182041]
+(reported) h1_route on this pool: BALL; near (d <= 0.3 m) legal: first 0.8793 (n 348, Wilson 0.841-0.909) vs later 0.9992 (n 99041, Wilson 0.999-0.999); gap +0.1199
+RESULT NEITHER
+VERDICT: NEITHER

@@ -6960,3 +6960,36 @@ The forms of (iii) differed. Least new code: architecture's, about 25 lines and 
 **Tests:** tests/test_d1_rule.py::test_ball_route_lines; tests/test_pair_cut.py (GPU, runs the pair branch with the new logging) passes.
 
 **Seeds (ledgered):** dev 4220378-4220379. No training seed. Next free: training 224, dev 4220380.
+
+### D-225 result (2026-11-05): NEITHER as coded; the ball-quality tally is multi-counted (an instrument defect); receivers are moving on the first hand-off's tail
+
+**Both reads and the pool are VALID on H1-RECON:** pooled 0.7238 vs 0.7308.
+- h1_route on this pool reads BALL again (reported): near first hand-offs 0.879 (n 348) vs later 0.9992.
+- The early part of handoff_stale by bin is mostly far (e.g. 4220378: [1, 1, 1, 2, 2, 5, 11, 0]), so it cannot carry the near gap.
+
+**Route, as coded: NEITHER.**
+
+| | feeder-ball returns | handed-ball returns | line |
+|---|---|---|---|
+| keep_alive median | 0.007 | 0.000 | BALL if <= -0.10 |
+| \|velocity\| p50 | 9.13 m/s | 9.28 m/s | BALL if >= +1.0 |
+| \|velocity\| p90 | 10.19 | 9.61 | |
+| \|spin\| p50 (reported) | 74.6 rad/s | 88.0 rad/s | |
+
+| | first hand-off | later hand-offs | line |
+|---|---|---|---|
+| receiver speed p50 | 0.30 m/s | 0.24 m/s | RECEIVER if >= +0.2 |
+| receiver speed p90 | 1.27 m/s | 0.53 m/s | |
+
+**Instrument defect (agent's check after the verdict; nothing re-scored):** the ball-quality histograms are multi-counted.
+- On 4220378 they hold 4,506 feeder-ball and 226,499 handed-ball legal returns, against court_counts' 1,559 and 90,053. That is ratios of 2.89 and 2.52, which differ by class.
+- Likely cause: `return_now` / `keep_alive_now` stay set for the remaining physics substeps of a control step (they are consumed once per control step; decimation 4), so a landing is booked about 2.5 times. Feeder returns also include `return_now` events that court_counts files elsewhere.
+- So the keep_alive / velocity / spin lines are **not reconciled**, and their verdict is weak.
+- The keep_alive score is also a weak instrument here: 98 % of handed-ball returns and 80 % of feeder-ball returns score 0.
+- **The receiver-speed tally is booked once per hand-off (at `recv`) and reconciles:** 3,539 first hand-offs, matching the class-0 count.
+
+**Reported, from the reconciled receiver tally:** 36.1 % of first-hand-off receivers are moving faster than 0.5 m/s at the hand-off, against 11.9 % at later hand-offs.
+- The medians are close, but the tail differs by 3x. This agrees with D-204's diag68 STATE finding and with motion's and coach's readiness reading in round 88.
+- Motion's pre-registered READINESS split (set vs moving near receivers) was not the adopted form, so it is not scored here.
+
+Seeds dev 4220378-4220379 are used. No training. C stays the parent; the target is unchanged. Panel round 89 is called (mjlab/results/footwork-round89-brief.md).
