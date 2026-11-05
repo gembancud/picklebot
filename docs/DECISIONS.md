@@ -7178,3 +7178,14 @@ fw1b-S model_16600 at mean actions on Measure60-Court, dev 4220383 (reported):
 - In 16.4 M hip samples, 73 were at >= 0.95 x the limit; in 5.5 M knee samples, 19. Torque never reaches the clamp during the start.
 - The x2 limit leaves the first step unchanged (+0.002 / +0.004 s, within a bin).
 - **Reading (motion's round-91 route):** the start is not bounded by the effort limits. It is set by the PD actuator (kp and the damping ratio 2.0) and by the action scale (0.25 x effort / kp: a unit action asks for about 25 % of the effort limit). D-229 pre-registered that a no-saturation result sends the damping route to the next round. fw-act2-01 runs unchanged as registered.
+
+## D-230 (2026-11-06): SMPL-X body models installed (the user registered and approved the download)
+
+- **The user, 2026-11-06:** "i registered, what do you need me todo", then "i have the browser on in here". On being shown the file ("SMPL-X v1.1 (NPZ+PKL, 830 MB)", smpl-x.is.tue.mpg.de, non-commercial single-user licence): "go".
+- **Downloaded in the built-in browser,** logged in as the user: models_smplx_v1_1.zip, 870,108,517 bytes. zipfile.testzip passed.
+- **Placement (data only, nothing executed):**
+  - the zip: mjlab/artifacts/motion/body_models_download/models_smplx_v1_1.zip (git-ignored);
+  - SMPLX_{NEUTRAL,MALE,FEMALE}.npz: GVHMR/inputs/checkpoints/body_models/smplx/;
+  - SMPLX_{NEUTRAL,MALE,FEMALE}.pkl: GMR/assets/body_models/smplx/.
+- The browser left the original as a .tmp file in the user's Downloads; the agent did not delete it.
+- **Still needed for GVHMR:** the SMPL v1.1.0 python models from smpl.is.tue.mpg.de (a separate account the user must create). Then the CalTennis pilot on the session on disk (D-229's reference route).
