@@ -7090,3 +7090,19 @@ Pooled dev 4220380-4220381, standard pairs reads with --pair-set-start 3.0, agai
 - **This read is reported only.** The frozen read and the target are unchanged. Whether a set or held start belongs in the target's read is the user's decision (D-226, D-227).
 
 Stage B smoke (seed 225) passed all six lines: exit, traceback, NaN, no resume, fw_first_step present, agility rows. Falls are reported only: 610 per 1,000 env-s, as expected for a random init. fw-scratch-01 training (seed 224, 6,000 iterations) is running; the kill read is at +1,800.
+
+## D-228 (2026-11-06): the user's answers to D-226's asks - a set start ("the proper spot, like a drill"), agile reference motion, and no realistic motor limits
+
+**The user, 2026-11-06, verbatim:**
+1. "lets follow the proper spot if its going to be like in a drill. i guess it has to adjust either way"
+2. "i would say if you could get a more agile reference like in tennis that should help. but we need to make it scale on to the proper scale right? i would say our target right now is purely digital. i dont have a fucking bot so even if its not possible with the current motor limits which i think its able to anyways, i want the robot to move the fastest it can to learn. i dont give a fuck about limiting the motors for realistic motors, i want fast humanlike movement"
+
+**What changes, by the user's authority:**
+- **The target's read gets a set start.** Each rally starts with both robots on their proper spots, as in a drill, and they still have to move to the ball after that. This changes the read's premise (rally-target.md's "Setup"); the user changed it.
+  - The bars are unchanged: P(5+) >= 0.80 with Wilson low >= 0.78 over >= 1,000 dev-seed rallies, sides within 3, court falls <= 4 %.
+  - The exact set-start mechanism (for example placing both robots on their spots before each feeder ball, or holding the feeder ball until both are set) is defined, coded, tested and frozen by the panel before any score is read under it.
+  - The old read and its results are kept and reported alongside; nothing is relabelled.
+- **Agile reference motion (tennis-like) is wanted, scaled to the robot.** Any download still needs the user's explicit yes on the named file (source, size, licence); the agent proposes candidates first.
+- **Realistic motor limits are no longer a constraint.** The target is purely digital. Actuator limits (effort, velocity, gains) may be raised in simulation, and the goal is fast, humanlike movement. This supersedes any premise that the G1's real actuator specs bound the policy.
+
+**In flight:** fw-scratch-01 (D-227 stage B) continues to its pre-registered +1,800 kill read; at +914 it stood still (0 arrivals, 0 falls). Panel round 91 plans the set-start read, the actuation change and the reference-motion route.
