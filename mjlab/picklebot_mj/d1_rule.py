@@ -1061,3 +1061,29 @@ def cut81_kills(rows: list[dict], start_it: int) -> list[tuple[str, str]]:
         v = "CONTINUE" if g <= CUT_EASY_MAX else "KILL-EASY"
         out.append((v, f"KILL-EASY: feeder legal after a cut 30-90 {g:.4f} (n {e['cut_feeds']}; kill above {CUT_EASY_MAX}) -> {v}"))
     return out
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-218 (panel round 81; no majority: (iv) reads 2 (experiment design: 120 s / 240 s split; motion: --audit-fixes re-read),
+# (i) feed the furthest robot 1 (RL), (ii) episode length 24 s 1 (architecture), (iii) STOP 1 (coach); fewest moving
+# parts: (iv); experiment design's form decides the route, motion's read is reported). Reads only, C model_32598.
+#   SPAWN-BINDS: first-half (0-120 s) off-spot (d > 1.2 m) share of logged feeder launches >= 0.45, and second half
+#     (120-240 s, the 240-s read minus the 120-s read) <= 0.35, Wilson 95 % intervals apart -> (ii) episode length.
+#   MID-BINDS: second-half off-spot share >= 0.45 -> the post-bounce cut. Otherwise PANEL.
+SPAWN_FIRST, SPAWN_SECOND, MID_SECOND = 0.45, 0.35, 0.45
+
+
+def spawn_route(first_dhist: list[int], full_dhist: list[int]) -> tuple[str, list[str]]:
+    """d_hist totals (summed over the previous-rally bins): the 120-s read and the 240-s read on the same seeds."""
+    second = [b - a for a, b in zip(first_dhist, full_dhist)]
+    f_n, f_k = sum(first_dhist), first_dhist[-1]
+    s_n, s_k = sum(second), second[-1]
+    pf, ps = f_k / max(f_n, 1), s_k / max(s_n, 1)
+    (flo, fhi), (slo, shi) = wilson(f_k, f_n), wilson(s_k, s_n)
+    spawn = pf >= SPAWN_FIRST and ps <= SPAWN_SECOND and flo > shi
+    mid = ps >= MID_SECOND
+    v = "SPAWN-BINDS" if spawn else "MID-BINDS" if mid else "PANEL"
+    return v, [f"off-spot share: first half {pf:.4f} (n {f_n}, Wilson {flo:.3f}-{fhi:.3f}); second half {ps:.4f} (n {s_n}, "
+               f"Wilson {slo:.3f}-{shi:.3f})",
+               f"SPAWN-BINDS (first >= {SPAWN_FIRST}, second <= {SPAWN_SECOND}, apart) -> {spawn}; MID-BINDS (second >= "
+               f"{MID_SECOND}) -> {mid}"]

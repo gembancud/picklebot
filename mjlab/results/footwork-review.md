@@ -1129,3 +1129,35 @@ Brief: footwork-round80-brief.md; correction footwork-round80b-brief.md.
 - Routes are experiment design's lines; coach's route is reported.
 
 **Decision:** D-216.
+
+
+## Round 81 (2026-11-05): D-217 killed at +360; the dose did not arrive
+
+Brief: footwork-round81-brief.md.
+
+**Correction checks**
+- **The KILL is valid as coded** (all five).
+  - Both firing lines are built into the lever: cut balls log as misses, and cuts shorten rallies.
+  - The proposer (RL) and architecture own the error, as does the agent, which adopted the list without checking it against the lever.
+- **KILL-NO-DOSE could never read at +360:** the pair log writes every 100 iterations (all five). From now on, kills must be readable at smoke.
+- **The dose failure closes this lever** (all five). The per-window off-spot share fell 0.356 -> 0.259 -> 0.224: the policy recovered closer as feeder balls became 3x as common.
+
+**What we learned**
+- **The far state is already practised:** about 18,000 far launches in training, legal 0.48-0.51 (coach).
+- **The read's receiver is still moving:** > 0.5 m/s at launch 48 % at read vs 28 % in training (RL, coach).
+- **The spawn ball:** about 31 % of the read's feeder-type balls vs 6 % in training (architecture). It does not enter len_hist, so it moves the FEEDER line, not P(5+) (RL). It may be the known pair-reset leak (motion).
+- **Unfrozen base is costed:** 80-400 lines and about 6 GPU h, with a high risk of hitting collapse (architecture).
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| Coach | (iii) STOP: unfrozen-base rally fine-tune; far-bin legal >= 0.52 gate |
+| Experiment design | (iv) 120 s / 240 s read -> SPAWN-BINDS (episode length 30) / MID-BINDS (post-bounce cut) |
+| RL | (i) feed the robot furthest off spot (about 3 lines), dose >= 0.40 at smoke; else STOP |
+| Architecture | (ii) episode length 24 s, reset-bucket dose >= 0.18 |
+| Motion | (iv) --audit-fixes re-read (pair-reset leak) -> LEAK-BINDS / feed the chaser |
+
+No majority. Fewest moving parts: (iv), reads only. Experiment design's form routes; motion's read is reported.
+
+**Decision:** D-218.

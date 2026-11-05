@@ -438,3 +438,15 @@ def test_cut81_kills():
     v = [x[0] for x in dr.cut81_kills(bad, start)]
     assert v == ["KILL-NO-SHARE", "KILL-NO-DOSE", "KILL-EASY"], v
     assert all(x[0] == "NO-DATA" for x in dr.cut81_kills([], start))
+
+
+def test_spawn_route():
+    first = [10, 10, 10, 100, 100, 270, 500]          # off-spot 0.50 of 1,000
+    full = [30, 30, 30, 400, 400, 810, 800]            # second half: 300 of 2,000 = 0.15
+    assert dr.spawn_route(first, full)[0] == "SPAWN-BINDS"
+    full_mid = [20, 20, 20, 200, 200, 540, 1000]       # second half: 500 of 1,000 = 0.50
+    assert dr.spawn_route(first, full_mid)[0] == "MID-BINDS"
+    full_mix = [20, 20, 20, 300, 300, 640, 900]        # second half: 400 of 1,300 = 0.31 but first 0.50 -> spawn
+    assert dr.spawn_route(first, full_mix)[0] == "SPAWN-BINDS"
+    full_none = [20, 20, 20, 400, 400, 640, 700]       # second 400 / 1,200 = 0.33
+    assert dr.spawn_route([10, 10, 10, 200, 200, 270, 300], full_none)[0] == "PANEL"  # first 0.30 (< 0.45), second 0.33 (< 0.45)

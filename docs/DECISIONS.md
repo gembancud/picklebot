@@ -6516,3 +6516,37 @@ Smoke (seed 216) passed: falls 2.498 against 4.157 (half-split 4.443 / 1.035); t
   - A ball cut 0.2-0.6 s into its flight leaves the receiver close to its spot. At read, the off-spot feeder balls follow a miss the robot chased (D-216: 0.42 legal beyond 1.2 m).
 
 No endpoint read. C stays the parent. Panel round 81 is called (mjlab/results/footwork-round81-brief.md).
+
+## D-218 (2026-11-05): where the read's off-spot feeder balls come from - 120 s vs 240 s, and the pair-reset leak
+
+Panel round 81 (mjlab/results/footwork-review.md). Run: scripts/diag/half81.sh.
+
+**Votes (no majority):**
+- (iv) reads only, 2: experiment design (a 120 s / 240 s split) and motion (a re-read with --audit-fixes, the pair-reset leak);
+- (i) feed the robot furthest off its spot, 1 (RL);
+- (ii) training episode length 120 -> 24 s, 1 (architecture);
+- (iii) STOP to an unfrozen-base rally fine-tune, 1 (coach).
+
+Fewest moving parts: (iv), reads only and no code. Between the two read forms, experiment design's position decides the route; motion's read runs alongside, reported only.
+
+**Round 81 findings:**
+- D-217's KILL stands as coded, but neither firing line tells the policy apart from the lever. KILL-NO-DOSE could not read at +360: the pair log writes every 100 iterations. From now on, every kill line must be shown readable at smoke, e.g. with PICKLEBOT_PAIR_LOG_EVERY 480-1200.
+- The cut's off-spot share fell per window (0.356 -> 0.259 -> 0.224), so the dose moved away from the target. The early-cut form is closed (all five).
+- Within the same previous-rally bin (0-1 shots), training's off-spot share is 0.22-0.28 against 0.52 at read. Moving receivers (> 0.5 m/s at launch) are 28 % in training against 48 % at read (RL, coach).
+- **The reset ball.**
+  - It is about 31 % of the read's feeder-type balls (legal 0.50) and about 6 % in training (architecture).
+  - pairs._end counts only started rallies, so the spawn rally never enters len_hist. The reset ball moves the FEEDER line, not P(5+) or H0 (RL).
+  - Motion: it is the known pair-reset leak (audit 2026-10-28; pair_reset_parks off; dist80b ran without --audit-fixes). Part of the read's off-spot share and its 0-shot rallies may be instrument. Inferred, to be checked.
+- **Unfrozen base (architecture):** the d1 base runs outside rsl_rl's graph, so unfreezing gives it no gradient. A joint fine-tune needs a composite actor (about 250-400 lines) or a distil-then-PPO route (about 80 lines), about 6 GPU h, and carries a high risk (D-189's P1 collapse).
+
+**Reads** (C model_32598, pairs, 2,048 envs, mean actions):
+- 120 s and 240 s on dev 4220369-4220370 (experiment design's route);
+- 120 s with --audit-fixes on dev 4220371-4220372 (reported, motion; compared with dist80b's 4220366-67).
+
+**Route** (d1_rule.spawn_route):
+- **SPAWN-BINDS:** first-half (0-120 s) off-spot share of logged feeder launches >= 0.45, and second half (240-s minus 120-s read) <= 0.35, Wilson intervals apart. -> (ii) episode length, in its own entry. Experiment design's lines: smoke dose with reset feeds >= 0.15 of feeder balls and off-spot >= 0.40; kills readable at smoke.
+- **MID-BINDS:** second half >= 0.45. -> the post-bounce cut, in its own entry.
+- **Otherwise:** the panel.
+- Motion's LEAK-BINDS question (off-spot <= 0.35 or P(5+) moving >= 5 points with the fixes) is reported for the next round, not routed here.
+
+**Seeds (ledgered):** dev 4220369-4220372. Training 217-218 stay reserved for the routed run. Next free: dev 4220373.
