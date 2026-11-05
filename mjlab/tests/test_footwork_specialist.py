@@ -526,3 +526,56 @@ def test_idle_recovery_on_a_real_pair_court():
     t.hit_done[a] = True
     r = fs.rally_recovery_reward(env, std=1.5)
     assert bool(recv[b]) and r[b] == 0.0 and r[a] > 0.0  # b receives: unpaid; a hit: paid as before
+
+
+def test_first_step_bonus_pays_once_per_spot_and_is_off_by_default():
+    from picklebot_mj.tasks import footwork_specialist as fs
+    for on in (True, False):
+        t, dr = _drill(2, first_bonus=on)
+        t.shadow = None
+        t.recover_xy = torch.tensor([[-2.4, 0.0], [-2.4, 0.0]])  # 4 m toward the net
+        dr.d0[:], dr.limit[:], dr.elapsed[:] = 4.0, 100.0, 0.0
+        for _ in range(240):  # 1.2 s, no progress
+            dr.update(0.005)
+        assert float(dr.first_now.abs().sum()) == 0.0
+        t.place([[-4.8, 0.0], [-6.0, 0.0]])  # env 0 is 1.6 m closer, env 1 only 0.4 m
+        dr.update(0.005)
+        want = (fs.FIRST_PAY_T - 1.2) if on else 0.0
+        assert abs(float(dr.first_now[0]) - want) < 2e-3 and float(dr.first_now[1]) == 0.0
+        dr.first_now.zero_()  # read-and-clear (fw_first_step)
+        t.place([[-3.0, 0.0], [-4.4, 0.0]])  # both further on; env 1 now 1.6 m closer too
+        dr.update(0.005)
+        assert float(dr.first_now[0]) == 0.0  # once per spot
+        assert abs(float(dr.first_now[1]) - (want and fs.FIRST_PAY_T - 1.205)) < 2e-3
+        assert abs(sum(dr.counters()["first_pay_sum"]) - float(dr.first_now[1]) - want) < 4e-3
+
+
+def test_first_step_bonus_is_clamped_and_skips_short_spots():
+    t, dr = _drill(2, first_bonus=True)
+    t.shadow = None
+    t.recover_xy = torch.tensor([[-2.4, 0.0], [-5.2, 0.0]])
+    dr.d0[:], dr.limit[:], dr.elapsed[:] = torch.tensor([4.0, 1.2]), 100.0, 3.0  # late start; env 1 is a short spot
+    t.place([[-4.8, 0.0], [-5.2, 0.0]])
+    dr.update(0.005)
+    assert float(dr.first_now[0]) == 0.0 and float(dr.first_t[0]) > 0  # 3 s: clamped to zero, still booked
+    assert float(dr.first_now[1]) == 0.0 and float(dr.first_t[1]) < 0
+
+
+def test_quick_task_changes_only_the_spots_and_adds_the_bonus():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks.footwork_specialist as fs
+    from picklebot_mj.tasks import move_drill as md
+    s, q = load_env_cfg(fs.TASK_FW_SETTLE), load_env_cfg(fs.TASK_FW_QUICK)
+    sb, qb = s.actions["ball"], q.actions["ball"]
+    diff = {f.name for f in dataclasses.fields(sb) if getattr(sb, f.name) != getattr(qb, f.name)}
+    assert diff == {"footwork_dist", "deadline_dist", "move_spot_box", "footwork_first_bonus"}, diff
+    assert qb.footwork_dist == md.DIST_RANGE and qb.move_spot_box == md.SPOT_BOX and qb.footwork_first_bonus
+    assert qb.footwork_pay == "settled" and qb.footwork_cmd_cap == 2.5 and qb.deadline_v_req == (1.2, 2.2)
+    assert set(q.rewards) - set(s.rewards) == {"fw_first_step"} and set(s.rewards) <= set(q.rewards)
+    assert q.rewards["fw_first_step"].weight == q.rewards["move_arrival"].weight > 0
+    for k in s.rewards:
+        assert s.rewards[k].func is q.rewards[k].func and s.rewards[k].weight == q.rewards[k].weight
+    assert q.episode_length_s == s.episode_length_s and not s.actions["ball"].footwork_first_bonus
+    assert "fw_first_step" not in load_env_cfg(fs.TASK_FW_MEASURE_COURT).rewards

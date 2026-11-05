@@ -6687,3 +6687,28 @@ Least new code and fewest moving parts: (iv), about 25 lines in d1_rule plus tes
 - **Reported:** P(5+) X 0.418, C 0.412; court read (24 s, dev 4220365) falls per episode X 0.0507, C 0.0556; launch-distance legal X 0.912 at d <= 0.3 m, 0.446 beyond 1.2 m (C 0.901 / 0.422).
 
 **Reading:** five times the spawn-start practice left the spawn ball's conversion where it was (0.27 vs 0.25), and far-ball legal moved 0.42 -> 0.45. With practice at the read's weight, the far ball is a capability limit of the frozen d1 base plus a lam_r 2 residual, not an exposure gap. The pre-registered STOP (all five, round 83) fires: the episode-length route closes, and the next round names the footwork-base phase. C (rally-d1s3lr3 model_32598) stays the parent. Training seed 217 and smoke 219 are used; CONFIRM seeds 4220349-4220356 stay unread. Round 84 is called (mjlab/results/footwork-round84-brief.md). The target is unchanged.
+
+## D-221 (2026-11-05): footwork-base phase Q - a court-scale quickness specialist with a first-step bonus, read before anything is rebuilt
+
+Panel rounds 84 and 84b (mjlab/results/footwork-review.md). The premise that changed, reopening a base rebuild (round 78 closed teacher swaps and rebuilds): D-220 gave the read's spawn-start practice at its weight and q0 did not move, so the far ball is a capability limit of the frozen base, not an exposure gap.
+
+**Round 84:** (a) stage 1 only, 5 of 5. Parent fw1b-S model_16600 4 of 5 (RL: Fast4). The forms differed (deadlines, spots only, Fast4 on court spots, a first-step bonus).
+
+**Round 84b (re-vote on the form, called by the agent on a fact four reviewers had not seen):** Fast4's training log (results/fwfast4-train.jsonl, windowed first_step_hist) held left / back time to 1.5 m at 1.325-1.375 s in every window over 1,500 iterations, with deadline success 6-10 %, while sustained speed rose. Deadline pressure and a cap raise do not pay the start; fw_track_lin_vel's kernel widens with the command (std 0.5 x |v_cmd|), so a slow first second is cheap (motion). Form F2, 5 of 5.
+
+**Run:** Q = fw-quick-01 on Picklebot-Footwork-Specialist-Quick-G1, from fw1b-S model_16600 with fw_fast4.sh's algorithm (stock PPO, adaptive, initial LR 1e-5), 4,096 envs, 1,500 iterations, training seed 220, smoke 221. Driver: scripts/diag/qk84.sh.
+- **Task:** fw1b-S's task (Picklebot-Footwork-Specialist-G1) with the read's court spots (md.DIST_RANGE 0.5-3 m inside md.SPOT_BOX, as Measure60-Court), pay "settled", cap 2.5 and deadlines (V_REQ 1.2-2.2) unchanged.
+- **The new term, fw_first_step:** paid once per spot of at least 1.5 m, on the step the pelvis has closed 1.5 m (the D-191 first-step instrument's own event): clamp(1.6 - t, 0, 1) x the arrival bonus weight (100). Off by default; only this task turns it on. It does not require settling, so SETTLE, ARRIVE and FALLS stay in the gate.
+- "First step" and "time to 1.5 m" are one instrument (FIRST_STEP_M 1.5, timed from the spot's issue; correction, round 84).
+
+**Coded lines (picklebot_mj/d1_rule.py, tests/test_d1_rule.py, tests/test_footwork_specialist.py):**
+- **Smoke** (120 iterations): exit 0, no traceback, fw_first_step paid, the early window readable (first_window over 0-100: >= 200 left and back samples each), falls over the last 100 <= 8.314.
+- **Kills:** VOID-unstable (fw_fast4.sh's falls line); KILL-NO-START at +450: quick_kill, left and back first-step p50 over 400-450 each >= 0.10 s faster than over 0-100 (4 of 5; motion 0.05). On Fast4's log this line reads KILL-NO-START (1.334 / 1.370 -> 1.369 / 1.366 s).
+- **Gate, paired on dev 4220373** (Measure60-Court, mean actions, 1,024 envs, 120 s; Q vs fw1b-S), quick_check: VALID, ARRIVE, SETTLE as D-213; FALLS <= fw1b-S's; QUICK: left / back p50 each <= fw1b-S's - 0.25 s. QUICK margin: -0.25 (RL, experiment design), -0.20 (coach, architecture), -0.15 (motion); no majority, equal code, experiment design's line. FASTER is reported only (at 0.5-3 m sustained speed is capped by the spot length, D-193).
+- QUICK-OK -> panel, then d1c (D-192's kickstart with Q as the move teacher) as its own entry; the base gate then adds a first-step line against the d1 base (to be fixed in that entry).
+
+**Reading a fail (recorded now, split):** a KILL-NO-START or a QUICK fail with a flat training window means no faster start was shown under a reward that pays the start directly (coach, motion, architecture: STOP evidence, worded "no faster start shown", not "body limit"). A QUICK fail with a moving training window is a recipe limit (RL, experiment design). The next round reads it; under D-169 a STOP moves the loop to the next phase.
+
+**Estimates (reported, round 84):** a G1 can plausibly reach 1.0-1.2 s to 1.5 m (motion); the spawn ball needs about 1.1-1.15 s (RL, architecture). Even a perfect spawn ball gives P(5+) about 0.67 at today's h1-h4, so h1 (the partner's first ball, 0.26) must also fall (experiment design). The target is unchanged.
+
+**Seeds (ledgered):** training 220, smoke 221; dev 4220373. Next free: training 222, dev 4220374 (4220340 held; 4220349-4220356 CONFIRM only).

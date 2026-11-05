@@ -492,3 +492,56 @@ def test_reset_dose_kill_lines():
         return {"step": it * dr.STEPS_PER_IT, "end_reasons": [[0, 0, res, 0], [0, 0, 0, 0]], "split": [[fire, 0], [0, 0]]}
     low = [row(32598 + 20, 0, 0), row(32598 + 140, 300, 2000)]  # share 0.15
     assert dr.reset_dose_kill(low, 20, 140, 32598, 1024)[0] == "KILL-NO-DOSE"
+
+
+def _fs_row(it, left, back, start=16600, pay=0.0, issued=0):
+    h = [[0] * 80 for _ in range(8)]
+    for i, xs in ((dr.LEFT, left), (dr.BACK, back)):
+        for b, n in xs:
+            h[i][b] = n
+    return {"step": (start + it) * dr.STEPS_PER_IT,
+            "move": {"first_step_hist": h, "first_step_bin_s": 0.05, "first_pay_sum": [pay] * 8, "issued": [issued] * 8}}
+
+
+def test_quick_kill_lines():
+    def cum(rows):
+        out, acc = [], None
+        for it, l, b in rows:
+            r = _fs_row(it, l, b)
+            if acc is not None:
+                for i in (dr.LEFT, dr.BACK):
+                    r["move"]["first_step_hist"][i] = [x + y for x, y in zip(r["move"]["first_step_hist"][i], acc[i])]
+            acc = r["move"]["first_step_hist"]
+            out.append(r)
+        return out
+    base = [(0, [], []), (100, [(27, 300)], [(28, 300)]), (400, [(27, 900)], [(28, 900)])]
+    fast = cum(base + [(450, [(24, 300)], [(25, 300)])])      # 1.375 -> 1.225 / 1.425 -> 1.275: 0.15 faster
+    assert dr.quick_kill(fast, 16600)[0] == "CONTINUE"
+    slow = cum(base + [(450, [(26, 300)], [(25, 300)])])      # left only 0.05 faster
+    assert dr.quick_kill(slow, 16600)[0] == "KILL-NO-START"
+    assert dr.quick_kill(cum(base), 16600)[0] == "NO-DATA"    # no row at +450
+    few = cum([(0, [], []), (100, [(27, 50)], [(28, 50)]), (400, [], []), (450, [(24, 50)], [(25, 50)])])
+    assert dr.quick_kill(few, 16600)[0] == "NO-DATA"          # < 200 samples
+
+
+def test_quick_check_lines():
+    w = {"falls": 0.02, "worst_arrival": 0.97, "fallen_censored_share": 0.05, "settled": [0.3] * 8,
+         "first_step_p50": [1.375] * 8, "sustained_p50": [1.0] * 8}
+    t = dict(w, falls=0.01, worst_arrival=0.98, settled=[0.35] * 8, first_step_p50=[1.125] * 8)
+    assert dr.quick_check(t, w)[0] == "QUICK-OK"              # exactly - 0.25
+    assert dr.quick_check(dict(t, first_step_p50=[1.175] * 8), w)[0] == "QUICK-FAIL"
+    assert dr.quick_check(dict(t, falls=0.03), w)[0] == "QUICK-FAIL"
+    assert dr.quick_check(dict(t, settled=[0.2] * 8), w)[0] == "QUICK-FAIL"
+    assert dr.quick_check(dict(t, worst_arrival=0.7), w)[0] == "INVALID"
+
+
+def test_quick_kill_reads_the_fast4_log_as_flat():
+    import json
+    import os
+    p = "results/fwfast4-train.jsonl"
+    if not os.path.exists(p):
+        import pytest
+        pytest.skip("needs the D-191 training log")
+    rows = [json.loads(x) for x in open(p)]
+    v, line = dr.quick_kill(rows, 16600)
+    assert v == "KILL-NO-START", line   # Fast4's first step held at 1.33-1.38 s

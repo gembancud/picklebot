@@ -1230,3 +1230,23 @@ Brief: footwork-round83-brief.md.
 No majority. Least new code / fewest moving parts: (iv). All five agree that a q0 miss after the dose arrives means STOP.
 
 **Decision:** D-220.
+
+## Round 84 (2026-11-05): D-220 NO-CANDIDATE; the STOP fires; name the footwork-base phase
+
+Brief: footwork-round84-brief.md.
+
+**Correction checks**
+- NO-CANDIDATE is valid and the pre-registered STOP fired (all five).
+- The brief's "K3-KEPT 0.028 vs 0.012" is the reported 5+ split; the coded line is 0.0495 vs 0.0331 (all five).
+- "Far legal 0.42 -> 0.45" compares unpaired reads (dist80b vs D-204's seeds); not a measured move (RL, motion, coach, experiment design).
+- "Five times the practice" overstates it: resets per env-s 4.7x, post-reset share 1.8x (RL).
+- "Within-rally legal 0.98-0.99" is false for shots 1-2: h0 0.374, h1 0.259; the product matches P(5+) (experiment design).
+- First-step time and time to 1.5 m are one instrument (architecture, coach).
+- (c) d1 + --recover was withdrawn in round 78; --recover copies the walker only after the first contact, so it cannot reach the spawn ball (RL, architecture).
+- Kickstart ball episodes copy s5c-17's footwork, not the walker's (RL).
+
+**Votes:** (a) stage 1 only, 5 of 5. Parents: fw1b-S 4 (architecture, motion, coach, experiment design), Fast4 1 (RL). Forms: deadlines tightened (architecture, motion), Fast4 on court spots (RL), spots only (experiment design), first-step bonus (coach). Architecture withdrew (d).
+
+**Round 84b (form re-vote):** the agent verified the coach's fact (Fast4's training first step flat at 1.325-1.375 s over 1,500 iterations) and asked all five again. F2 (court spots, pay settled, deadlines unchanged, plus a first-step bonus) 5 of 5. QUICK margin -0.25 (RL, experiment design) / -0.20 (coach, architecture) / -0.15 (motion): experiment design's. Kill +0.10 s (4 of 5). Fail reading split (D-221).
+
+**Decision:** D-221.

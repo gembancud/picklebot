@@ -58,6 +58,7 @@ PAY_MODES = ("entry", "settled")
 MEASURE_EPISODE_S = 60.0
 HEADING_BIN, HEADING_BINS = 10.0, 18  # degrees from facing the net, 0-180
 FIRST_STEP_M, FIRST_BIN, FIRST_BINS = 1.5, 0.05, 80  # D-191 first-step metric: metres, seconds (last bin >= 3.95 s)
+FIRST_PAY_T = 1.6  # D-221: the first-step bonus pays clamp(FIRST_PAY_T - first-step time, 0, 1) (s)
 CMD_CAP = 2.5  # m/s
 V_REQ = (1.2, 2.2)  # deadline speed, m/s
 DIST = (1.0, 5.0)
@@ -75,7 +76,7 @@ STYLE_FILES = ("lafan-g1.npz", "lafan-g1-mirror.npz", "amass-footwork.npz")
 class FootworkDrill(dd.DeadlineMoveDrill):
     def __init__(self, term, move_prob: float, seed: int, sector_weights=None, dist_range=DIST, v_req_range=V_REQ,
                  heading_free_m: float = dd.HEADING_FREE_M, cmd_cap: float = CMD_CAP, spot_box=SPOT_BOX,
-                 pay: str = "entry"):
+                 pay: str = "entry", first_bonus: bool = False):
         super().__init__(term, move_prob, seed, sector_weights, dist_range=dist_range, v_req_range=v_req_range,
                          heading_free_m=heading_free_m, arrival_mode="first_entry")
         n, dev = self.n, self.dev
@@ -115,6 +116,11 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.first_hist = torch.zeros(md.N_SECTORS, FIRST_BINS, dtype=torch.long, device=dev)
         self._ar = torch.arange(n, device=dev)
         self._calls = 0
+        # D-221 (panel round 84b, 5 of 5): the first-step bonus. Once per spot of at least FIRST_STEP_M, on the step its
+        # first-step time is set, fw_first_step pays clamp(FIRST_PAY_T - t, 0, 1) (read-and-clear). Off by default.
+        self.first_bonus = bool(first_bonus)
+        self.first_now = torch.zeros(n, device=dev)
+        self.first_pay_sum = torch.zeros(md.N_SECTORS, device=dev)
 
     def reset(self, env_ids: torch.Tensor) -> None:
         self.live[env_ids] = False  # a spot cut by the episode end is counted (fell / censored) by DeadlineMoveDrill
@@ -169,6 +175,10 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.mid_done = self.mid_done | mid
         first = self.move_ep & self.live & (self.first_t < 0) & (self.d0 >= FIRST_STEP_M) & (self.d0 - d >= FIRST_STEP_M)
         self.first_t = torch.where(first, self.elapsed, self.first_t)
+        if self.first_bonus:  # D-221
+            pay = (FIRST_PAY_T - self.elapsed).clamp(0.0, 1.0) * first.float()
+            self.first_now = self.first_now + pay
+            self.first_pay_sum.index_add_(0, self.sector, pay)
         if self._calls % self.decimation == 0:
             mv = self.move_ep & self.live
             v = t._entity.data.root_link_lin_vel_w[:, :2]
@@ -216,6 +226,7 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         out["mid_heading_bin_deg"] = HEADING_BIN
         out["first_step_hist"] = self.first_hist.tolist()
         out["first_step_bin_s"] = FIRST_BIN
+        out["first_pay_sum"] = [round(x, 4) for x in self.first_pay_sum.tolist()]  # D-221 (zero when off)
         return out
 
     def summary(self) -> dict:
@@ -233,6 +244,7 @@ class FootworkBallActionCfg(ag.AgilityBallActionCfg):
     footwork_dist: tuple = DIST
     footwork_pay: str = "entry"  # "settled" (D-181): the bonus pays the held arrival of an in-time first entry
     footwork_cmd_cap: float = CMD_CAP  # D-191: the internal command's speed cap (m/s)
+    footwork_first_bonus: bool = False  # D-221: the first-step bonus (fw_first_step)
 
     def build(self, env) -> "FootworkBallAction":
         return FootworkBallAction(self, env)
@@ -247,7 +259,8 @@ class FootworkBallAction(ag.AgilityBallAction):
             self.drill = FootworkDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights,
                                        dist_range=cfg.footwork_dist, v_req_range=cfg.deadline_v_req,
                                        heading_free_m=cfg.heading_free_m, pay=cfg.footwork_pay,
-                                       cmd_cap=cfg.footwork_cmd_cap, spot_box=cfg.move_spot_box or SPOT_BOX)
+                                       cmd_cap=cfg.footwork_cmd_cap, spot_box=cfg.move_spot_box or SPOT_BOX,
+                                       first_bonus=cfg.footwork_first_bonus)
 
 
 def fw_track_lin_vel(env, std: float = TRACK_STD) -> torch.Tensor:
@@ -259,6 +272,16 @@ def fw_track_lin_vel(env, std: float = TRACK_STD) -> torch.Tensor:
     v = dr.t._entity.data.root_link_lin_vel_b[:, :2]
     s = std * v_cmd.norm(dim=-1).clamp(min=1.0)
     return torch.exp(-((v_cmd - v) ** 2).sum(-1) / s ** 2) * md._walk_mask(dr)
+
+
+def fw_first_step(env) -> torch.Tensor:
+    """D-221: the first-step bonus (FootworkDrill.first_now), read-and-clear once per control step."""
+    dr = md._drill(env)
+    if dr is None or not getattr(dr, "first_bonus", False):
+        return torch.zeros(env.num_envs, device=env.device)
+    r = dr.first_now.clone()
+    dr.first_now.zero_()
+    return r
 
 
 class fw_posture(vr.variable_posture):
@@ -282,18 +305,21 @@ class fw_posture(vr.variable_posture):
         return torch.exp(-torch.mean(err / std ** 2, dim=1))
 
 
-def footwork_task(cfg, dist=DIST, pay="entry", episode_s=EPISODE_S, cmd_cap=CMD_CAP, v_req=V_REQ, spot_box=SPOT_BOX):
+def footwork_task(cfg, dist=DIST, pay="entry", episode_s=EPISODE_S, cmd_cap=CMD_CAP, v_req=V_REQ, spot_box=SPOT_BOX,
+                  first_bonus=False):
     """The walking teacher's task -> the footwork specialist (module docstring)."""
     ag.deadline_task(cfg)  # move-only deadline drill, free-heading yaw reward
     b = cfg.actions["ball"]
     vals = {f.name: getattr(b, f.name) for f in dataclasses.fields(b) if f.init}
     vals.update(deadline_arrival_mode="first_entry", deadline_v_req=v_req, deadline_dist=dist, footwork_dist=dist,
-                move_spot_box=spot_box, footwork_pay=pay, footwork_cmd_cap=cmd_cap)
+                move_spot_box=spot_box, footwork_pay=pay, footwork_cmd_cap=cmd_cap, footwork_first_bonus=first_bonus)
     cfg.actions["ball"] = FootworkBallActionCfg(**vals)
     r = cfg.rewards
     assert r["move_track_lin_vel"].func is md.move_track_lin_vel and r["pose"].func is vr.variable_posture
     r["move_track_lin_vel"] = dataclasses.replace(r["move_track_lin_vel"], func=fw_track_lin_vel)
     r["pose"] = dataclasses.replace(r["pose"], func=fw_posture)
+    if first_bonus:  # D-221: weighted as the arrival bonus
+        r["fw_first_step"] = RewardTermCfg(func=fw_first_step, weight=r["move_arrival"].weight)
     cfg.episode_length_s = max(cfg.episode_length_s, episode_s)
     return cfg
 
@@ -682,3 +708,10 @@ def rally_idlerec(cfg):
 register_mjlab_task(task_id=TASK_RALLY_IDLEREC, env_cfg=rally_idlerec(load_env_cfg(ag.SRC_22B)),
                     play_env_cfg=rally_idlerec(load_env_cfg(ag.SRC_22B, play=True)), rl_cfg=load_rl_cfg(ag.SRC_22B),
                     runner_cls=load_runner_cls(ag.SRC_22B))
+
+# D-221 (panel round 84, (a) stage 1, 5 of 5; round 84b form F2, 5 of 5): the court-scale quickness specialist's
+# training task. fw1b-S's task with the read's court geometry (Measure60-Court's spots: md.DIST_RANGE inside
+# md.SPOT_BOX), pay "settled", cap 2.5 and deadlines (V_REQ) unchanged, plus the first-step bonus (fw_first_step).
+TASK_FW_QUICK = "Picklebot-Footwork-Specialist-Quick-G1"
+_register(TASK_FW_QUICK, lambda c: footwork_task(c, dist=md.DIST_RANGE, pay="settled", spot_box=md.SPOT_BOX,
+                                                 first_bonus=True))

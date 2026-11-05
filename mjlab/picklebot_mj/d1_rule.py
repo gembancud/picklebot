@@ -1170,3 +1170,65 @@ def reset_dose_kill(rows: list[dict], it_lo: int, it_hi: int, start_it: int, env
     v = "CONTINUE" if ok else "KILL-NO-DOSE"
     return v, (f"KILL-NO-DOSE: post-reset share of live feeder fires {it_lo}-{it_hi} {s:.4f} (>= {RESET_SHARE_MIN}); resets per "
                f"live env-s {r:.5f} (>= {RESET_RATE_MIN}; n {n}) -> {v}")
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-221 (panel round 84, (a) stage 1, 5 of 5; round 84b form F2, 5 of 5). Q = fw-quick-01: fw1b-S model_16600 on
+# Picklebot-Footwork-Specialist-Quick-G1 (court spots, pay settled, plus the first-step bonus). Training log rows (one per
+# 10 iterations, cumulative counters; step = global iteration x STEPS_PER_IT) carry first_step_hist per sector.
+QUICK_MARGIN = 0.25    # QUICK: left / back first-step p50 each <= fw1b-S's - 0.25 s (experiment design's line; tie)
+QUICK_KILL = 0.10      # KILL-NO-START: the late window not >= 0.10 s faster, left and back each (4 of 5)
+QUICK_MIN_N = 200      # a window is readable with >= 200 first-step samples in each of left and back (motion)
+QUICK_EARLY, QUICK_LATE = (0, 100), (400, 450)  # iterations from the start checkpoint (experiment design's windows)
+
+
+def first_window(rows: list[dict], it_lo: int, it_hi: int, start_it: int):
+    """Left / back first-step p50 (s) and sample counts over a training window built from rows that exist; None if no
+    row covers an edge."""
+    rows = [r for r in rows if "move" in r and "first_step_hist" in r["move"]]
+    a = _row_from(rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(rows, max((start_it + it_hi) * STEPS_PER_IT, a["step"] + (it_hi - it_lo) * STEPS_PER_IT))
+    if a is None or b is None:
+        return None
+    w = b["move"].get("first_step_bin_s", 0.05)
+    out = []
+    for i in (LEFT, BACK):
+        h = [y - x for x, y in zip(a["move"]["first_step_hist"][i], b["move"]["first_step_hist"][i])]
+        out.append((quantile(h, 0.5, w), sum(h)))
+    pay = [y - x for x, y in zip(a["move"].get("first_pay_sum", [0.0] * 8), b["move"].get("first_pay_sum", [0.0] * 8))]
+    spots = sum(y - x for x, y in zip(a["move"]["issued"], b["move"]["issued"]))
+    return {"p50": [out[0][0], out[1][0]], "n": [out[0][1], out[1][1]], "pay_per_spot": sum(pay) / max(spots, 1)}
+
+
+def quick_kill(rows: list[dict], start_it: int) -> tuple[str, str]:
+    e, l = first_window(rows, *QUICK_EARLY, start_it), first_window(rows, *QUICK_LATE, start_it)
+    lab = "KILL-NO-START"
+    if e is None or l is None or min(e["n"] + l["n"]) < QUICK_MIN_N or None in e["p50"] + l["p50"]:
+        return "NO-DATA", f"{lab}: windows {QUICK_EARLY} / {QUICK_LATE} not readable -> NO-DATA"
+    d = [e["p50"][k] - l["p50"][k] for k in (0, 1)]
+    ok = all(x >= QUICK_KILL - 1e-9 for x in d)
+    return ("CONTINUE" if ok else lab), (
+        f"{lab}: first-step p50 L/B {e['p50'][0]}/{e['p50'][1]} -> {l['p50'][0]}/{l['p50'][1]} s (each >= {QUICK_KILL} faster; "
+        f"n {e['n']} / {l['n']}); reported bonus per spot {e['pay_per_spot']:.4f} -> {l['pay_per_spot']:.4f} -> "
+        + ("CONTINUE" if ok else lab))
+
+
+def quick_check(t: dict, w: dict) -> tuple[str, list[str]]:
+    """t, w: agility() of the child and fw1b-S on the same seed (Measure60-Court, mean actions)."""
+    lr = (LEFT, BACK)
+    valid = t["falls"] <= 2 * w["falls"] and t["worst_arrival"] >= 0.80 and t["fallen_censored_share"] <= 0.15
+    arrive = t["worst_arrival"] >= F4_ARRIVE and t["worst_arrival"] >= w["worst_arrival"] - F4_ARRIVE_SLACK
+    settle = all(t["settled"][i] >= w["settled"][i] for i in lr)
+    falls = t["falls"] <= w["falls"]
+    quick = all(t["first_step_p50"][i] is not None and w["first_step_p50"][i] is not None
+                and t["first_step_p50"][i] <= w["first_step_p50"][i] - QUICK_MARGIN + 1e-9 for i in lr)
+    g = lambda k: f"L/B {t[k][LEFT]}/{t[k][BACK]} vs {w[k][LEFT]}/{w[k][BACK]}"  # noqa: E731
+    lines = [f"VALID: falls {t['falls']:.3f} vs {w['falls']:.3f} (<= 2x), worst arrival {t['worst_arrival']:.3f} (>= 0.80), "
+             f"fallen+censored {t['fallen_censored_share']:.3f} (<= 0.15) -> {valid}",
+             f"ARRIVE: worst arrival {t['worst_arrival']:.3f} vs {w['worst_arrival']:.3f} (>= {F4_ARRIVE} and >= -{F4_ARRIVE_SLACK}) -> {arrive}",
+             f"SETTLE: settled {g('settled')} (each >=) -> {settle}",
+             f"FALLS: {t['falls']:.3f} vs {w['falls']:.3f} (<=) -> {falls}",
+             f"QUICK: first-step p50 {g('first_step_p50')} s (each <= - {QUICK_MARGIN}) -> {quick}",
+             f"(reported) FASTER: sustained p50 {g('sustained_p50')} m/s"]
+    v = "INVALID" if not valid else "QUICK-OK" if arrive and settle and falls and quick else "QUICK-FAIL"
+    return v, lines
