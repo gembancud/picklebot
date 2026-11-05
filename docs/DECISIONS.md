@@ -6623,3 +6623,14 @@ All pass -> CONFIRM on dev 4220349-4220356 (D-212's CONFIRMED lines).
 - the leak-ball legal rate (training's pair_reset_parks is off, so 24 s gives about 5x more leak balls).
 
 **Seeds (ledgered):** training 217, smoke 218; dev 4220365 (X's court read, paired); dev 4220349-4220356 (CONFIRM only). Next free: training 219, dev 4220373.
+
+### D-219 result (2026-11-05): SMOKE-FAIL - the dose premise is not met (reset-feed share 0.096 < 0.15); nothing trained
+
+Smoke (seed 218, 160 iterations, 24-s episodes):
+- **Passed:** exit 0, no traceback, falls 2.193 against 4.157 (half-split 2.374 / 2.007), std 0.1 with no dead outputs, config with episode_length_s 24.0.
+- **Dose line:** read NO-DATA as coded, and the driver counts a non-ok line as STOP, so SMOKE-FAIL.
+  - Why NO-DATA: the first pair-log row is at +22, and _row_from then needs an end row at or after +182. The last row was +162. The agent's window design error.
+- **Reported, not changing the verdict:** over the window the rows do cover (+22 to +162), the reset-feed share of feeder-type outcomes is 0.096 (n 2,833). That is below the pre-registered 0.15, so the premise fails on the readable window too. The cumulative 0.151 includes the first row's spawn burst (205 reset feeds at +22) and overstates the steady state. Architecture's estimate was about 0.24.
+- Training seed 217 was not used. C stays the parent.
+
+The reset bucket counts the leak balls at each env reset, about one per episode start. With 24-s episodes it grows, but training rallies end often enough that feeder balls stay the large majority. Panel round 83 is called (mjlab/results/footwork-round83-brief.md).
