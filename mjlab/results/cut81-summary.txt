@@ -1,0 +1,14 @@
+D-217: parent C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt; X = rally-d1s3cut on Picklebot-Rally22b-FastMove-G1 + pair_cut_prob 0.33; training seed 215, smoke 216
+smoke exit 0 ok
+smoke no traceback ok
+smoke falls per 1,000 env-seconds 2.498 ok
+smoke std min 0.1013 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + stance_progress, no other new terms True -> ok
+smoke falls half-split (reported): first half 4.443, second half 1.035
+training: {"run": "rally-d1s3cut", "exit_code": 143, "finished": "2026-11-05T08:48:14+08:00"}
++341-360: falls per 1,000 env-s 1.30 (kill > 2 x 22b 1.57); legal_return 0.6724 (kill < 22b 0.7549 - 0.05) -> KILL-NO-HIT; reported +241-260: falls 1.30, legal_return 0.7240
+mean rally length, iterations 100-300: child 2.013 vs parent 4.221 (kill below 0.9 x) -> KILL-FARM
+KILL-NO-SHARE: live-court feeder share 300-360 nan (n 0): NO-DATA (not a kill)
+KILL-NO-DOSE: off-spot launch share 300-360: NO-DATA (not a kill) None
+KILL-EASY: feeder legal after a cut 30-90 0.7208 (n 9803; kill above 0.85) -> CONTINUE
+VERDICT: KILL (KILL-NO-HIT)

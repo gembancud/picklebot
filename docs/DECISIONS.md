@@ -6494,3 +6494,25 @@ All pass -> CONFIRM on dev 4220349-4220356 (D-212's CONFIRMED lines). If the dos
 **Reported:** gain2 against C2 and against F; launch-distance legal for X (C: dist80b); R3 pairs rate; X's court read on dev 4220365 (C's is cfs79-court-C).
 
 **Seeds (ledgered):** training 215, smoke 216; dev 4220365 (X's court read, paired with C's); dev 4220349-4220356 (CONFIRM only). Next free: training 217, dev 4220369.
+
+### D-217 result (2026-11-05): KILL at +360 (KILL-NO-HIT, KILL-FARM) - and the cut did not deliver the off-spot dose
+
+Smoke (seed 216) passed: falls 2.498 against 4.157 (half-split 4.443 / 1.035); the other checks passed too. Cuts fired as designed: about 8,600 by +149.
+
+**Training (seed 215) was killed at +368 by the pre-registered lines:**
+- **KILL-NO-HIT:** legal_return 0.672 against the line 0.705. +241-260 read 0.724; C2 read 0.915 at +360.
+- **KILL-FARM:** mean rally length over iterations 100-300 was 2.01 against C2's 4.22 (line 0.9x).
+- **cut81_kills:**
+  - KILL-EASY passed: feeder legal after a cut over 30-90 was 0.721 (n 9,803).
+  - KILL-NO-SHARE and KILL-NO-DOSE read NO-DATA: the pair log writes every 100 iterations, so no row at or after +360 existed yet.
+
+**Recorded, not changing the verdict:**
+- **Both firing lines are partly mechanical effects of the lever itself.** The agent's design error: it adopted RL's kill list without checking it against the lever.
+  - A cut ball is logged as a miss, and feeder balls became about 3x as common and harder, so legal_return falls by construction. By the agent's rough arithmetic that accounts for part of the drop, not all of it.
+  - KILL-FARM (written to catch a policy farming short rallies) cannot tell farming from cuts that shorten rallies by design.
+- **The lever did not deliver its premise.**
+  - Live-court feeder share rose to 0.25 (C2 0.088) and about 29,000 cuts fired.
+  - But the off-spot share of live-court feeder launches stayed at 0.281 cumulative (C2 and earlier runs 0.25-0.29). The panel's dose line was >= 0.40.
+  - A ball cut 0.2-0.6 s into its flight leaves the receiver close to its spot. At read, the off-spot feeder balls follow a miss the robot chased (D-216: 0.42 legal beyond 1.2 m).
+
+No endpoint read. C stays the parent. Panel round 81 is called (mjlab/results/footwork-round81-brief.md).
