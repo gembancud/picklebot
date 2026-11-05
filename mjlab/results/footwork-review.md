@@ -1328,3 +1328,17 @@ Brief: footwork-round88-brief.md.
 **Estimates:** h1 about 0.19-0.21 under the best lever; P(5+) about 0.45; overall 0.45-0.55.
 
 **Decision:** D-225.
+
+## Round 89 (2026-11-05): D-225 NEITHER; STOP the footwork phase
+
+Brief: footwork-round89-brief.md.
+
+**Correction checks:** NEITHER valid; the multi-count is confirmed in code (substep booking), so the counts are void and the quantiles are near unbiased (all five). The keep_alive instrument is blind (experiment design, RL, motion). The receiver tally over-books faulted hand-offs by 12 %, but the tail survives (experiment design). The first-hand-off ball is off the groove: 3x the speed spread, 6x the spin spread (coach).
+
+**Votes:** (v) STOP 4 (architecture, motion, coach, RL); (i) then STOP 1 (experiment design).
+
+**Estimates:** best reachable P(5+) about 0.45-0.55; 0.80 not shown reachable on this stack.
+
+**Asks for the user:** a set start (architecture, motion); a body or controller rebuild (coach: agile reference motion; RL: actuation review; experiment design: from-scratch controller).
+
+**Decision:** D-226. Next phase named in round 90.

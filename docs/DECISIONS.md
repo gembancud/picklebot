@@ -6993,3 +6993,48 @@ The forms of (iii) differed. Least new code: architecture's, about 25 lines and 
 - Motion's pre-registered READINESS split (set vs moving near receivers) was not the adopted form, so it is not scored here.
 
 Seeds dev 4220378-4220379 are used. No training. C stays the parent; the target is unchanged. Panel round 89 is called (mjlab/results/footwork-round89-brief.md).
+
+## D-226 (2026-11-05): STOP the footwork phase (4 of 5) - 0.80 is not shown reachable on this body and stack; report to the user; the next phase is named in round 90
+
+Panel round 89 (mjlab/results/footwork-review.md).
+
+**Correction checks (all five):**
+- NEITHER is valid as coded.
+- **The multi-count is confirmed in code.** The D-225 tally runs in `apply_actions` once per physics substep, while `return_now` / `keep_alive_now` are consumed once per control step (decimation 4). A landing is booked once per remaining substep, about 2.5x (handed 2.52x; feeder 2.89x, with a second, unexplained source).
+  - The counts are void.
+  - The quantiles are close to unbiased: the multiplier is the substep phase and does not depend on the ball.
+  - The velocity verdict stands: -0.15 m/s against a +1.0 line. With 15 % zero-velocity junk rows removed, p50 is 9.25 vs 9.25 (coach).
+  - The keep_alive line could never fire: 80-98 % of returns score 0 (experiment design: "our design error").
+- **The receiver tally books every receive, including feeder returns that later faulted** (+12 % over the class-0 feeds; experiment design). The tail survives the worst case: 0.28 vs 0.12 moving above 0.5 m/s; 16.2 % vs 0.3 % above 1.0 m/s. Speed is read at the hitter's contact, not at the receiver's hit (RL).
+- **The first-hand-off ball is off the groove, not harder on median (coach).** Its q10-q90 speed is 8.0-10.0 against 8.75-9.5 m/s, and spin 45-105 against 80-90 rad/s. Later rally balls collapse onto one repeated ball, which is why they are 0.999 legal.
+- **The first-hand-off receiver is the robot that was not fed.** It is still covering its spawn offset when the return arrives: the same cold-start reach limit (motion).
+
+**Votes:**
+- (v) STOP, 4: architecture, motion, coach, RL.
+- (i) partner credit as the phase's last entry, then STOP either way, 1: experiment design.
+- RL also names (i) as the next phase's first run; architecture and motion reject it.
+
+**Recorded:**
+- **Best reachable P(5+) on this body, stack and read:** about 0.45-0.55 (coach and RL 0.45-0.50).
+- **Since D-199, no lever has moved P(5+) by more than about 3 points.** Within-rally legal is 0.98-0.99; the whole gap is the two opening balls.
+- **What would have to be true for 0.80:** (1 - h0)(1 - h1) >= 0.886, against 0.46 today, so h0 and h1 near 0.06 each.
+  - That needs about 1.1 s to close 1.5 m in every direction, back included. Every policy shown, including four specialists warm-started from the model_15900 walking lineage and two that paid the start directly, reads 1.26-1.41 s.
+  - It also needs near first-hand-off legal of about 0.97 or more (shown: 0.87-0.88).
+
+**Asks for the user (outside the loop's authority, or a change to the read's premise):**
+- **A set start** (architecture, motion): each rally starts with both robots on their spots, either by a near-spot spawn or by holding the feeder ball until both are set, with a timeout. It changes the frozen read's premise, so it is the user's call.
+  - Architecture projects P(5+) about 0.74-0.77 on C before retraining; motion 0.65-0.73.
+  - RL's caveat: near first hand-offs at 0.88 leave even a set opening short of 0.80 without a hitting lever.
+- **The body or controller** (coach, RL, experiment design), one of:
+  - rebuild the motion layer from agile racket-sport reference motion (coach; a download);
+  - review the G1's actuation (torque / PD limits) against the real robot's specs, or a different body (RL);
+  - rebuild the low-level controller from scratch, with no model_15900 warm start and not through latent-07, trained for acceleration and for reaching and hitting on the run (experiment design).
+
+**Next (D-169: a STOP moves the loop to the next phase):** panel round 90 names the next phase inside the loop's authority. Candidates:
+- a reported-only read of C under a set start (architecture), so the user decides on a measured number;
+- the from-scratch controller (experiment design);
+- the joint fine-tune (motion's fallback);
+- the partner credit (RL, experiment design);
+- random-practice hand-offs (coach).
+
+The target is unchanged; the panel proposes no loosening.
