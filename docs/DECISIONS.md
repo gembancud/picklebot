@@ -6671,3 +6671,5 @@ Least new code and fewest moving parts: (iv), about 25 lines in d1_rule plus tes
 **Pre-registered STOP (5 of 5 agree on a q0 trigger):** if the dose arrives and the endpoint q0 < C + 0.08, the episode-length route closes. The next round names the footwork-base phase (4 of 5 named a base rebuild for cold-start speed; architecture names a distil-then-PPO joint fine-tune). The target is unchanged.
 
 **Seeds (ledgered):** training 217, smoke 219; dev 4220365 (X's court read); dev 4220349-4220356 (CONFIRM only). Next free: training 220, dev 4220373.
+
+**D-220 driver defect (2026-11-05):** training ran clean to its endpoint (exit 0 at 15:03). The +360 watcher read CONTINUE on every line and did not stop training. But the driver's post-training check (`grep -q "KILL-"`) matched the dose line's own label "KILL-NO-DOSE:" and stopped before the endpoint reads, writing a false "VERDICT: KILL (KILL-NO-DOSE)" to ep83-summary.txt. That line is void; no kill fired. Fix: the check matches verdict tokens only (`-> KILL-`). The driver is re-run; it skips the finished smoke and training and goes on to the reads. No line or seed changes.
