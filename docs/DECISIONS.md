@@ -6926,3 +6926,37 @@ Said in advance (experiment design): POSITION's |gap| <= 0.03 is close to the in
 **Reading:** the first robot-to-robot ball is hard at every distance; even at 0-0.1 m it is legal at only 0.88. That ball is the return of the feeder ball, hit by a robot that started the rally off its spot. Position adds to it: 38 % of these receivers are beyond 1.2 m, where legal is 0.54. Both halves are real; the coded route is BALL.
 
 **Pre-registered next (D-223):** a hitter-side lever on the feeder-ball return only, as its own entry. Panel round 88 designs it (mjlab/results/footwork-round88-brief.md). C stays the parent; the target is unchanged.
+
+## D-225 (2026-11-05): what makes the first hand-off hard - a ball-quality read before any lever
+
+Panel round 88 (mjlab/results/footwork-review.md).
+
+**Correction checks:**
+- BALL is valid as coded (all five).
+- handoff_stale[1] (48 early-volley class-0 feeds) cannot flip it; report its outcomes by bin (RL, experiment design, motion, architecture).
+- **"BALL" is labelled more strongly than shown (motion, coach, architecture).** The route controls only the receiver's distance from its spot, not its motion. D-204's diag68 had attributed the k = 1 excess to the receiver's state (pelvis speed).
+- Options (i) and (ii) are re-weightings of terms C already pays on that shot: partner_return 150 and keep_alive 100 (RL, architecture).
+- **Position is the larger share of h1 (experiment design).** 64 % of first hand-off misses come from receivers beyond 1.2 m: about 0.18 of h1 from position, about 0.10 from the ball.
+
+**Votes:**
+- (iii) read first, 3: motion, coach, architecture;
+- (i) partner credit on the first hand-off, 2: RL, experiment design.
+
+The forms of (iii) differed. Least new code: architecture's, about 25 lines and two reads.
+
+**The read (scripts/diag/bq88.sh):** C at mean actions, standard pairs reads on dev 4220378 and 4220379, pooled.
+- **Logging only:** launch_state.ball_by_class records:
+  - for legal returns of feeder balls (class 0, the ball that becomes the first hand-off) vs of handed balls (class 1): the keep_alive score, and |velocity| and |spin| at the hitter's contact;
+  - the receiver's pelvis ground speed at a hand-off, by hand-off class.
+- pairs also reports handoff_stale's early part by distance bin.
+- **Validity:** H1-RECON per read and pooled (unchanged), and >= 200 per class.
+- **Route (d1_rule.ball_route, written before the read):**
+  - **BALL-STATE:** feeder-return keep_alive median <= own-ball median - 0.10, or |velocity| p50 >= own-ball + 1.0 m/s. Next is (ii): keep_alive doubled on the feeder-ball return, its own entry (architecture's spec: Rally22b-FastMove + feeder_keep_alive weight 100; LR 3e-5, 1,200 iterations; KILL-NO-H1 at +360; gate on D-204's seeds: first hand-off legal >= C + 0.03, h1 <= C - 0.03, H0 <= C + 0.01, gain2, r19_guards, bars, FEEDER).
+  - **RECEIVER:** no ball line, and the first-hand-off receiver's speed p50 >= the later one's + 0.2 m/s. Back to the panel (a receiver lever is outside D-223's hitter-side pre-registration).
+  - **NEITHER:** back to the panel.
+
+**Estimates (round 88, reported):** the best h1 lever plausibly takes h1 from 0.27 to about 0.19-0.21, so P(5+) about 0.45-0.46. The estimate stays 0.45-0.55; 0.80 is not reachable on this stack as shown. The target is unchanged.
+
+**Tests:** tests/test_d1_rule.py::test_ball_route_lines; tests/test_pair_cut.py (GPU, runs the pair branch with the new logging) passes.
+
+**Seeds (ledgered):** dev 4220378-4220379. No training seed. Next free: training 224, dev 4220380.

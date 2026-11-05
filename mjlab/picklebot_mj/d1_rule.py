@@ -1294,3 +1294,51 @@ def h1_route(paths: list[str]) -> tuple[str, list[str]]:
              "(reported) legal by bin, first: " + ", ".join(rate(0, b) for b in range(7)),
              "(reported) legal by bin, later: " + ", ".join(rate(1, b) for b in range(7))]
     return v, lines
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-225 (panel round 88: (iii) 3 of 5; forms differed, least new code: architecture's). What makes the first hand-off
+# hard? launch_state.ball_by_class (logging only): legal returns of a feeder ball (class 0: the ball that becomes the
+# first hand-off) vs of a handed ball (class 1): keep_alive score, |velocity| and |spin| at the hitter's contact; and the
+# receiver's pelvis speed at the hand-off by hand-off class. Route (written before the read):
+#   BALL-STATE: feeder-return keep_alive median <= own-ball median - 0.10, or |velocity| p50 >= own + 1.0 m/s -> (ii);
+#   RECEIVER: no ball line, and the first hand-off receiver's speed p50 >= later + 0.2 m/s -> panel (outside D-223);
+#   NEITHER otherwise -> panel. INVALID if H1-RECON fails or fewer than 200 feeder returns / first hand-offs.
+BQ_KA_GAP, BQ_V_GAP, BQ_RS_GAP, BQ_MIN_N = 0.10, 1.0, 0.2, 200
+
+
+def ball_by_class(paths: list[str]) -> dict:
+    import json
+    out = None
+    for p in paths:
+        b = json.load(open(p))["launch_state"]["ball_by_class"]
+        if out is None:
+            out = {k: (v if not isinstance(v, list) else [list(r) for r in v]) for k, v in b.items()}
+        else:
+            for k in ("ka", "v", "w", "recv_speed"):
+                out[k] = [[x + y for x, y in zip(r, s)] for r, s in zip(out[k], b[k])]
+    return out
+
+
+def ball_route(paths: list[str]) -> tuple[str, list[str]]:
+    b = ball_by_class(paths)
+    q = lambda k, c, p=0.5: quantile(b[k][c], p, b[k.replace("recv_speed", "rs") + "_bin"] if k != "recv_speed" else b["rs_bin"])  # noqa: E731
+    n_ret = [sum(b["v"][c]) for c in (0, 1)]
+    n_rs = [sum(b["recv_speed"][c]) for c in (0, 1)]
+    if min(n_ret + n_rs) < BQ_MIN_N:
+        return "INVALID", [f"counts: feeder / own returns {n_ret}, first / later hand-offs {n_rs} (each >= {BQ_MIN_N})"]
+    # keep_alive bins are rounded to the nearest BQ_KA_BIN: the median is read on bin centres
+    ka = [quantile(b["ka"][c], 0.5, b["ka_bin"]) - b["ka_bin"] / 2 for c in (0, 1)]
+    v = [q("v", c) for c in (0, 1)]
+    w = [q("w", c) for c in (0, 1)]
+    rs = [q("recv_speed", c) for c in (0, 1)]
+    ball = ka[0] <= ka[1] - BQ_KA_GAP + 1e-9 or v[0] >= v[1] + BQ_V_GAP - 1e-9
+    recv = rs[0] >= rs[1] + BQ_RS_GAP - 1e-9
+    verdict = "BALL-STATE" if ball else "RECEIVER" if recv else "NEITHER"
+    lines = [f"keep_alive median feeder-return {ka[0]:.3f} vs own-ball {ka[1]:.3f} (BALL if <= -{BQ_KA_GAP}); n {n_ret}",
+             f"|velocity| p50 feeder-return {v[0]:.2f} vs own-ball {v[1]:.2f} m/s (BALL if >= +{BQ_V_GAP}); "
+             f"p90 {q('v', 0, 0.9):.2f} / {q('v', 1, 0.9):.2f}",
+             f"(reported) |spin| p50 {w[0]:.1f} vs {w[1]:.1f} rad/s",
+             f"receiver speed p50 at first vs later hand-offs {rs[0]:.2f} vs {rs[1]:.2f} m/s (RECEIVER if >= +{BQ_RS_GAP}); "
+             f"p90 {q('recv_speed', 0, 0.9):.2f} / {q('recv_speed', 1, 0.9):.2f}; n {n_rs}"]
+    return verdict, lines

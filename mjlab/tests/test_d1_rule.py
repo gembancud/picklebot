@@ -572,3 +572,24 @@ def test_h1_route_lines(tmp_path):
     assert dr.h1_route([few])[0] == "INVALID-SPLIT"
     ok, line = dr.h1_recon([ball])
     assert ok, line
+
+
+def _bq_read(tmp_path, name, ka, v, rs):
+    import json
+    def h(n, bins, at):
+        x = [0] * n
+        x[at] = 1000
+        return x
+    b = {"ka_bin": 0.05, "v_bin": 0.25, "w_bin": 5.0, "rs_bin": 0.1,
+         "ka": [h(21, 0.05, ka[0]), h(21, 0.05, ka[1])], "v": [h(80, 0.25, v[0]), h(80, 0.25, v[1])],
+         "w": [h(60, 5.0, 10), h(60, 5.0, 10)], "recv_speed": [h(40, 0.1, rs[0]), h(40, 0.1, rs[1])]}
+    p = tmp_path / name
+    json.dump({"launch_state": {"ball_by_class": b}}, open(p, "w"))
+    return str(p)
+
+
+def test_ball_route_lines(tmp_path):
+    assert dr.ball_route([_bq_read(tmp_path, "a.json", (10, 14), (30, 30), (5, 5))])[0] == "BALL-STATE"   # ka 0.50 vs 0.70
+    assert dr.ball_route([_bq_read(tmp_path, "b.json", (14, 14), (36, 30), (5, 5))])[0] == "BALL-STATE"   # v +1.5 m/s
+    assert dr.ball_route([_bq_read(tmp_path, "c.json", (14, 14), (30, 30), (9, 5))])[0] == "RECEIVER"     # +0.4 m/s
+    assert dr.ball_route([_bq_read(tmp_path, "d.json", (13, 14), (32, 30), (6, 5))])[0] == "NEITHER"

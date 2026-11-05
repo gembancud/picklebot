@@ -78,6 +78,7 @@ class PairCourts:
         # reported only: own-ball feeds finished with no live received ball (stale `handed`), and class-0 feeds tallied
         # while the court's rally length is still 0 (the hitter's copy not yet judged: a receiver's early volley)
         self.ho_stale = torch.zeros(2, dtype=torch.long, device=device)
+        self.ho_stale_d = torch.zeros(HO_BINS, dtype=torch.long, device=device)  # D-225: ho_stale[1] by distance bin
 
     def court(self, mask: torch.Tensor) -> torch.Tensor:
         """Per-env mask -> per-court mask (either env)."""
@@ -221,7 +222,9 @@ class PairCourts:
         if self.ho_dbin_now is None:
             return
         self.ho_stale[0] += (done & ~self.ho_live).sum()
-        self.ho_stale[1] += (done & self.ho_live & (self.ho_cls == 0) & (self.rally_len.repeat(2) == 0)).sum()
+        early0 = done & self.ho_live & (self.ho_cls == 0) & (self.rally_len.repeat(2) == 0)
+        self.ho_stale[1] += early0.sum()
+        self.ho_stale_d.index_add_(0, self.ho_dbin, early0.long())
         k = (self.ho_cls * HO_BINS + self.ho_dbin) * 2
         self.ho_out.view(-1).index_add_(0, k, (done & self.ho_live).long())
         self.ho_out.view(-1).index_add_(0, k + 1, (legal & self.ho_live).long())
@@ -249,4 +252,4 @@ class PairCourts:
                 "handoff": self.handoff, "sides": side, "started": {"feeder": int(self.n_started[0]),
                 "handoffs": int(self.n_started[1])}, "court_counts": self.court_counts.tolist(),
                 "sides_own_ball": side_own, "len_hist": h, "handoff_by_d": self.ho_out.tolist(),
-                "handoff_stale": self.ho_stale.tolist()}
+                "handoff_stale": self.ho_stale.tolist(), "handoff_stale_early_by_d": self.ho_stale_d.tolist()}

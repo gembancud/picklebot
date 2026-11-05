@@ -62,6 +62,10 @@ RECOVERY_BOX = ((-6.2, -5.0), (-1.5, 1.5))  # training: sampled per feed (x rang
 LAUNCH_D_EDGES = (0.1, 0.2, 0.3, 0.5, 0.8, 1.2)  # D-165: m from the recovery spot at a feeder-ball launch
 LAUNCH_V_EDGES = (0.25, 0.5, 1.0, 1.5, 2.0)  # m/s pelvis ground speed at launch
 PAIR_CUT_T = (0.2, 0.6)  # D-217: s after the hand-off is received
+BQ_KA_BIN, BQ_KA_BINS = 0.05, 21  # D-225: keep_alive score bins (last: 1.0)
+BQ_V_BIN, BQ_V_BINS = 0.25, 80    # m/s, |ball velocity| out of the paddle (last >= 19.75)
+BQ_W_BIN, BQ_W_BINS = 5.0, 60     # rad/s, |spin| out of the paddle (last >= 295)
+BQ_RS_BIN, BQ_RS_BINS = 0.1, 40   # m/s, receiver pelvis ground speed at the hand-off (last >= 3.9)
 RECOVERY_FIXED = (-5.6, 0.0)  # evaluation: baseline centre
 RECOVERY_STD = 0.5  # reward exp(-(d / std)^2)
 RECOVERY_BIN = 0.05  # error histogram bin width (m), 100 bins
@@ -353,6 +357,13 @@ class BallPhysicsAction(ActionTerm):
         # "not recorded" bucket (index len(LAUNCH_D_EDGES) + 1), set at reset, instead of defaulting to bin 0
         self._ls_out_d = torch.zeros(len(LAUNCH_D_EDGES) + 2, 2, dtype=torch.long, device=dev)
         self._fdbin = torch.full((n,), len(LAUNCH_D_EDGES) + 1, dtype=torch.long, device=dev)
+        # D-225 (logging only): legal returns by class (0 = of a feeder ball: the ball that becomes the first hand-off;
+        # 1 = of a handed ball): keep_alive score (BQ_KA_BIN bins), |ball velocity| and |spin| at the hitter's contact;
+        # and the receiver's pelvis ground speed at a hand-off by hand-off class (pairs.ho_cls)
+        self._bq_ka = torch.zeros(2, BQ_KA_BINS, dtype=torch.long, device=dev)
+        self._bq_v = torch.zeros(2, BQ_V_BINS, dtype=torch.long, device=dev)
+        self._bq_w = torch.zeros(2, BQ_W_BINS, dtype=torch.long, device=dev)
+        self._bq_rs = torch.zeros(2, BQ_RS_BINS, dtype=torch.long, device=dev)
         # D-217: cut state (pair_cut_prob > 0 only), and feeder-ball outcomes after a cut (feeds, legal; logging)
         self._cut_court = None
         if float(getattr(cfg, "pair_cut_prob", 0.0)) > 0.0 and getattr(cfg, "pair_mode", False):
@@ -1123,6 +1134,14 @@ class BallPhysicsAction(ActionTerm):
             # D-150: a legal return (landed, or volleyed back early) of a feeder ball: h0 is the ball type before this
             # step's pair update, which marks the hitter's ball as handed when the partner volleys it back
             self.feeder_return_now |= self.return_now & ~h0
+            # D-225 (logging only): ball quality of legal returns by class, and the receiver's speed at a hand-off
+            for c, m in ((0, self.return_now & ~h0 & live0), (1, self.return_now & h0 & live0)):
+                ml = m.long()
+                self._bq_ka[c].index_add_(0, (self.keep_alive_now / BQ_KA_BIN).round().long().clamp(0, BQ_KA_BINS - 1), ml)
+                self._bq_v[c].index_add_(0, (self.hit_out_vel.norm(dim=-1) / BQ_V_BIN).long().clamp(0, BQ_V_BINS - 1), ml)
+                self._bq_w[c].index_add_(0, (self.hit_out_spin.norm(dim=-1) / BQ_W_BIN).long().clamp(0, BQ_W_BINS - 1), ml)
+            rs = (data.root_link_lin_vel_w[:, :2].norm(dim=-1) / BQ_RS_BIN).long().clamp(0, BQ_RS_BINS - 1)
+            self._bq_rs.view(-1).index_add_(0, self.pairs.ho_cls * BQ_RS_BINS + rs, recv.long())
             self._handoff = recv
             fire = fire | recv
         else:
@@ -1193,7 +1212,10 @@ class BallPhysicsAction(ActionTerm):
         return {"prev_len_bins": ["0-1", "2-4", "5+"], "d_edges": list(LAUNCH_D_EDGES), "v_edges": list(LAUNCH_V_EDGES),
                 "d_hist": self._ls_d.tolist(), "v_hist": self._ls_v.tolist(), "outcome_feeds_legal": self._ls_out.tolist(),
                 "outcome_by_d": self._ls_out_d.tolist(), "outcome_after_cut": self._out_cut.tolist(),
-                "cuts": int(self.cut_count)}
+                "cuts": int(self.cut_count),
+                "ball_by_class": {"ka_bin": BQ_KA_BIN, "v_bin": BQ_V_BIN, "w_bin": BQ_W_BIN, "rs_bin": BQ_RS_BIN,
+                                  "ka": self._bq_ka.tolist(), "v": self._bq_v.tolist(), "w": self._bq_w.tolist(),
+                                  "recv_speed": self._bq_rs.tolist()}}
 
     def _credit_early(self, recv: torch.Tensor) -> torch.Tensor:
         """Pair mode: an env receives its partner's return while its own copy of the ball is still in flight (the

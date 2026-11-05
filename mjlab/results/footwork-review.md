@@ -1306,3 +1306,25 @@ Brief: footwork-round87-brief.md.
 **Estimates:** unchanged at 0.45-0.55; if the split holds, the perfect-reach ceiling falls to about 0.65-0.69.
 
 **Decision:** D-224.
+
+## Round 88 (2026-11-05): D-224 BALL; design the hitter-side lever
+
+Brief: footwork-round88-brief.md.
+
+**Correction checks:** BALL valid as coded (all five). The early-volley feeds cannot flip it (all). BALL controls distance only, not the receiver's motion (motion, coach, architecture). (i) and (ii) re-weight terms C already pays (RL, architecture). Position is the larger share of h1: 64 % of first hand-off misses are beyond 1.2 m (experiment design).
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| RL | (i) partner credit x2 on the first hand-off |
+| Motion | (iii) read: ball descriptors + receiver speed / ready flag, route on set vs moving receivers |
+| Coach | (iii) read: ball descriptors + receiver speed, diag68-style reweighting route |
+| Experiment design | (i) partner_first_return 150; one dose only |
+| Architecture | (iii) read: keep_alive / |v| / |spin| by class + receiver speed; medians route |
+
+(iii) 3 of 5. Form: least new code, architecture's.
+
+**Estimates:** h1 about 0.19-0.21 under the best lever; P(5+) about 0.45; overall 0.45-0.55.
+
+**Decision:** D-225.
