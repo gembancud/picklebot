@@ -455,3 +455,19 @@ def test_spawn_route():
 def test_spawn_route_invalid_split():
     first = [10, 10, 10, 100, 100, 270, 500]
     assert dr.spawn_route(first, [9, 10, 10, 101, 100, 269, 499])[0] == "INVALID-SPLIT"  # second half about 0
+
+
+def test_court_conv_and_ep24_dose(tmp_path):
+    import json
+    cc = [[0, 0, 1, 1]] * 26 + [[0, 0, 2, 1]] * 37 + [[0, 0, 3, 1]] * 37   # q0 0.26
+    json.dump({"pairs": {"court_counts": cc}}, open(tmp_path / "p.json", "w"))
+    q = dr.court_conv([str(tmp_path / "p.json")])
+    assert abs(q["q0"] - 0.26) < 1e-9 and abs(q["q1"] - 74 / 111) < 1e-9 and q["courts"] == 100
+
+    def row(it, reset, other):
+        return {"step": it * dr.STEPS_PER_IT, "launch": {"outcome_by_d": [[other, 0]] + [[0, 0]] * 6 + [[reset, 0]]}}
+    rows = [row(32598, 0, 0), row(32598 + 160, 500, 1500)]
+    assert dr.ep24_dose_kill(rows, 0, 160, 32598)[0] == "CONTINUE"    # 0.25
+    rows = [row(32598, 0, 0), row(32598 + 160, 100, 1900)]
+    assert dr.ep24_dose_kill(rows, 0, 160, 32598)[0] == "KILL-NO-DOSE"  # 0.05
+    assert dr.ep24_dose_kill([], 0, 160, 32598)[0] == "NO-DATA"

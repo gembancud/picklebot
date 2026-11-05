@@ -6574,3 +6574,52 @@ The summary first crashed: a negative second-half count reached the Wilson inter
   - The instrument does not separate a court's first feeder ball from later ones, so this is a hypothesis for the panel. A direct test is a reporting-only tally of the court's first feeder ball (pairs.started False at fire).
 
 Panel round 82 is called (mjlab/results/footwork-round82-brief.md).
+
+**D-218 labelling note (round 82, experiment design):** the `or s_k < 0` clause in spawn_route was added in the crash fix, after the pooled numbers existed. It changes nothing here (n -74 < 200 trips the guard on its own), but it is post-verdict code. The failed split was experiment design's design error: a time split registered without first checking the read's feeder-ball count per episode.
+
+## D-219 (2026-11-05): train with 24-s episodes - the read's first feeder ball converts 0.26 vs 0.51
+
+Panel round 82 (mjlab/results/footwork-review.md): (ii) 3 of 5 (coach, motion, architecture); (i) the first-ball tally, 2 (RL, experiment design). Run: scripts/diag/ep82.sh.
+
+**Round 82 findings (from existing files, no code):**
+- court_counts column 2 (feeder balls per court) splits the first feeder ball from later ones (coach, motion, architecture).
+  - First ball: q0, the share of courts whose first feeder ball started the court's final rally, is 0.25-0.29 in six reads.
+  - Later balls: q1, the geometric fit, is 0.51-0.53.
+  - On C's lev74 reads, q0 is 0.252 and q1 0.531 (d1_rule.court_conv).
+  - P(5+) is about 1 / (1 + (1 - q0) / q1) = 0.41 (observed 0.405).
+- The read has no time-out: 1,023 of 1,024 courts end in an open rally (architecture). Each court has exactly one spawn feeder ball. It counts in P(5+) and H0 (RL's round-81 "FEEDER only" held for the leak ball, not this one).
+- The spawn box puts about 80 % of robots more than 1.2 m from the spot (-5.6, 0) at the first feeder ball, 0.5 s after start (motion, architecture). This is consistent with the read's 0.51 off-spot share.
+- **Ceiling (architecture):** with q1 = 1, P(5+) <= 1 / (2 - q0) = 0.57 today. Reaching 0.80 needs q0 >= 0.75. Fixing the spawn ball only up to the later-ball rate gives about 0.5 (motion).
+- Within a rally, legal is 0.98-0.99: the whole gap is the opening (coach). Coach withdrew round 81's STOP vote.
+- --audit-fixes lowered feeder legal by about 5 points, but on different seeds. Not attributed (experiment design, motion).
+- **The target and its read are unchanged (all five).** Learning to reach the ball from a cold, random start is a legitimate skill, and it is this phase's footwork goal.
+  - Counts as loosening: narrowing the spawn box; settle time; dropping or down-weighting the first rally; adopting --audit-fixes because it scores higher.
+  - Does not: more spawn starts in training; a first / later breakdown reported beside the unchanged read.
+
+**One change:** X = rally-d1s3ep24, C model_32598 on d1s3's task with the training episode length 120 -> 24 s (--env.episode-length-s 24; reads set their own length).
+- Everything else as D-217 without the cut (pair_cut_prob 0): LR 3e-5, ScheduledPPO, no anchor, 1,200 iterations, endpoint model_33797.
+- Training seed 217, smoke 218.
+- Pair log every 480 steps (20 iterations), so every kill line is readable at smoke.
+
+**Smoke:** 160 iterations (about 3 episodes), with D-201's checks (falls line 4.157, half-split reported) and a config check requiring episode_length_s 24.0. Dose premise: d1_rule.ep24_dose_kill over 0-160, reset-feed share of feeder-type outcomes >= 0.15. Otherwise SMOKE-FAIL.
+
+**Kill at +360:**
+- D-194's lines (falls per env-s are episode-length independent, D-170; legal_return as coded).
+- KILL-NO-DOSE (ep24_dose_kill over 300-360).
+- KILL-FARM is reported only: shorter episodes shorten rallies by design (round 81's lesson).
+
+**Lines** (D-204 pooled seeds, against lev74-C; unchanged):
+- gain2;
+- r19_guards against the original parent on the same seeds;
+- ready >= 0.25 and falls per 1,000 hits <= 1.3;
+- cfs79_lines (H0 <= C - 0.03, FEEDER, K3-KEPT).
+
+All pass -> CONFIRM on dev 4220349-4220356 (D-212's CONFIRMED lines).
+
+**Reported:**
+- q0 / q1 for X, C and C2 (architecture's q0 >= C + 0.08 and motion's +0.10 as reference lines);
+- gain2 against C2;
+- X's court read on dev 4220365;
+- the leak-ball legal rate (training's pair_reset_parks is off, so 24 s gives about 5x more leak balls).
+
+**Seeds (ledgered):** training 217, smoke 218; dev 4220365 (X's court read, paired); dev 4220349-4220356 (CONFIRM only). Next free: training 219, dev 4220373.

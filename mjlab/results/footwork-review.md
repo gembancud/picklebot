@@ -1161,3 +1161,41 @@ Brief: footwork-round81-brief.md.
 No majority. Fewest moving parts: (iv), reads only. Experiment design's form routes; motion's read is reported.
 
 **Decision:** D-218.
+
+
+## Round 82 (2026-11-05): D-218 INVALID-SPLIT; the first feeder ball is the loss
+
+Brief: footwork-round82-brief.md.
+
+**Correction checks**
+- **INVALID-SPLIT is valid** (all five). The guard is a validity condition written before the pooled verdict.
+  - Experiment design: the `or s_k < 0` clause came after the verdict (immaterial, labelled), and the split itself was its design error.
+  - Coach: dist80b's open_len_hist already showed 1,016 of 1,024 courts rallying at the end, so the split could never work.
+- **"Run to the timeout" is wrong** (architecture): --rally sets the episode to the read length + 1 s, so there is no time-out.
+- **"About 1,024" is exact:** one spawn feeder ball per court (architecture).
+- **The first feeder ball counts in P(5+) and H0** (RL, architecture). Round 81's "FEEDER only" held for the leak ball.
+- **The instrument can split the first ball** (coach, motion, architecture): court_counts column 2 gives q0 0.25-0.29 and q1 about 0.51.
+- **Motion withdrew its round-81 leak hypothesis.** The audit-fixes drop in feeder legal is on different seeds, so it is not attributed.
+
+**What we learned**
+- **P(5+) is about 1 / (1 + (1 - q0) / q1) = 0.41**, so the whole gap is the opening. Within-rally legal is 0.98-0.99.
+- **The spawn feeder ball converts 0.26.** About 80 % of spawns sit more than 1.2 m from the spot, and the ball comes 0.5 s after start.
+- **Ceiling:** P(5+) <= 0.57 at today's q0. The target needs q0 >= 0.75 (architecture).
+- **Training sees episode starts about 5x less often than the read weights them.**
+- **The target and read stay unchanged.** The spawn-start scramble is a legitimate footwork skill; loosening is defined in D-219.
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| RL | (i) first-ball tally (about 15 lines), FIRST-BINDS -> 24-s episodes |
+| Experiment design | (i) first-ball tally, SPAWN-BINDS -> 24-s episodes |
+| Coach | (ii) 24-s episodes; withdraws STOP |
+| Motion | (ii) 24-s episodes; court_counts already shows the premise |
+| Architecture | (ii) 24-s episodes; q0 >= C + 0.08 as a mechanism line |
+
+(ii) wins 3 of 5.
+- Kills: D-194's lines and KILL-NO-DOSE at smoke and at +360; KILL-FARM reported only (2 of 3 of the (ii) voters).
+- Endpoint lines unchanged; q0 / q1 reported.
+
+**Decision:** D-219.

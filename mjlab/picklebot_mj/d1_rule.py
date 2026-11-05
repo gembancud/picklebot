@@ -1093,3 +1093,48 @@ def spawn_route(first_dhist: list[int], full_dhist: list[int]) -> tuple[str, lis
                f"Wilson {slo:.3f}-{shi:.3f})",
                f"SPAWN-BINDS (first >= {SPAWN_FIRST}, second <= {SPAWN_SECOND}, apart) -> {spawn}; MID-BINDS (second >= "
                f"{MID_SECOND}) -> {mid}"]
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-219 (panel round 82; (ii) 3 of 5: coach, motion, architecture; (i) 2: RL, experiment design). X = rally-d1s3ep24:
+# C model_32598 with the training episode length 120 -> 24 s (one knob; reads set their own length). Reported mechanism:
+# per-court feeder-ball conversion from court_counts column 2 (feeder balls per court): q0 = share of courts whose first
+# feeder ball started the court's final rally (column 2 == 1); q1 = later feeder balls' conversion (geometric MLE over the
+# courts with >= 2 feeder balls). Smoke / +360 dose (KILL-NO-DOSE): the reset-feed bucket (outcome_by_d's last bin)
+# must be >= EP_DOSE_MIN of feeder-type outcomes; its growth tracks episode starts.
+EP_DOSE_MIN = 0.15
+
+
+def court_conv(paths: list[str]) -> dict:
+    import json
+    n1 = n2 = extra = 0
+    for p in paths:
+        for row in json.load(open(p))["pairs"]["court_counts"]:
+            f = int(row[2])
+            if f == 1:
+                n1 += 1
+            elif f >= 2:
+                n2 += 1
+                extra += f - 1
+    n = n1 + n2
+    return {"q0": n1 / max(n, 1), "q1": n2 / max(extra, 1), "courts": n}
+
+
+def ep_dose(rows: list[dict], it_lo: int, it_hi: int, start_it: int) -> tuple[float, int]:
+    rows = [r for r in rows if "launch" in r and "outcome_by_d" in r["launch"]]
+    a = _row_from(rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(rows, max((start_it + it_hi) * STEPS_PER_IT, a["step"] + (it_hi - it_lo) * STEPS_PER_IT))
+    if a is None or b is None or b["step"] <= a["step"]:
+        return float("nan"), 0
+    oa, ob = a["launch"]["outcome_by_d"], b["launch"]["outcome_by_d"]
+    tot = sum(y[0] - x[0] for x, y in zip(oa, ob))
+    reset = ob[-1][0] - oa[-1][0]
+    return (reset / tot if tot else float("nan")), int(tot)
+
+
+def ep24_dose_kill(rows: list[dict], it_lo: int, it_hi: int, start_it: int) -> tuple[str, str]:
+    s, n = ep_dose(rows, it_lo, it_hi, start_it)
+    if s != s or n < MIN_WINDOW_EVENTS:
+        return "NO-DATA", f"KILL-NO-DOSE: reset-feed share {it_lo}-{it_hi} {s} (n {n}): NO-DATA (not a kill)"
+    v = "CONTINUE" if s >= EP_DOSE_MIN else "KILL-NO-DOSE"
+    return v, f"KILL-NO-DOSE: reset-feed share of feeder-type outcomes {it_lo}-{it_hi} {s:.4f} (n {n}; kill below {EP_DOSE_MIN}) -> {v}"
