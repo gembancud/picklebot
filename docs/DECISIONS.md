@@ -7157,3 +7157,11 @@ Panel round 91 (mjlab/results/footwork-review.md). All five agree on every main 
 - **How the clips enter:** the existing AMP style reward (style.py STYLE_FILES; with_style), not a tracking teacher.
 
 **Seeds (ledgered):** dev 4220383-4220388; training 226, 227. Next free: training 228, dev 4220389.
+
+### D-227 stage B result (2026-11-06): fw-scratch-01 KILL-NO-START at +1,850 - from a random init it learned to stand, not to move
+
+- **Training** (seed 224; random init on Q2's task, no resume) ran 1,850 iterations and was stopped by d1_rule.scratch_kill (exit 143, 01:17).
+- **The policy found the standing optimum.** By about +900, falls were 0 and episodes ran their full length, but there were no arrivals and no first-step samples at all. Over 1,700-1,800: n = 0 / 0 left / back, against the 200 line, so the p50 was unreadable: KILL-NO-START as coded. Falls over the last 100 were 0.01 per 1,000 env-s.
+- **What this shows:** on the unchanged task, PPO from scratch does not discover locomotion within 1,850 iterations. The deadline / settled / first-step bonuses pay nothing to a robot that never reaches a spot, and the tracking terms alone did not get it moving.
+- **What it does not show:** whether a from-scratch gait would be faster once it walks. The lineage question is still open; this route needs a locomotion curriculum or a motion prior to test it. Recorded for panel round 92.
+- Seeds 224 / 225 are used; dev 4220382 is unread (no endpoint).
