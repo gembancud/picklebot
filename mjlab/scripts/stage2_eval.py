@@ -97,6 +97,9 @@ def main():
     ap.add_argument("--pair-set-start", type=float, default=0.0,
                     help="D-227 (reported only, not a score): hold each feeder ball until both robots are set, with this "
                          "timeout in s (0 = off)")
+    ap.add_argument("--pair-drill-reset", action="store_true",
+                    help="D-229: the set-start read (both robots placed on their spots before each feeder ball); "
+                         "also sets pair_reset_parks")
     ap.add_argument("--pairs", action="store_true",
                     help="self-play readiness R4 (D-116): two-robot courts from mirrored env pairs")
     ap.add_argument("--replay-file", default=None,
@@ -198,6 +201,8 @@ def main():
         cfg.actions["ball"].record_contacts = True
     if args.anchor_y is not None:
         cfg.actions["ball"].start_anchor_y = args.anchor_y
+    if args.pair_drill_reset:
+        cfg.actions["ball"].pair_drill_reset = cfg.actions["ball"].pair_reset_parks = True
     if args.pair_set_start > 0:
         cfg.actions["ball"].pair_set_timeout_s = args.pair_set_start
     if args.audit_fixes:
@@ -230,7 +235,8 @@ def main():
         cfg.viewer.max_extra_envs = 0
     from picklebot_mj import eval_meta
     meta = eval_meta.guard(args.checkpoint, cfg)
-    meta.update(anchor_y=getattr(cfg.actions["ball"], "start_anchor_y", None), audit_fixes=args.audit_fixes)
+    meta.update(anchor_y=getattr(cfg.actions["ball"], "start_anchor_y", None), audit_fixes=args.audit_fixes,
+                pair_drill_reset=args.pair_drill_reset)
     env = ManagerBasedRlEnv(cfg=cfg, device="cuda", render_mode="rgb_array" if (args.video or args.pair_video) else None)
     agent_cfg = load_rl_cfg(task)
     venv = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)

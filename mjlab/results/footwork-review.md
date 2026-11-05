@@ -1354,3 +1354,25 @@ Brief: footwork-round90-brief.md.
 **User brief:** stopped at 0.41 (best 0.45-0.55); first ask the set start (measured now), then the body or controller.
 
 **Decision:** D-227.
+
+## Round 91 (2026-11-06): the user's answers (D-228)
+
+Brief: footwork-round91-brief.md.
+
+**Correction checks:**
+- 0.607 is a 3-s pause, not a set start, and it was unpaired (all five; RL on the seeds).
+- Velocity limits are not enforced (motion, architecture, experiment design).
+- The action scale is tied to effort / stiffness at import (motion, architecture, experiment design).
+- Damping may be the brake (motion).
+- No saturation evidence yet (RL).
+- "Humanlike" stays a requirement (experiment design).
+
+**Set start:** a drill reset (place both robots on their spots at every rally start; feeder after 0.5 s), 5 of 5. Read C as the new baseline (all five), on new pooled seeds with the old read alongside (experiment design).
+
+**Actuation:** a saturation / zero-shot premise read first (motion, architecture, RL; coach and experiment design: a zero-shot read); then effort x2 on legs, waist and ankles with the action scale kept, as Q2 from fw1b-S (all five; motion's damping alternative recorded).
+
+**Reference:** ask for the SMPL-X registration now; pilot on the session on disk; a named subset after (all five). Clips go into the AMP style reward (all five). Coach: extract the footwork between strokes.
+
+**Order:** fw-scratch-01's kill read, then the premise read, the set-start baseline, then the effort run (all five).
+
+**Decision:** D-229.

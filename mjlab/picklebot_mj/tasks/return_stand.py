@@ -132,6 +132,11 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # D-227 (reported-only reads; 0 = off, as in every score): a set start. A court's feeder ball is held until both
     # robots are within PAIR_SET_D m of their spot and slower than PAIR_SET_V m/s, or this many seconds have passed.
     pair_set_timeout_s: float = 0.0
+    # D-229 (the user, D-228: "the proper spot ... like in a drill"): the set-start read. When a court's restart timer
+    # starts (both robots idle), both robots are placed on their spots: pelvis at recover_xy, the default root height
+    # and orientation (facing the net), the default joint pose, zero velocity. The feeder ball follows after
+    # refeed_delay_s. Off by default; reads under it use pair_reset_parks too.
+    pair_drill_reset: bool = False
     # D-217 (training only; 0 = off, as in every read): on half of the live pair courts (odd court index among the
     # courts without drills), a received hand-off is cut with this probability at a random time PAIR_CUT_T s after it
     # is received, if the receiver has not hit it yet: the ball is lost (a miss), the rally ends, and the feeder ball
@@ -1111,6 +1116,8 @@ class BallPhysicsAction(ActionTerm):
                 self._share_split += torch.stack([torch.stack([(fire & ~dc).sum(), (recv & ~dc).sum()]),
                                                   torch.stack([(fire & dc).sum(), (recv & dc).sum()])])
             self._launch_log(fire, over, h0, data)
+            if getattr(self.cfg, "pair_drill_reset", False) and bool(self.pairs.start_now.any()):  # D-229
+                self._drill_place(self.pairs.start_now.repeat(2).nonzero().squeeze(-1))
             if self._cut_court is not None:  # D-217: arm received hand-offs; feeder balls after a cut
                 h = self.pairs.h
                 done_f = over & ~h0 & self._fcut
@@ -1216,11 +1223,24 @@ class BallPhysicsAction(ActionTerm):
         self._ls_out_d.view(-1).index_add_(0, self._fdbin * 2, done.long())
         self._ls_out_d.view(-1).index_add_(0, self._fdbin * 2 + 1, (done & self.return_done).long())
 
+    def _drill_place(self, idx: torch.Tensor) -> None:
+        """D-229: place these envs' robots on their spots (default height, orientation and pose; zero velocity)."""
+        robot = self._entity
+        root = robot.data.default_root_state[idx].clone()
+        origins = self._env.scene.env_origins[idx]
+        root[:, 0:2] = self.recover_xy[idx] + origins[:, 0:2]
+        root[:, 2] = root[:, 2] + origins[:, 2]
+        root[:, 7:] = 0.0
+        robot.write_root_state_to_sim(root, env_ids=idx)
+        jp = robot.data.default_joint_pos[idx].clone()
+        robot.write_joint_state_to_sim(jp, torch.zeros_like(jp), env_ids=idx)
+        self.drill_places = getattr(self, "drill_places", 0) + int(idx.numel())
+
     def launch_summary(self) -> dict:
         return {"prev_len_bins": ["0-1", "2-4", "5+"], "d_edges": list(LAUNCH_D_EDGES), "v_edges": list(LAUNCH_V_EDGES),
                 "d_hist": self._ls_d.tolist(), "v_hist": self._ls_v.tolist(), "outcome_feeds_legal": self._ls_out.tolist(),
                 "outcome_by_d": self._ls_out_d.tolist(), "outcome_after_cut": self._out_cut.tolist(),
-                "cuts": int(self.cut_count),
+                "cuts": int(self.cut_count), "drill_places": int(getattr(self, "drill_places", 0)),
                 "ball_by_class": {"ka_bin": BQ_KA_BIN, "v_bin": BQ_V_BIN, "w_bin": BQ_W_BIN, "rs_bin": BQ_RS_BIN,
                                   "ka": self._bq_ka.tolist(), "v": self._bq_v.tolist(), "w": self._bq_w.tolist(),
                                   "recv_speed": self._bq_rs.tolist()}}

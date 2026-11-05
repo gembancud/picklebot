@@ -604,3 +604,26 @@ def test_steeper_span_pays_double_and_saturates():
         t.place([[-4.8, 0.0]])
         dr.update(0.005)
         assert abs(float(dr.first_now[0]) - want) < 1e-4, (span, t0, float(dr.first_now[0]))
+
+
+def test_strong_tasks_double_only_leg_waist_ankle_effort_and_keep_the_action_scale():
+    import re
+
+    import mjlab.tasks  # noqa: F401
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks.footwork_specialist as fs
+    for base, strong in ((fs.TASK_FW_QUICK2, fs.TASK_FW_QUICK2_STRONG), (fs.TASK_FW_MEASURE_COURT, fs.TASK_FW_MEASURE_COURT_STRONG)):
+        a, b = load_env_cfg(base), load_env_cfg(strong)
+        aa, ba = a.scene.entities["robot"].articulation.actuators, b.scene.entities["robot"].articulation.actuators
+        assert len(aa) == len(ba)
+        for x, y in zip(aa, ba):
+            leg = any(re.search(r"(_hip_|_knee_|_ankle_|waist_)", e) for e in x.target_names_expr)
+            assert y.effort_limit == (2.0 * x.effort_limit if leg else x.effort_limit), x.target_names_expr
+            assert (y.stiffness, y.damping, y.armature) == (x.stiffness, x.damping, x.armature)
+        assert a.actions == b.actions  # same action terms and scales
+        for k in a.rewards:
+            assert a.rewards[k].func is b.rewards[k].func and a.rewards[k].weight == b.rewards[k].weight
+    # the shared constants are untouched (old tasks unchanged)
+    q = load_env_cfg(fs.TASK_FW_QUICK2).scene.entities["robot"].articulation.actuators
+    assert max(x.effort_limit for x in q) == 139.0

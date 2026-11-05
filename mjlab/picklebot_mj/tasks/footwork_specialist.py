@@ -37,6 +37,7 @@ from __future__ import annotations
 import dataclasses
 import math
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -60,6 +61,9 @@ HEADING_BIN, HEADING_BINS = 10.0, 18  # degrees from facing the net, 0-180
 FIRST_STEP_M, FIRST_BIN, FIRST_BINS = 1.5, 0.05, 80  # D-191 first-step metric: metres, seconds (last bin >= 3.95 s)
 FIRST_PAY_T = 1.6  # D-221: the first-step bonus pays clamp((FIRST_PAY_T - first-step time) / span, 0, 1) (s)
 FIRST_PAY_SPAN = 1.0  # D-221's span (s); D-222 (panel round 85): 0.5, saturating at 1.1 s
+SAT_GROUPS = {"hip": r"_hip_", "knee": r"_knee_", "ankle": r"_ankle_", "waist": r"^waist_"}  # D-229
+SAT_FRAC, SAT_WINDOW_S = 0.95, 1.0
+STRONG_EFFORT_X = 2.0  # D-229: leg / waist / ankle effort limits x2 (the user: no realistic motor limits)
 CMD_CAP = 2.5  # m/s
 V_REQ = (1.2, 2.2)  # deadline speed, m/s
 DIST = (1.0, 5.0)
@@ -123,6 +127,11 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.first_span = float(first_span)
         self.first_now = torch.zeros(n, device=dev)
         self.first_pay_sum = torch.zeros(md.N_SECTORS, device=dev)
+        # D-229 (reads only; PICKLEBOT_FW_SAT=1): actuator saturation in the first SAT_WINDOW_S of each move: per joint
+        # group, [samples, samples with |qfrc_actuator| >= SAT_FRAC x the joint's effort limit], once per control step
+        self.sat_on = os.environ.get("PICKLEBOT_FW_SAT") == "1"
+        self.sat = torch.zeros(len(SAT_GROUPS), 2, dtype=torch.long, device=dev)
+        self._sat_lim = None
 
     def reset(self, env_ids: torch.Tensor) -> None:
         self.live[env_ids] = False  # a spot cut by the episode end is counted (fell / censored) by DeadlineMoveDrill
@@ -181,6 +190,8 @@ class FootworkDrill(dd.DeadlineMoveDrill):
             pay = ((FIRST_PAY_T - self.elapsed) / self.first_span).clamp(0.0, 1.0) * first.float()
             self.first_now = self.first_now + pay
             self.first_pay_sum.index_add_(0, self.sector, pay)
+        if self.sat_on and self._calls % self.decimation == 0:
+            self._sat_step(t._entity)
         if self._calls % self.decimation == 0:
             mv = self.move_ep & self.live
             v = t._entity.data.root_link_lin_vel_w[:, :2]
@@ -202,6 +213,29 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         self.entry_t = torch.where(new, self.elapsed, self.entry_t)
         if self.pay == "settled":
             self.arrive_now = keep | self._settled
+
+    def _sat_step(self, robot) -> None:
+        if self._sat_lim is None:  # per joint: effort limit and group index (from the entity's actuator configs)
+            names = list(robot.joint_names)
+            lim = torch.full((len(names),), float("inf"), device=self.dev)
+            grp = torch.full((len(names),), -1, dtype=torch.long, device=self.dev)
+            for a in robot.cfg.articulation.actuators:
+                for i, nm in enumerate(names):
+                    if a.effort_limit is not None and any(re.fullmatch(e, nm) for e in a.target_names_expr):
+                        lim[i] = float(a.effort_limit)
+            for g, rx in enumerate(SAT_GROUPS.values()):
+                for i, nm in enumerate(names):
+                    if re.search(rx, nm):
+                        grp[i] = g
+            self._sat_lim, self._sat_grp = lim, grp
+        q = robot.data.qfrc_actuator
+        q = q[:, -len(self._sat_lim):]  # joint dofs (a free root, if present, comes first)
+        m = (self.move_ep & self.live & (self.elapsed < SAT_WINDOW_S)).unsqueeze(-1).expand_as(q)
+        hit = (q.abs() >= SAT_FRAC * self._sat_lim) & m
+        g = self._sat_grp.unsqueeze(0).expand_as(q)
+        ok = g >= 0
+        self.sat[:, 0].index_add_(0, g[m & ok], torch.ones_like(g[m & ok]))
+        self.sat[:, 1].index_add_(0, g[hit & ok], torch.ones_like(g[hit & ok]))
 
     def command(self):
         """DeadlineMoveDrill's law with a fixed cap CMD_CAP (not v_req): the policy cannot see v_req, so the command
@@ -229,6 +263,8 @@ class FootworkDrill(dd.DeadlineMoveDrill):
         out["first_step_hist"] = self.first_hist.tolist()
         out["first_step_bin_s"] = FIRST_BIN
         out["first_pay_sum"] = [round(x, 4) for x in self.first_pay_sum.tolist()]  # D-221 (zero when off)
+        if self.sat_on:
+            out["saturation"] = {k: self.sat[i].tolist() for i, k in enumerate(SAT_GROUPS)}  # D-229
         return out
 
     def summary(self) -> dict:
@@ -725,3 +761,28 @@ _register(TASK_FW_QUICK, lambda c: footwork_task(c, dist=md.DIST_RANGE, pay="set
 TASK_FW_QUICK2 = "Picklebot-Footwork-Specialist-Quick2-G1"
 _register(TASK_FW_QUICK2, lambda c: footwork_task(c, dist=md.DIST_RANGE, pay="settled", spot_box=md.SPOT_BOX,
                                                   first_bonus=True, first_span=0.5))
+
+
+# D-229 (the user, D-228: "i dont give a fuck about limiting the motors for realistic motors, i want fast humanlike
+# movement"): the leg, waist and ankle actuators' effort limits x STRONG_EFFORT_X, in new tasks only. Stiffness, damping
+# and armature are unchanged, and so is every policy's action scale (G1_ACTION_SCALE is computed at import from the
+# original constants). Arms and wrists are unchanged (paddle contact as before).
+def with_strong_legs(cfg, k: float = STRONG_EFFORT_X):
+    robot = cfg.scene.entities["robot"]
+    acts = []
+    for a in robot.articulation.actuators:
+        leg = any(re.search(r"(_hip_|_knee_|_ankle_|waist_)", e) for e in a.target_names_expr)
+        acts.append(dataclasses.replace(a, effort_limit=a.effort_limit * k) if leg and a.effort_limit is not None else a)
+    cfg.scene.entities["robot"] = dataclasses.replace(robot, articulation=dataclasses.replace(robot.articulation,
+                                                                                              actuators=tuple(acts)))
+    return cfg
+
+
+TASK_FW_QUICK2_STRONG = "Picklebot-Footwork-Specialist-Quick2-Strong-G1"
+TASK_FW_MEASURE_COURT_STRONG = "Picklebot-Footwork-Measure60-Court-Strong-G1"
+_register(TASK_FW_QUICK2_STRONG, lambda c: with_strong_legs(footwork_task(c, dist=md.DIST_RANGE, pay="settled",
+                                                                          spot_box=md.SPOT_BOX, first_bonus=True,
+                                                                          first_span=0.5)))
+_register(TASK_FW_MEASURE_COURT_STRONG, lambda c: with_strong_legs(footwork_task(c, dist=md.DIST_RANGE, pay="settled",
+                                                                                 episode_s=MEASURE_EPISODE_S,
+                                                                                 spot_box=md.SPOT_BOX)))

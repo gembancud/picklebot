@@ -7106,3 +7106,54 @@ Stage B smoke (seed 225) passed all six lines: exit, traceback, NaN, no resume, 
 - **Realistic motor limits are no longer a constraint.** The target is purely digital. Actuator limits (effort, velocity, gains) may be raised in simulation, and the goal is fast, humanlike movement. This supersedes any premise that the G1's real actuator specs bound the policy.
 
 **In flight:** fw-scratch-01 (D-227 stage B) continues to its pre-registered +1,800 kill read; at +914 it stood still (0 arrivals, 0 falls). Panel round 91 plans the set-start read, the actuation change and the reference-motion route.
+
+## D-229 (2026-11-06): the set-start read (drill reset) defined and frozen; a torque-saturation premise read; effort x2 as one change
+
+Panel round 91 (mjlab/results/footwork-review.md). All five agree on every main point.
+
+**Corrections (round 91):**
+- D-227 A's 0.607 is a 3-s pause before the feeder ball, not a set start (95 % timeouts), and its standard comparison was on unpaired seeds (RL). It is never quoted as the set-start baseline.
+- Joint velocity limits are not enforced: BuiltinPositionActuatorCfg takes only stiffness, damping, effort and armature (motion, architecture, experiment design).
+- `G1_ACTION_SCALE = 0.25 x effort / stiffness` is computed at import. Editing the constants would rescale every policy's actions, so any change is per task, with the action scale kept (motion, architecture, experiment design).
+- **Damping may brake more than effort (motion):** at damping ratio 2.0 the knee's damping takes about 63 Nm at 10 rad/s. Reported; a saturation read routes it.
+- No read has shown that torque binds (RL).
+- **Recorded (experiment design):** "humanlike" replaces motor realism as the constraint, so style stays a requirement.
+
+**The set-start read (frozen; by the user's authority, D-228). The bars are unchanged.**
+- **Mechanism, a drill reset (5 of 5), not a hold:**
+  - when a court's restart timer starts (both robots idle; PairCourts.start_now), both robots are placed on their spots: pelvis at recover_xy, the default root height and orientation (facing the net), the default joint pose, zero root and joint velocity (task flag pair_drill_reset, ReturnStand._drill_place);
+  - the feeder ball follows after the standard refeed_delay_s (0.5 s), alternating sides as now;
+  - pair_reset_parks is on, so no leak ball survives a reset;
+  - every rally start, the court's first one included, follows a placement.
+- **Everything after the feeder ball is unchanged:** the standard pairs read (2,048 envs, 120 s, mean actions, contact hand-off, open rallies counted as now) and the bars.
+- **"Set" is placement** (no tolerance to tune).
+- **R3 stays the h5f court read** (<= 4 % per episode). Pair falls are reported.
+- **The flag:** stage2_eval --pair-drill-reset (also sets pair_reset_parks).
+- **Test:** tests/test_drill_reset.py (GPU). It checks the placement, the 0.5-s feed after it, and that the flag is off by default.
+- **Seeds:** the new pooled reference is dev 4220385-4220388, for C and every later child (D-204's role). The old read runs on the same seeds and is reported alongside under its own name. CONFIRM stays 4220349-4220356, unread.
+- **Invalidated as references for the new bar (experiment design):** C's 0.412 and the gain2 / H0 / FEEDER / K3 references (the reference changes, not the thresholds); the q0 ceilings and the 0.45-0.55 estimate (old-read only); D-227 A's 0.607. Nothing is relabelled.
+
+**The actuation change (one change):**
+- The leg, waist and ankle effort limits x2:
+  - hip pitch / hip yaw / waist yaw (the 7520_14 group): 88 -> 176 Nm;
+  - hip roll and knees (the 7520_22 group): 139 -> 278 Nm;
+  - waist pitch / roll and ankles: 50 -> 100 Nm.
+- Stiffness, damping, armature and every action scale are unchanged; arms and wrists are unchanged (4 of 5; experiment design would have done every joint).
+- New tasks only: Picklebot-Footwork-Specialist-Quick2-Strong-G1 and Picklebot-Footwork-Measure60-Court-Strong-G1 (footwork_specialist.with_strong_legs).
+- Test: tests/test_footwork_specialist.py::test_strong_tasks_double_only_leg_waist_ankle_effort_and_keep_the_action_scale.
+
+**Order (5 of 5), scripts/diag/sr91.sh, after ph90 (fw-scratch-01) reaches its pre-registered +1,800 read:**
+1. GPU tests.
+2. **Premise read (reported):** fw1b-S at mean actions on Measure60-Court under x1 and x2 effort, dev 4220383. It reports the saturation share by group (PICKLEBOT_FW_SAT=1: |qfrc_actuator| >= 0.95 x the limit, first 1.0 s of each move) and the first step.
+3. **C's baseline on the new read,** dev 4220385-4220388 pooled, with the old read on the same seeds.
+4. **fw-act2-01:** D-222's Q2 task with effort x2 (Quick2-Strong), from fw1b-S model_16600, D-222's recipe. Training seed 226, smoke 227. D-222's smoke, VOID-unstable and KILL-NO-START (quick_kill unchanged). Gate: quick_check, the child on Measure60-Court-Strong against fw1b-S on the standard Measure60-Court, dev 4220384. Saturation reported.
+   - If the premise read shows no saturation (hips and knees < 10 %) while damping dominates, the next round considers the damping route (motion); the run is not changed after the fact.
+
+**The reference route:**
+- Ask the user now for the SMPL-X registration (all five).
+- Pilot GVHMR -> GMR on the CalTennis session already on disk (244 MB), with a retarget-quality check.
+- Only then propose a named subset: 2-4 match-play sessions, one camera each, about 1-4 GB, CC BY-NC 4.0, for the user's yes.
+- **Extract the footwork between strokes** (coach): the split step, the first step, the run or shuffle into the contact, and the recovery.
+- **How the clips enter:** the existing AMP style reward (style.py STYLE_FILES; with_style), not a tracking teacher.
+
+**Seeds (ledgered):** dev 4220383-4220388; training 226, 227. Next free: training 228, dev 4220389.

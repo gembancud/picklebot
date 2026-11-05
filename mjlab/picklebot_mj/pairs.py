@@ -78,6 +78,8 @@ class PairCourts:
         # D-227 (reported-only reads; off = None): a set start. The feeder ball is held until both robots of the court
         # are set (set_now, per env, given by the task each step) or set_timeout s have passed; released[0 set, 1 timeout]
         self.set_now = None
+        # D-229: courts whose restart timer started this step (both robots idle): the task's drill reset places them
+        self.start_now = torch.zeros(self.h, dtype=torch.bool, device=device)
         self.set_timeout = 0.0
         self.set_wait = torch.zeros(self.h, device=device)
         self.set_released = torch.zeros(2, dtype=torch.long, device=device)
@@ -182,6 +184,7 @@ class PairCourts:
         self.waiting = (self.waiting & ~done) | receive
         both_idle = self.parked[: self.h] & self.parked[self.h:]
         start = self.court_dead & both_idle & (self.timer < 0)
+        self.start_now = start
         self.timer = torch.where(start, torch.full_like(self.timer, delay), self.timer)
         run = self.timer >= 0
         self.timer = torch.where(run, self.timer - dt, self.timer)
