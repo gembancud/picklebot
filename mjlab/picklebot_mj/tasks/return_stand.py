@@ -62,6 +62,7 @@ RECOVERY_BOX = ((-6.2, -5.0), (-1.5, 1.5))  # training: sampled per feed (x rang
 LAUNCH_D_EDGES = (0.1, 0.2, 0.3, 0.5, 0.8, 1.2)  # D-165: m from the recovery spot at a feeder-ball launch
 LAUNCH_V_EDGES = (0.25, 0.5, 1.0, 1.5, 2.0)  # m/s pelvis ground speed at launch
 PAIR_CUT_T = (0.2, 0.6)  # D-217: s after the hand-off is received
+PAIR_SET_D, PAIR_SET_V = 0.3, 0.3  # D-227: m from the spot, m/s pelvis ground speed
 BQ_KA_BIN, BQ_KA_BINS = 0.05, 21  # D-225: keep_alive score bins (last: 1.0)
 BQ_V_BIN, BQ_V_BINS = 0.25, 80    # m/s, |ball velocity| out of the paddle (last >= 19.75)
 BQ_W_BIN, BQ_W_BINS = 5.0, 60     # rad/s, |spin| out of the paddle (last >= 295)
@@ -128,6 +129,9 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # leaves it off). PICKLEBOT_PAIR_LOG: append the cumulative feeder-ball / hand-off counts every
     # PICKLEBOT_PAIR_LOG_EVERY (default 2,400) env steps (a host sync each time).
     pair_rally_cap: int = 0
+    # D-227 (reported-only reads; 0 = off, as in every score): a set start. A court's feeder ball is held until both
+    # robots are within PAIR_SET_D m of their spot and slower than PAIR_SET_V m/s, or this many seconds have passed.
+    pair_set_timeout_s: float = 0.0
     # D-217 (training only; 0 = off, as in every read): on half of the live pair courts (odd court index among the
     # courts without drills), a received hand-off is cut with this probability at a random time PAIR_CUT_T s after it
     # is received, if the receiver has not hit it yet: the ball is lost (a miss), the rally ends, and the feeder ball
@@ -1096,6 +1100,10 @@ class BallPhysicsAction(ActionTerm):
                     busy = busy | self.shadow.swing_ep  # swing at a ghost ball (round 26: it stalled the court)
             # D-223 (logging only): the receiver's distance bin, booked by PairCourts at a hand-off
             self.pairs.ho_dbin_now = torch.bucketize((self.pelvis_xy() - self.recover_xy).norm(dim=-1), self._ls_de)
+            if float(getattr(self.cfg, "pair_set_timeout_s", 0.0)) > 0.0:  # D-227: set start (reported-only reads)
+                self.pairs.set_timeout = float(self.cfg.pair_set_timeout_s)
+                self.pairs.set_now = (((self.pelvis_xy() - self.recover_xy).norm(dim=-1) <= PAIR_SET_D)
+                                      & (data.root_link_lin_vel_w[:, :2].norm(dim=-1) <= PAIR_SET_V))
             fire, recv = self.pairs.step(over, self.return_done, torch.zeros_like(over), crossing, dt,
                                          self.cfg.refeed_delay_s, contact=first, busy=busy)
             if self.drill_scale is not None:  # D-162: feeder balls and hand-offs started, pair vs drill courts

@@ -593,3 +593,16 @@ def test_ball_route_lines(tmp_path):
     assert dr.ball_route([_bq_read(tmp_path, "b.json", (14, 14), (36, 30), (5, 5))])[0] == "BALL-STATE"   # v +1.5 m/s
     assert dr.ball_route([_bq_read(tmp_path, "c.json", (14, 14), (30, 30), (9, 5))])[0] == "RECEIVER"     # +0.4 m/s
     assert dr.ball_route([_bq_read(tmp_path, "d.json", (13, 14), (32, 30), (6, 5))])[0] == "NEITHER"
+
+
+def test_scratch_kill_lines():
+    def row(it, l, b):
+        return _fs_row(it, [(l, 300)], [(b, 300)], start=0)
+    base = row(1700, 0, 0)
+    for r in base["move"]["first_step_hist"]:
+        r[:] = [0] * 80
+    fast = [base, row(1800, 24, 26)]   # 1.225 / 1.325 s
+    assert dr.scratch_kill(fast)[0] == "CONTINUE"
+    slow = [base, row(1800, 24, 28)]   # back 1.425 > 1.3847
+    assert dr.scratch_kill(slow)[0] == "KILL-NO-START"
+    assert dr.scratch_kill([base])[0] == "NO-DATA"

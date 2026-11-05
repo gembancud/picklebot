@@ -1342,3 +1342,35 @@ def ball_route(paths: list[str]) -> tuple[str, list[str]]:
              f"receiver speed p50 at first vs later hand-offs {rs[0]:.2f} vs {rs[1]:.2f} m/s (RECEIVER if >= +{BQ_RS_GAP}); "
              f"p90 {q('recv_speed', 0, 0.9):.2f} / {q('recv_speed', 1, 0.9):.2f}; n {n_rs}"]
     return verdict, lines
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-227 (panel round 90: (b) 5 of 5, opened with its premise run; (a) first). fw-scratch-01: Q2's task from a random
+# init (no model_15900 lineage). Kill at +1,800 (30 % of 6,000), training log rows (one per 10 iterations, step =
+# iteration x STEPS_PER_IT, start 0), experiment design's form: VOID-unstable (falls over the last 100 iterations > 8.314,
+# read from the +1,800 check on) and KILL-NO-START (first-step p50 over 1,700-1,800 slower in left or back than Q2's
+# 400-450 window, or n < 200 in either).
+SCRATCH_KILL_WIN = (1700, 1800)
+SCRATCH_REF = (1.2733, 1.3847)  # Q2 (D-222) 400-450, left / back
+
+
+def scratch_kill(rows: list[dict]) -> tuple[str, str]:
+    w = first_window(rows, *SCRATCH_KILL_WIN, 0)
+    lab = "KILL-NO-START"
+    if w is None:
+        return "NO-DATA", f"{lab}: window {SCRATCH_KILL_WIN} not readable -> NO-DATA"
+    ok_n = min(w["n"]) >= QUICK_MIN_N and None not in w["p50"]
+    ok = ok_n and all(w["p50"][k] <= SCRATCH_REF[k] + 1e-9 for k in (0, 1))
+    return ("CONTINUE" if ok else lab), (
+        f"{lab}: first-step p50 L/B over {SCRATCH_KILL_WIN} {w['p50'][0]}/{w['p50'][1]} s vs Q2's 400-450 "
+        f"{SCRATCH_REF[0]}/{SCRATCH_REF[1]} (each <=; n {w['n']} >= {QUICK_MIN_N}) -> " + ("CONTINUE" if ok else lab))
+
+
+def set_start_report(paths: list[str], ref_paths: list[str]) -> list[str]:
+    """D-227 (reported only, not a score): C under a set start against C's standard reads."""
+    out = []
+    for name, f in (("set start", paths), ("standard", ref_paths)):
+        pp, hz, cv = pooled_pairs(f), pooled_hazards(f), court_conv(f)
+        out.append(f"(reported) {name}: P(5+) {pp['p5']:.4f} (rallies {pp['rallies']}), feeder legal {pp['feeder']:.4f}, "
+                   f"hazards h0-h4 " + " / ".join(f"{x:.3f}" for x in hz["h"]) + f", q0 {cv['q0']:.3f} q1 {cv['q1']:.3f}")
+    return out

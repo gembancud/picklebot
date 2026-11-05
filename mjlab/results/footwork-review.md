@@ -1342,3 +1342,15 @@ Brief: footwork-round89-brief.md.
 **Asks for the user:** a set start (architecture, motion); a body or controller rebuild (coach: agile reference motion; RL: actuation review; experiment design: from-scratch controller).
 
 **Decision:** D-226. Next phase named in round 90.
+
+## Round 90 (2026-11-05): name the next phase after the footwork STOP
+
+Brief: footwork-round90-brief.md.
+
+**Corrections to D-226:** specialist count double-counted; mixed instruments in "1.26-1.41 s"; 1.1 s is an estimate; within-rally 0.98-0.99 holds only from shot 3; the set-start projection is about 0.71 (plan 0.65-0.75); a set start is a loosening and is reported only (experiment design); D-006 must be superseded for a from-scratch controller (architecture).
+
+**Votes:** (b) from-scratch controller, opened with a premise run (Q2's task from a random init), 5 of 5; (a) set-start read first, 5 of 5. Iterations 6,000 (coach, architecture, experiment design) vs 4,000 (motion, RL). Kill windows differed; experiment design's form.
+
+**User brief:** stopped at 0.41 (best 0.45-0.55); first ask the set start (measured now), then the body or controller.
+
+**Decision:** D-227.

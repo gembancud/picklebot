@@ -94,6 +94,9 @@ def main():
     ap.add_argument("--audit-fixes", action="store_true",
                     help="audit 2026-10-28: pair-mode resets park the env, and volleyed-back returns count in the pair "
                          "stats (task flags pair_reset_parks, pair_count_volleys)")
+    ap.add_argument("--pair-set-start", type=float, default=0.0,
+                    help="D-227 (reported only, not a score): hold each feeder ball until both robots are set, with this "
+                         "timeout in s (0 = off)")
     ap.add_argument("--pairs", action="store_true",
                     help="self-play readiness R4 (D-116): two-robot courts from mirrored env pairs")
     ap.add_argument("--replay-file", default=None,
@@ -195,6 +198,8 @@ def main():
         cfg.actions["ball"].record_contacts = True
     if args.anchor_y is not None:
         cfg.actions["ball"].start_anchor_y = args.anchor_y
+    if args.pair_set_start > 0:
+        cfg.actions["ball"].pair_set_timeout_s = args.pair_set_start
     if args.audit_fixes:
         cfg.actions["ball"].pair_reset_parks = cfg.actions["ball"].pair_count_volleys = True
     cfg.observations["actor"].enable_corruption = bool(args.keep_corruption)

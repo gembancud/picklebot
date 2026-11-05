@@ -7038,3 +7038,38 @@ Panel round 89 (mjlab/results/footwork-review.md).
 - random-practice hand-offs (coach).
 
 The target is unchanged; the panel proposes no loosening.
+
+## D-227 (2026-11-05): next phase - a set-start read for the user (reported only), then a from-scratch controller premise run
+
+Panel round 90 (mjlab/results/footwork-review.md): (b) the from-scratch controller, 5 of 5, opened with a premise run; (a) a set-start read first, 5 of 5.
+
+**Corrections to D-226 (round 90):**
+- **"Four specialists and two that paid the start" double-counts.** There are four in all (fw1b-S, Fast4, Q, Q2); Q and Q2 paid the start, and all four descend from model_15900.
+- **"1.26-1.41 s" mixes instruments.** 1.26 is Q2's stochastic training window; the mean-action reads are 1.31-1.44 s.
+- **"About 1.1 s" is an estimate, not a derived need.**
+- **"Within-rally legal 0.98-0.99" holds only from shot 3 on** (h2 0.084).
+- **The set-start projection of 0.74-0.77 is high.** On C's near rates (h0 about 0.10, h1 about 0.12) and today's h2-h4, P(5+) is about 0.71; plan on 0.65-0.75.
+- **A set start is a loosening by D-219's own definition.** It goes to the user as a change to the bar's premise. Any read under it is reported only and never replaces the frozen read (experiment design).
+- **D-006 ("do not learn humanoid locomotion from scratch") is superseded for this premise test (architecture).** The premise that changed: the pretrained lineage's acceleration is now the measured limit.
+
+**A. Set start, reported only (scripts/diag/ph90.sh, stage A).** C on dev 4220380-4220381, standard pairs reads, with --pair-set-start 3.0, reported beside C's standard reads (h1r87, 4220375 + 4220377).
+- Each court's feeder ball is held until both robots are within 0.3 m of their spot and slower than 0.3 m/s, or 3 s have passed (PairCourts.set_now / set_timeout; task flag pair_set_timeout_s, default 0 = off in every score).
+- Releases are counted by cause (set / timeout).
+- Test: tests/test_stage5f.py::test_pair_courts_set_start_holds_the_feeder_ball_until_set_or_timeout.
+
+**B. fw-scratch-01 (stage B):** Picklebot-Footwork-Specialist-Quick2-G1 (D-222's task, unchanged) from a random init. There is no resume, no model_15900 lineage and no latent-07; the one change is "no resume". Stock PPO settings (no LR override), 4,096 envs, 6,000 iterations (3 of 5). Training seed 224, smoke 225.
+- **Smoke** (120 iterations): exit 0, no traceback, no NaN, no resume, fw_first_step present, agility rows with first_step_hist. Falls are reported only.
+- **Kill at +1,800, experiment design's form (the windows differed; tie rule), d1_rule.scratch_kill:**
+  - VOID-unstable: falls over the last 100 iterations > 8.314, read from +1,800 on.
+  - KILL-NO-START: left or back first-step p50 over 1,700-1,800 not <= Q2's 400-450 window (1.2733 / 1.3847 s), or n < 200 in either.
+- **Gate:** d1_rule.quick_check unchanged (QUICK <= fw1b-S - 0.25 s in left and back; VALID, ARRIVE, SETTLE, FALLS), paired against fw1b-S on Measure60-Court at mean actions, dev 4220382.
+  - A pass leads to a d1c kickstart as its own entry.
+  - A fail closes the in-authority controller route and makes the body or actuation the leading suspect for the user's ask.
+
+**User brief (round 90, agreed in substance):**
+- The footwork phase has stopped.
+- C's P(5+) is 0.41, and the best estimate on this body and controller is 0.45-0.55, because both opening balls are returned from a scramble.
+- First ask: does the user accept a set start as part of the target's read? It is measured now, projected about 0.65-0.75, and still short of 0.80.
+- Second ask: the body or controller.
+
+**Seeds (ledgered):** dev 4220380-4220382; training 224, 225. Next free: training 226, dev 4220383.

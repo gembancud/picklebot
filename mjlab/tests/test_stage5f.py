@@ -1440,3 +1440,37 @@ def test_pair_courts_handoff_tally_skips_stale_leak_balls():
     assert s["handoff_by_d"][0][3] == [1, 0]  # not tallied again
     assert sum(r[0] for r in s["court_counts"]) == own0 + 1  # court_counts still books it (unchanged behaviour)
     assert s["handoff_stale"][0] == 1
+
+
+def test_pair_courts_set_start_holds_the_feeder_ball_until_set_or_timeout():
+    """D-227 (reported-only reads): with set_now given, a court's feeder ball waits until both robots are set, or
+    until set_timeout s; off (set_now None) the restart is unchanged."""
+    from picklebot_mj.pairs import PairCourts
+    F = lambda *i: torch.tensor([k in i for k in range(4)])  # noqa: E731
+    Z = F()
+    # not set: released only by the timeout (0.1 s delay + 0.5 s wait)
+    pc = PairCourts(4, "cpu", handoff="contact")
+    pc.set_timeout, pc.set_now = 0.5, Z.clone()
+    pc.on_reset(torch.arange(4))
+    t_fire = [k for k in range(120) if pc.step(Z, Z, Z, Z, 0.01, 0.1)[0].any()]
+    assert t_fire and 55 <= t_fire[0] <= 65, t_fire
+    assert pc.summary()["set_start_released"][1] >= 1
+    # set after 0.3 s on both envs of court 0 only: court 0 fires then, court 1 at the timeout
+    pc = PairCourts(4, "cpu", handoff="contact")
+    pc.set_timeout, pc.set_now = 0.5, Z.clone()
+    pc.on_reset(torch.arange(4))
+    fires = {}
+    for k in range(120):
+        if k == 30:
+            pc.set_now = F(0, 2)
+        f = pc.step(Z, Z, Z, Z, 0.01, 0.1)[0]
+        for c in (0, 1):
+            if (f[c] or f[c + 2]) and c not in fires:
+                fires[c] = k
+    assert 29 <= fires[0] <= 31 and 55 <= fires[1] <= 65, fires
+    assert pc.summary()["set_start_released"] == [1, 1]
+    # off: the plain 0.1 s restart
+    pc = PairCourts(4, "cpu", handoff="contact")
+    pc.on_reset(torch.arange(4))
+    t_fire = [k for k in range(30) if pc.step(Z, Z, Z, Z, 0.01, 0.1)[0].any()]
+    assert t_fire and t_fire[0] <= 11 and pc.summary()["set_start_released"] is None

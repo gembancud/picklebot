@@ -75,6 +75,12 @@ class PairCourts:
         # at a feeder ball and on reset, and once tallied). Only these are tallied: a reset (leak) ball on an env whose
         # `handed` survived on_reset carried a stale class (D-223 INVALID). `handed` itself is untouched.
         self.ho_live = torch.zeros(n, dtype=torch.bool, device=device)
+        # D-227 (reported-only reads; off = None): a set start. The feeder ball is held until both robots of the court
+        # are set (set_now, per env, given by the task each step) or set_timeout s have passed; released[0 set, 1 timeout]
+        self.set_now = None
+        self.set_timeout = 0.0
+        self.set_wait = torch.zeros(self.h, device=device)
+        self.set_released = torch.zeros(2, dtype=torch.long, device=device)
         # reported only: own-ball feeds finished with no live received ball (stale `handed`), and class-0 feeds tallied
         # while the court's rally length is still 0 (the hitter's copy not yet judged: a receiver's early volley)
         self.ho_stale = torch.zeros(2, dtype=torch.long, device=device)
@@ -180,6 +186,15 @@ class PairCourts:
         run = self.timer >= 0
         self.timer = torch.where(run, self.timer - dt, self.timer)
         go = run & (self.timer <= 0)
+        if self.set_now is not None:  # D-227: hold the feeder ball until both robots are set, or the timeout
+            both = self.set_now[: self.h] & self.set_now[self.h:]
+            out = self.set_wait >= self.set_timeout
+            rel = go & (both | out)
+            hold = go & ~rel
+            self.set_released += torch.stack([(rel & both).sum(), (rel & ~both).sum()])
+            self.set_wait = torch.where(hold, self.set_wait + dt, torch.where(rel, torch.zeros_like(self.set_wait), self.set_wait))
+            self.timer = torch.where(hold, torch.zeros_like(self.timer), self.timer)
+            go = rel
         if busy is not None:  # D-140: a court with both robots busy waits (its timer holds at 0)
             both_busy = busy[: self.h] & busy[self.h:]
             self.timer = torch.where(go & both_busy, torch.zeros_like(self.timer), self.timer)
@@ -252,4 +267,5 @@ class PairCourts:
                 "handoff": self.handoff, "sides": side, "started": {"feeder": int(self.n_started[0]),
                 "handoffs": int(self.n_started[1])}, "court_counts": self.court_counts.tolist(),
                 "sides_own_ball": side_own, "len_hist": h, "handoff_by_d": self.ho_out.tolist(),
-                "handoff_stale": self.ho_stale.tolist(), "handoff_stale_early_by_d": self.ho_stale_d.tolist()}
+                "handoff_stale": self.ho_stale.tolist(), "handoff_stale_early_by_d": self.ho_stale_d.tolist(),
+                "set_start_released": self.set_released.tolist() if self.set_now is not None else None}
