@@ -7206,3 +7206,17 @@ C = rally-d1s3lr3 model_32598 (d1 base, lam_r 2), standard pairs reads with --pa
 - **Target status:** 0.5645 against 0.80 (Wilson low 0.78). Not met.
 
 Stage 4 (fw-act2-01) smoke passed all five lines (falls 0.648; early window 1.368 / 1.478 s), and training (seed 226) is running.
+
+### D-229 stage 4 result (2026-11-06): fw-act2-01 KILL-NO-START at +482 - effort x2 trains exactly like Q2
+
+Smoke passed (seed 227). Training (seed 226, Quick2-Strong from fw1b-S) was stopped by quick_kill at +482: left / back 1.367 / 1.472 -> 1.285 / 1.382 s, against the 0.10-s line (gains 0.083 / 0.090).
+
+| window | act2 (effort x2) L / B | Q2 (D-222, standard) L / B |
+|---|---|---|
+| 30-60 | 1.382 / 1.482 | 1.392 / 1.471 |
+| 60-100 | 1.341 / 1.464 | 1.349 / 1.452 |
+| 400-450 | 1.285 / 1.382 | 1.273 / 1.385 |
+
+- **Effort x2 changes nothing:** not zero-shot (premise read) and not in training; every window is within one 0.05-s bin of Q2. With the saturation read (about 0 at the clamp), the effort limit is ruled out as the start's binder.
+- **The candidates left at the actuator are the PD law itself and the action scale:** kp, the damping ratio 2.0, and a unit action that asks for about 25 % of effort. Panel round 92 is called.
+- Seeds 226 / 227 are used; dev 4220384 is unread.

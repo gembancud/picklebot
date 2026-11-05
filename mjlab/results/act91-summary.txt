@@ -1,0 +1,12 @@
+D-229 stage 4: fw-act2-01 on Picklebot-Footwork-Specialist-Quick2-Strong-G1 (leg / waist / ankle effort x2) from fw1b-S model_16600.pt; training seed 226, smoke 227; gate dev 4220384
+exit 0 ok
+traceback none ok
+fw_first_step paid: max episode mean 0.144 ok
+early window (0, 100): {'p50': [1.3677, 1.4783], 'n': [3216, 1668], 'pay_per_spot': 0.16691526153383007} ok
+falls per 1,000 env-s over the last 100: 0.648 (<= 8.314) ok
+train: {"run": "fw-act2-01", "exit_code": 143, "finished": "2026-11-06T04:33:30+08:00"}
++482: KILL-NO-START: first-step p50 L/B 1.3674/1.4717 -> 1.2848/1.3815 s (each >= 0.1 faster; n [3247, 1738] / [1764, 978]); reported bonus per spot 0.1646 -> 0.2231 -> KILL-NO-START
+(reported) window 30-60: act2 {'p50': [1.3824, 1.482], 'n': [1021, 572], 'pay_per_spot': 0.15008833861072632} | Q2 (D-222) {'p50': [1.3921, 1.4706], 'n': [1024, 545], 'pay_per_spot': 0.14610487175670983}
+(reported) window 60-100: act2 {'p50': [1.3407, 1.464], 'n': [1355, 804], 'pay_per_spot': 0.16766491852613036} | Q2 (D-222) {'p50': [1.349, 1.4523], 'n': [1375, 763], 'pay_per_spot': 0.16463322207958922}
+(reported) window 400-450: act2 {'p50': [1.2848, 1.3815], 'n': [1764, 978], 'pay_per_spot': 0.22305713751653536} | Q2 (D-222) {'p50': [1.2733, 1.3847], 'n': [1766, 1018], 'pay_per_spot': 0.2159003232542839}
+VERDICT: KILL-NO-START
