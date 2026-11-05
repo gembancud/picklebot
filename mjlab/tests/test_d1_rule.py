@@ -450,3 +450,8 @@ def test_spawn_route():
     assert dr.spawn_route(first, full_mix)[0] == "SPAWN-BINDS"
     full_none = [20, 20, 20, 400, 400, 640, 700]       # second 400 / 1,200 = 0.33
     assert dr.spawn_route([10, 10, 10, 200, 200, 270, 300], full_none)[0] == "PANEL"  # first 0.30 (< 0.45), second 0.33 (< 0.45)
+
+
+def test_spawn_route_invalid_split():
+    first = [10, 10, 10, 100, 100, 270, 500]
+    assert dr.spawn_route(first, [9, 10, 10, 101, 100, 269, 499])[0] == "INVALID-SPLIT"  # second half about 0

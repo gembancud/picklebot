@@ -1071,6 +1071,7 @@ def cut81_kills(rows: list[dict], start_it: int) -> list[tuple[str, str]]:
 #     (120-240 s, the 240-s read minus the 120-s read) <= 0.35, Wilson 95 % intervals apart -> (ii) episode length.
 #   MID-BINDS: second-half off-spot share >= 0.45 -> the post-bounce cut. Otherwise PANEL.
 SPAWN_FIRST, SPAWN_SECOND, MID_SECOND = 0.45, 0.35, 0.45
+SPAWN_MIN_N = 200
 
 
 def spawn_route(first_dhist: list[int], full_dhist: list[int]) -> tuple[str, list[str]]:
@@ -1082,7 +1083,9 @@ def spawn_route(first_dhist: list[int], full_dhist: list[int]) -> tuple[str, lis
     (flo, fhi), (slo, shi) = wilson(f_k, f_n), wilson(s_k, s_n)
     spawn = pf >= SPAWN_FIRST and ps <= SPAWN_SECOND and flo > shi
     mid = ps >= MID_SECOND
-    v = "SPAWN-BINDS" if spawn else "MID-BINDS" if mid else "PANEL"
+    # D-218 guard (added before the verdict was read): the two reads are separate simulations, so the second half is a
+    # difference of counts; with fewer than SPAWN_MIN_N second-half launches (or a negative count) the split is undefined.
+    v = "INVALID-SPLIT" if s_n < SPAWN_MIN_N else "SPAWN-BINDS" if spawn else "MID-BINDS" if mid else "PANEL"
     return v, [f"off-spot share: first half {pf:.4f} (n {f_n}, Wilson {flo:.3f}-{fhi:.3f}); second half {ps:.4f} (n {s_n}, "
                f"Wilson {slo:.3f}-{shi:.3f})",
                f"SPAWN-BINDS (first >= {SPAWN_FIRST}, second <= {SPAWN_SECOND}, apart) -> {spawn}; MID-BINDS (second >= "

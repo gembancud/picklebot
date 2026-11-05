@@ -6550,3 +6550,13 @@ Fewest moving parts: (iv), reads only and no code. Between the two read forms, e
 - Motion's LEAK-BINDS question (off-spot <= 0.35 or P(5+) moving >= 5 points with the fixes) is reported for the next round, not routed here.
 
 **Seeds (ledgered):** dev 4220369-4220372. Training 217-218 stay reserved for the routed run. Next free: dev 4220373.
+
+### D-218 addendum (2026-11-05, before the verdict): the split is undefined - a validity guard, no line changed
+
+**Seen on dev 4220369:** the 240-s read logged about the same number of feeder-ball launches as the 120-s read (2,511 vs 2,513). Nearly every feeder ball in a pairs read happens early in the episode, and almost none later: once the robots get rallying, rallies run to the timeout.
+- The "second half" (240-s minus 120-s counts, from two separate simulations) is about 0 and can be negative.
+- The coded rule would then read SPAWN-BINDS spuriously (a negative second-half share passes "<= 0.35").
+
+**Guard, added before the pooled verdict was read** (d1_rule.spawn_route): fewer than 200 second-half launches -> INVALID-SPLIT. The thresholds are unchanged. Test: test_spawn_route_invalid_split.
+
+**Reported:** the read's feeder balls are an early-episode phenomenon. The spawn ball, and the restarts right after it, are most of what the target's feeder line and opening hazards measure. That supports the spawn-transient reading (experiment design, architecture, motion) in a different form, for the next round.
