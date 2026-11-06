@@ -7425,3 +7425,30 @@ Driver: scripts/diag/ct94.sh. Forgetting of the rally gain is the main risk, so 
 R's court-read falls are diffuse: easy families are included and between-feed falls tripled against the d1 base. They do not yield to a short fine-tune at LR 3e-5.
 
 Seeds 232 / 233 / 4220391 are used; 4220392-4220393 are unread. R stays unpromoted and C stays the parent. Panel round 95 is called (mjlab/results/footwork-round95-brief.md).
+
+### D-234 (2026-11-06): the R3 premise read - where R's extra court falls happen, against the d1 base on R3's own instrument
+
+Panel round 95, (ii) 4 of 5 (coach for a longer court practice plus the fall penalty). Two R3 levers failed without
+knowing where the falls are (D-232, D-233). No training.
+
+**Instrument (logging only):** return_stand books every robot fall (fall_log in stage2_eval's JSON) by phase (a feed in
+play / between feeds), time since the episode start (0.5-s bins), pelvis distance from the recovery spot at the last
+control step (edges 0.3 / 0.8 / 1.5 / 3.0 m) and the current feed's family. Smoke on dev 4220396 (the base, 256 envs,
+12 s): booked falls 11 == robot_falls 11.
+
+**Read (scripts/diag/fl95.sh):** the d1 base s5c-d1-fw1bS model_32854 as a zero-residual checkpoint
+(scripts/residual_init.py; mean actions, so exactly the base), R (rally-d1s3dr model_33797) and C (rally-d1s3lr3
+model_32598) on the h5f court read (Picklebot-Latent-Court-Res-G1, 2,048 envs, 24 s, random recovery, every family),
+dev 4220394 and 4220395, pooled.
+
+**Route (d1_rule.r3_route, R against the base, coded before launch):**
+- INVALID if booked falls != robot_falls for either read;
+- BASE-FAILS if the base's R3 > 0.04: put the facts to the user;
+- SPAWN if >= 50 % of R's excess falls per episode come < 1.0 s after the episode start: put the facts to the user
+  (R3 keeps the random-spawn scramble the user removed from the rally start);
+- RECOVERY if >= 50 % come between feeds after 1 s: random recovery spots on the drill courts only, warm start R;
+- FEED if >= 50 % come in feeds after 1 s: court-read episodes on the drill courts (motion's mixed form);
+- else MIXED (or NO-EXCESS): panel.
+C's route is reported only.
+
+Seeds: dev 4220394-4220396. C stays the parent; R stays unpromoted.

@@ -1450,3 +1450,30 @@ Brief: footwork-round94-brief.md.
 **Asking the user (iv):** not warranted now (experiment design, RL, motion).
 
 **Decision:** D-233.
+
+## Round 95 (2026-11-06): D-233 KILL-NO-SAFER; the R3 premise read
+
+Brief: footwork-round95-brief.md.
+
+**Correction checks:**
+- KILL-NO-SAFER valid (all five); the manual stop at +217 follows the coded kill and nothing after +125 is used.
+- The base's 0.0318 is from another instrument; it needs a read on R3's own (RL, architecture, coach).
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| RL | (ii) the d1 base as a zero-residual checkpoint (residual_init.py) beside R, paired dev 4220394-4220395 |
+| Motion | (ii) the premise read first; the mixed form if FEED |
+| Coach | (iii) a longer court practice plus the fall penalty |
+| Experiment design | (ii) with pre-registered routes; random recovery on drill courts if RECOVERY |
+| Architecture | (ii) a fall log: time since reset (0.5-s bins), phase, distance from the recovery spot, family |
+
+(ii) 4 of 5. Routes (d1_rule.r3_route): INVALID (booked falls != robot_falls); BASE-FAILS (base R3 > 0.04 on R3's
+instrument) -> put the facts to the user (iv); SPAWN (>= 50 % of R's excess within 1.0 s of the episode start) -> the
+user (iv); RECOVERY (>= 50 % between feeds after 1 s) -> random recovery on drill courts only, warm start R, full gate;
+FEED (>= 50 % in feeds after 1 s) -> the mixed form (court-read episodes on drill courts); else MIXED -> panel.
+
+**Asking the user (iv):** only on BASE-FAILS or SPAWN.
+
+**Decision:** D-234.

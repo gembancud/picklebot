@@ -452,6 +452,8 @@ def main():
         out["recorded_contacts"] = {"file": args.record_contacts, "n": int(rec.shape[0])}
     if args.replay_file:
         out["replay"] = {"file": args.replay_file, "states": int(term.replay.shape[0])}
+    if hasattr(term, "fall_log_summary"):  # D-234
+        out["fall_log"] = term.fall_log_summary()
     if args.pairs:
         out["pairs"] = term.pairs.summary()
         out["launch_state"] = term.launch_summary()  # D-165

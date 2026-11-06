@@ -67,6 +67,8 @@ BQ_KA_BIN, BQ_KA_BINS = 0.05, 21  # D-225: keep_alive score bins (last: 1.0)
 BQ_V_BIN, BQ_V_BINS = 0.25, 80    # m/s, |ball velocity| out of the paddle (last >= 19.75)
 BQ_W_BIN, BQ_W_BINS = 5.0, 60     # rad/s, |spin| out of the paddle (last >= 295)
 BQ_RS_BIN, BQ_RS_BINS = 0.1, 40   # m/s, receiver pelvis ground speed at the hand-off (last >= 3.9)
+FL_T_BIN, FL_T_BINS = 0.5, 17     # D-234: s since the episode start at a robot fall (last >= 8.0)
+FL_D_EDGES = (0.3, 0.8, 1.5, 3.0)  # D-234: m from the recovery spot at the fall (last control step before)
 RECOVERY_FIXED = (-5.6, 0.0)  # evaluation: baseline centre
 RECOVERY_STD = 0.5  # reward exp(-(d / std)^2)
 RECOVERY_BIN = 0.05  # error histogram bin width (m), 100 bins
@@ -373,6 +375,13 @@ class BallPhysicsAction(ActionTerm):
         self._bq_v = torch.zeros(2, BQ_V_BINS, dtype=torch.long, device=dev)
         self._bq_w = torch.zeros(2, BQ_W_BINS, dtype=torch.long, device=dev)
         self._bq_rs = torch.zeros(2, BQ_RS_BINS, dtype=torch.long, device=dev)
+        # D-234 (logging only): robot falls by phase (0 a feed in play, 1 between feeds) and by time since the
+        # episode start, distance from the recovery spot and the current feed's family
+        self._fl_t = torch.zeros(2, FL_T_BINS, dtype=torch.long, device=dev)
+        self._fl_d = torch.zeros(2, len(FL_D_EDGES) + 1, dtype=torch.long, device=dev)
+        self._fl_fam = torch.zeros(2, len(FAMILY_NAMES), dtype=torch.long, device=dev)
+        self._fl_d_edges = torch.tensor(FL_D_EDGES, device=dev)
+        self._fl_d_now = torch.zeros(n, device=dev)
         # D-217: cut state (pair_cut_prob > 0 only), and feeder-ball outcomes after a cut (feeds, legal; logging)
         self._cut_court = None
         if float(getattr(cfg, "pair_cut_prob", 0.0)) > 0.0 and getattr(cfg, "pair_mode", False):
@@ -527,6 +536,14 @@ class BallPhysicsAction(ActionTerm):
             self._tally(open_ & fell_all, fell_all)
             self.ep["env_episodes"] += len(env_ids)  # robot episodes (several feeds each)
             self.ep["env_falls"] += fell.sum()  # includes falls between feeds
+            if hasattr(self, "_fl_t"):  # D-234: the fall log (episode_length_buf is cleared after this reset)
+                ph = (~open_[env_ids]).long()
+                tb = (self._env.episode_length_buf[env_ids].float() * self._env.step_dt / FL_T_BIN).long().clamp(0, FL_T_BINS - 1)
+                db = torch.bucketize(self._fl_d_now[env_ids], self._fl_d_edges)
+                fl = fell.long()
+                self._fl_t.view(-1).index_add_(0, ph * FL_T_BINS + tb, fl)
+                self._fl_d.view(-1).index_add_(0, ph * (len(FL_D_EDGES) + 1) + db, fl)
+                self._fl_fam.view(-1).index_add_(0, ph * len(FAMILY_NAMES) + self.family[env_ids], fl)
         if self.ready is not None:
             self.ready.reset(env_ids)
         if self.shadow is not None:
@@ -937,6 +954,8 @@ class BallPhysicsAction(ActionTerm):
         dt = env.physics_dt
         origins = env.scene.env_origins
         data = self._entity.data
+        if hasattr(self, "_fl_d_now"):  # D-234: distance from the recovery spot, kept for the fall log
+            self._fl_d_now = (self.pelvis_xy() - self.recover_xy).norm(dim=-1)
         pose = data.body_link_pose_w[:, self.paddle_id]
         vel = data.body_link_vel_w[:, self.paddle_id]
         paddle = PaddleState(pose[:, :3] - origins, _quat_to_matrix(pose[:, 3:7]), vel[:, :3], vel[:, 3:6])
@@ -1250,6 +1269,11 @@ class BallPhysicsAction(ActionTerm):
         jp = robot.data.default_joint_pos[idx].clone()
         robot.write_joint_state_to_sim(jp, torch.zeros_like(jp), env_ids=idx)
         self.drill_places = getattr(self, "drill_places", 0) + int(idx.numel())
+
+    def fall_log_summary(self) -> dict:
+        """D-234: robot falls by phase [in feed, between feeds] x time since episode start / distance / family."""
+        return {"t_bin_s": FL_T_BIN, "d_edges": list(FL_D_EDGES), "families": list(FAMILY_NAMES),
+                "by_t": self._fl_t.tolist(), "by_d": self._fl_d.tolist(), "by_family": self._fl_fam.tolist()}
 
     def launch_summary(self) -> dict:
         return {"prev_len_bins": ["0-1", "2-4", "5+"], "d_edges": list(LAUNCH_D_EDGES), "v_edges": list(LAUNCH_V_EDGES),

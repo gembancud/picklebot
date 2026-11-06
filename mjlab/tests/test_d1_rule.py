@@ -650,3 +650,29 @@ def test_fall_kill_open_keep_and_r_kept_lines(tmp_path):
         return [str(f)]
     assert dr.r_kept(pairs("a.json", 0.71), pairs("b.json", 0.72))[0]
     assert not dr.r_kept(pairs("c.json", 0.69), pairs("d.json", 0.72))[0]
+
+
+def _fl_read(feed, betw, eps):
+    pad = lambda v: v + [0] * (17 - len(v))
+    falls = sum(feed) + sum(betw)
+    return {"fall_log": {"t_bin_s": 0.5, "by_t": [pad(feed), pad(betw)]}, "robot_episodes": eps,
+            "robot_falls": falls, "robot_fall_rate_per_episode": falls / eps}
+
+
+def test_r3_route_classes_and_validity():
+    from picklebot_mj import d1_rule as dr
+    base = _fl_read([1, 1, 5, 5], [0, 0, 4, 4], 1000)            # 20 falls, 0.02
+    spawn = _fl_read([20, 20, 5, 5], [5, 5, 4, 4], 1000)         # +50 of +50 excess in < 1 s
+    rec = _fl_read([1, 1, 5, 5], [0, 0, 30, 30], 1000)           # +52 between feeds
+    feed = _fl_read([1, 1, 30, 30], [0, 0, 4, 4], 1000)          # +50 in feeds
+    mixed = _fl_read([10, 0, 15, 5], [0, 0, 14, 14], 1000)       # +8 spawn, +10 feed, +20 recovery of +38 -> 53 % rec
+    assert dr.r3_route(base, spawn)[0] == "SPAWN"
+    assert dr.r3_route(base, rec)[0] == "RECOVERY"
+    assert dr.r3_route(base, feed)[0] == "FEED"
+    assert dr.r3_route(base, mixed)[0] == "RECOVERY"
+    even = _fl_read([10, 10, 15, 15], [0, 0, 14, 14], 1000)     # +18 spawn, +20 feed, +20 recovery of +58
+    assert dr.r3_route(base, even)[0] == "MIXED"
+    assert dr.r3_route(_fl_read([10, 10, 20, 20], [0, 0, 0, 0], 1000), even)[0] == "BASE-FAILS"
+    bad = dict(spawn, robot_falls=spawn["robot_falls"] + 1)
+    assert dr.r3_route(base, bad)[0] == "INVALID"
+    assert dr.r3_route(spawn, base)[0] in ("NO-EXCESS", "BASE-FAILS")

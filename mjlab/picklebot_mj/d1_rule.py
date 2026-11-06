@@ -1457,3 +1457,45 @@ def r_kept(child_paths: list[str], r_paths: list[str]) -> tuple[bool, str]:
     c, r = pooled_pairs(child_paths)["p5"], pooled_pairs(r_paths)["p5"]
     ok = c >= r - R_KEPT - 1e-9
     return ok, f"R-KEPT: P(5+) {c:.4f} vs R {r:.4f} (>= -{R_KEPT}) -> {ok}"
+
+
+# D-234 (panel round 95, (ii) 4 of 5): the R3 premise read. R (and C) against the d1 base read as a zero-residual
+# checkpoint on R3's exact instrument, same seeds. Each read's fall_log splits robot falls into SPAWN (< 1.0 s after the
+# episode start, either phase), FEED (a feed in play, >= 1.0 s) and RECOVERY (between feeds, >= 1.0 s). R's excess over
+# the base, per episode, is shared out over those three; a class with >= 50 % of the excess names the route.
+R3_SPAWN_S = 1.0
+R3_ROUTE_SHARE = 0.5
+
+
+def fall_classes(read: dict) -> dict:
+    fl, eps = read["fall_log"], max(int(read["robot_episodes"]), 1)
+    k = int(round(R3_SPAWN_S / fl["t_bin_s"]))
+    feed, betw = fl["by_t"]
+    n = {"SPAWN": sum(feed[:k]) + sum(betw[:k]), "FEED": sum(feed[k:]), "RECOVERY": sum(betw[k:])}
+    return {"falls": n, "per_ep": {c: v / eps for c, v in n.items()}, "booked": sum(feed) + sum(betw),
+            "robot_falls": int(read["robot_falls"]), "rate": float(read["robot_fall_rate_per_episode"])}
+
+
+def r3_route(base: dict, r: dict) -> tuple[str, str]:
+    b, x = fall_classes(base), fall_classes(r)
+    lines = []
+    for w, c in (("base", b), ("R", x)):
+        if c["booked"] != c["robot_falls"]:
+            return "INVALID", f"INVALID: {w} booked {c['booked']} falls vs robot_falls {c['robot_falls']}"
+    if b["rate"] > R3_MAX + 1e-9:
+        return "BASE-FAILS", f"BASE-FAILS: the d1 base's R3 {b['rate']:.4f} > {R3_MAX} on R3's own instrument"
+    exc = {c: x["per_ep"][c] - b["per_ep"][c] for c in x["per_ep"]}
+    tot = x["rate"] - b["rate"]
+    lines.append(f"R3 base {b['rate']:.4f}, R {x['rate']:.4f}, excess {tot:+.4f} per episode")
+    for c in exc:
+        lines.append(f"  {c}: base {b['per_ep'][c]:.4f} R {x['per_ep'][c]:.4f} excess {exc[c]:+.4f}"
+                     + (f" ({exc[c] / tot:.0%} of the excess)" if tot > 0 else ""))
+    route = "MIXED"
+    if tot > 0:
+        for c in ("SPAWN", "RECOVERY", "FEED"):
+            if exc[c] >= R3_ROUTE_SHARE * tot - 1e-12:
+                route = c
+                break
+    else:
+        route = "NO-EXCESS"
+    return route, "\n".join(lines + [f"ROUTE: {route}"])
