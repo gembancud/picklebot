@@ -7405,3 +7405,23 @@ Driver: scripts/diag/ct94.sh. Forgetting of the rally gain is the main risk, so 
 **If R-KEPT fails** (sequential forgetting), the next round builds the mixed form (court-read episodes inside the drill-reset rally training; RL, motion).
 
 **Seeds (ledgered):** training 232, smoke 233; dev 4220391-4220393. Next free: training 234, dev 4220394.
+
+### D-233 result (2026-11-06): KILL-NO-SAFER at +125 - court-task practice leaves training falls flat; the +100 checkpoint's R3 is 0.0523
+
+**Smoke** (seed 233, 60 iterations) passed all six lines: falls 3.832 (line 4.157), config ok, training falls over 20-60 4.217.
+
+**Training** (seed 232, R on Picklebot-Latent-Court-Res-G1):
+- **KILL-NO-SAFER fired at +125:** training falls per 1,000 env-s went 3.738 over 20-40 -> 3.747 over 100-120 (line <= 0.8 x).
+- **Driver defect (the agent's):** `export CTB` came after the kill watcher's subshell was started, so the watcher raised KeyError('CTB') right after printing the KILL-NO-SAFER line. It never reached the court read and never stopped training.
+  - The agent stopped training by hand at +217 (13:02, exit 143), as the coded kill required. Nothing after +125 is used.
+  - The driver then read the kill line and closed: VERDICT KILL (-> KILL-NO-SAFER).
+  - Fix for future drivers: export the watcher's variables before starting it.
+- **Reported, not changing the verdict:** the KILL-NO-FALLS read was run by hand afterwards. model_33920 on dev 4220391 read **0.0523** falls per episode (line <= 0.0486; R 0.0575-0.0586 on other seeds). So the court practice moved R3 by about 0.5-0.6 points in 100 iterations, not enough for the line, while training falls stayed flat.
+
+**Reading:** two R3 levers have now failed.
+- The fall penalty on the rally task (D-232, unchanged).
+- Practice on the court read's task (D-233, falls flat in training; R3 -0.6 points by +100).
+
+R's court-read falls are diffuse: easy families are included and between-feed falls tripled against the d1 base. They do not yield to a short fine-tune at LR 3e-5.
+
+Seeds 232 / 233 / 4220391 are used; 4220392-4220393 are unread. R stays unpromoted and C stays the parent. Panel round 95 is called (mjlab/results/footwork-round95-brief.md).

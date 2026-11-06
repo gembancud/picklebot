@@ -1,0 +1,14 @@
+D-233: C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt (reference); warm start R = artifacts/train/logs/picklebot_return_stand/2026-11-06_05-15-42_rally-d1s3dr/model_33797.pt (unpromoted); K = rally-d1s3drc on Picklebot-Latent-Court-Res-G1; training seed 232, smoke 233
+smoke exit 0 ok
+smoke no traceback ok
+smoke falls per 1,000 env-seconds 3.832 ok
+smoke std min 0.1 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True -> ok
+smoke training falls per 1,000 env-s over 20-60: 4.217 readable ok
+training: {"run": "rally-d1s3drc", "exit_code": 143, "finished": "2026-11-06T13:02:15+08:00"}
+KILL-NO-SAFER: training falls per 1,000 env-s 3.738 over 20-40 -> 3.747 over 100-120 (<= 0.8 x) -> KILL-NO-SAFER
+Traceback (most recent call last):
+  File "<stdin>", line 36, in <module>
+  File "<frozen os>", line 714, in __getitem__
+KeyError: 'CTB'
+VERDICT: KILL (-> KILL-NO-SAFER)
