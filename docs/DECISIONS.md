@@ -7565,3 +7565,29 @@ The failed smoke's files are kept.
 So 360 iterations of launcher-court practice cut R's court falls by a third and moved R3 to within 0.004 of the bar, with better returns. The rally side was not read (no gate reads after a kill).
 
 Seed 234 is used. Dev 4220398-4220399 are unread. C stays the parent. Panel round 96 is called.
+
+### D-236 (2026-11-06): continue rally-d1s3drl2 from model_34160 with exact-count kill lines (panel round 96, (ii) 3 of 5)
+
+Coach, motion and architecture voted to continue. RL and experiment design voted (i), a rerun from R; experiment design calls continuing after the hand read a rescue.
+
+**Withdrawn (the agent's, D-235 result):**
+- The "rally length 6.97 vs 4.75" claim, which pooled both court groups. Pair-court mean rally length over +241-360 is L 14.29, R 12.84, D-232 14.23.
+- The heading "the launcher courts work on R3", which overclaims from one seed and a non-endpoint checkpoint. The right word is "promising".
+
+**Corrected lines, checked on the killed run's logs before any seed was used (the coach's condition):**
+- KILL-NO-HIT is now d1_rule.launch_kill: pair-court (len_hist_group[0]) mean rally length >= 0.9 x R's at the same offsets.
+  - On +241-360 it reads 14.295 vs 12.837 -> CONTINUE.
+- KILL-UNSTABLE is now exact falls off the launcher courts <= 3.14 per 1,000 env-s (D-194's value, on the right population).
+  - On +241-360 it reads 0.490 -> CONTINUE.
+- These replace D-194's two log lines on launcher-court runs only.
+
+**Run (scripts/diag/lc98.sh):** M = rally-d1s3drl3, resumed from rally-d1s3drl2 model_34160 to the same endpoint model_34996 (837 iterations). Training seed 237. No new smoke; the config is checked at the kill.
+
+**Kill at +600 (window +481-600; every line is read before any stop):**
+- KILL-NO-HIT;
+- KILL-UNSTABLE;
+- KILL-LOST-OPEN (>= rally-d1s3drl2's own +20-140 value 0.6188 - 0.02);
+- KILL-NO-FALLS (model_34400 on dev 4220397 <= R's 0.0653 - 0.01);
+- config.
+
+**Gate and CONFIRM:** unchanged from D-235.

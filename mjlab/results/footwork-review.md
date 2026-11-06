@@ -1481,3 +1481,36 @@ FEED (>= 50 % in feeds after 1 s) -> the mixed form (court-read episodes on dril
 **Result (D-234):** FEED (R 63 % of the excess in feeds after 1 s; base 0.0345 passes R3 on R3's instrument). The excess
 sits mostly in the first feed after the spawn and the recovery after it. Route -> D-235 (launcher courts in the
 drill-reset rally training, motion's mixed form), D-232's lines.
+
+## Round 96 (2026-11-06): D-235 killed on a defective line; continue
+
+Brief: footwork-round96-brief.md.
+
+**Correction checks:**
+- KILL right as coded (all five).
+- "Defective line" is honest (all five). Architecture: mjlab logs the mean episode reward sum / 120 s, so 8-s launcher episodes count at about 1/15 and dominate the resets. L's line rose 0.03 -> 0.53. Experiment design: mean episode length 5,791 -> 2,367 steps while legal_return per step rose 1.71e-4 -> 2.06e-4.
+- **Withdrawn (RL, architecture): the agent's "rally length 6.97 vs 4.75" is a mix artefact too.** Pair-court rallying is flat-to-up: L 14.29 vs R 12.84 vs D-232's 14.23 mean length over +241-360.
+- launch.outcome_feeds_legal and outcome_by_d include launcher feeds; never use them for lines (experiment design, architecture).
+- The 4.157 smoke line is ~10x loose on the exact count. Experiment design wants a new D-entry (0.64); the others say leave it as a sanity check.
+- The D-194 falls estimator is biased by the synchronised time-outs (motion, RL).
+- The heading "works on R3" overclaims: one seed, a non-endpoint checkpoint. "Promising" (experiment design, RL).
+- The watcher stops at the first kill; read every line before stopping (experiment design).
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| RL | (i) rerun from R; pair-court P(5+) line and exact falls |
+| Motion | (ii) continue from model_34160; exact counts |
+| Coach | (ii) continue, if a corrected line passes on the +360 logs first |
+| Experiment design | (i) rerun; continuing after the hand read is a rescue |
+| Architecture | (ii) continue; pair-court mean rally length >= 0.9 x R's (about 3 lines of code) |
+
+(ii) 3 of 5. Line forms: architecture's (least code, within the winning bloc) for KILL-NO-HIT; RL's / motion's exact off-launcher falls with D-194's value 3.14 for KILL-UNSTABLE.
+
+**Estimates:**
+- R3 <= 0.04 at the endpoint: 45-60 %.
+- R-KEPT: about 65-75 %.
+- P(5+) >= 0.80 with Wilson low >= 0.78 from this run: 5-15 %. The opening (1-h0)(1-h1) of about 0.66 is still the gap.
+
+**Decision:** D-236.

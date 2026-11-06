@@ -676,3 +676,18 @@ def test_r3_route_classes_and_validity():
     bad = dict(spawn, robot_falls=spawn["robot_falls"] + 1)
     assert dr.r3_route(base, bad)[0] == "INVALID"
     assert dr.r3_route(spawn, base)[0] in ("NO-EXCESS", "BASE-FAILS")
+
+
+def test_launch_kill_reads_pair_courts_and_exact_falls():
+    from picklebot_mj import d1_rule as dr
+    S = dr.STEPS_PER_IT
+
+    def row(it, hist0, other):
+        return {"step": it * S, "len_hist_group": [hist0, [0] * len(hist0)],
+                "launch": {"launch_courts": {"envs": 2, "episodes_falls": [0, 0], "other_falls": other}}}
+    c = [row(100 + 481, [0] * 20, 0), row(100 + 600, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1200] + [0] * 9, 119 * S * 0.02 * 0.002)]
+    p = [row(50 + 481, [0] * 20, 0), row(50 + 600, [0] * 12 + [1200] + [0] * 7, 0)]
+    out = dr.launch_kill(c, p, 100, 50, 1)
+    assert out[0][0] == "KILL-NO-HIT" and "10.000 vs R 12.000" in out[0][1]  # 10 < 0.9 x 12
+    assert out[1][0] == "CONTINUE" and "2.000 per" in out[1][1]
+    assert dr.launch_kill(c, c, 100, 100, 1)[0][0] == "CONTINUE"

@@ -1499,3 +1499,51 @@ def r3_route(base: dict, r: dict) -> tuple[str, str]:
     else:
         route = "NO-EXCESS"
     return route, "\n".join(lines + [f"ROUTE: {route}"])
+
+
+# D-236 (panel round 96, (ii) 3 of 5): rally-d1s3drl2 (D-235) continued from model_34160 to model_34996. D-194's
+# log-based lines are replaced for launcher-court runs (an 8-s launcher episode's reward sum, and the Poisson falls
+# estimator, both measure the episode mix): exact pair-court and off-launcher counts from the share log.
+HIT_RATIO = 0.9          # KILL-NO-HIT (D-236): pair-court mean rally length >= 0.9 x R's at the same offsets
+EXACT_FALLS_MAX = 3.14   # KILL-UNSTABLE (D-236): exact falls per 1,000 env-s off the launcher courts (D-194's value)
+LAUNCH_KILL_WIN = (481, 600)
+
+
+def pair_rally(rows: list[dict], it_lo: int, it_hi: int, start_it: int) -> tuple[float, int]:
+    """Pair-court (len_hist_group[0]) mean rally length and rally count over the window."""
+    rows = [r for r in rows if "len_hist_group" in r]
+    a = _row_from(rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(rows, (start_it + it_hi) * STEPS_PER_IT)
+    if a is None or b is None or b["step"] <= a["step"]:
+        return float("nan"), 0
+    h = [y - x for x, y in zip(a["len_hist_group"][0], b["len_hist_group"][0])]
+    n = sum(h)
+    return (sum(i * c for i, c in enumerate(h)) / n if n else float("nan")), n
+
+
+def exact_falls(rows: list[dict], it_lo: int, it_hi: int, start_it: int, dt: float = 0.02) -> float:
+    """Falls per 1,000 env-s off the launcher courts (launch_courts.other_falls) over the window."""
+    rows = [r for r in rows if "other_falls" in r.get("launch", {}).get("launch_courts", {})]
+    a = _row_from(rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(rows, (start_it + it_hi) * STEPS_PER_IT)
+    if a is None or b is None or b["step"] <= a["step"]:
+        return float("nan")
+    la, lb = a["launch"]["launch_courts"], b["launch"]["launch_courts"]
+    return 1000 * (lb["other_falls"] - la["other_falls"]) / ((b["step"] - a["step"]) * dt)
+
+
+def launch_kill(rows, r_rows, start_it, r_start, envs_other, win=LAUNCH_KILL_WIN) -> list[tuple[str, str]]:
+    """D-236's log lines over win (all read; the caller stops on any KILL)."""
+    out = []
+    c, nc = pair_rally(rows, *win, start_it)
+    p, npar = pair_rally(r_rows, *win, r_start)
+    if c != c or p != p or min(nc, npar) < MIN_WINDOW_EVENTS:
+        out.append(("NO-DATA", f"KILL-NO-HIT: pair-court rally length {c} (n {nc}) vs R {p} (n {npar}) -> NO-DATA"))
+    else:
+        v = "CONTINUE" if c >= HIT_RATIO * p - 1e-9 else "KILL-NO-HIT"
+        out.append((v, f"KILL-NO-HIT: pair-court mean rally length +{win[0]}-{win[1]} {c:.3f} vs R {p:.3f} "
+                       f"(>= {HIT_RATIO} x; n {nc} / {npar}) -> {v}"))
+    f = exact_falls(rows, *win, start_it) / envs_other if envs_other else float("nan")
+    v = "NO-DATA" if f != f else ("CONTINUE" if f <= EXACT_FALLS_MAX else "KILL-UNSTABLE")
+    out.append((v, f"KILL-UNSTABLE: exact falls off the launcher courts {f:.3f} per 1,000 env-s (<= {EXACT_FALLS_MAX}) -> {v}"))
+    return out
