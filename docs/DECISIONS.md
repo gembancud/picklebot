@@ -7591,3 +7591,36 @@ Coach, motion and architecture voted to continue. RL and experiment design voted
 - config.
 
 **Gate and CONFIRM:** unchanged from D-235.
+
+**D-236 kill at +600: CONTINUE on every line.**
+- Pair-court rally length 13.450 vs R 12.901.
+- Exact falls off the launcher courts 0.488.
+- Open 0.6188 -> 0.6584.
+- Config ok.
+- KILL-NO-FALLS: model_34400 reads 0.0374 on dev 4220397 against R's 0.0653.
+
+The R3 read here is on the kill seed, not the gate seed, and it is reported only.
+
+### D-236 result (2026-11-06): NO-CANDIDATE on the left + back guard alone (-5.1 vs kill -5) - R3 0.0271 and P(5+) 0.7454 pass
+
+M = rally-d1s3drl3 model_34996. The gate is the frozen set-start read, dev 4220385-4220388, against C. Every line passed except one:
+- gain2: P(5+) +18.10 points over C (lower bound +15.73). M 0.7454, C 0.5645.
+- **R-KEPT: 0.7454 vs R 0.7236 -> True.**
+- **R3: 0.0271 court falls per episode on dev 4220398 (<= 0.04) -> True.** R reads 0.0596 on the same seed.
+- cfs79 lines: H0 0.1283 vs 0.2448, FEEDER 0.8746 vs 0.7619, K3-KEPT 0.0276 vs 0.0269: all True.
+- Mechanism: ready 0.767, falls per 1,000 hits 0.19.
+- Guards (r19_guards against the original parent, pooled):
+  - worst family contact +7.8: pass;
+  - **left + back feeder contact 0.4051 vs 0.4557 = -5.1 points, kill below -5: FAIL.**
+
+**Reading:**
+- R (D-231) read -3.5 on this guard and M reads -5.1.
+- Direction contact: M left 0.346 / back 0.568; C 0.407 / 0.584.
+- The direction read has about 1.5k left + back feeds, so the 1.6-point drop from R is within about one standard error. The guard is a fixed line, though, and it fails.
+- The plausible cause is D-235's form: the move and swing drill dose halved, and those drills train the left and back footwork (RL flagged this in round 96).
+
+The rule is NO-CANDIDATE, so there is no CONFIRM. Dev 4220399 and 4220349-4220356 stay unread. C stays the parent. Panel round 97 is called.
+
+**Status against the frozen target:**
+- R3 passes on its gate seed for the first time.
+- P(5+) 0.7454 is still below 0.80 (Wilson low 0.78).
