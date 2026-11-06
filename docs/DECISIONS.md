@@ -7513,3 +7513,26 @@ D-234's pre-registered FEED route is motion's mixed form (round 94): court-read 
 - **CONFIRM:** dev 4220349-4220356 plus R3 on dev 4220399.
 
 C stays the parent.
+
+### D-235 smoke result and fix (2026-11-06): SMOKE-FAIL of rally-d1s3drl - the launcher feeds were not the court read's; rerun as rally-d1s3drl2
+
+**Smoke (seed 235):** six of seven lines passed. The falls line failed: 4.973 per 1,000 env-s against 4.157.
+
+**Two defects (the agent's), found by the agent's own check:**
+- **The launcher feeds were drill-v2 feeds aimed at the fixed start spot**, so they were not the court read's feeds.
+  - In the court read every feed is aimed at the pelvis, its family is zone-valid from the feed mix (no drill v2), and its recovery spot is random.
+  - In the smoke the launcher courts fell only 16 times in 2,314 episodes.
+  - A mean-action read of R on the task (dev 4220400) gave 0.017 falls per episode on the launcher courts, against R's 0.0622 on the court read.
+  - **Fix:** a launcher feed is now a rally court feed that is always aimed at the pelvis, with a random recovery spot from RECOVERY_BOX.
+  - **Check:** R on the fixed task (dev 4220401) reads 0.0568 falls per episode on the launcher courts.
+- **The smoke falls estimator (falls_by_length.py) assumes resets arrive as a Poisson stream.** The launcher courts' 8-s time-outs come in synchronised bursts, which inflates the estimate.
+  - **Fix:** the line (<= 4.157, unchanged) is now read from an exact count of falls off the launcher courts (launch_courts.other_falls over the share log's steps).
+  - The estimator is reported only.
+  - The kill's D-194 falls line keeps the estimator; its margin is about 5x.
+
+Everything else in D-235 is unchanged:
+- run rally-d1s3drl2 (scripts/diag/lc97.sh);
+- training seed 234 (unused so far), smoke 236;
+- the kill's paired reference is R's court read on dev 4220397 from the failed driver's stage 0: 0.0653, so the kill line is <= 0.0553.
+
+The failed smoke's files are kept.

@@ -43,13 +43,19 @@ def test_launch_courts_feed_their_own_robots_and_never_rally(monkeypatch):
     assert int(le.sum()) == 16 and bool((le == ((court >= 8) & (court < 16))).all())
     assert bool((t.drill_scale[le] == 0).all()) and bool((t.drill_scale[court < 8] == 2).all())
     assert int(t.pairs.solo.sum()) == 8
-    seen = {"lfire": 0, "court_feed": 0, "busy": 0}
+    seen = {"lfire": 0, "not_court": 0, "anch": 0, "rec_out": 0, "busy": 0}
+    from picklebot_mj.tasks.return_stand import RECOVERY_BOX
     orig = t._refeed
 
     def refeed(fire):
         seen["lfire"] += int((fire & le).sum())
         orig(fire)
-        seen["court_feed"] += int((t.court_feed & le).sum())
+        f = fire & le
+        seen["not_court"] += int((f & ~t.court_feed).sum())  # pelvis-anchored court feeds (the court read's feed)
+        seen["anch"] += int((f & t._court_anch).sum())
+        r = t.recover_xy[f]
+        (x0, x1), (y0, y1) = RECOVERY_BOX
+        seen["rec_out"] += int(((r[:, 0] < x0) | (r[:, 0] > x1) | (r[:, 1] < y0) | (r[:, 1] > y1)).sum())
 
     t._refeed = refeed
     act = torch.zeros(env.num_envs, env.action_manager.total_action_dim, device=env.device)
@@ -61,5 +67,6 @@ def test_launch_courts_feed_their_own_robots_and_never_rally(monkeypatch):
     started = t.pairs.started.clone()
     env.close()
     assert summ["envs"] == 16 and summ["episodes_falls"][0] >= 16, summ
-    assert seen["lfire"] > 0 and seen["court_feed"] == 0 and seen["busy"] == 0, seen
+    assert seen["lfire"] > 0 and seen["not_court"] == seen["anch"] == seen["rec_out"] == seen["busy"] == 0, seen
+    assert summ["other_falls"] >= 0 and summ["step"] > 0, summ
     assert not bool(started[8:16].any())

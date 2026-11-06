@@ -151,9 +151,11 @@ class BallPhysicsActionCfg(ActionTermCfg):
     pair_drill_court_frac: float = 0.0
     # D-235 (training only; 0 = off, as in every read): the top pair_launch_court_frac of the drill courts (court
     # indices just below round(pair_drill_court_frac * courts)) become launcher courts: no rally, no move or swing
-    # episodes; each robot plays the court read's own episode: a drill feed in play from the reset (random start
-    # spot), the next after refeed_delay_s, drill v2 recovery spots, LAUNCH_EPISODE_S episodes (the task's
-    # launch_time_out term). The other drill courts keep their per-episode move and swing chances.
+    # episodes; each robot plays the court read's own episode: a feed in play from the reset (random start spot),
+    # the next after refeed_delay_s, every feed aimed at the pelvis with a zone-valid family from the feed mix and a
+    # random recovery spot (RECOVERY_BOX), as the court read (D-235 fix: a pelvis-anchored court feed), and
+    # LAUNCH_EPISODE_S episodes (the task's launch_time_out term). The other drill courts keep their per-episode
+    # move and swing chances.
     pair_launch_court_frac: float = 0.0
     # D-089: share of feeds aimed at the court (anchored at the start spot, as in the rally evaluation) instead of at
     # the pelvis, drawn per feed; 0 keeps every feed pelvis-anchored (feed_anchor "pelvis") as before.
@@ -370,6 +372,7 @@ class BallPhysicsAction(ActionTerm):
             self.launch_env = (court >= lo) & (court < hi)
             self.drill_scale = torch.where(self.launch_env, torch.zeros_like(self.drill_scale), self.drill_scale)
         self._launch_ep = torch.zeros(2, dtype=torch.long, device=dev)  # D-235: launcher-court episodes, falls
+        self._other_falls = torch.zeros((), dtype=torch.long, device=dev)  # D-235 fix: falls off the launcher courts
         self._share_split = torch.zeros(2, 2, dtype=torch.long, device=dev)  # [pair, drill court] x [feeder, hand-off]
         # D-165 (logging only): the receiver's state at each feeder-ball launch, by the court's previous rally length
         # (0-1, 2-4, 5+ shots): distance from its recovery spot and ground speed histograms, and that feeder ball's
@@ -557,6 +560,7 @@ class BallPhysicsAction(ActionTerm):
             if self.launch_env is not None:  # D-235
                 le = self.launch_env[env_ids]
                 self._launch_ep += torch.stack([le.sum(), (le & fell).sum()])
+                self._other_falls += (~le & fell).sum()
             if hasattr(self, "_fl_t"):  # D-234: the fall log (episode_length_buf is cleared after this reset)
                 ph = (~open_[env_ids]).long()
                 tb = (self._env.episode_length_buf[env_ids].float() * self._env.step_dt / FL_T_BIN).long().clamp(0, FL_T_BINS - 1)
@@ -817,8 +821,10 @@ class BallPhysicsAction(ActionTerm):
                                          < self.cfg.court_feed_anchor_prob)
             if mixed:  # D-130: the replay draw comes first; court_feed_prob applies to the rest
                 self.court_feed[env_ids] = self.court_feed[env_ids] & ~self.replay_feed[env_ids]
-            if getattr(self, "launch_env", None) is not None:  # D-235: launcher courts get the court read's drill feeds
-                self.court_feed[env_ids] = self.court_feed[env_ids] & ~self.launch_env[env_ids]
+            if getattr(self, "launch_env", None) is not None:  # D-235 fix: launcher feeds are the court read's feeds:
+                le = self.launch_env[env_ids]  # court feeds (zone-valid family, no drill v2) aimed at the pelvis
+                self.court_feed[env_ids] = self.court_feed[env_ids] | le
+                self._court_anch[env_ids] = self._court_anch[env_ids] & ~le
         if getattr(self.cfg, "court_anchor_prob", 0.0) > 0.0:
             if not hasattr(self, "_court_anch"):
                 self._court_anch = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
@@ -886,6 +892,12 @@ class BallPhysicsAction(ActionTerm):
                 fixed = _const("rec_fixed", lambda: list(RECOVERY_FIXED), self.device).expand(k, 2)
                 rc = torch.where(self._court_anch[env_ids].unsqueeze(-1), fixed, rec_court)
                 rec = torch.where(self.court_feed[env_ids].unsqueeze(-1), rc, rec)
+        if getattr(self, "launch_env", None) is not None:  # D-235 fix: launcher feeds recover to a random spot
+            from picklebot_mj.tasks.shadow_swing import _const
+            u = torch.rand(k, 2, generator=self.gen_recover, device=self.device)
+            lo = _const(("rec_lo", RECOVERY_BOX), lambda: [RECOVERY_BOX[0][0], RECOVERY_BOX[1][0]], self.device)
+            hi = _const(("rec_hi", RECOVERY_BOX), lambda: [RECOVERY_BOX[0][1], RECOVERY_BOX[1][1]], self.device)
+            rec = torch.where(self.launch_env[env_ids].unsqueeze(-1), lo + (hi - lo) * u, rec)
         self.recover_xy[env_ids] = rec
         x0, z0 = self._u("start_x", fam), self._u("start_z", fam)
         ax, ay = self._anchor(env_ids)
@@ -1316,7 +1328,8 @@ class BallPhysicsAction(ActionTerm):
                 "cuts": int(self.cut_count), "drill_places": int(getattr(self, "drill_places", 0)),
                 "drill_place_skipped": int(getattr(self, "drill_place_skipped", 0)),
                 "launch_courts": {"envs": 0 if self.launch_env is None else int(self.launch_env.sum()),
-                                  "episodes_falls": self._launch_ep.tolist()},
+                                  "episodes_falls": self._launch_ep.tolist(), "other_falls": int(self._other_falls),
+                                  "step": int(self._env.common_step_counter)},
                 "ball_by_class": {"ka_bin": BQ_KA_BIN, "v_bin": BQ_V_BIN, "w_bin": BQ_W_BIN, "rs_bin": BQ_RS_BIN,
                                   "ka": self._bq_ka.tolist(), "v": self._bq_v.tolist(), "w": self._bq_w.tolist(),
                                   "recv_speed": self._bq_rs.tolist()}}
