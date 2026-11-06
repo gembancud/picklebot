@@ -7356,3 +7356,52 @@ Panel round 93 (mjlab/results/footwork-review.md): (i) 5 of 5.
 - R3 needs practice in those states, or a premise change. Neither is a stronger dose of a term that is not being paid.
 
 Seeds 230 / 231 / 4220390 are used; dev 4220391-4220392 are unread. R stays unpromoted and C stays the parent. Panel round 94 is called (mjlab/results/footwork-round94-brief.md).
+
+## D-233 (2026-11-06): practise R3's own states - R continued on the court read's task (zero task code)
+
+Panel round 94 (mjlab/results/footwork-review.md).
+
+**Votes:**
+- (i) practise the court read's states, 3: experiment design, RL, motion;
+- (ii) a premise read first, 2: coach, architecture.
+
+The (i) forms differed:
+- random recovery on the drill courts, about 20 lines (experiment design);
+- R continued on Picklebot-Latent-Court-Res-G1, zero task code (RL);
+- court-read episodes on half the drill courts, 40-80 lines (motion).
+
+Least new code: RL's.
+
+**Corrections (round 94):**
+- KILL-NO-FALLS is valid (all five).
+- **Rally training uses fixed recovery spots.** The rally runs pass `--env.actions.ball.recovery-mode fixed` (dr92 / df93 OV), while the court read uses random spots (experiment design). Architecture's "random recovery is trained" read the task default and missed the override.
+- **No court runs solo launcher feeds** (all five).
+- **The court read has about 15x more cold spawns per env-second than training:** 8-s episodes, against 120-s ones plus placement (architecture).
+- **The d1 base's 0.0318 is not paired on R3's instrument** (coach, motion). The base was trained on 8-s Latent-Court episodes (architecture).
+- **R's added falls are spread across families, easy ones included** (1.0-2.4 % against the base's 0.1-0.3 %). Between-feed falls go from 34 to 99, and R moves toward its spots harder (motion).
+- **Front-zone feeds fall most** (topspin 6.6 %, high 6.3 %, reach_forehand 6.1 %; experiment design).
+- **The instrument matches its frozen definition** (2.69 feeds per episode against about 2.8; experiment design).
+- **(iv), asking the user, is not warranted** while practice is untried. The user changed the rally start, not the falls bar (experiment design, RL, motion).
+
+**Run:** K = rally-d1s3drc. R (rally-d1s3dr model_33797, UNPROMOTED) continued on Picklebot-Latent-Court-Res-G1 at the task defaults:
+- 8-s episodes, solo launcher feeds, random recovery spots, move 0.35 / swing 0.05;
+- RES_BASE the d1 base, LAM_R 2;
+- ScheduledPPO, LR 3e-5, 400 iterations, endpoint model_34196;
+- training seed 232, smoke 233.
+
+Driver: scripts/diag/ct94.sh. Forgetting of the rally gain is the main risk, so R-KEPT is binding.
+
+**Lines:**
+- **Smoke** (60 iterations): exit, traceback, falls <= 4.157, std; config (d1 base, lam_r 2.0, 8-s episodes, random recovery, no pairs); training falls readable over 20-60.
+- **Kill at +120 (30 %):**
+  - KILL-NO-SAFER: training falls per 1,000 env-s over 100-120 <= 0.8 x the run's own 20-40;
+  - KILL-NO-FALLS: model_33920 (the first checkpoint at or after +100) on the R3 court read, dev 4220391, <= 0.0486.
+- **Gate:**
+  - on the frozen set-start read, dev 4220385-4220388, against C: gain2, r19_guards, bars, cfs79_lines;
+  - R-KEPT >= 0.7036;
+  - R3 <= 0.04 on dev 4220392, with R and C on the same seed reported.
+  - All pass -> CONFIRM on 4220349-4220356 (C re-read) plus K's R3 on dev 4220393.
+
+**If R-KEPT fails** (sequential forgetting), the next round builds the mixed form (court-read episodes inside the drill-reset rally training; RL, motion).
+
+**Seeds (ledgered):** training 232, smoke 233; dev 4220391-4220393. Next free: training 234, dev 4220394.

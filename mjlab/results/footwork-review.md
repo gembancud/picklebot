@@ -1422,3 +1422,31 @@ Brief: footwork-round93-brief.md.
 **Estimates:** R3 fixable; P(5+) about 0.74-0.80 with one more opening lever; 0.80 not yet shown.
 
 **Decision:** D-232.
+
+## Round 94 (2026-11-06): D-232 KILL-NO-FALLS; the R3 route
+
+Brief: footwork-round94-brief.md.
+
+**Correction checks:**
+- KILL-NO-FALLS valid (all five).
+- Rally training's recovery is fixed by the run's CLI (experiment design); architecture read the task default.
+- No solo launcher courts in training (all five).
+- The court read has about 15x the cold spawns (architecture).
+- The base's 0.032 is from another instrument (coach, motion).
+- R's falls are diffuse, easy families included, and between-feed falls tripled (motion, RL, experiment design).
+
+**Votes**
+
+| reviewer | vote |
+|---|---|
+| RL | (i) R continued on the court read's task (zero task code) |
+| Motion | (i) court-read episodes on half the drill courts |
+| Coach | (ii) premise read (time since reset, phase, distance, family) on R and the base |
+| Experiment design | (i) random recovery on the drill courts only |
+| Architecture | (ii) premise read with a SPAWN / RECOVERY / FEED route |
+
+(i) 3 of 5. Forms differed; least new code: RL's.
+
+**Asking the user (iv):** not warranted now (experiment design, RL, motion).
+
+**Decision:** D-233.
