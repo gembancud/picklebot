@@ -7264,3 +7264,40 @@ Panel round 92 (mjlab/results/footwork-review.md): (d) 5 of 5.
 - Copied to mjlab/artifacts/motion/body_models_download/ (git-ignored).
 - basicmodel_{neutral,m,f}_lbs_10_207_0_v1.1.0.pkl were written as GVHMR/inputs/checkpoints/body_models/smpl/SMPL_{NEUTRAL,MALE,FEMALE}.pkl (data only).
 - **GVHMR's body models are now complete.** The CalTennis pilot (D-229's reference route) needs the GPU, so it runs after D-231's training, not beside it (nothing else on the GPU while training).
+
+### D-231 result (2026-11-06): NO-CANDIDATE on R3 alone - the set-start practice lifts P(5+) 0.5645 -> 0.7236 with every other line passing; court falls 0.0575 > 0.04
+
+**Training:** seed 228, 1,200 iterations to model_33797, exit 0 at 07:53.
+- Smoke passed all six lines (dose 2.011 placements per pair-court rally; 0 busy skips).
+- The +360 kill read CONTINUE: training (1-h0)(1-h1) went 0.562 -> 0.621, with falls 0.47.
+- Training opening rate by 700-800: 0.637.
+
+**Gate** on the frozen set-start read, dev 4220385-4220388, against C's baseline:
+
+| line | R (rally-d1s3dr) | C | verdict |
+|---|---|---|---|
+| P(5+) | **0.7236** (Wilson 0.712-0.735, 5,709 rallies; per seed 0.719 / 0.713 / 0.742 / 0.720) | 0.5645 | GAIN2 +15.91, lower bound +14.29: GAIN |
+| H0 (feeder-ball hazard) | 0.146 | 0.245 | pass |
+| FEEDER (feeder legal) | 0.857 | 0.762 | pass |
+| K3-KEPT (late failure share) | 0.0243 | 0.0269 | pass |
+| r19 guards vs the original parent | worst family -3.9 (reach_deep); cross_forehand 0.939 vs 0.756; L+B feeder contact -3.5 | | pass |
+| mechanism bars | ready 0.532; falls / 1,000 hits 0.17 | | pass |
+| **R3** (h5f court read, 24 s, dev 4220389) | **0.0575 robot falls per episode** | 0.0556 (dev 4220365) | **FAIL (<= 0.04)** |
+
+- **Hazards h0-h4:** R 0.146 / 0.107 / 0.037 / 0.012 / 0.003; C 0.245 / 0.187 / 0.065 / 0.013 / 0.003. So (1-h0)(1-h1) = 0.762 against C's 0.614; the bar needs about 0.87.
+- **Court conversion:** q0 0.710 / q1 0.745 against C's 0.461 / 0.695.
+
+**Reported:**
+- **Old read, same seeds:** R 0.3901 vs C 0.4061, GAIN2 -1.59 (lower bound -2.92). A small loss on the old read (forgetting check), every seed -0.5 to -2.8.
+- **Pairs falls / (falls + envs):** R 0.0097 vs C 0.0245 on the new read; 0.0586 vs 0.0524 on the old read.
+- **Direction contact R / C:** forward 0.926 / 0.918, left 0.364 / 0.407, back 0.567 / 0.584, right 0.769 / 0.777.
+
+**Verdict as coded: NO-CANDIDATE.** Only R3 fails. That line was named binding in D-231, because C itself reads 0.0556. CONFIRM does not run.
+
+**What this means:**
+- Practising the placed start is the largest single gain of the climb: +15.9 points paired, every seed +15 to +17.
+- The remaining blockers to the target:
+  - P(5+) 0.72 against 0.80, with the opening still the gap;
+  - R3 court falls about 5.6-5.8 % against 4 %. That is a pre-existing failure that no lever has targeted; the court read uses random recovery spots and 24-s episodes, unlike the pairs read.
+
+Panel round 93 is called (mjlab/results/footwork-round93-brief.md). R is not promoted; C stays the parent until a gate passes. Seeds 228 / 229 / 4220389 are used.
