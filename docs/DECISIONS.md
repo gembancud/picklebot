@@ -7536,3 +7536,32 @@ Everything else in D-235 is unchanged:
 - the kill's paired reference is R's court read on dev 4220397 from the failed driver's stage 0: 0.0653, so the kill line is <= 0.0553.
 
 The failed smoke's files are kept.
+
+**D-235 rerun smoke (rally-d1s3drl2, seed 236): all seven lines pass.**
+- The launcher courts are active: 2,433 episodes, 179 falls, 0.074 falls per episode with sampled actions.
+- **Caveat (reported):** the exact count off the launcher courts is 0.426 falls per 1,000 env-s. That is about 10x below the 4.157 line, which was set on the log estimator's scale.
+  - On the exact count the line is a sanity check only and binds nowhere near.
+  - D-194's kill window reported 0.57 on its own estimator for D-232, consistent with this count.
+  - The line's value is unchanged. A recalibrated line would be a new decision.
+- Training (seed 234) started.
+
+### D-235 result (2026-11-06): KILL-NO-HIT at +360 on a defective line - the launcher courts work on R3 (0.0653 -> 0.0438)
+
+**Coded kill at +360:**
+- D-194's lines: falls 1.99 per 1,000 env-s (kill > 3.14); legal_return 0.4877 (kill < 0.7049) -> **KILL-NO-HIT**.
+- KILL-LOST-OPEN passed: training (1-h0)(1-h1) 0.6188 -> 0.6598.
+- KILL-NO-FALLS was not read, because the earlier kill stopped the watcher.
+- Training was stopped at +363 (exit 143). VERDICT KILL.
+
+**The line is defective (the agent's).** D-194's legal_return line is the mean of Episode_Reward/legal_return over the episodes that ended.
+- That is a per-episode sum of the reward, so it scales with episode length.
+- The launcher courts' 8-s episodes end about 15x as often per robot as the 120-s rally episodes, so they dominate the mean.
+- The line therefore measures the episode-length mix, not hitting. The agent checked the falls line's margin before launch but not this one.
+
+**Reported, read by hand after the kill:** model_34160 (+360) on the h5f court read, dev 4220397.
+- R3 **0.0438** (271 / 6,187), against R's 0.0653 on the same seed. KILL-NO-FALLS's line was <= 0.0553: CONTINUE.
+- Court-read legal returns: 0.7286 against R's 0.6864.
+
+So 360 iterations of launcher-court practice cut R's court falls by a third and moved R3 to within 0.004 of the bar, with better returns. The rally side was not read (no gate reads after a kill).
+
+Seed 234 is used. Dev 4220398-4220399 are unread. C stays the parent. Panel round 96 is called.
