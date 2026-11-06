@@ -1547,3 +1547,52 @@ def launch_kill(rows, r_rows, start_it, r_start, envs_other, win=LAUNCH_KILL_WIN
     v = "NO-DATA" if f != f else ("CONTINUE" if f <= EXACT_FALLS_MAX else "KILL-UNSTABLE")
     out.append((v, f"KILL-UNSTABLE: exact falls off the launcher courts {f:.3f} per 1,000 env-s (<= {EXACT_FALLS_MAX}) -> {v}"))
     return out
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-240 (panel round 100, (i) 5 of 5; the lever by majority and the tie rule: the training-only pair_rally_cap 8, RL and
+# experiment design, architecture's value): P = M (rally-d1s3drl3 model_34996) on D-235's launcher-court task (move
+# weights x1) with pair_rally_cap 8 in training. Smoke: D-235's lines plus the pair-court feeder share >= 2.0 x M's 0.0667
+# (prediction 0.185 from M's length histogram, recorded before the smoke). Kill at +240 over +181-240, paired with M's
+# post-restart +181-240 (M resumed from 34160): KILL-LOST-OPEN, KILL-UNSTABLE, KILL-NO-FALLS (dev 4220404); the rally-length
+# line is void under the cap. Training-log lines are read first and stop training at once on a KILL; the dev read follows.
+# Gate: D-239's lines plus OPEN, pooled (1-h0)(1-h1) >= M's + 0.02, with R3 on dev 4220405.
+CAP8 = 8
+CAP8_SHARE_MIN = 0.1334        # 2.0 x M's pair-court feeder share 0.0667 (results/lc98-train-share.jsonl, last row)
+CAP8_SHARE_PRED = 0.185        # predicted from M's pair-court length histogram (round 100)
+CAP8_KILL_WIN = (181, 240)
+M_START, M_OPEN_181_240 = 34160, 0.6519   # M's post-restart window (results/lc98-train-share.jsonl)
+OPEN_GATE_GAIN = 0.02
+
+
+def pair_feeder_share(rows: list[dict]) -> tuple[float, int]:
+    """Pair-court feeder share of balls (split[0] = [feeder, other]) between the first and last logged rows."""
+    rows = [r for r in rows if "split" in r]
+    if len(rows) < 2:
+        return float("nan"), 0
+    a, b = rows[0]["split"][0], rows[-1]["split"][0]
+    f, o = b[0] - a[0], b[1] - a[1]
+    return (f / (f + o) if f + o else float("nan")), f + o
+
+
+def cap8_kill(rows: list[dict], start_it: int, envs_other: int, m_rows: list[dict]) -> list[tuple[str, str]]:
+    """D-240's training-log lines over CAP8_KILL_WIN, paired with M's post-restart window (all read)."""
+    out = []
+    e, l = train_open(m_rows, *CAP8_KILL_WIN, M_START), train_open(rows, *CAP8_KILL_WIN, start_it)
+    if e is None or l is None or min(e["n"], l["n"]) < OPEN_MIN_RALLIES:
+        out.append(("NO-DATA", f"KILL-LOST-OPEN: windows not readable ({e and e['n']} / {l and l['n']}) -> NO-DATA"))
+    else:
+        v = "CONTINUE" if l["open2"] >= e["open2"] - OPEN_KEEP - 1e-9 else "KILL-LOST-OPEN"
+        out.append((v, f"KILL-LOST-OPEN: training (1-h0)(1-h1) +{CAP8_KILL_WIN[0]}-{CAP8_KILL_WIN[1]} {l['open2']:.4f} vs M's "
+                       f"{e['open2']:.4f} (>= -{OPEN_KEEP}; n {l['n']} / {e['n']}) -> {v}"))
+    f = exact_falls(rows, *CAP8_KILL_WIN, start_it) / envs_other if envs_other else float("nan")
+    v = "NO-DATA" if f != f else ("CONTINUE" if f <= EXACT_FALLS_MAX else "KILL-UNSTABLE")
+    out.append((v, f"KILL-UNSTABLE: exact falls off the launcher courts {f:.3f} per 1,000 env-s (<= {EXACT_FALLS_MAX}) -> {v}"))
+    return out
+
+
+def open_gate(child_paths: list[str], m_paths: list[str]) -> tuple[bool, str]:
+    c, m = pooled_hazards(child_paths), pooled_hazards(m_paths)
+    ok = c["open2"] >= m["open2"] + OPEN_GATE_GAIN - 1e-9
+    return ok, (f"OPEN: pooled (1-h0)(1-h1) {c['open2']:.4f} vs M {m['open2']:.4f} (>= +{OPEN_GATE_GAIN}; h0 {c['h'][0]:.3f} / "
+                f"{m['h'][0]:.3f}, h1 {c['h'][1]:.3f} / {m['h'][1]:.3f}) -> {ok}")

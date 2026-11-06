@@ -1602,3 +1602,36 @@ Brief: footwork-round99-brief.md.
 - Target from this run: under 5 %. Within 3-6 runs: 20-40 %, via the opening (h0, h1).
 
 **Decision:** D-239.
+
+## Round 100 (2026-11-07): D-239 NO-CANDIDATE on K3-KEPT
+
+Brief: results/footwork-round100-brief.md.
+
+**Correction check (all five):**
+- D-239 ran as registered. NO-CANDIDATE stands.
+- **The K3 fail is real.** N has 168 late failures of 4,261 rallies that reached shot 3 (0.0394); M has 116 of 4,210 (0.0276): +1.18 points, SE 0.39, and all four seeds rise. It costs about 0.5 points of P(5+); the "5+ ended" half does not touch P(5+).
+- **Brief corrections:** there was one left / back dose (N, 600 iterations in two legs), not three runs (experiment design). The left 0.34 is a direction-probe read; nothing yet shows how much of h0 / h1 it accounts for (coach, architecture). On the gate's own feeder ball, reach_deep went 0.241 -> 0.342 and cross_backhand 0.525 -> 0.610 against M (motion).
+- **Implementation defect, the second time (experiment design):** the kill watcher let training run past a coded KILL (D-233, D-238). From D-240, training-log lines are read first and stop training at once; the watcher records the actual stop iteration.
+- **Body-level cause of the K3 rise (motion):** recovery error median 0.475 -> 0.525 m, paddle speed 5.36 -> 5.21 m/s; the move dose pulls the robot off its spot.
+
+**Votes:** (i) 5 of 5, parent M.
+
+| member | lever |
+|---|---|
+| RL | training-only pair_rally_cap 8, all courts (no new code) |
+| experiment design | pair_rally_cap 20, all courts; revised to 8 after the agent's correction (below) |
+| architecture | pair_rally_cap 8 on half the pair courts (about 15 lines) |
+| coach | pair_rally_cap 5 on half the pair courts (about 15 lines) |
+| motion | FeedMix x3 on reach_deep, cross_backhand, reach_backhand |
+
+**Agent correction to experiment design's premise:** experiment design assumed pair-court rallies run about 70 shots. M's training log says 15.75 balls per rally (feeder share 0.0667). From M's length histogram the predicted feeder share is 0.247 at cap 5, 0.185 at cap 8 and 0.107 at cap 20 (about 1.6x). Experiment design revised its vote to cap 8 with a smoke line of 2.0 x M's share.
+
+**Decision (majority and the tie rule):** the training-only pair_rally_cap, value 8 (RL, experiment design, architecture), on all courts (the least-new-code form). Kill and smoke lines in experiment design's form; OPEN as a gate line (RL, coach, architecture).
+
+**Rejected (ii) (all five):** effort is not binding (D-229); any actuator change sits under the frozen decoder and d1 base (15-20 GPU h). The simpler first step, the damping / action-scale premise read queued since round 92, should run first.
+
+**Risks named:** M itself read -5.1 on the left + back guard, so a child of M without the dose may fail it again (motion, coach: about 50 % pass). Cap 8 removes shots 8+ from training, which K3 catches (experiment design).
+
+**Estimates:** P(5+) 0.75-0.79 from this run; target from this run 5-10 %; within 3-6 runs 15-35 %. Motion: 0.80 likely needs the human-footwork reference route.
+
+**Decision:** D-240.

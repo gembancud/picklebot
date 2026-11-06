@@ -691,3 +691,25 @@ def test_launch_kill_reads_pair_courts_and_exact_falls():
     assert out[0][0] == "KILL-NO-HIT" and "10.000 vs R 12.000" in out[0][1]  # 10 < 0.9 x 12
     assert out[1][0] == "CONTINUE" and "2.000 per" in out[1][1]
     assert dr.launch_kill(c, c, 100, 100, 1)[0][0] == "CONTINUE"
+
+
+def test_cap8_feeder_share_and_kill_lines():
+    rows = [{"step": 0, "split": [[100, 900], [0, 0]]}, {"step": 10, "split": [[300, 1900], [0, 0]]}]
+    s, n = dr.pair_feeder_share(rows)
+    assert n == 1200 and abs(s - 200 / 1200) < 1e-9
+    assert dr.pair_feeder_share(rows[:1])[1] == 0
+
+    def mk(start, h0, h1, falls_per_it):
+        out = []
+        for k, it in enumerate(range(start + 170, start + 260, 10)):
+            n = 1000 * (k + 1)
+            out.append({"step": it * dr.STEPS_PER_IT, "len_hist_group": [[int(n * h0), int(n * (1 - h0) * h1), n], [0]],
+                        "launch": {"launch_courts": {"other_falls": falls_per_it * it}}})
+        return out
+    m = mk(dr.M_START, 0.19, 0.20, 0.0)
+    v = dict((x[0], x) for x in dr.cap8_kill(mk(34996, 0.19, 0.20, 0.0), 34996, 9216, m))
+    assert "CONTINUE" in v and "KILL-LOST-OPEN" not in v
+    v = [x[0] for x in dr.cap8_kill(mk(34996, 0.40, 0.40, 0.0), 34996, 9216, m)]
+    assert v[0] == "KILL-LOST-OPEN"
+    v = [x[0] for x in dr.cap8_kill(mk(34996, 0.19, 0.20, 1e6), 34996, 9216, m)]
+    assert v[1] == "KILL-UNSTABLE"

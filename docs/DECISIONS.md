@@ -7731,3 +7731,52 @@ Paired, read after the kill: N +181-300 14.054 vs M 14.289.
 **Standing rule:** rally-length lines are paired at the same offsets after a (re)start, from +181.
 
 Coach dissented, preferring (ii), a rerun from M.
+
+**D-239 result (2026-11-07): NO-CANDIDATE on K3-KEPT (results/lc101-summary.txt).** CONFIRM was not run.
+
+| line | N (rally-d1s3drl6 model_35595) | reference | result |
+|---|---|---|---|
+| GAIN2 vs C | +17.68 points, lower bound +15.67 | >= +1, > 0 | pass |
+| worst family vs parent | +8.0 | kill below -5 | pass |
+| left + back guard | 0.4165 vs parent 0.4557 (-3.9) | kill below -5 | pass |
+| H0 feeder-ball hazard | 0.1169 vs C 0.2448 | <= -0.03 | pass |
+| FEEDER legal | 0.8871 vs C 0.7619 | >= -0.01 | pass |
+| **K3-KEPT late failure share** | **0.0394 vs C 0.0269** | **<= +0.005** | **FAIL** |
+| M-KEPT P(5+) | 0.7413 vs M 0.7454 | >= -0.02 | pass |
+| R3 court read, dev 4220403 | 0.0245 (M on the same seed 0.0306) | <= 0.04 | pass |
+
+Reported:
+- M read 0.0276 on the same K3 line in D-236, so the late-failure rise is new in N. Late splits: shots 3-4 0.0214 vs C 0.0162; 5+ ended 0.0185 vs 0.0109.
+- Hazards h0-h4: N 0.117 / 0.105 / 0.041 / 0.016 / 0.006; M 0.128 / 0.096 / 0.040 / 0.012 / 0.003; C 0.245 / 0.187 / 0.065 / 0.013 / 0.003.
+- Direction contact N vs M: forward 0.902 / 0.914, left 0.343 / 0.346, back 0.600 / 0.568, right 0.784 / 0.783. Left + back +1.1 points (SE 1.3).
+- Old read (reported): N P(5+) 0.3562 vs C 0.4061.
+
+Plain reading: the x3 left / back dose (D-237 to D-239) moved back contact by about 3 points and left not at all. P(5+) is flat against M, and late failures rose from a small base. Panel round 100 is called.
+
+### D-240 (2026-11-07): M + the training-only pair_rally_cap 8 (panel round 100, (i) 5 of 5; the lever by majority and the tie rule)
+
+**Premise:** under the drill-reset set start, pair-court rallies average about 16 balls, so the feeder ball and the opening are only 6.7 % of pair-court training balls. The binding hazards are h0 and h1 (N 0.117 / 0.105). The left / back dose is closed (D-239).
+
+**Run (scripts/diag/lc102.sh):**
+- N = rally-d1s3cap8 = M (rally-d1s3drl3 model_34996, unpromoted) on D-235's launcher-court task (Picklebot-Rally22b-FastMove-DrillReset-Launch-G1, move weights x1).
+- The only change: pair_rally_cap 8 in training (D-161 knob; every read leaves it at 0).
+- C's recipe: LR 3e-5, ScheduledPPO, 600 iterations to model_35595. Training seed 242, smoke 243.
+
+**Smoke (160 iterations):** D-235's seven lines (config also checks pair_rally_cap 8) plus the pair-court feeder share >= 0.1334 (2.0 x M's 0.0667). Predicted, before the smoke: 0.185.
+
+**Kill at +240 (window +181-240, paired with M's post-restart +181-240 from 34160):**
+- Training-log lines, read first; any KILL stops training at once:
+  - KILL-LOST-OPEN: training (1-h0)(1-h1) >= M's 0.6519 - 0.02;
+  - KILL-UNSTABLE: exact falls off the launcher courts <= 3.14 per 1,000 env-s;
+  - config: launcher courts, launch_time_out, no fall term, pair_rally_cap 8.
+- Then KILL-NO-FALLS: the +240 checkpoint (model_35240) court falls / episode on dev 4220404 <= 0.04.
+- The rally-length line is void under the cap. The watcher records the iteration at which training stopped.
+
+**Gate (frozen set-start read, dev 4220385-4220388 / 4220307, 4220334-4220336, against C):**
+- every D-236 line unchanged (gain2, r19_guards with the left + back guard, cfs79_lines including K3-KEPT);
+- M-KEPT: P(5+) >= M's - 0.02 (0.7254);
+- OPEN: pooled (1-h0)(1-h1) >= M's + 0.02;
+- R3: court falls / episode <= 0.04 on dev 4220405 (M read there too, reported).
+- All pass -> CONFIRM on dev 4220349-4220356 (guards re-read against C) plus R3 on dev 4220399.
+
+**New code:** picklebot_mj/d1_rule.py (pair_feeder_share, cap8_kill, open_gate and the D-240 constants) with a test (tests/test_d1_rule.py: 45 passed).
