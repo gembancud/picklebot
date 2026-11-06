@@ -70,3 +70,15 @@ def test_launch_courts_feed_their_own_robots_and_never_rally(monkeypatch):
     assert seen["lfire"] > 0 and seen["not_court"] == seen["anch"] == seen["rec_out"] == seen["busy"] == 0, seen
     assert summ["other_falls"] >= 0 and summ["step"] > 0, summ
     assert not bool(started[8:16].any())
+
+
+def test_left_back_task_only_changes_the_move_sector_weights():
+    import dataclasses
+    import mjlab.tasks  # noqa: F401
+    import picklebot_mj.tasks.footwork_specialist as fs
+    from mjlab.tasks.registry import load_env_cfg
+    a = dataclasses.asdict(load_env_cfg(TASK).actions["ball"])
+    b = dataclasses.asdict(load_env_cfg(fs.TASK_RALLY_FASTMOVE_DR_LAUNCH_LB).actions["ball"])
+    assert {k for k in a if a[k] != b[k]} == {"move_sector_weights"}
+    assert tuple(b["move_sector_weights"]) == (1.0, 1.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0)
+    assert b["adaptive_curriculum"] is False  # the weights hold during training

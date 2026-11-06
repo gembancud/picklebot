@@ -7624,3 +7624,38 @@ The rule is NO-CANDIDATE, so there is no CONFIRM. Dev 4220399 and 4220349-422035
 **Status against the frozen target:**
 - R3 passes on its gate seed for the first time.
 - P(5+) 0.7454 is still below 0.80 (Wilson low 0.78).
+
+**D-236 result, corrections (panel round 97):**
+- The cause is unproven. Most of the left loss came with R, which had the full dose: left contact C 0.407 -> R 0.364 -> M 0.346. Fair wording: "the drill-reset line of runs wears away left contact; the dose cut may add to it."
+- Left + back pools 2,982 feeds, not about 1.5k. The M - R SE is about 1.3 points.
+- The gate output prints M under the label "R". The same-seed R3 for R is 0.0596.
+- The guard is read against the original parent; against C, M reads -5.2.
+
+### D-237 (2026-11-06): M with the move drill weighted toward the left and back (panel round 97, (ii) 5 of 5)
+
+**Change:** Picklebot-Rally22b-FastMove-DrillReset-Launch-LeftBack-G1 is D-235's launcher-court task with move_sector_weights (1,1,2,2,2,1,1,1). That doubles sectors 2 (left), 3 (back-left) and 4 (back); sector 0 points toward the net, counter-clockwise, as in RIGHT_SIDE_X2. adaptive_curriculum is off, so the weights hold. Launcher courts, drill dose and everything else are unchanged.
+
+**Run (scripts/diag/lc99.sh):** N = rally-d1s3drl4, warm start M (rally-d1s3drl3 model_34996, unpromoted).
+- LR 3e-5, ScheduledPPO, 600 iterations, endpoint model_35595.
+- Training seed 238, smoke 239.
+- Stage 0: M's direction read on dev 4220402.
+
+**Smoke:** D-235's seven lines plus the sector share (sectors 2-4 >= 0.45 of the move spots issued). The config check also covers the weights.
+
+**Kill at +180 (window +61-180; every line is read before any stop):**
+- KILL-NO-HIT: pair-court mean rally length >= 0.9 x M's last 120 iterations.
+- KILL-UNSTABLE: exact falls off the launcher courts <= 3.14.
+- KILL-LOST-OPEN: >= M's last window - 0.02.
+- KILL-NO-FALLS: court falls <= 0.04 on dev 4220402.
+- KILL-DIR: left + back feeder contact on dev 4220402 >= M's on the same seed - 0.01.
+- config.
+
+**Gate:** every D-236 line against C on dev 4220385-4220388, with the left + back guard unchanged.
+- M-KEPT: pooled P(5+) >= M's 0.7454 - 0.02.
+- R3 <= 0.04 on dev 4220403.
+- Reported: N - M left + back contact, with its SE.
+- Labels fixed (N, M).
+
+**CONFIRM:** dev 4220349-4220356, with the guards re-read against C on those seeds, plus R3 on dev 4220399.
+
+C stays the parent.

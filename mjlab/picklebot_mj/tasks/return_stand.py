@@ -1327,6 +1327,7 @@ class BallPhysicsAction(ActionTerm):
                 "outcome_by_d": self._ls_out_d.tolist(), "outcome_after_cut": self._out_cut.tolist(),
                 "cuts": int(self.cut_count), "drill_places": int(getattr(self, "drill_places", 0)),
                 "drill_place_skipped": int(getattr(self, "drill_place_skipped", 0)),
+                "move_issued": None if self.drill is None else self.drill.stats["issued"].tolist(),  # D-237: spots per sector
                 "launch_courts": {"envs": 0 if self.launch_env is None else int(self.launch_env.sum()),
                                   "episodes_falls": self._launch_ep.tolist(), "other_falls": int(self._other_falls),
                                   "step": int(self._env.common_step_counter)},

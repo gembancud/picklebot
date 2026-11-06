@@ -1514,3 +1514,38 @@ Brief: footwork-round96-brief.md.
 - P(5+) >= 0.80 with Wilson low >= 0.78 from this run: 5-15 %. The opening (1-h0)(1-h1) of about 0.66 is still the gap.
 
 **Decision:** D-236.
+
+## Round 97 (2026-11-06): D-236 NO-CANDIDATE on the left + back guard; left/back move-drill emphasis
+
+Brief: footwork-round97-brief.md.
+
+**Correction checks:**
+- NO-CANDIDATE right as coded (all five). Unrounded: 0.40514 vs 0.40573; the miss is 0.06 points. The guard stays.
+- **The cause in D-236's result is wrong (RL, motion, experiment design).** Most of the left loss came with R, which had the full drill dose: left C 0.407 -> R 0.364 -> M 0.346. D-235 adds about 1.8 points (about 1.2 SE). Fair wording: "the drill-reset line of runs wears away left contact; the dose cut may add to it."
+- **The feed count was wrong (experiment design):** left + back pools 2,982 feeds for M and 2,971 for the reference, not about 1.5k. The SE of the difference from R is about 1.3 points.
+- **Labels (coach, experiment design):** lc98-summary prints M under "R"; its R3 comparison quotes R's pooled value. The same-seed value is 0.0596.
+- **Not footwork loss (motion):** M's left p90 peak speed rose (C 2.04, R 2.06, M 2.15 m/s). What changed is lower effort on misses (median miss peak speed down about 0.1 m/s) and a larger recovery error (R 0.325 -> M 0.475 m).
+- **The dose did halve by construction (architecture).** (i) cannot restore it without halving the pair courts or dropping swing episodes.
+- launch.outcome_feeds_legal / outcome_by_d include launcher feeds; logging only (architecture).
+- With the guard at the line on the same seeds, a pass by noise is likely; CONFIRM must re-read the guard (RL, experiment design).
+
+**Votes:** (ii) 5 of 5. Forms:
+- weights x2 on sectors 2-4 (RL, motion, experiment design; coach left x2 / back x1.5; architecture x3);
+- kill at +180 (coach, motion, experiment design);
+- a direction kill (coach, RL, motion; RL's -1-point form, the median);
+- M-KEPT (all); R3 on fresh dev 4220403 (coach, experiment design, architecture);
+- a smoke check of the sector share (RL, architecture).
+
+**What would count as selecting on noise (experiment design):**
+- re-reading M on other seeds or checkpoints;
+- calling -5.06 "-5";
+- treating a -4.9 child as fixed before CONFIRM;
+- claiming a gain over M under about 2.6 points (2 SE).
+
+**Estimates:**
+- Guard passes: 55-65 %.
+- Target from this run: under 5 %.
+- Target within 3-5 runs: 20-50 %.
+- **Next binding lever: the opening** (h0 0.128 -> about 0.08, h1 0.096 -> about 0.06).
+
+**Decision:** D-237.

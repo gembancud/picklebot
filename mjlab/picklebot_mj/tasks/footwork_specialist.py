@@ -851,3 +851,21 @@ def rally_fastmove_dr_launch(cfg):
 register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_LAUNCH, env_cfg=rally_fastmove_dr_launch(load_env_cfg(ag.SRC_22B)),
                     play_env_cfg=rally_fastmove_dr_launch(load_env_cfg(ag.SRC_22B, play=True)),
                     rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))
+
+
+# D-237 (panel round 97, (ii) 4 of 5): D-235's launcher-court task with the move drill's spots weighted toward the
+# left and back (sectors 2 left, 3 back-left, 4 back doubled; sector 0 = toward the net, counter-clockwise, as
+# RIGHT_SIDE_X2 in tasks/__init__.py). The only change from TASK_RALLY_FASTMOVE_DR_LAUNCH.
+TASK_RALLY_FASTMOVE_DR_LAUNCH_LB = "Picklebot-Rally22b-FastMove-DrillReset-Launch-LeftBack-G1"
+LEFT_BACK_X2 = (1.0, 1.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0)
+
+
+def rally_fastmove_dr_launch_lb(cfg):
+    cfg = rally_fastmove_dr_launch(cfg)
+    cfg.actions["ball"] = dataclasses.replace(cfg.actions["ball"], move_sector_weights=LEFT_BACK_X2)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_LAUNCH_LB, env_cfg=rally_fastmove_dr_launch_lb(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_fastmove_dr_launch_lb(load_env_cfg(ag.SRC_22B, play=True)),
+                    rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))
