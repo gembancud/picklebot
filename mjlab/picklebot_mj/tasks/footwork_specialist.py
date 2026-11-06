@@ -534,6 +534,26 @@ register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR, env_cfg=rally_fastmove_dr(lo
                     play_env_cfg=rally_fastmove_dr(load_env_cfg(ag.SRC_22B, play=True)), rl_cfg=load_rl_cfg(ag.SRC_22B),
                     runner_cls=load_runner_cls(ag.SRC_22B))
 
+# D-232 (panel round 93, (i) 5 of 5; D-063's term, 4 of 5): the drill-reset task plus the terminating-fall penalty
+# (is_terminated, weight -50, placed before legal_return, which clears the step flags). The only change from
+# TASK_RALLY_FASTMOVE_DR.
+TASK_RALLY_FASTMOVE_DR_FALL = "Picklebot-Rally22b-FastMove-DrillReset-Fall-G1"
+FALL_PENALTY_WEIGHT = -50.0
+
+
+def rally_fastmove_dr_fall(cfg):
+    from mjlab.envs import mdp as _mdp
+    cfg = rally_fastmove_dr(cfg)
+    legal = cfg.rewards.pop("legal_return")
+    cfg.rewards["fall"] = RewardTermCfg(func=_mdp.is_terminated, weight=FALL_PENALTY_WEIGHT)
+    cfg.rewards["legal_return"] = legal
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_FALL, env_cfg=rally_fastmove_dr_fall(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_fastmove_dr_fall(load_env_cfg(ag.SRC_22B, play=True)),
+                    rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))
+
 
 # D-199 (D-198's FEED-STATE route; motion's ready_at_handoff, panel rounds 63-64): the d1s3 task (Rally22b-FastMove) plus
 # one reward term for being set at the moment a ball is put in play for this env: the feeder fire or the partner's

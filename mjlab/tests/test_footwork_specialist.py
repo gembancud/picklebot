@@ -643,3 +643,18 @@ def test_rally_drill_reset_task_changes_only_the_two_flags():
     for k in a.rewards:
         assert a.rewards[k].func is b.rewards[k].func and a.rewards[k].weight == b.rewards[k].weight
     assert a.episode_length_s == b.episode_length_s
+
+
+def test_rally_drill_reset_fall_task_adds_only_the_fall_penalty_before_legal_return():
+    import mjlab.tasks  # noqa: F401
+    from mjlab.envs import mdp
+    from mjlab.tasks.registry import load_env_cfg
+
+    import picklebot_mj.tasks.footwork_specialist as fs
+    a, b = load_env_cfg(fs.TASK_RALLY_FASTMOVE_DR), load_env_cfg(fs.TASK_RALLY_FASTMOVE_DR_FALL)
+    assert set(b.rewards) - set(a.rewards) == {"fall"} and set(a.rewards) <= set(b.rewards)
+    assert b.rewards["fall"].func is mdp.is_terminated and b.rewards["fall"].weight == -50.0
+    assert list(b.rewards)[-1] == "legal_return"
+    for k in a.rewards:
+        assert a.rewards[k].func is b.rewards[k].func and a.rewards[k].weight == b.rewards[k].weight
+    assert a.actions["ball"] == b.actions["ball"] and b.actions["ball"].pair_drill_reset

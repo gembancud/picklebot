@@ -7301,3 +7301,40 @@ Panel round 92 (mjlab/results/footwork-review.md): (d) 5 of 5.
   - R3 court falls about 5.6-5.8 % against 4 %. That is a pre-existing failure that no lever has targeted; the court read uses random recovery spots and 24-s episodes, unlike the pairs read.
 
 Panel round 93 is called (mjlab/results/footwork-round93-brief.md). R is not promoted; C stays the parent until a gate passes. Seeds 228 / 229 / 4220389 are used.
+
+## D-232 (2026-11-06): a fall penalty on the set-start-practised policy (R, unpromoted), gated in full
+
+Panel round 93 (mjlab/results/footwork-review.md): (i) 5 of 5.
+
+**Corrections (round 93):**
+- NO-CANDIDATE is valid, and R3's read (the h5f court read) is the frozen instrument, not an error (all five).
+- R's and C's R3 were read on unpaired seeds (4220389 / 4220365), so every child-vs-R comparison now shares seeds (RL, experiment design, coach).
+- "R3 never targeted" holds only on this lineage. D-063's terminating-fall penalty took H3 from 6.0 % to 0.1 % of episodes, and the rally task has no fall term (RL, motion, experiment design, coach).
+- **The rally residual lineage brought the falls in (architecture):** d1 base 0.0318 (passes), d1s2 0.068, d1s3 0.062, C 0.0556, R 0.0575.
+- **Where the court-read falls happen:** 264 of R's 357 come during feeds and 93 between feeds, while recovering to random spots (coach, architecture).
+- **The pairs read's falls are a different unit** and cannot stand in for R3 (RL, experiment design).
+
+**Run:** F = rally-d1s3drf on Picklebot-Rally22b-FastMove-DrillReset-Fall-G1. That is R's task plus D-063's term `fall` = is_terminated x -50, placed before legal_return (4 of 5; architecture would have used -250).
+- footwork_specialist.rally_fastmove_dr_fall; test_rally_drill_reset_fall_task_adds_only_the_fall_penalty_before_legal_return.
+- **Warm start:** R (rally-d1s3dr model_33797), UNPROMOTED (5 of 5). The child must pass every D-231 line against C's references, plus R3, plus R-KEPT. Nothing R failed is waived, and R gains no status.
+- **Recipe:** C's (LR 3e-5, ScheduledPPO, no anchor, 1,200 iterations, endpoint model_34996). Training seed 230, smoke 231. Driver: scripts/diag/df93.sh.
+
+**Lines** (d1_rule.fall_kill / open_keep_kill / r_kept, tests/test_d1_rule.py::test_fall_kill_open_keep_and_r_kept_lines):
+- **Stage 0:** R's court read on dev 4220390 (the kill's paired reference).
+- **Smoke** (160 iterations): D-201's lines; config (both drill-reset flags, the fall term present); the drill-reset dose (20-140).
+- **Kill at +360:**
+  - D-194's lines.
+  - **KILL-LOST-OPEN** (3 of 5): training (1-h0)(1-h1) over 220-340 >= the run's own 20-140 window - 0.02 (coach's form).
+  - **KILL-NO-FALLS** (5 of 5 named a mid-run court read; experiment design's form): the first checkpoint at or after +360 (model_34160) read on dev 4220390, court falls / episode <= R's on the same seed - 0.01. It is read during training as part of the run's own kill.
+  - KILL-FARM is reported only.
+- **Gate** on the frozen set-start read, dev 4220385-4220388:
+  - every D-231 line against C's reference (gain2, r19_guards, bars, cfs79_lines);
+  - **R-KEPT** (4 of 5): pooled P(5+) >= R's - 0.02 = 0.7036;
+  - **R3** <= 0.04 on dev 4220391 (R read on 4220391 too, reported).
+  - All pass -> CONFIRM on 4220349-4220356 (C re-read), plus F's R3 re-read on dev 4220392 (<= 0.04).
+
+**Not adopted:** architecture's premise read of fall timing after reset (1 of 5).
+
+**Estimates (round 93):** R3 looks fixable on the D-063 precedent, with the risk that a cautious robot gives back some of the opening gain (R-KEPT catches it). P(5+) about 0.74-0.80 after one more opening lever on a passing child (for example random-practice hand-offs for h1, coach). 0.80 with Wilson low 0.78 needs a point estimate near 0.79-0.80, that is (1-h0)(1-h1) about 0.87 against 0.762 today. Not yet shown. The target is unchanged.
+
+**Seeds (ledgered):** training 230, smoke 231; dev 4220390-4220392. Next free: training 232, dev 4220393.

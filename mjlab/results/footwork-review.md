@@ -1400,3 +1400,25 @@ Brief: footwork-round92-brief.md.
 **Estimates:** (d) +3-8 points; 0.80 still needs the actuator and reference routes.
 
 **Decision:** D-231.
+
+## Round 93 (2026-11-06): D-231 P(5+) 0.7236 on the set-start read; NO-CANDIDATE on R3 alone
+
+Brief: footwork-round93-brief.md.
+
+**Correction checks:**
+- NO-CANDIDATE valid; R3's read is right (all five).
+- R vs C R3 was unpaired (RL, experiment design, coach).
+- D-063's fall penalty is the precedent (RL, motion, experiment design, coach).
+- The rally lineage raised falls from the d1 base's 0.032 (architecture).
+- Falls split: 264 in feeds, 93 between feeds (coach, architecture).
+
+**Votes:** (i) fall penalty on R, 5 of 5.
+- Term: D-063's -50 (4) vs -250 (architecture).
+- R as an unpromoted warm start, gated in full against C (5 of 5).
+- R-KEPT (4 of 5).
+- A mid-run court read kill (5 of 5; experiment design's form).
+- KILL-LOST-OPEN (3 of 5).
+
+**Estimates:** R3 fixable; P(5+) about 0.74-0.80 with one more opening lever; 0.80 not yet shown.
+
+**Decision:** D-232.

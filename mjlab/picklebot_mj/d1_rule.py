@@ -1424,3 +1424,36 @@ def open_kill(rows: list[dict], start_it: int) -> tuple[str, str]:
         f"{lab}: training (1-h0)(1-h1) {e['open2']:.4f} over {DR_EARLY} -> {l['open2']:.4f} over {DR_LATE} "
         f"(>= +{OPEN_KILL_GAIN}; n {e['n']} / {l['n']}; h0 {e['h0']:.3f} -> {l['h0']:.3f}, h1 {e['h1']:.3f} -> {l['h1']:.3f}) -> "
         + ("CONTINUE" if ok else lab))
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-232 (panel round 93, (i) 5 of 5): F = rally-d1s3drf, R (rally-d1s3dr model_33797, unpromoted: NO-CANDIDATE on R3) +
+# D-063's fall penalty. Lines, by majority with experiment design's form where they differed:
+FALL_KILL_GAP = 0.01     # KILL-NO-FALLS: the +360 checkpoint's court falls / episode <= R's on the same seed - 0.01
+OPEN_KEEP = 0.02         # KILL-LOST-OPEN: training (1-h0)(1-h1) over 220-340 >= the run's own 20-140 window - 0.02
+R_KEPT = 0.02            # R-KEPT (gate): pooled P(5+) >= R's - 0.02 on the same seeds
+R3_MAX = 0.04            # R3 (gate): court falls / episode <= 0.04
+
+
+def fall_kill(child_rate: float, r_rate: float) -> tuple[str, str]:
+    ok = child_rate <= r_rate - FALL_KILL_GAP + 1e-9
+    return ("CONTINUE" if ok else "KILL-NO-FALLS"), (
+        f"KILL-NO-FALLS: +360 court falls per episode {child_rate:.4f} vs R {r_rate:.4f} on the same seed "
+        f"(<= -{FALL_KILL_GAP}) -> " + ("CONTINUE" if ok else "KILL-NO-FALLS"))
+
+
+def open_keep_kill(rows: list[dict], start_it: int) -> tuple[str, str]:
+    e, l = train_open(rows, *DR_EARLY, start_it), train_open(rows, *DR_LATE, start_it)
+    lab = "KILL-LOST-OPEN"
+    if e is None or l is None or min(e["n"], l["n"]) < OPEN_MIN_RALLIES:
+        return "NO-DATA", f"{lab}: windows {DR_EARLY} / {DR_LATE} not readable -> NO-DATA"
+    ok = l["open2"] >= e["open2"] - OPEN_KEEP - 1e-9
+    return ("CONTINUE" if ok else lab), (
+        f"{lab}: training (1-h0)(1-h1) {e['open2']:.4f} over {DR_EARLY} -> {l['open2']:.4f} over {DR_LATE} "
+        f"(>= -{OPEN_KEEP}; n {e['n']} / {l['n']}) -> " + ("CONTINUE" if ok else lab))
+
+
+def r_kept(child_paths: list[str], r_paths: list[str]) -> tuple[bool, str]:
+    c, r = pooled_pairs(child_paths)["p5"], pooled_pairs(r_paths)["p5"]
+    ok = c >= r - R_KEPT - 1e-9
+    return ok, f"R-KEPT: P(5+) {c:.4f} vs R {r:.4f} (>= -{R_KEPT}) -> {ok}"

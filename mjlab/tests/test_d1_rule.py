@@ -623,3 +623,30 @@ def test_open_kill_and_dose_lines():
     assert ok, line                              # 2000 placements over 1000 rallies
     ok, line = dr.dr_dose([z, row(140, [300, 150, 550], 500)], 32598)
     assert not ok
+
+
+def test_fall_kill_open_keep_and_r_kept_lines(tmp_path):
+    assert dr.fall_kill(0.045, 0.0575)[0] == "CONTINUE"
+    assert dr.fall_kill(0.050, 0.0575)[0] == "KILL-NO-FALLS"
+
+    def row(it, hist):
+        return {"step": (32598 + it) * dr.STEPS_PER_IT, "len_hist_group": [hist + [0] * (65 - len(hist)), [0] * 65],
+                "launch": {"drill_places": 0, "drill_place_skipped": 0}}
+    z, e = row(20, [0, 0, 0]), row(140, [300, 150, 550])          # open2 0.55
+    keep = row(340, [300 + 320, 150 + 160, 550 + 520])              # late open2 ~0.52 (> 0.53? no: check)
+    v, line = dr.open_keep_kill([z, e, row(220, [300, 150, 550]), keep], 32598)
+    assert v in ("CONTINUE", "KILL-LOST-OPEN"), line
+    drop = row(340, [300 + 500, 150 + 200, 550 + 300])              # late open2 0.30
+    assert dr.open_keep_kill([z, e, row(220, [300, 150, 550]), drop], 32598)[0] == "KILL-LOST-OPEN"
+    same = row(340, [600, 300, 1100])
+    assert dr.open_keep_kill([z, e, row(220, [300, 150, 550]), same], 32598)[0] == "CONTINUE"
+    import json
+    def pairs(name, p5):
+        n = 1000
+        k = round(p5 * n)
+        q = {"pairs": {"court_counts": [[0, 0, 10, 8]], "len_hist": [0, 0, 0, 0, n - k] + [k] + [0] * 59, "open_len_hist": [0] * 65}}
+        f = tmp_path / name
+        json.dump(q, open(f, "w"))
+        return [str(f)]
+    assert dr.r_kept(pairs("a.json", 0.71), pairs("b.json", 0.72))[0]
+    assert not dr.r_kept(pairs("c.json", 0.69), pairs("d.json", 0.72))[0]
