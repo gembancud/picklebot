@@ -1,0 +1,21 @@
+D-238: C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt (reference); warm start M = artifacts/train/logs/picklebot_return_stand/2026-11-06_15-24-56_rally-d1s3drl3/model_34996.pt (unpromoted); N = rally-d1s3drl5 on Picklebot-Rally22b-FastMove-DrillReset-Launch-LeftBack3-G1 (launcher courts + left/back move drill x3); training seed 238, smoke 240
+smoke exit 0 ok
+smoke no traceback ok
+(reported) smoke falls per 1,000 env-seconds, log estimator (biased by the launcher courts synchronised time-outs) 6.181
+(reported) launcher-court falls per episode 0.0244 (R on the court read 0.0622)
+smoke falls per 1,000 env-seconds off the launcher courts (exact count, steps 840480-843840) 0.639 ok
+smoke std min 0.1 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + stance_progress + launch_time_out, no fall term, no other new terms True -> ok
+smoke falls half-split (reported): first half 6.766, second half 5.580
+smoke dose drill-reset dose over (20, 140): 2.009 placements per pair-court rally (in (1.9, 2.05)), n 923, skipped busy 0, open2 0.5764 ok
+smoke launcher courts: {'envs': 256, 'episodes_falls': [2337, 54], 'other_falls': 35, 'step': 843840} (256 envs, episodes booked) ok
+smoke sector share 2-4 (left, back-left, back) 0.468 of 5404 spots (>= 0.45; per sector [671, 399, 893, 773, 863, 378, 678, 749]) ok
+training: {"run": "rally-d1s3drl5", "exit_code": 143, "finished": "2026-11-06T22:21:07+08:00"}
+KILL-NO-HIT: pair-court mean rally length +61-180 11.714 vs M's last 120 iterations 14.584 (>= 0.9 x; n 8394 / 8214) -> KILL-NO-HIT
+KILL-UNSTABLE: exact falls off the launcher courts 0.448 per 1,000 env-s (<= 3.14) -> CONTINUE
+KILL-LOST-OPEN: training (1-h0)(1-h1) M's last window 0.6618 -> 0.6656 (+61-180) (>= -0.02; n 8214 / 8394) -> CONTINUE
+config: launcher courts, launch_time_out, no fall term, sector weights [1.0, 1.0, 3.0, 3.0, 3.0, 1.0, 1.0, 1.0] -> True
+KILL-NO-FALLS: +180 court falls per episode 0.0257 on dev 4220402 (<= 0.04) -> CONTINUE
+(reported) right feeder contact +180 0.7744 (n 851) vs M 0.7726 (n 818)
+KILL-DIR: left + back feeder contact +180 0.4469 (n 743) vs M 0.4191 (n 704) on dev 4220402 (>= -0.01) -> CONTINUE
+VERDICT: KILL (-> KILL-NO-HIT)

@@ -7674,3 +7674,60 @@ C stays the parent.
 **Lines:** D-237's, unchanged, including the >= 0.45 share; the config check asserts the x3 weights. Reported only: the right feeder contact against M at the kill.
 
 If the share fails again, a new panel round is called; there is no automatic x4.
+
+**D-238 smoke (seed 240): all eight lines pass.**
+- Sector share 2-4: 0.468 of 5,404 spots (line >= 0.45; predicted about 0.51, lower because more spots flip).
+- Spots per sector: 671, 399, 893, 773, 863, 378, 678, 749.
+- Exact falls 0.639; launcher falls 0.023 per episode; dose 2.009.
+- Training (seed 238) started.
+
+### D-238 result (2026-11-06): KILL-NO-HIT at +180 on a restart-biased line - left + back contact +2.8, R3 0.0257
+
+**Kill at +180 (all lines read):**
+- **KILL-NO-HIT:** pair-court mean rally length over +61-180 was 11.714 against M's last 120 iterations 14.584 (0.80x; line 0.9x) -> KILL.
+- KILL-UNSTABLE 0.448: CONTINUE.
+- KILL-LOST-OPEN 0.6618 -> 0.6656: CONTINUE.
+- config: ok.
+- KILL-NO-FALLS: 0.0257 on dev 4220402, CONTINUE.
+- **KILL-DIR:** left + back contact 0.4469 (n 743) against M's 0.4191 (n 704), +2.8 points: CONTINUE.
+- Reported: right contact 0.7744 against 0.7726.
+
+Training was stopped at about +185 (exit 143). VERDICT KILL.
+
+**Restart dip (reported; found after the kill):** every run's pair-court mean rally length right after a (re)start sits about 15-20 % below its settled value.
+
+| run | +61-180 | later window |
+|---|---|---|
+| L | 12.05 | 14.90 (+181-300) |
+| M, resumed | 12.21 | 14.29, then 14.72 at the end |
+| R | 10.96 | 13.09 |
+| N | 11.71 | - |
+
+N's 11.71 is 0.96x M's own post-restart window. The line compared a post-restart window with the parent's settled end window, which is a line-design defect: the agent took the line form without checking the transient. The coded KILL stands. Panel round 99 is called. The GPU is free, and the GVHMR pilots run in the gap.
+
+**D-238 result, corrections (round 99):**
+- Training did not stop at about +185. The watcher's dev reads ran for about 30 minutes while training continued, so the run reached about +364, with checkpoints to model_35320.
+- The "+180" dev reads were taken on model_35200 (+204).
+
+The restart dip is a censoring artefact: long rallies are not finished early after a restart. The 64+ bin is 0 in +61-180 and 3 % later.
+
+Paired, read after the kill: N +181-300 14.054 vs M 14.289.
+
+### D-239 (2026-11-06): continue N from model_35320 to model_35595 (panel round 99, (i) 4 of 5)
+
+**Frozen paired line (D-236's form):** N's +181-300 >= 0.9 x M's +181-300 = 12.86. It reads 14.054: pass. This was read after the kill and is labelled as such.
+
+**Run (scripts/diag/lc101.sh):**
+- rally-d1s3drl6, resumed from rally-d1s3drl5 model_35320; same task (Launch-LeftBack3) and recipe.
+- 276 iterations to model_35595, training seed 241, fresh share log (results/lc101-*).
+- No mid-run kill: the remaining run is shorter than one post-restart window.
+
+**Gate and CONFIRM (D-237 / D-238, unchanged):**
+- Every D-236 line against C on dev 4220385-4220388, with the left + back guard unchanged.
+- M-KEPT (>= 0.7254).
+- R3 <= 0.04 on dev 4220403.
+- CONFIRM: dev 4220349-4220356 (guards re-read against C) plus R3 on dev 4220399.
+
+**Standing rule:** rally-length lines are paired at the same offsets after a (re)start, from +181.
+
+Coach dissented, preferring (ii), a rerun from M.

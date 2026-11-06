@@ -1565,3 +1565,40 @@ Brief: footwork-round98-brief.md.
 - Fresh run name and output directory (experiment design).
 
 **Decision:** D-238.
+
+## Round 99 (2026-11-06): D-238 KILL-NO-HIT on a restart-censored line; continue
+
+Brief: footwork-round99-brief.md.
+
+**The brief had factual errors (motion, RL, experiment design, architecture):**
+- N did not stop at +185. The kill watcher's dev reads shared the GPU for about 30 minutes while training continued, and pkill landed near +349-364.
+- Checkpoints exist up to model_35320 (+324), not 35160.
+- The "+180" dev reads were taken on model_35200 (+204).
+
+**Correction check:**
+- The KILL is right as coded (all five).
+- **The dip is a measurement artefact (architecture, RL):** after a restart every court begins at once, so long rallies are not yet finished. The 64+ bin is 0.000 in every +61-180 window and 0.031-0.035 afterwards, worth about 2 shots of the mean.
+- **The line defect is the panel's:** D-236 used D-236's paired form ("at the same offsets"); D-237 dropped it and rounds 97-98 approved that (coach, experiment design).
+- **Paired, read after the kill (labelled as such):** N +181-300 14.054 vs M 14.289 (0.98x); N +241-360 14.19 vs 14.26.
+
+**Votes:**
+
+| option | votes |
+|---|---|
+| (i) continue N from model_35320 | 4 of 5 (motion, architecture, RL, experiment design) |
+| (ii) rerun from M | coach |
+
+**Form (experiment design / RL):**
+- The paired line is frozen now: N +181-300 >= 0.9 x M's +181-300 (12.86). It passes.
+- Resume to the fixed endpoint model_35595 as rally-d1s3drl6, seed 241, with a fresh share log.
+- No later rally-length line: the remaining 275 iterations are shorter than one post-restart window.
+- Gate and CONFIRM unchanged.
+
+**Standing rule:** any rally-length line is paired at the same offsets after a (re)start and starts at +181 or later. Kill watchers record the actual stop iteration.
+
+**Estimates:**
+- Guard passes: 60-70 %.
+- P(5+) 0.74-0.77 from this run.
+- Target from this run: under 5 %. Within 3-6 runs: 20-40 %, via the opening (h0, h1).
+
+**Decision:** D-239.
