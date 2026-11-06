@@ -1,0 +1,41 @@
+D-234: the R3 premise read; base = artifacts/zr/d1-base-zero-residual.pt (zero residual on /mnt/f/dev/picklebot-mjlab/mjlab/artifacts/train/logs/picklebot_return_stand/2026-10-31_18-24-20_s5c-d1-fw1bS/model_32854.pt), R = artifacts/train/logs/picklebot_return_stand/2026-11-06_05-15-42_rally-d1s3dr/model_33797.pt, C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt; dev 4220394-4220395
+base dev 4220394: R3 0.0363 (224 / 6170)
+base dev 4220395: R3 0.0326 (201 / 6164)
+R dev 4220394: R3 0.0635 (395 / 6217)
+R dev 4220395: R3 0.0609 (378 / 6209)
+C dev 4220394: R3 0.0560 (348 / 6212)
+C dev 4220395: R3 0.0510 (316 / 6200)
+
+base: pooled R3 0.0345; falls in feed / between feeds by 0.5-s bin:
+  feed  [0, 9, 32, 20, 23, 13, 14, 37, 39, 26, 14, 19, 28, 34, 21, 20, 1]
+  betw  [0, 0, 3, 0, 9, 14, 1, 1, 1, 8, 10, 5, 4, 4, 6, 9, 0]
+  by distance from the spot (edges [0.3, 0.8, 1.5, 3.0] m): feed [2, 14, 44, 165, 125] betw [0, 5, 9, 24, 37]
+  by family (feed / betw): easy_forehand 2/0, wide_forehand 3/2, backhand 2/5, deep 2/0, short 1/1, high 2/1, low 6/1, fast 1/0, topspin 1/0, backspin 2/0, reach_forehand 9/0, reach_backhand 18/3, reach_short 12/8, reach_deep 93/20, drop 14/9, lob 86/6, cross_forehand 38/9, cross_backhand 51/9, volley_forehand 1/0, volley_backhand 6/1
+
+R: pooled R3 0.0622; falls in feed / between feeds by 0.5-s bin:
+  feed  [0, 3, 15, 59, 92, 33, 43, 48, 42, 44, 41, 28, 29, 22, 27, 35, 2]
+  betw  [0, 0, 0, 4, 41, 52, 8, 4, 8, 10, 25, 24, 3, 8, 6, 16, 1]
+  by distance from the spot (edges [0.3, 0.8, 1.5, 3.0] m): feed [7, 27, 76, 273, 180] betw [0, 8, 35, 100, 67]
+  by family (feed / betw): easy_forehand 19/6, wide_forehand 29/7, backhand 23/12, deep 25/8, short 22/11, high 21/19, low 25/12, fast 16/7, topspin 30/9, backspin 11/2, reach_forehand 35/7, reach_backhand 42/19, reach_short 63/21, reach_deep 42/16, drop 36/19, lob 29/3, cross_forehand 38/10, cross_backhand 42/22, volley_forehand 9/0, volley_backhand 6/0
+
+C: pooled R3 0.0535; falls in feed / between feeds by 0.5-s bin:
+  feed  [0, 1, 8, 41, 64, 51, 47, 39, 25, 32, 23, 27, 31, 34, 17, 23, 2]
+  betw  [0, 0, 1, 3, 43, 53, 16, 4, 6, 11, 23, 15, 4, 2, 7, 11, 0]
+  by distance from the spot (edges [0.3, 0.8, 1.5, 3.0] m): feed [5, 26, 70, 233, 131] betw [1, 3, 30, 93, 72]
+  by family (feed / betw): easy_forehand 14/7, wide_forehand 21/5, backhand 13/7, deep 14/5, short 17/6, high 24/16, low 18/2, fast 18/8, topspin 14/7, backspin 9/5, reach_forehand 23/7, reach_backhand 31/18, reach_short 44/16, reach_deep 42/19, drop 31/15, lob 16/11, cross_forehand 47/13, cross_backhand 50/30, volley_forehand 9/0, volley_backhand 10/2
+
+R against the base:
+R3 base 0.0345, R 0.0622, excess +0.0278 per episode
+  SPAWN: base 0.0007 R 0.0002 excess -0.0005 (-2% of the excess)
+  FEED: base 0.0276 R 0.0451 excess +0.0174 (63% of the excess)
+  RECOVERY: base 0.0061 R 0.0169 excess +0.0108 (39% of the excess)
+ROUTE: FEED
+
+(reported) C against the base:
+R3 base 0.0345, R 0.0535, excess +0.0190 per episode
+  SPAWN: base 0.0007 R 0.0001 excess -0.0006 (-3% of the excess)
+  FEED: base 0.0276 R 0.0374 excess +0.0097 (51% of the excess)
+  RECOVERY: base 0.0061 R 0.0160 excess +0.0100 (52% of the excess)
+ROUTE: RECOVERY
+
+VERDICT: FEED

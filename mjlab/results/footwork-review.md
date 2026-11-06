@@ -1477,3 +1477,7 @@ FEED (>= 50 % in feeds after 1 s) -> the mixed form (court-read episodes on dril
 **Asking the user (iv):** only on BASE-FAILS or SPAWN.
 
 **Decision:** D-234.
+
+**Result (D-234):** FEED (R 63 % of the excess in feeds after 1 s; base 0.0345 passes R3 on R3's instrument). The excess
+sits mostly in the first feed after the spawn and the recovery after it. Route -> D-235 (launcher courts in the
+drill-reset rally training, motion's mixed form), D-232's lines.

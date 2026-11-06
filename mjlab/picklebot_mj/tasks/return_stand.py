@@ -149,6 +149,12 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # each is unchanged; the other courts never have a busy robot and play live rallies, as the pairs read does. With
     # the default the random draws are exactly as before.
     pair_drill_court_frac: float = 0.0
+    # D-235 (training only; 0 = off, as in every read): the top pair_launch_court_frac of the drill courts (court
+    # indices just below round(pair_drill_court_frac * courts)) become launcher courts: no rally, no move or swing
+    # episodes; each robot plays the court read's own episode: a drill feed in play from the reset (random start
+    # spot), the next after refeed_delay_s, drill v2 recovery spots, LAUNCH_EPISODE_S episodes (the task's
+    # launch_time_out term). The other drill courts keep their per-episode move and swing chances.
+    pair_launch_court_frac: float = 0.0
     # D-089: share of feeds aimed at the court (anchored at the start spot, as in the rally evaluation) instead of at
     # the pelvis, drawn per feed; 0 keeps every feed pelvis-anchored (feed_anchor "pelvis") as before.
     court_anchor_prob: float = 0.0
@@ -355,6 +361,15 @@ class BallPhysicsAction(ActionTerm):
             court = torch.arange(n, device=dev) % (n // 2)
             self.drill_scale = torch.where(court < round(frac * (n // 2)), torch.full((n,), 1.0 / frac, device=dev),
                                            torch.zeros(n, device=dev))
+        self.launch_env = None  # D-235
+        lf = float(getattr(cfg, "pair_launch_court_frac", 0.0))
+        if lf > 0.0 and self.drill_scale is not None:
+            court = torch.arange(n, device=dev) % (n // 2)
+            lo, hi = round((frac - lf) * (n // 2)), round(frac * (n // 2))
+            assert 0 <= lo < hi, (lo, hi)
+            self.launch_env = (court >= lo) & (court < hi)
+            self.drill_scale = torch.where(self.launch_env, torch.zeros_like(self.drill_scale), self.drill_scale)
+        self._launch_ep = torch.zeros(2, dtype=torch.long, device=dev)  # D-235: launcher-court episodes, falls
         self._share_split = torch.zeros(2, 2, dtype=torch.long, device=dev)  # [pair, drill court] x [feeder, hand-off]
         # D-165 (logging only): the receiver's state at each feeder-ball launch, by the court's previous rally length
         # (0-1, 2-4, 5+ shots): distance from its recovery spot and ground speed histograms, and that feeder ball's
@@ -467,6 +482,9 @@ class BallPhysicsAction(ActionTerm):
             self.pairs = PairCourts(n, dev, getattr(cfg, "pair_handoff", "crossing"), getattr(cfg, "pair_rally_cap", 0))
             if self.drill_scale is not None:  # D-163: rally lengths logged per court group (0 pair, 1 drill courts)
                 self.pairs.group = (self.drill_scale[: n // 2] > 0).long()
+            if self.launch_env is not None:  # D-235
+                self.pairs.solo = self.launch_env[: n // 2].clone()
+                self.pairs.court_dead |= self.pairs.solo
             else:  # D-167 (logging only): one group, so per-ball legal and rally ends are logged on every pair task
                 self.pairs.group = torch.zeros(n // 2, dtype=torch.long, device=dev)
         if getattr(cfg, "replay_file", ""):
@@ -536,6 +554,9 @@ class BallPhysicsAction(ActionTerm):
             self._tally(open_ & fell_all, fell_all)
             self.ep["env_episodes"] += len(env_ids)  # robot episodes (several feeds each)
             self.ep["env_falls"] += fell.sum()  # includes falls between feeds
+            if self.launch_env is not None:  # D-235
+                le = self.launch_env[env_ids]
+                self._launch_ep += torch.stack([le.sum(), (le & fell).sum()])
             if hasattr(self, "_fl_t"):  # D-234: the fall log (episode_length_buf is cleared after this reset)
                 ph = (~open_[env_ids]).long()
                 tb = (self._env.episode_length_buf[env_ids].float() * self._env.step_dt / FL_T_BIN).long().clamp(0, FL_T_BINS - 1)
@@ -560,6 +581,8 @@ class BallPhysicsAction(ActionTerm):
             self.pairs.on_reset(env_ids, fo)
             mk = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
             mk[env_ids] = True
+            if self.launch_env is not None:  # D-235: a launcher-court robot's reset feed is in play
+                mk &= ~self.launch_env
             self.rules.lost(mk)
             self.tallied |= mk
         if getattr(self, "lat_on", None) is not None:  # D-105: this episode's latency; the history starts at its ball
@@ -592,6 +615,8 @@ class BallPhysicsAction(ActionTerm):
         if self.pairs is not None and getattr(self.cfg, "pair_reset_parks", False):  # audit: keep the reset env parked
             mk = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
             mk[env_ids] = True
+            if self.launch_env is not None:  # D-235
+                mk &= ~self.launch_env
             self.rules.lost(mk)
             self.tallied |= mk
             self._prev_dead |= mk  # not a new fault
@@ -792,6 +817,8 @@ class BallPhysicsAction(ActionTerm):
                                          < self.cfg.court_feed_anchor_prob)
             if mixed:  # D-130: the replay draw comes first; court_feed_prob applies to the rest
                 self.court_feed[env_ids] = self.court_feed[env_ids] & ~self.replay_feed[env_ids]
+            if getattr(self, "launch_env", None) is not None:  # D-235: launcher courts get the court read's drill feeds
+                self.court_feed[env_ids] = self.court_feed[env_ids] & ~self.launch_env[env_ids]
         if getattr(self.cfg, "court_anchor_prob", 0.0) > 0.0:
             if not hasattr(self, "_court_anch"):
                 self._court_anch = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
@@ -1191,6 +1218,13 @@ class BallPhysicsAction(ActionTerm):
                 self._bq_w[c].index_add_(0, (self.hit_out_spin.norm(dim=-1) / BQ_W_BIN).long().clamp(0, BQ_W_BINS - 1), ml)
             rs = (data.root_link_lin_vel_w[:, :2].norm(dim=-1) / BQ_RS_BIN).long().clamp(0, BQ_RS_BINS - 1)
             self._bq_rs.view(-1).index_add_(0, self.pairs.ho_cls * BQ_RS_BINS + rs, recv.long())
+            if self.launch_env is not None:  # D-235: launcher courts: the feeding machine, as without pairs
+                le = self.launch_env
+                self.refeed_timer = torch.where(over & le, torch.full_like(self.refeed_timer, self.cfg.refeed_delay_s),
+                                                self.refeed_timer)
+                waiting = (self.refeed_timer >= 0.0) & le
+                self.refeed_timer = torch.where(waiting, self.refeed_timer - dt, self.refeed_timer)
+                fire = fire | (waiting & (self.refeed_timer <= 0.0))
             self._handoff = recv
             fire = fire | recv
         else:
@@ -1281,6 +1315,8 @@ class BallPhysicsAction(ActionTerm):
                 "outcome_by_d": self._ls_out_d.tolist(), "outcome_after_cut": self._out_cut.tolist(),
                 "cuts": int(self.cut_count), "drill_places": int(getattr(self, "drill_places", 0)),
                 "drill_place_skipped": int(getattr(self, "drill_place_skipped", 0)),
+                "launch_courts": {"envs": 0 if self.launch_env is None else int(self.launch_env.sum()),
+                                  "episodes_falls": self._launch_ep.tolist()},
                 "ball_by_class": {"ka_bin": BQ_KA_BIN, "v_bin": BQ_V_BIN, "w_bin": BQ_W_BIN, "rs_bin": BQ_RS_BIN,
                                   "ka": self._bq_ka.tolist(), "v": self._bq_v.tolist(), "w": self._bq_w.tolist(),
                                   "recv_speed": self._bq_rs.tolist()}}

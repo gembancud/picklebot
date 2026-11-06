@@ -821,3 +821,33 @@ _register(TASK_FW_QUICK2_STRONG, lambda c: with_strong_legs(footwork_task(c, dis
 _register(TASK_FW_MEASURE_COURT_STRONG, lambda c: with_strong_legs(footwork_task(c, dist=md.DIST_RANGE, pay="settled",
                                                                                  episode_s=MEASURE_EPISODE_S,
                                                                                  spot_box=md.SPOT_BOX)))
+
+
+# D-235 (D-234's FEED route: panel round 95's pre-registered route; motion's mixed form, round 94): C's drill-reset task
+# with the top half of the drill courts made launcher courts (pair_launch_court_frac 0.25 of 0.5): each robot there plays
+# the court read's own episode (a drill feed in play from the reset at a random start spot, drill v2 recovery, 8-s
+# episodes). The only change from TASK_RALLY_FASTMOVE_DR; the other drill courts keep their move / swing chances.
+TASK_RALLY_FASTMOVE_DR_LAUNCH = "Picklebot-Rally22b-FastMove-DrillReset-Launch-G1"
+LAUNCH_COURT_FRAC = 0.25
+LAUNCH_EPISODE_S = 8.0  # the court read's episode (return_stand.EPISODE_S)
+
+
+def launch_time_out(env):
+    """D-235: launcher-court robots end their episode at LAUNCH_EPISODE_S (a time-out, as the court read's)."""
+    le = getattr(env.action_manager.get_term("ball"), "launch_env", None)
+    if le is None:
+        return torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
+    return le & (env.episode_length_buf >= int(round(LAUNCH_EPISODE_S / env.step_dt)))
+
+
+def rally_fastmove_dr_launch(cfg):
+    from mjlab.managers.termination_manager import TerminationTermCfg
+    cfg = rally_fastmove_dr(cfg)
+    cfg.actions["ball"] = dataclasses.replace(cfg.actions["ball"], pair_launch_court_frac=LAUNCH_COURT_FRAC)
+    cfg.terminations["launch_time_out"] = TerminationTermCfg(func=launch_time_out, time_out=True)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_LAUNCH, env_cfg=rally_fastmove_dr_launch(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_fastmove_dr_launch(load_env_cfg(ag.SRC_22B, play=True)),
+                    rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))

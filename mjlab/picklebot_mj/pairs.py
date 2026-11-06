@@ -33,6 +33,7 @@ class PairCourts:
         self.side = (ids >= self.h).long()  # 0 = side A, 1 = side B
         b = lambda: torch.zeros(n, dtype=torch.bool, device=device)  # noqa: E731
         self.court_dead = torch.zeros(self.h, dtype=torch.bool, device=device)  # rally over, waiting to restart
+        self.solo = None  # D-235: launcher courts (per court), never started; each env is fed by its own launcher
         self.rally_len = torch.zeros(self.h, dtype=torch.long, device=device)
         self.rally_idx = torch.zeros(self.h, dtype=torch.long, device=device)  # parity picks the restarting side
         self.timer = torch.full((self.h,), -1.0, device=device)
@@ -145,6 +146,8 @@ class PairCourts:
             self.waiting &= ~done
         else:
             done = over
+        if self.solo is not None:  # D-235: launcher courts stay dead, so nothing of theirs is counted or handed over
+            self.court_dead |= self.solo
         s = self.side
         live = ~self.court_dead.repeat(2)  # feeds of a court whose rally has ended are not counted
         cnt = lambda m: torch.stack([(m & live & (s == k)).sum() for k in (0, 1)])  # noqa: E731
@@ -184,6 +187,8 @@ class PairCourts:
         self.waiting = (self.waiting & ~done) | receive
         both_idle = self.parked[: self.h] & self.parked[self.h:]
         start = self.court_dead & both_idle & (self.timer < 0)
+        if self.solo is not None:
+            start &= ~self.solo
         self.start_now = start
         self.timer = torch.where(start, torch.full_like(self.timer, delay), self.timer)
         run = self.timer >= 0

@@ -7452,3 +7452,64 @@ dev 4220394 and 4220395, pooled.
 C's route is reported only.
 
 Seeds: dev 4220394-4220396. C stays the parent; R stays unpromoted.
+
+### D-234 result (2026-11-06): FEED - R's extra court falls come mostly with a ball in play, in the first feed after the spawn
+
+All six reads are valid (booked falls == robot_falls). Court falls per episode (the h5f court read, dev 4220394 / 4220395):
+
+| policy | 4220394 | 4220395 | pooled |
+|---|---|---|---|
+| d1 base (zero residual) | 0.0363 | 0.0326 | 0.0345 |
+| R (rally-d1s3dr) | 0.0635 | 0.0609 | 0.0622 |
+| C (rally-d1s3lr3) | 0.0560 | 0.0510 | 0.0535 |
+
+- **The base passes R3 on R3's own instrument** (0.0345 <= 0.04), so the bar is reachable by this body and controller.
+- **R's excess over the base** is +0.0278 per episode:
+  - SPAWN (< 1.0 s) -0.0005;
+  - FEED (a ball in play, >= 1.0 s) +0.0174 (63 %);
+  - RECOVERY (between feeds, >= 1.0 s) +0.0108 (39 %).
+- **Route: FEED.** C reads RECOVERY 52 % / FEED 51 % (reported only).
+
+**Where in time (reported):** the excess sits in the first feed after the spawn and the recovery right after it.
+- Falls with a ball in play at 1.5-2.5 s: R 151, base 43.
+- Falls between feeds at 2.0-3.0 s: R 93, base 23.
+- Together these hold about half of R's excess.
+- In the court read the first ball is in play from the reset, at a random start spot. In R's training every rally starts from the drill reset (placed, 0.5 s to settle).
+
+**Where on court and which balls (reported):** most falls are > 1.5 m from the recovery spot, so the robot falls while travelling. Every family adds falls, easy ones included.
+
+Seeds 4220394-4220396 are used. Route FEED -> D-235.
+
+### D-235 (2026-11-06): launcher courts inside the drill-reset rally training (D-234's FEED route)
+
+D-234's pre-registered FEED route is motion's mixed form (round 94): court-read episodes on drill courts.
+
+**Change (the only one from R's recipe):** Picklebot-Rally22b-FastMove-DrillReset-Launch-G1 is R's task with pair_launch_court_frac 0.25.
+- The top half of the drill courts (25 % of courts) become launcher courts. There is no rally and no move or swing episode there.
+- Each robot on a launcher court plays the court read's own episode:
+  - a drill feed in play from the reset at a random start spot;
+  - the next feed refeed_delay_s after each one ends;
+  - drill v2 recovery spots;
+  - an 8-s time-out (launch_time_out).
+- The live pair courts are unchanged (50 %).
+- The other drill courts keep their per-episode move and swing chances, so the overall move and swing dose halves. This is part of the form, and it is reported.
+- Tests: tests/test_launch_courts.py, plus the pair and drill-reset tests, all pass.
+
+**Run (scripts/diag/lc96.sh):** L = rally-d1s3drl, warm start R model_33797.
+- C's recipe: LR 3e-5, ScheduledPPO, 1,200 iterations, endpoint model_34996.
+- Training seed 234, smoke 235.
+
+**Lines: D-232's, unchanged.**
+- **Smoke:**
+  - D-201's lines;
+  - the config check (no fall term; pair_launch_court_frac and launch_time_out present);
+  - the drill-reset dose;
+  - launcher courts active (256 of 1,024 envs, episodes booked).
+- **Kill at +360:**
+  - D-194's lines;
+  - KILL-LOST-OPEN;
+  - KILL-NO-FALLS (court falls per episode on dev 4220397 <= R's on the same seed - 0.01).
+- **Gate:** every D-231 line on the frozen set-start read (dev 4220385-4220388) against C, R-KEPT, and R3 <= 0.04 on dev 4220398.
+- **CONFIRM:** dev 4220349-4220356 plus R3 on dev 4220399.
+
+C stays the parent.
