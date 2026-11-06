@@ -869,3 +869,21 @@ def rally_fastmove_dr_launch_lb(cfg):
 register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_LAUNCH_LB, env_cfg=rally_fastmove_dr_launch_lb(load_env_cfg(ag.SRC_22B)),
                     play_env_cfg=rally_fastmove_dr_launch_lb(load_env_cfg(ag.SRC_22B, play=True)),
                     rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))
+
+
+# D-238 (panel round 98, (a) 5 of 5): D-237's smoke failed its sector-share line (0.436 < 0.45; back spots near the
+# baseline flip forward), so the weights go to x3 on sectors 2-4 (architecture's round-97 form). The only change from
+# TASK_RALLY_FASTMOVE_DR_LAUNCH_LB.
+TASK_RALLY_FASTMOVE_DR_LAUNCH_LB3 = "Picklebot-Rally22b-FastMove-DrillReset-Launch-LeftBack3-G1"
+LEFT_BACK_X3 = (1.0, 1.0, 3.0, 3.0, 3.0, 1.0, 1.0, 1.0)
+
+
+def rally_fastmove_dr_launch_lb3(cfg):
+    cfg = rally_fastmove_dr_launch(cfg)
+    cfg.actions["ball"] = dataclasses.replace(cfg.actions["ball"], move_sector_weights=LEFT_BACK_X3)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_LAUNCH_LB3, env_cfg=rally_fastmove_dr_launch_lb3(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_fastmove_dr_launch_lb3(load_env_cfg(ag.SRC_22B, play=True)),
+                    rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))

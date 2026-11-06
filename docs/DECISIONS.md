@@ -7659,3 +7659,18 @@ The rule is NO-CANDIDATE, so there is no CONFIRM. Dev 4220399 and 4220349-422035
 **CONFIRM:** dev 4220349-4220356, with the guards re-read against C on those seeds, plus R3 on dev 4220399.
 
 C stays the parent.
+
+**D-237 smoke result: SMOKE-FAIL** (seed 239). Seven of eight lines passed: exact falls 0.639, launcher falls 0.038 per episode, dose 1.988, config. The sector share of 2-4 was 0.436 of 5,345 spots against >= 0.45.
+- Spots issued per sector 0-7: 645, 521, 801, 728, 804, 487, 635, 724.
+- Back spots near the baseline flip forward (sector + 4). The agent set the line from the pre-flip 0.545 without allowing for this.
+- Seed 239 is used. Training seed 238 was not used. M's direction read on dev 4220402 (stage 0) is kept as KILL-DIR's reference.
+
+### D-238 (2026-11-06): D-237 with the sector weights x3 (panel round 98, (a) 5 of 5)
+
+**Change:** Picklebot-Rally22b-FastMove-DrillReset-Launch-LeftBack3-G1, move_sector_weights (1,1,3,3,3,1,1,1). The predicted sector share after flips is about 0.51, recorded before the smoke.
+
+**Run (scripts/diag/lc100.sh):** rally-d1s3drl5, warm start M model_34996. Smoke seed 240, training seed 238. KILL-DIR uses M's dev 4220402 read (results/lc99-dirM-4220402.json).
+
+**Lines:** D-237's, unchanged, including the >= 0.45 share; the config check asserts the x3 weights. Reported only: the right feeder contact against M at the kill.
+
+If the share fails again, a new panel round is called; there is no automatic x4.

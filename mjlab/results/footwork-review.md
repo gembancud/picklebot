@@ -1549,3 +1549,19 @@ Brief: footwork-round97-brief.md.
 - **Next binding lever: the opening** (h0 0.128 -> about 0.08, h1 0.096 -> about 0.06).
 
 **Decision:** D-237.
+
+## Round 98 (2026-11-06, narrow): D-237 SMOKE-FAIL on the sector share
+
+Brief: footwork-round98-brief.md.
+
+**Correction check (all five):** SMOKE-FAIL right as coded. The issued counter books the sector after the flip, which is what the policy practises. The agent set the 0.45 line from the 0.545 pre-flip share without allowing for flips; architecture flagged flips in round 97 but gave no figure. Flip rates from the counts: left about 15-21 %, back-left about 25 %, back about 16-17 %; front sectors almost never.
+
+**Votes:** (a) 5 of 5. Weights (1,1,3,3,3,1,1,1), every line unchanged including >= 0.45. Predicted share about 0.51 (about 10 SE above the line).
+
+**Additions:**
+- Reported only: the right feeder contact N vs M (the right sector falls to about 7-11 % of spots).
+- Per-sector shares.
+- If x3 also fails the line, stop for a new round; no automatic x4 and no re-derived line (RL).
+- Fresh run name and output directory (experiment design).
+
+**Decision:** D-238.

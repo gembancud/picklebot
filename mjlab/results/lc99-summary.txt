@@ -1,0 +1,13 @@
+D-237: C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt (reference); warm start M = artifacts/train/logs/picklebot_return_stand/2026-11-06_15-24-56_rally-d1s3drl3/model_34996.pt (unpromoted); N = rally-d1s3drl4 on Picklebot-Rally22b-FastMove-DrillReset-Launch-LeftBack-G1 (launcher courts + left/back move drill); training seed 238, smoke 239
+smoke exit 0 ok
+smoke no traceback ok
+(reported) smoke falls per 1,000 env-seconds, log estimator (biased by the launcher courts synchronised time-outs) 8.184
+(reported) launcher-court falls per episode 0.0400 (R on the court read 0.0622)
+smoke falls per 1,000 env-seconds off the launcher courts (exact count, steps 840480-843840) 0.639 ok
+smoke std min 0.1002 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + stance_progress + launch_time_out, no fall term, no other new terms True -> ok
+smoke falls half-split (reported): first half 9.065, second half 7.288
+smoke dose drill-reset dose over (20, 140): 1.988 placements per pair-court rally (in (1.9, 2.05)), n 990, skipped busy 0, open2 0.5818 ok
+smoke launcher courts: {'envs': 256, 'episodes_falls': [2355, 89], 'other_falls': 35, 'step': 843840} (256 envs, episodes booked) ok
+smoke sector share 2-4 (left, back-left, back) 0.436 of 5345 spots (>= 0.45; per sector [645, 521, 801, 728, 804, 487, 635, 724]) STOP
+VERDICT: SMOKE-FAIL
