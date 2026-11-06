@@ -7338,3 +7338,21 @@ Panel round 93 (mjlab/results/footwork-review.md): (i) 5 of 5.
 **Estimates (round 93):** R3 looks fixable on the D-063 precedent, with the risk that a cautious robot gives back some of the opening gain (R-KEPT catches it). P(5+) about 0.74-0.80 after one more opening lever on a passing child (for example random-practice hand-offs for h1, coach). 0.80 with Wilson low 0.78 needs a point estimate near 0.79-0.80, that is (1-h0)(1-h1) about 0.87 against 0.762 today. Not yet shown. The target is unchanged.
 
 **Seeds (ledgered):** training 230, smoke 231; dev 4220390-4220392. Next free: training 232, dev 4220393.
+
+### D-232 result (2026-11-06): KILL-NO-FALLS at +386 - the fall penalty leaves court falls unchanged (0.0584 vs R 0.0586)
+
+**Stage 0:** R's court read on dev 4220390, 0.0586 falls per episode.
+
+**Smoke** (seed 231) passed all six lines: falls 0.572, the fall term present, dose 2.002, open2 0.609.
+
+**Training** (seed 230) was stopped at +386 (exit 143, 12:18) by the +360 kill:
+- D-194's lines: CONTINUE (falls 0.57 per 1,000 env-s; legal_return 0.945).
+- **KILL-LOST-OPEN: CONTINUE.** Training (1-h0)(1-h1) went 0.617 -> 0.659 over 220-340, so the opening kept improving under the penalty.
+- **KILL-NO-FALLS: KILL.** model_34160's court falls per episode were **0.0584**, against R's **0.0586** on the same seed (dev 4220390); the line was <= 0.0486.
+
+**Reading:**
+- The fall penalty does not reach the court read's falls. Rally training under the drill reset rarely falls (0.47-0.57 per 1,000 env-s in training; about 1 % of pair episodes), so the -50 term is almost never paid, and the policy learns nothing about falling.
+- The court read's falls come from states the rally task does not train: single-robot launcher feeds from 20 families, random recovery spots across the court, and recovering between feeds (93 of R's 357 falls).
+- R3 needs practice in those states, or a premise change. Neither is a stronger dose of a term that is not being paid.
+
+Seeds 230 / 231 / 4220390 are used; dev 4220391-4220392 are unread. R stays unpromoted and C stays the parent. Panel round 94 is called (mjlab/results/footwork-round94-brief.md).

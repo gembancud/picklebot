@@ -1,0 +1,14 @@
+D-232: C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt (reference); warm start R = artifacts/train/logs/picklebot_return_stand/2026-11-06_05-15-42_rally-d1s3dr/model_33797.pt (unpromoted); F = rally-d1s3drf on Picklebot-Rally22b-FastMove-DrillReset-Fall-G1 (+ fall penalty); training seed 230, smoke 231
+smoke exit 0 ok
+smoke no traceback ok
+smoke falls per 1,000 env-seconds 0.572 ok
+smoke std min 0.1004 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + stance_progress, no other new terms True -> ok
+smoke falls half-split (reported): first half 0.552, second half 0.578
+smoke dose drill-reset dose over (20, 140): 2.002 placements per pair-court rally (in (1.9, 2.05)), n 937, skipped busy 0, open2 0.6094 ok
+training: {"run": "rally-d1s3drf", "exit_code": 143, "finished": "2026-11-06T12:18:34+08:00"}
++341-360: falls per 1,000 env-s 0.57 (kill > 2 x 22b 1.57); legal_return 0.9453 (kill < 22b 0.7549 - 0.05) -> CONTINUE; reported +241-260: falls 0.56, legal_return 0.9509
+(reported, not a kill) rally-length windows: child 4.750866310160427 (n 46750), parent nan (n 0): NO-DATA (not a kill)
+KILL-LOST-OPEN: training (1-h0)(1-h1) 0.6169 over (20, 140) -> 0.6593 over (220, 340) (>= -0.02; n 9272 / 8444) -> CONTINUE
+KILL-NO-FALLS: +360 court falls per episode 0.0584 vs R 0.0586 on the same seed (<= -0.01) -> KILL-NO-FALLS
+VERDICT: KILL (-> KILL-NO-FALLS)
