@@ -1701,3 +1701,5 @@ Brief: results/footwork-round103-brief.md.
 **Experiment design's conditions for a re-prediction (adopted):** a D-entry naming the changed premise; the band stays +/- 25 %; the new prediction recorded before the run; a fresh smoke seed, never seed 247.
 
 **Decision:** D-243.
+
+**Round 103 addendum (architecture, received after the decision was recorded):** (b), pair_rally_cap 16 on all courts. The smoke shows (a) cutting free-half practice where K3 fails: free-half (1-h0)(1-h1) fell from 0.60 at the end of D-241 to 0.42, and the share of free-half rallies reaching shot 3 from 0.54 to 0.42; a few very long rallies (87 past 15 shots) use up the extra balls. Final tally (a) 3, (b) 2; D-243 stands. Architecture's KILL-LATE line (a K3 read at +240 against P on dev 4220421) had one vote and is not added.

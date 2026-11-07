@@ -7896,3 +7896,22 @@ Plain reading: the best P(5+) so far (0.7817) and the best opening (h0 0.091), a
 **Run (scripts/diag/lc105.sh):** everything as D-242 (parent P = rally-d1s3cap8h model_36194; HalfReset task; pair_rally_cap 8 on the set-start half only; 600 iterations to model_36793; smoke, kill, gate and CONFIRM lines unchanged), with:
 - run name rally-d1s3cap8hr2; training seed 248, smoke seed 249;
 - dev seeds as D-242 registered them: 4220418 (KILL-NO-FALLS), 4220419 (KILL-DIR, against P's stage-0 read already taken there in D-242, results/lc104-dirP-4220419.json), 4220420 (gate R3), 4220409-4220417 (CONFIRM).
+
+**D-243 gate result (2026-11-08): CANDIDATE (results/lc105-summary.txt).** CONFIRM is running.
+
+- Smoke: all 8 lines ok; pair-court feeder share 0.1497 (prediction 0.156 +/- 25 %); reset-half longest rally 8; 79 free-half rallies ended at 9-15 (19.8 % past 8).
+- Kill at +240: reset-half (1-h0)(1-h1) 0.7356 vs P's 0.7351 (free half 0.4965); falls 0.659; config ok; KILL-NO-FALLS 0.0244 (dev 4220418); KILL-DIR left 0.3646 vs P 0.3545 (dev 4220419). All CONTINUE.
+
+| line | child (rally-d1s3cap8hr2 model_36793) | reference | result |
+|---|---|---|---|
+| GAIN2 vs C | +21.14 points, lower bound +19.55 | | pass |
+| left + back guard | 0.4249 vs parent 0.4557 (-3.1) | kill below -5 | pass |
+| H0 / FEEDER | 0.1169 hazard / 0.8848 legal | | pass |
+| K3-KEPT | 0.0245 vs C 0.0269 (-0.0024) | <= +0.005 | pass |
+| M-KEPT / N-KEPT / P-KEPT | 0.7759 vs 0.7454 / 0.7660 / 0.7817 | >= -0.02 | pass |
+| OPEN | 0.8172 vs M 0.7883 (+0.029) | >= +0.02 | pass |
+| R3, dev 4220420 | 0.0324 (P 0.0265) | <= 0.04 | pass |
+
+Reported: hazards h0-h4 0.117 / 0.075 / 0.036 / 0.012 / 0.003 (P 0.091 / 0.084 / 0.039 / 0.019 / 0.005). Rally endings by length 3-4 / 5-7 / 8+: child 63 / 7 / 33, P 103 / 15 / 63, C 68 / 12 / 33. Ready share 0.315 (P 0.397); recovery median 0.225 m. Direction contact forward 0.874, left 0.346, back 0.637, right 0.776. Old read P(5+) 0.3648 vs C 0.4061.
+
+Plain reading: the cap on the set-start half only brought K3 back below C's (0.0245) at a cost of about 0.6 points of P(5+) against P (h0 0.091 -> 0.117, h1 0.084 -> 0.075). Architecture's round-103 objection did not bind on this read.
