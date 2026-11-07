@@ -7888,3 +7888,11 @@ Plain reading: the best P(5+) so far (0.7817) and the best opening (h0 0.091), a
 **CONFIRM:** the unread D-241 block: pairs 4220409-4220412, directions 4220413-4220416 (C re-read), R3 4220417; every line gating.
 
 **New code:** picklebot_mj/pairs.py (cap_court mask), picklebot_mj/tasks/return_stand.py (pair_rally_cap_reset_only, default off), picklebot_mj/d1_rule.py (half_kill reference argument, cap_split, late_split). Tests: tests/test_launch_courts.py (a direct PairCourts test of the masked cap; the reset-half wiring on GPU), tests/test_d1_rule.py 46 passed, tests/test_footwork_specialist.py passed.
+
+### D-243 (2026-11-07): D-242 re-run unchanged on a fresh smoke seed, the share re-predicted (panel round 103, (a) 3 of 5)
+
+**Changed premise:** D-242's share prediction assumed the free half would average about 12 balls per rally uncapped. D-242's smoke measured 5.74 (reset half 5.43). The re-made prediction, from those measured values with the same formula (0.5 / 5.43 + 0.5 / 5.74, time-weighted over the two halves), is 0.156. The band stays +/- 25 % (0.117-0.195). Recorded before the smoke.
+
+**Run (scripts/diag/lc105.sh):** everything as D-242 (parent P = rally-d1s3cap8h model_36194; HalfReset task; pair_rally_cap 8 on the set-start half only; 600 iterations to model_36793; smoke, kill, gate and CONFIRM lines unchanged), with:
+- run name rally-d1s3cap8hr2; training seed 248, smoke seed 249;
+- dev seeds as D-242 registered them: 4220418 (KILL-NO-FALLS), 4220419 (KILL-DIR, against P's stage-0 read already taken there in D-242, results/lc104-dirP-4220419.json), 4220420 (gate R3), 4220409-4220417 (CONFIRM).

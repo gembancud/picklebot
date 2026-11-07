@@ -1685,3 +1685,19 @@ Brief: results/footwork-round102-brief.md.
 **Estimates:** K3 pass about 40-50 %; P(5+) 0.77-0.80 from this run; target from this run about 5-10 %; within 3-6 runs 15-35 %. Motion: h2 (0.039) has not moved across M, N and the child and now binds; the human-footwork route is probably still needed.
 
 **Decision:** D-242.
+
+## Round 103 (2026-11-07): D-242 SMOKE-FAIL on the cap-split line
+
+Brief: results/footwork-round103-brief.md.
+
+**Correction check (all who reported):**
+- SMOKE-FAIL is right as coded: 1,885 feeder balls of 12,122 (0.15550) against a band of 0.124 +/- 25 % (top 0.155); the miss is 0.0005, about 0.15 binomial SE. Seed 247 is spent.
+- The cap mask works: the reset half's longest rally was 8; 63 free-half rallies ended at 9-15 and 18.3 % passed 8.
+- **The agent's error, unchecked by the panel:** the prediction assumed the free half would average about 12 balls per rally once uncapped; D-241's own log already showed the free half's (1-h0)(1-h1) at 0.59. It averaged 5.74 (reset half 5.43). The same fault as D-237's smoke.
+- **What the free half does (motion, RL, coach):** h1 0.41 means robots that start where the last rally ended return the feeder ball but cannot recover for ball two; 58 % of free-half rallies end by shot 1. Rallies past 8 still add about 20 % of pair-court shots past shot 8. The free half practises recovery from bad positions.
+
+**Votes:** (a) re-run D-242 unchanged with the share re-predicted: coach, motion, RL (3). (b) pair_rally_cap 16 on all courts, reset-only off: experiment design (the free half's late practice starts from collapsed states, not the set start K3 reads). Architecture had not reported when the decision was recorded.
+
+**Experiment design's conditions for a re-prediction (adopted):** a D-entry naming the changed premise; the band stays +/- 25 %; the new prediction recorded before the run; a fresh smoke seed, never seed 247.
+
+**Decision:** D-243.
