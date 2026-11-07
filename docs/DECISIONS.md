@@ -7915,3 +7915,18 @@ Plain reading: the best P(5+) so far (0.7817) and the best opening (h0 0.091), a
 Reported: hazards h0-h4 0.117 / 0.075 / 0.036 / 0.012 / 0.003 (P 0.091 / 0.084 / 0.039 / 0.019 / 0.005). Rally endings by length 3-4 / 5-7 / 8+: child 63 / 7 / 33, P 103 / 15 / 63, C 68 / 12 / 33. Ready share 0.315 (P 0.397); recovery median 0.225 m. Direction contact forward 0.874, left 0.346, back 0.637, right 0.776. Old read P(5+) 0.3648 vs C 0.4061.
 
 Plain reading: the cap on the set-start half only brought K3 back below C's (0.0245) at a cost of about 0.6 points of P(5+) against P (h0 0.091 -> 0.117, h1 0.084 -> 0.075). Architecture's round-103 objection did not bind on this read.
+
+**D-243 CONFIRM result (2026-11-08): CONFIRMED (results/lc105-summary.txt).** Q = rally-d1s3cap8hr2 model_36793 is the first child to pass the gate and CONFIRM since D-235.
+
+| line (fresh dev 4220409-4220416, C re-read on the same seeds) | Q | C (fresh) | result |
+|---|---|---|---|
+| GAIN2 | P(5+) +20.27 points, lower bound +18.67 | | pass |
+| worst family | -0.0 | kill below -5 | pass |
+| left + back contact | 0.4414 vs 0.4731 (-3.2) | kill below -5 | pass |
+| H0 / FEEDER | 0.1187 vs 0.2412 / 0.8828 vs 0.7662 | | pass |
+| K3-KEPT | 0.0222 vs 0.0236 | <= +0.005 | pass |
+| R3, dev 4220417 | 0.0292 | <= 0.04 | pass |
+
+Reported: P(5+) on the fresh seeds 0.7761 (gate seeds 0.7759); hazards h0-h4 0.119 / 0.071 / 0.039 / 0.011 / 0.003; ready share 0.311; recovery median 0.225 m; left contact 0.356 vs C 0.428.
+
+**Against the target (results/rally-target.md):** P(5+) >= 0.80 with Wilson low >= 0.78 over >= 1,000 dev rallies. Q reads 0.776 on two seed sets: not met. With Q's h1-h4, h0 would have to fall from 0.119 to about 0.085 for P(5+) 0.80, or to about 0.075 for the Wilson bar. Q becomes the parent for the next run (the gate's C reference is unchanged). Panel round 104 is called. The GPU gap after CONFIRM runs the user-approved GVHMR body pass on 58 of the 63 marked rallies (the five with large tracking gaps dropped).
