@@ -7870,3 +7870,21 @@ Reported:
 - Label correction: the summary's printed lines say "N" where they mean the child (the D-240 gate template); the arms are right (lc103-R files).
 
 Plain reading: the best P(5+) so far (0.7817) and the best opening (h0 0.091), and left moved about a point; but late failures rose again, from N's 0.031 to 0.042. Two runs under cap 8 now show the late-rally cost the panel named in round 100. Panel round 102 is called.
+
+### D-242 (2026-11-07): the D-241 child + the cap on the set-start half only (panel round 102, lever 3 of 5, parent 3 of 5)
+
+**Run (scripts/diag/lc104.sh):**
+- child = rally-d1s3cap8hr = P (rally-d1s3cap8h model_36194, unpromoted) on the HalfReset task.
+- The only change: pair_rally_cap_reset_only (pair_rally_cap 8 applies on the set-start half only; the free half plays uncapped rallies). Training only, as a driver override.
+- C's recipe: LR 3e-5, ScheduledPPO, 600 iterations to model_36793. Training seed 246, smoke 247.
+- Stage 0: P's direction read on dev 4220419.
+
+**Smoke (160 iterations):** D-241's lines (config also checks pair_rally_cap_reset_only), with the feeder-share line replaced by the cap-split line: pair-court feeder share within +/- 25 % of the prediction 0.124 (made before the smoke from the D-241 log: reset half 6.08 balls per rally, free half about 12 uncapped), reset-half rallies never past 8, and at least one free-half rally ending at 9-15.
+
+**Kill at +240 (window +181-240):** KILL-LOST-OPEN on the reset half >= P's 0.7351 - 0.02; KILL-UNSTABLE <= 3.14; config; then KILL-NO-FALLS on dev 4220418 <= 0.04 and KILL-DIR (left contact on dev 4220419 >= P's - 0.01). Training-log lines stop training at once.
+
+**Gate (frozen set-start read, against C):** every D-241 line unchanged (K3-KEPT +0.005, M-KEPT, N-KEPT, OPEN), plus P-KEPT (P(5+) >= 0.7617) and R3 <= 0.04 on dev 4220420 (P read there too). Reported: rally endings split by length (3-4 / 5-7 / 8+), the ready share.
+
+**CONFIRM:** the unread D-241 block: pairs 4220409-4220412, directions 4220413-4220416 (C re-read), R3 4220417; every line gating.
+
+**New code:** picklebot_mj/pairs.py (cap_court mask), picklebot_mj/tasks/return_stand.py (pair_rally_cap_reset_only, default off), picklebot_mj/d1_rule.py (half_kill reference argument, cap_split, late_split). Tests: tests/test_launch_courts.py (a direct PairCourts test of the masked cap; the reset-half wiring on GPU), tests/test_d1_rule.py 46 passed, tests/test_footwork_specialist.py passed.

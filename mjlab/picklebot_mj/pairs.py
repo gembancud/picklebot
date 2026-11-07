@@ -54,6 +54,7 @@ class PairCourts:
         # capped shot is not handed over, it lands and is judged as usual, and a feeder ball starts the next rally.
         # It holds the feeder ball's share of play at >= 1 / rally_cap however long the policy can rally.
         self.rally_cap = int(rally_cap)
+        self.cap_court = None  # D-242: optional per-court mask; the cap applies on these courts only
         self.shots = torch.zeros(self.h, dtype=torch.long, device=device)
         self.final = torch.zeros(n, dtype=torch.bool, device=device)
         # D-163 (logging only): an optional per-court group (0 or 1, e.g. pair vs drill courts) and the rally-length
@@ -177,7 +178,10 @@ class PairCourts:
         if self.rally_cap > 0:  # D-161: count this step's shots; the rally_cap-th is not handed over
             t = trigger & ~self.court_dead.repeat(2)
             self.shots = self.shots + t[: self.h].long() + t[self.h:].long()
-            self.final |= t & (self.shots >= self.rally_cap).repeat(2)
+            cap = self.shots >= self.rally_cap
+            if self.cap_court is not None:  # D-242
+                cap = cap & self.cap_court
+            self.final |= t & cap.repeat(2)
             receive = receive & ~self.final[self.partner]
         if busy is not None:
             receive = receive & ~busy

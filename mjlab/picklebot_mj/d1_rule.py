@@ -1638,7 +1638,8 @@ def half_dose(rows: list[dict], start_it: int) -> tuple[bool, str]:
                 f"n {rh['n']}), free half {fh['places_off']} placements (== 0; n {fh['n']})")
 
 
-def half_kill(rows: list[dict], start_it: int, envs_other: int) -> list[tuple[str, str]]:
+def half_kill(rows: list[dict], start_it: int, envs_other: int, ref_open: float = N_OPEN_181_240,
+              ref_name: str = "N") -> list[tuple[str, str]]:
     """D-241's training-log lines over HALF_KILL_WIN (all read): KILL-LOST-OPEN on the reset half against N's paired
     window (N reset every pair court), the free half reported; KILL-UNSTABLE."""
     out = []
@@ -1646,9 +1647,9 @@ def half_kill(rows: list[dict], start_it: int, envs_other: int) -> list[tuple[st
     if rh is None or rh["n"] < OPEN_MIN_RALLIES // 2:
         out.append(("NO-DATA", f"KILL-LOST-OPEN: reset-half window not readable ({rh and rh['n']}) -> NO-DATA"))
     else:
-        v = "CONTINUE" if rh["open2"] >= N_OPEN_181_240 - OPEN_KEEP - 1e-9 else "KILL-LOST-OPEN"
+        v = "CONTINUE" if rh["open2"] >= ref_open - OPEN_KEEP - 1e-9 else "KILL-LOST-OPEN"
         out.append((v, f"KILL-LOST-OPEN: reset-half training (1-h0)(1-h1) +{HALF_KILL_WIN[0]}-{HALF_KILL_WIN[1]} {rh['open2']:.4f} "
-                       f"vs N's {N_OPEN_181_240} (>= -{OPEN_KEEP}; n {rh['n']}); (reported) free half {fh['open2']:.4f} (n {fh['n']}) -> {v}"))
+                       f"vs {ref_name}'s {ref_open} (>= -{OPEN_KEEP}; n {rh['n']}); (reported) free half {fh['open2']:.4f} (n {fh['n']}) -> {v}"))
     f = exact_falls(rows, *HALF_KILL_WIN, start_it) / envs_other if envs_other else float("nan")
     v = "NO-DATA" if f != f else ("CONTINUE" if f <= EXACT_FALLS_MAX else "KILL-UNSTABLE")
     out.append((v, f"KILL-UNSTABLE: exact falls off the launcher courts {f:.3f} per 1,000 env-s (<= {EXACT_FALLS_MAX}) -> {v}"))
@@ -1659,3 +1660,37 @@ def left_contact(path: str) -> tuple[float, int]:
     import json
     d = json.load(open(path))["directions"]["left"]
     return d["contact"], d["feeds"]
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-242 (panel round 102, the lever 3 of 5, the parent 3 of 5): P = the D-241 child (rally-d1s3cap8h model_36194,
+# NO-CANDIDATE on K3-KEPT alone) with pair_rally_cap 8 on the set-start half only (pair_rally_cap_reset_only); the free
+# half plays uncapped. Lines in experiment design's form.
+P_START, P_OPEN_181_240 = 35595, 0.7351   # the child's +181-240 reset-half training (1-h0)(1-h1) (lc103 log)
+CAPR_SHARE_PRED = None                     # set by the driver from the prediction recorded before the smoke
+CAPR_BAND = 0.25                           # the smoke share must fall within +/- 25 % of the prediction
+
+
+def cap_split(rows: list[dict]) -> dict:
+    """Between the first and last rows: the pair-court feeder share, the reset half's longest rally and the free half's
+    rallies ending at 9-15 shots (len_hist index = legal returns in the rally)."""
+    rows = [r for r in rows if r.get("launch", {}).get("len_hist_sub") is not None and "split" in r]
+    if len(rows) < 2:
+        return {}
+    a, b = rows[0], rows[-1]
+    g = [y - x for x, y in zip(a["len_hist_group"][0], b["len_hist_group"][0])]
+    f = [y - x for x, y in zip(a["launch"]["len_hist_sub"], b["launch"]["len_hist_sub"])]
+    r = [x - y for x, y in zip(g, f)]
+    share, nb = pair_feeder_share(rows)
+    return {"share": share, "balls": nb, "reset_max": max([i for i, c in enumerate(r) if c > 0], default=-1),
+            "reset_n": sum(r), "free_9_15": sum(f[9:16]), "free_n": sum(f), "free_over8": sum(f[9:]) / max(sum(f), 1)}
+
+
+def late_split(paths: list[str]) -> dict:
+    """K3's late failures split by where the rally ended (shots 3-4 / 5-7 / 8+), pooled over pairs reads."""
+    import json
+    h = None
+    for p in paths:
+        q = json.load(open(p))["pairs"]["len_hist"]
+        h = list(q) if h is None else [x + y for x, y in zip(h, q)]
+    return {"3-4": sum(h[3:5]), "5-7": sum(h[5:8]), "8+": sum(h[8:])}

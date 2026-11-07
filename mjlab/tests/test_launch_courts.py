@@ -138,3 +138,44 @@ def test_half_reset_places_only_on_odd_live_courts(monkeypatch):
     env.close()
     assert s["drill_places"] > 0 and s["drill_places_off"] == 0, s
     assert 0 < sub_n < all_n, (sub_n, all_n)
+
+
+
+def test_cap_court_mask_caps_only_masked_courts():
+    """D-242: with cap_court set, the rally_cap-th shot ends the rally on masked courts only."""
+    from picklebot_mj.pairs import PairCourts
+    pc = PairCourts(4, "cpu", handoff="crossing", rally_cap=2)  # courts 0 (envs 0, 2) and 1 (envs 1, 3)
+    pc.cap_court = torch.tensor([True, False])
+    pc.court_dead[:] = False
+    pc.started[:] = True
+    z = torch.zeros(4, dtype=torch.bool)
+    recv = []
+    for cross in ([True, True, False, False], [False, False, True, True], [True, True, False, False]):
+        _, r = pc.step(z, z, z, torch.tensor(cross), 0.02, 0.5)
+        recv.append(r.clone())
+    # shot 1 is handed over on both courts; shot 2 (the cap) only on the uncapped court 1, which rallies on
+    assert recv[0].tolist() == [False, False, True, True]
+    assert recv[1].tolist() == [False, True, False, False]
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+def test_cap_reset_only_wires_the_reset_half(monkeypatch):
+    if not BASE.exists():
+        pytest.skip("needs the d1 base")
+    monkeypatch.setenv("PICKLEBOT_RES_BASE", str(BASE))
+    monkeypatch.setenv("PICKLEBOT_LAM_R", "2")
+    import mjlab.tasks  # noqa: F401
+    import picklebot_mj.tasks.footwork_specialist as fs
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+    assert getattr(load_env_cfg(fs.TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF).actions["ball"], "pair_rally_cap_reset_only") is False
+    cfg = load_env_cfg(fs.TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF)
+    cfg.scene.num_envs = 64
+    b = cfg.actions["ball"]
+    b.pair_rally_cap, b.pair_rally_cap_reset_only = 8, True
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    t = env.action_manager.get_term("ball")
+    ok = bool((t.pairs.cap_court == t._reset_court).all()) and int(t.pairs.cap_court.sum()) == 8
+    env.close()
+    assert ok

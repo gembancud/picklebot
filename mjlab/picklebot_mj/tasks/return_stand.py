@@ -143,6 +143,9 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # only on the odd court index among the live pair courts when this is 0.5 (D-217's split); the other half restart
     # from where the robots ended. The free half's rally lengths are logged as len_hist_sub.
     pair_drill_reset_frac: float = 1.0
+    # D-242 (training only; False = the cap on every pair court, as before): pair_rally_cap applies only on the
+    # set-start half (pair_drill_reset_frac 0.5); the free half plays uncapped rallies.
+    pair_rally_cap_reset_only: bool = False
     # D-217 (training only; 0 = off, as in every read): on half of the live pair courts (odd court index among the
     # courts without drills), a received hand-off is cut with this probability at a random time PAIR_CUT_T s after it
     # is received, if the receiver has not hit it yet: the ball is lost (a miss), the rally ends, and the feeder ball
@@ -504,6 +507,9 @@ class BallPhysicsAction(ActionTerm):
                 live &= ~self.pairs.solo
             self._reset_court = live & (c % 2 == 1)
             self.pairs.sub = live & ~self._reset_court
+        if getattr(cfg, "pair_rally_cap_reset_only", False):  # D-242
+            assert self._reset_court is not None, "D-242: needs pair_drill_reset_frac 0.5"
+            self.pairs.cap_court = self._reset_court.clone()
         if getattr(cfg, "replay_file", ""):
             self.replay = mirror_ball_states(torch.load(cfg.replay_file, map_location=dev).float())
             self.gen_replay_mix = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 161803)

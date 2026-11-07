@@ -1659,3 +1659,29 @@ Brief: results/footwork-round101-brief.md.
 **Estimates:** guard pass about 50 %; P(5+) 0.76-0.79 from this run; target from this run under 5-10 %; within 3-6 runs 15-35 %.
 
 **Decision:** D-241.
+
+## Round 102 (2026-11-07): D-241 NO-CANDIDATE on K3-KEPT alone
+
+Brief: results/footwork-round102-brief.md.
+
+**Correction check (all five):**
+- D-241 ran as registered; NO-CANDIDATE stands. The summary's "N" labels are a template slip (the arms are right).
+- **The K3 fail is real:** 181 of 4,275 (0.0423, SE 0.0031) against C's 113 of 4,207: +1.54 points, about 3.9 SE; every child seed is above the line.
+- **The panel's error (coach, experiment design):** round 101 knew K3 read +0.0041 at the gate and +0.0088 on fresh seeds and added no lever for it.
+- **The brief's premise is only partly right (motion, RL, architecture, experiment design):** against N most of the extra late endings are at shots 3-4 (inside the cap's practised range), not 8+; D-239's N' had no cap and still raised K3. RL reads it as fine-tuning drift down the continuation chain (K3 0.0243 -> 0.0276 -> 0.0310 -> 0.0394 / 0.0423). Motion: the ready share fell 0.77 (M) -> 0.57 (N) -> 0.40 (child) as the robot hurries back to its spot. Training-log hazards at shots 3-7 are flat, so only a read catches K3 (architecture).
+
+**Votes:**
+
+| member | vote |
+|---|---|
+| coach | cap 8 on the set-start half only, parent the child |
+| motion | cap 8 on the set-start half only, parent the child |
+| architecture | cap 8 on the set-start half only, parent N (a sibling for clean attribution), plus a KILL-LATE read |
+| experiment design | pair_rally_cap 16 on all courts, parent the child |
+| RL | (iii) no training: read the child's model_35840 |
+
+**Decision:** the lever by majority (3 of 5): pair_rally_cap 8 on the set-start half only. The parent by majority (3 of 5): the child, model_36194. Lines in experiment design's form; architecture's KILL-LATE had one vote and is not added.
+
+**Estimates:** K3 pass about 40-50 %; P(5+) 0.77-0.80 from this run; target from this run about 5-10 %; within 3-6 runs 15-35 %. Motion: h2 (0.039) has not moved across M, N and the child and now binds; the human-footwork route is probably still needed.
+
+**Decision:** D-242.
