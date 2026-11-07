@@ -7798,3 +7798,21 @@ Plain reading: the x3 left / back dose (D-237 to D-239) moved back contact by ab
 | R3 court read, dev 4220405 | 0.0274 (M 0.0337) | <= 0.04 | pass |
 
 Reported: hazards h0-h4 0.110 / 0.088 / 0.039 / 0.013 / 0.004; direction contact forward 0.903, left 0.349, back 0.624, right 0.799; recovery median 0.275 m (M 0.475); old read P(5+) 0.3600 vs C 0.4061.
+
+**D-240 CONFIRM result (2026-11-07): CONFIRM-FAIL on the left + back guard (-5.2 against a -5 kill).** N is not promoted.
+
+| line (fresh dev 4220349-4220356, against C re-read on the same seeds) | N | C | result |
+|---|---|---|---|
+| GAIN2 | P(5+) 0.7687 vs 0.5854: +18.33 points, lower bound +16.72 | | pass |
+| worst family | +1.6 | kill below -5 | pass |
+| **left + back feeder contact** | **0.4320 (n 2907) vs 0.4843 (n 2771): -5.2** | **kill below -5** | **FAIL** |
+| R3 court read, dev 4220399 | 0.0237 | <= 0.04 | pass |
+
+Reported:
+- The difference's binomial SE is about 1.3 points, so -5.2 is within noise of the line. The line is not loosened.
+- Direction contact N vs C (fresh): forward 0.899 / 0.922, left 0.368 / 0.434, back 0.617 / 0.623, right 0.783 / 0.750. The shortfall is left (-6.6 points); back is level.
+- (1-h0)(1-h1) 0.813 vs 0.619; hazards h0-h4 0.107 / 0.089 / 0.037 / 0.015 / 0.003.
+- K3 (reported in CONFIRM) 0.0287 vs C's fresh 0.0199 (+0.0088); late splits shots 3-4 0.0176 vs 0.0115.
+- The P(5+) gain replicates: 0.7660 on the gate seeds, 0.7687 on fresh seeds. M was never read on the fresh seeds.
+
+Panel round 101 is called.
