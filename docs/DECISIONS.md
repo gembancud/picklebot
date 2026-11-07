@@ -7780,3 +7780,21 @@ Plain reading: the x3 left / back dose (D-237 to D-239) moved back contact by ab
 - All pass -> CONFIRM on dev 4220349-4220356 (guards re-read against C) plus R3 on dev 4220399.
 
 **New code:** picklebot_mj/d1_rule.py (pair_feeder_share, cap8_kill, open_gate and the D-240 constants) with a test (tests/test_d1_rule.py: 45 passed).
+
+**D-240 gate result (2026-11-07): CANDIDATE (results/lc102-summary.txt).** CONFIRM is running.
+
+- Smoke: all 8 lines ok. Pair-court feeder share 0.1873 (predicted 0.185; line >= 0.1334).
+- Kill at +240: KILL-LOST-OPEN training (1-h0)(1-h1) 0.7273 vs M's 0.6519; KILL-UNSTABLE 0.610; config ok; KILL-NO-FALLS 0.0294 on dev 4220404. All CONTINUE; training ran to model_35595 without a stop.
+
+| line | N (rally-d1s3cap8 model_35595) | reference | result |
+|---|---|---|---|
+| GAIN2 vs C | +20.15 points, lower bound +18.55 | >= +1, > 0 | pass |
+| worst family vs parent | +8.7 | kill below -5 | pass |
+| left + back guard | 0.4204 vs parent 0.4557 (-3.5) | kill below -5 | pass |
+| H0 / FEEDER | 0.1096 hazard / 0.8934 legal | | pass |
+| K3-KEPT late failure share | 0.0310 vs C 0.0269 (+0.0041) | <= +0.005 | pass |
+| M-KEPT P(5+) | 0.7660 vs M 0.7454 | >= -0.02 | pass |
+| OPEN (1-h0)(1-h1) | 0.8117 vs M 0.7883 (+0.0234) | >= +0.02 | pass |
+| R3 court read, dev 4220405 | 0.0274 (M 0.0337) | <= 0.04 | pass |
+
+Reported: hazards h0-h4 0.110 / 0.088 / 0.039 / 0.013 / 0.004; direction contact forward 0.903, left 0.349, back 0.624, right 0.799; recovery median 0.275 m (M 0.475); old read P(5+) 0.3600 vs C 0.4061.
