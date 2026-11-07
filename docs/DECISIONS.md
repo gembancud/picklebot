@@ -7816,3 +7816,34 @@ Reported:
 - The P(5+) gain replicates: 0.7660 on the gate seeds, 0.7687 on fresh seeds. M was never read on the fresh seeds.
 
 Panel round 101 is called.
+
+### D-241 (2026-11-07): N + the set start on half the pair courts (panel round 101, 5 of 5 after the facts check)
+
+**Premise:** the guard's direction read starts rallies from the start spot with no drill reset. Since R, every child has trained only from the drill-reset set start on its pair courts, and left contact fell when that began (C 0.41-0.43, R 0.36, M 0.35, N 0.34-0.37). N already beats C on the backhand families under the set start.
+
+**Run (scripts/diag/lc103.sh):**
+- child = rally-d1s3cap8h = N (rally-d1s3cap8 model_35595, unpromoted) on Picklebot-Rally22b-FastMove-DrillReset-Launch-HalfReset-G1.
+- The only change: pair_drill_reset_frac 0.5. The set start applies on the odd court index among the live pair courts; the other half restart from where the robots ended. pair_rally_cap 8 stays (training only).
+- C's recipe: LR 3e-5, ScheduledPPO, 600 iterations to model_36194. Training seed 244, smoke 245.
+- Stage 0: N's direction read on dev 4220407.
+
+**Smoke (160 iterations):** D-240's lines, with the half-reset dose (reset half 1.9-2.05 placements per rally; free half 0 placements) in place of the all-court dose, and config also checking pair_drill_reset_frac 0.5.
+
+**Kill at +240 (window +181-240):**
+- Training-log lines first; any KILL stops training at once:
+  - KILL-LOST-OPEN: reset-half training (1-h0)(1-h1) >= N's paired 0.7273 - 0.02 (N reset every pair court, so the reset half is the like-for-like window); the free half reported;
+  - KILL-UNSTABLE: exact falls <= 3.14;
+  - config: launcher courts, launch_time_out, no fall term, pair_rally_cap 8, pair_drill_reset_frac 0.5.
+- Then KILL-NO-FALLS: court falls / episode on dev 4220406 <= 0.04.
+- Then KILL-DIR: left feeder contact on dev 4220407 >= N's same-seed read - 0.01.
+
+**Gate (frozen set-start read, against C):** every D-240 line unchanged (gain2, guards with the left + back guard, cfs79 lines, M-KEPT, OPEN against M), plus N-KEPT (P(5+) >= 0.7460) and R3 <= 0.04 on dev 4220408 (N read there too, reported).
+
+**CONFIRM:** pairs on dev 4220409-4220412, directions on 4220413-4220416, C re-read on them; R3 on dev 4220417. GAIN2, the guards, the mechanism, R3 and now H0, FEEDER and K3-KEPT all gate.
+
+**New code:**
+- picklebot_mj/tasks/return_stand.py: pair_drill_reset_frac (default 1.0, every read unchanged) with per-half logging (len_hist_sub, drill_places_off);
+- picklebot_mj/pairs.py: len_hist_sub;
+- picklebot_mj/tasks/footwork_specialist.py: the HalfReset task;
+- picklebot_mj/d1_rule.py: train_open_half, half_dose, half_kill, left_contact.
+- Tests: tests/test_launch_courts.py 6 passed (the task changes only the reset share; placements only on odd live courts; the free half's rallies logged); tests/test_d1_rule.py 46 passed.

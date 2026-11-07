@@ -887,3 +887,21 @@ def rally_fastmove_dr_launch_lb3(cfg):
 register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_LAUNCH_LB3, env_cfg=rally_fastmove_dr_launch_lb3(load_env_cfg(ag.SRC_22B)),
                     play_env_cfg=rally_fastmove_dr_launch_lb3(load_env_cfg(ag.SRC_22B, play=True)),
                     rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))
+
+
+# D-241 (panel round 101, 5 of 5): D-235's launcher-court task with the set start (pair_drill_reset) on half the live
+# pair courts only (odd court index); the other half restart from where the robots ended, the state the direction
+# read (feeder_speed_envelope.py: feed_anchor "start", no drill reset) tests. The only change from
+# TASK_RALLY_FASTMOVE_DR_LAUNCH; the training-only pair_rally_cap 8 (D-240) stays a driver override.
+TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF = "Picklebot-Rally22b-FastMove-DrillReset-Launch-HalfReset-G1"
+
+
+def rally_fastmove_dr_launch_half(cfg):
+    cfg = rally_fastmove_dr_launch(cfg)
+    cfg.actions["ball"] = dataclasses.replace(cfg.actions["ball"], pair_drill_reset_frac=0.5)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF, env_cfg=rally_fastmove_dr_launch_half(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_fastmove_dr_launch_half(load_env_cfg(ag.SRC_22B, play=True)),
+                    rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))

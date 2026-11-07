@@ -1635,3 +1635,27 @@ Brief: results/footwork-round100-brief.md.
 **Estimates:** P(5+) 0.75-0.79 from this run; target from this run 5-10 %; within 3-6 runs 15-35 %. Motion: 0.80 likely needs the human-footwork reference route.
 
 **Decision:** D-240.
+
+## Round 101 (2026-11-07): D-240 CONFIRM-FAIL on the left + back guard
+
+Brief: results/footwork-round101-brief.md.
+
+**Correction check (all five):**
+- D-240 ran as registered; CONFIRM-FAIL stands. No third read of N and no pooling after the fact.
+- **The crossing is noise, the deficit is real.** -5.2 +/- 1.3 against a -5 line; pooled over both seed sets N is about -4.4 (SE 0.9), so N sits on the line and passes gate plus CONFIRM only about 45 % of the time. Left alone is -5.8 at the gate and -6.6 at CONFIRM, below C on all 8 seeds; back is level.
+- **The panel's error (architecture, experiment design):** round 100 knew M read -5.1 on this guard and added no lever for left; its "about 50 %" risk was for one read, and two were required.
+- **K3 on the fresh seeds read +0.0088** (line +0.005), reported only; the brief left it out. From D-241, H0, FEEDER and K3-KEPT gate in CONFIRM too (a tightening).
+- **Left misses are not speed-limited (motion, coach, RL):** they end about 0.85 m from the ball at p90 1.6-1.8 m/s, against 2.1 m/s on left balls the robot hits.
+- **Instrument finding (architecture, verified by the agent):** the direction read (scripts/diag/feeder_speed_envelope.py) runs pair mode with feed_anchor "start" and no drill reset. Left fell exactly when drill-reset training began (C 0.407 -> R 0.364). On the set-start read N beats C on reach_backhand (0.81 / 0.74) and cross_backhand (0.64 / 0.52). RL: N's left losses are on wide_forehand, easy_forehand and topspin, not the backhand families.
+
+**First votes:** (i) 5 of 5, parent N, cap 8 kept. Lever: backhand-family feed weights (motion x4, coach x2, experiment design x3) against the drill reset on half the pair courts (RL, architecture).
+
+**Facts check (the agent, before the tally):** the three feed-weight voters were sent RL's and architecture's findings, and told that lc102.sh's training override already holds those weights at 1.0 and that no training-log counter of issued families exists. All three switched to the half-court drill reset.
+
+**Decision (5 of 5):** the set start on half the live pair courts (odd court index, D-217's split), cap 8 kept, parent N. Lines in experiment design's form: smoke checks each half's dose; kill at +240 with KILL-LOST-OPEN, KILL-UNSTABLE, config, KILL-NO-FALLS and KILL-DIR (left contact); gate adds N-KEPT; a new CONFIRM block.
+
+**Rejected (ii) (all five):** reads only; left is not speed- or effort-limited.
+
+**Estimates:** guard pass about 50 %; P(5+) 0.76-0.79 from this run; target from this run under 5-10 %; within 3-6 runs 15-35 %.
+
+**Decision:** D-241.

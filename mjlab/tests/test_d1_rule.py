@@ -713,3 +713,26 @@ def test_cap8_feeder_share_and_kill_lines():
     assert v[0] == "KILL-LOST-OPEN"
     v = [x[0] for x in dr.cap8_kill(mk(34996, 0.19, 0.20, 1e6), 34996, 9216, m)]
     assert v[1] == "KILL-UNSTABLE"
+
+
+def test_half_reset_windows_dose_and_kill():
+    def mk(start, h0r, h0f, places_per_rally, off=0):
+        out = []
+        for k, it in enumerate(range(start, start + 260, 10)):
+            n = 1000 * (k + 1)
+            sub = [int(n * h0f), int(n * (1 - h0f) * 0.1), n - int(n * h0f) - int(n * (1 - h0f) * 0.1)]
+            res = [int(n * h0r), int(n * (1 - h0r) * 0.1), n - int(n * h0r) - int(n * (1 - h0r) * 0.1)]
+            grp = [x + y for x, y in zip(res, sub)]
+            out.append({"step": it * dr.STEPS_PER_IT, "len_hist_group": [grp, [0, 0, 0]],
+                        "launch": {"len_hist_sub": sub, "drill_places": int(places_per_rally * n), "drill_places_off": off * k,
+                                   "launch_courts": {"other_falls": 0}}})
+        return out
+    rows = mk(35595, 0.10, 0.30, 2.0)
+    rh, fh = dr.train_open_half(rows, 20, 140, 35595)
+    assert abs(rh["h0"] - 0.10) < 0.01 and abs(fh["h0"] - 0.30) < 0.01 and abs(rh["places_per_rally"] - 2.0) < 0.05
+    assert dr.half_dose(rows, 35595)[0]
+    assert not dr.half_dose(mk(35595, 0.10, 0.30, 2.0, off=3), 35595)[0]
+    v = [x[0] for x in dr.half_kill(rows, 35595, 9216)]
+    assert v == ["CONTINUE", "CONTINUE"]
+    v = [x[0] for x in dr.half_kill(mk(35595, 0.40, 0.30, 2.0), 35595, 9216)]
+    assert v[0] == "KILL-LOST-OPEN"

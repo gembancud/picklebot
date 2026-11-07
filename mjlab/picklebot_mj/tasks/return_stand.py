@@ -139,6 +139,10 @@ class BallPhysicsActionCfg(ActionTermCfg):
     # and orientation (facing the net), the default joint pose, zero velocity. The feeder ball follows after
     # refeed_delay_s. Off by default; reads under it use pair_reset_parks too.
     pair_drill_reset: bool = False
+    # D-241 (training only; 1.0 = every live pair court, as before): with pair_drill_reset, the set start is applied
+    # only on the odd court index among the live pair courts when this is 0.5 (D-217's split); the other half restart
+    # from where the robots ended. The free half's rally lengths are logged as len_hist_sub.
+    pair_drill_reset_frac: float = 1.0
     # D-217 (training only; 0 = off, as in every read): on half of the live pair courts (odd court index among the
     # courts without drills), a received hand-off is cut with this probability at a random time PAIR_CUT_T s after it
     # is received, if the receiver has not hit it yet: the ball is lost (a miss), the rally ends, and the feeder ball
@@ -490,6 +494,16 @@ class BallPhysicsAction(ActionTerm):
                 self.pairs.court_dead |= self.pairs.solo
             else:  # D-167 (logging only): one group, so per-ball legal and rally ends are logged on every pair task
                 self.pairs.group = torch.zeros(n // 2, dtype=torch.long, device=dev)
+        self._reset_court = None  # D-241
+        rf = float(getattr(cfg, "pair_drill_reset_frac", 1.0))
+        if self.pairs is not None and getattr(cfg, "pair_drill_reset", False) and rf < 1.0:
+            assert rf == 0.5, "D-241: only the half split is coded"
+            c = torch.arange(n // 2, device=dev)
+            live = torch.ones(n // 2, dtype=torch.bool, device=dev) if self.drill_scale is None else self.drill_scale[: n // 2] == 0
+            if self.pairs.solo is not None:  # launcher courts never rally
+                live &= ~self.pairs.solo
+            self._reset_court = live & (c % 2 == 1)
+            self.pairs.sub = live & ~self._reset_court
         if getattr(cfg, "replay_file", ""):
             self.replay = mirror_ball_states(torch.load(cfg.replay_file, map_location=dev).float())
             self.gen_replay_mix = torch.Generator(device=dev).manual_seed(int(cfg.seed) + 161803)
@@ -1182,6 +1196,8 @@ class BallPhysicsAction(ActionTerm):
                 ok = self.pairs.start_now.clone()
                 if self.drill_scale is not None:
                     ok &= self.drill_scale[:h] == 0
+                if self._reset_court is not None:  # D-241
+                    ok &= self._reset_court
                 bz = torch.zeros(self.num_envs, dtype=torch.bool, device=self.device)
                 if self.drill is not None:
                     bz |= self.drill.move_ep
@@ -1315,6 +1331,8 @@ class BallPhysicsAction(ActionTerm):
         jp = robot.data.default_joint_pos[idx].clone()
         robot.write_joint_state_to_sim(jp, torch.zeros_like(jp), env_ids=idx)
         self.drill_places = getattr(self, "drill_places", 0) + int(idx.numel())
+        if getattr(self, "_reset_court", None) is not None:  # D-241: placements off the reset half (must stay 0)
+            self.drill_places_off = getattr(self, "drill_places_off", 0) + int((~self._reset_court.repeat(2)[idx]).sum())
 
     def fall_log_summary(self) -> dict:
         """D-234: robot falls by phase [in feed, between feeds] x time since episode start / distance / family."""
@@ -1327,6 +1345,8 @@ class BallPhysicsAction(ActionTerm):
                 "outcome_by_d": self._ls_out_d.tolist(), "outcome_after_cut": self._out_cut.tolist(),
                 "cuts": int(self.cut_count), "drill_places": int(getattr(self, "drill_places", 0)),
                 "drill_place_skipped": int(getattr(self, "drill_place_skipped", 0)),
+                "drill_places_off": int(getattr(self, "drill_places_off", 0)),  # D-241
+                "len_hist_sub": None if self.pairs is None or self.pairs.sub is None else self.pairs.len_hist_sub.tolist(),
                 "move_issued": None if self.drill is None else self.drill.stats["issued"].tolist(),  # D-237: spots per sector
                 "launch_courts": {"envs": 0 if self.launch_env is None else int(self.launch_env.sum()),
                                   "episodes_falls": self._launch_ep.tolist(), "other_falls": int(self._other_falls),

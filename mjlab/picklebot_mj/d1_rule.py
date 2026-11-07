@@ -1596,3 +1596,66 @@ def open_gate(child_paths: list[str], m_paths: list[str]) -> tuple[bool, str]:
     ok = c["open2"] >= m["open2"] + OPEN_GATE_GAIN - 1e-9
     return ok, (f"OPEN: pooled (1-h0)(1-h1) {c['open2']:.4f} vs M {m['open2']:.4f} (>= +{OPEN_GATE_GAIN}; h0 {c['h'][0]:.3f} / "
                 f"{m['h'][0]:.3f}, h1 {c['h'][1]:.3f} / {m['h'][1]:.3f}) -> {ok}")
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-241 (panel round 101, 5 of 5 after the agent's facts check): P = N (rally-d1s3cap8 model_35595, unpromoted:
+# CONFIRM-FAIL on the left + back guard, -5.2 vs -5) on D-235's launcher-court task with the set start on half the live
+# pair courts only (pair_drill_reset_frac 0.5); pair_rally_cap 8 stays. Training-log windows split the pair courts into
+# the reset half (len_hist_group[0] minus len_hist_sub) and the free half (len_hist_sub).
+N_START, N_OPEN_181_240 = 34996, 0.7273   # N's +181-240 training (1-h0)(1-h1), every pair court reset (lc102 log)
+HALF_KILL_WIN = (181, 240)
+HALF_DOSE = (1.9, 2.05)                    # placements per reset-half rally (two robots per restart)
+
+
+def train_open_half(rows: list[dict], it_lo: int, it_hi: int, start_it: int):
+    """(reset half, free half) training windows; None, None when the rows do not cover the window."""
+    rows = [r for r in rows if "len_hist_group" in r and r.get("launch", {}).get("len_hist_sub") is not None]
+    a = _row_from(rows, (start_it + it_lo) * STEPS_PER_IT)
+    b = None if a is None else _row_from(rows, max((start_it + it_hi) * STEPS_PER_IT, a["step"] + (it_hi - it_lo) * STEPS_PER_IT))
+    if a is None or b is None:
+        return None, None
+    g = [y - x for x, y in zip(a["len_hist_group"][0], b["len_hist_group"][0])]
+    f = [y - x for x, y in zip(a["launch"]["len_hist_sub"], b["launch"]["len_hist_sub"])]
+
+    def win(h):
+        n = sum(h)
+        h0 = h[0] / n if n else float("nan")
+        h1 = h[1] / sum(h[1:]) if sum(h[1:]) else float("nan")
+        return {"n": n, "h0": h0, "h1": h1, "open2": (1 - h0) * (1 - h1)}
+    rh, fh = win([x - y for x, y in zip(g, f)]), win(f)
+    rh["places_per_rally"] = (b["launch"]["drill_places"] - a["launch"]["drill_places"]) / max(rh["n"], 1)
+    fh["places_off"] = b["launch"].get("drill_places_off", 0) - a["launch"].get("drill_places_off", 0)
+    return rh, fh
+
+
+def half_dose(rows: list[dict], start_it: int) -> tuple[bool, str]:
+    rh, fh = train_open_half(rows, *DR_EARLY, start_it)
+    if rh is None or min(rh["n"], fh["n"]) < OPEN_MIN_RALLIES // 2:
+        return False, f"half-reset dose over {DR_EARLY}: not readable ({rh and rh['n']} / {fh and fh['n']} rallies) -> NO-DATA"
+    ok = HALF_DOSE[0] <= rh["places_per_rally"] <= HALF_DOSE[1] and fh["places_off"] == 0
+    return ok, (f"half-reset dose over {DR_EARLY}: reset half {rh['places_per_rally']:.3f} placements per rally (in {HALF_DOSE}; "
+                f"n {rh['n']}), free half {fh['places_off']} placements (== 0; n {fh['n']})")
+
+
+def half_kill(rows: list[dict], start_it: int, envs_other: int) -> list[tuple[str, str]]:
+    """D-241's training-log lines over HALF_KILL_WIN (all read): KILL-LOST-OPEN on the reset half against N's paired
+    window (N reset every pair court), the free half reported; KILL-UNSTABLE."""
+    out = []
+    rh, fh = train_open_half(rows, *HALF_KILL_WIN, start_it)
+    if rh is None or rh["n"] < OPEN_MIN_RALLIES // 2:
+        out.append(("NO-DATA", f"KILL-LOST-OPEN: reset-half window not readable ({rh and rh['n']}) -> NO-DATA"))
+    else:
+        v = "CONTINUE" if rh["open2"] >= N_OPEN_181_240 - OPEN_KEEP - 1e-9 else "KILL-LOST-OPEN"
+        out.append((v, f"KILL-LOST-OPEN: reset-half training (1-h0)(1-h1) +{HALF_KILL_WIN[0]}-{HALF_KILL_WIN[1]} {rh['open2']:.4f} "
+                       f"vs N's {N_OPEN_181_240} (>= -{OPEN_KEEP}; n {rh['n']}); (reported) free half {fh['open2']:.4f} (n {fh['n']}) -> {v}"))
+    f = exact_falls(rows, *HALF_KILL_WIN, start_it) / envs_other if envs_other else float("nan")
+    v = "NO-DATA" if f != f else ("CONTINUE" if f <= EXACT_FALLS_MAX else "KILL-UNSTABLE")
+    out.append((v, f"KILL-UNSTABLE: exact falls off the launcher courts {f:.3f} per 1,000 env-s (<= {EXACT_FALLS_MAX}) -> {v}"))
+    return out
+
+
+def left_contact(path: str) -> tuple[float, int]:
+    import json
+    d = json.load(open(path))["directions"]["left"]
+    return d["contact"], d["feeds"]

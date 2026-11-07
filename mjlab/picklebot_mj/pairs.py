@@ -60,6 +60,9 @@ class PairCourts:
         # histogram per group; None leaves len_hist the only histogram, as before.
         self.group = None
         self.len_hist_group = torch.zeros(2, MAX_LEN + 1, dtype=torch.long, device=device)
+        # D-241 (logging only): an optional per-court mask and the rally-length histogram of the masked courts only
+        self.sub = None
+        self.len_hist_sub = torch.zeros(MAX_LEN + 1, dtype=torch.long, device=device)
         # rally ends per group and reason: 0 the shot was not a legal return, 1 returned to a busy partner, 2 a robot
         # reset (fall or time-out), 3 the rally cap
         self.end_reasons = torch.zeros(2, 4, dtype=torch.long, device=device)
@@ -121,6 +124,8 @@ class PairCourts:
         if self.group is not None:
             self.len_hist_group.view(-1).index_add_(0, self.group * (MAX_LEN + 1) + idx, (c & self.started).long())
             self.end_reasons[:, reason] += torch.stack([(c & self.started & (self.group == g)).sum() for g in (0, 1)])
+        if self.sub is not None:
+            self.len_hist_sub.index_add_(0, idx, (c & self.started & self.sub).long())
         self.last_len = torch.where(c, self.rally_len, self.last_len)
         self.rally_len = torch.where(c, torch.zeros_like(self.rally_len), self.rally_len)
         self.shots = torch.where(c, torch.zeros_like(self.shots), self.shots)
