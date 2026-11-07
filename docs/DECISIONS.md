@@ -7930,3 +7930,21 @@ Plain reading: the cap on the set-start half only brought K3 back below C's (0.0
 Reported: P(5+) on the fresh seeds 0.7761 (gate seeds 0.7759); hazards h0-h4 0.119 / 0.071 / 0.039 / 0.011 / 0.003; ready share 0.311; recovery median 0.225 m; left contact 0.356 vs C 0.428.
 
 **Against the target (results/rally-target.md):** P(5+) >= 0.80 with Wilson low >= 0.78 over >= 1,000 dev rallies. Q reads 0.776 on two seed sets: not met. With Q's h1-h4, h0 would have to fall from 0.119 to about 0.085 for P(5+) 0.80, or to about 0.075 for the Wilson bar. Q becomes the parent for the next run (the gate's C reference is unchanged). Panel round 104 is called. The GPU gap after CONFIRM runs the user-approved GVHMR body pass on 58 of the 63 marked rallies (the five with large tracking gaps dropped).
+
+### D-244 (2026-11-08): Q + pair_rally_cap 5 on the set-start half; the target read registered (panel round 104, the tie rule)
+
+**Run (scripts/diag/lc106.sh):**
+- child = rally-d1s3cap5hr = Q (rally-d1s3cap8hr2 model_36793, CONFIRMED) on the HalfReset task with pair_rally_cap 5 (was 8) on the set-start half only; the free half stays uncapped. The only change. 600 iterations to model_37392; training seed 250, smoke 251.
+- Stage 0: Q's direction read on dev 4220422.
+
+**Smoke:** D-243's lines; the cap-split line: pair-court feeder share within +/- 25 % of 0.160 (recorded here before the smoke: 0.5 / 4.46 + 0.5 / 10.47 from Q's second-half log; the same formula gives 0.1306 for cap 8 against Q's measured 0.1297), set-start half never past 5, free-half rallies ending at 9-15 > 0.
+
+**Kill at +240 (window +181-240):** training-log lines first (KILL-LOST-OPEN reset half >= Q's 0.7356 - 0.02; KILL-UNSTABLE <= 3.14; config incl. pair_rally_cap 5), stopping training at once on a KILL; then KILL-NO-FALLS (dev 4220421 <= 0.04), KILL-DIR (left contact on dev 4220422 >= Q's - 0.01), KILL-LATE (one pairs read on dev 4220423: late failure share <= 0.0319).
+
+**Gate (frozen set-start read, against C):** every D-243 line unchanged (gain2, guards, cfs79 incl. K3-KEPT, M-KEPT, N-KEPT, P-KEPT, R3), with OPEN read against Q (>= Q's 0.8172 + 0.02; a tightening in place of OPEN against M), plus Q-KEPT (P(5+) >= 0.7559). R3 on dev 4220424 (Q read there too).
+
+**CONFIRM:** pairs on dev 4220425-4220428, directions on 4220429-4220432 (C re-read), R3 on 4220433; every line gating.
+
+**The target read (registered now, experiment design):** for a child that passed the gate, its CONFIRM block is the target read of results/rally-target.md. The target is met only if every line passes: pooled P(5+) (open rallies counted) >= 0.80; pooled Wilson low >= 0.78 over >= 1,000 rallies; sides A and B within 3 points of legal returns; R3 <= 0.04. One look per child: no re-reads, no pooling across blocks, never the gate seeds (used to select about eight children). Coded as d1_rule.target_read (tests/test_d1_rule.py, 47 passed).
+
+**Order:** the user-approved GVHMR body pass (58 of the 63 marked rallies) runs first; training starts when it ends.

@@ -1694,3 +1694,42 @@ def late_split(paths: list[str]) -> dict:
         q = json.load(open(p))["pairs"]["len_hist"]
         h = list(q) if h is None else [x + y for x, y in zip(h, q)]
     return {"3-4": sum(h[3:5]), "5-7": sum(h[5:8]), "8+": sum(h[8:])}
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-244 (panel round 104; no majority: cap 5 on the set-start half (RL, experiment design), the weak-family feed-mix
+# weights (coach x3, motion x2), a free-half cap 16 (architecture); the tie rule: both front options need no new code,
+# so experiment design's position): P = Q (rally-d1s3cap8hr2 model_36793, CONFIRMED in D-243) with pair_rally_cap 5 on
+# the set-start half only. The CONFIRM block is registered as the target read (results/rally-target.md).
+Q_START, Q_OPEN_181_240 = 36194, 0.7356   # Q's +181-240 reset-half training (1-h0)(1-h1) (lc105 log)
+CAP5_SHARE_PRED = 0.160                    # 0.5 / 4.46 + 0.5 / 10.47 (Q's second-half log; the formula gives 0.1306 for
+                                           # cap 8 against Q's measured 0.1297)
+K3_LINE = 0.0269 + 0.005                   # KILL-LATE: one pairs read's late failure share <= C's gate K3 + 0.005
+TARGET_P5, TARGET_WILSON, TARGET_SIDES, TARGET_R3 = 0.80, 0.78, 0.03, 0.04
+
+
+def target_read(paths: list[str], r3: float) -> tuple[bool, list[str]]:
+    """The frozen rally target on a pooled pairs read: P(5+) (open rallies counted) >= 0.80 with Wilson low >= 0.78
+    over >= 1,000 rallies, sides A and B within 3 points of legal returns, court falls / episode <= 0.04."""
+    import json
+    import math
+    q = pooled_pairs(paths)
+    n = q["rallies"]
+    k = round(q["p5"] * n)
+    z = 1.96
+    p = k / max(n, 1)
+    d = 1 + z * z / max(n, 1)
+    lo = (p + z * z / (2 * n) - z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))) / d if n else 0.0
+    sides = {}
+    for pth in paths:
+        for s, v in json.load(open(pth))["pairs"]["sides"].items():
+            a = sides.setdefault(s, [0.0, 0])
+            a[0] += v["legal"] * v["feeds"]; a[1] += v["feeds"]
+    leg = {s: a[0] / max(a[1], 1) for s, a in sides.items()}
+    gap = max(leg.values()) - min(leg.values()) if leg else 1.0
+    ok = {"p5": p >= TARGET_P5, "wilson": lo >= TARGET_WILSON and n >= 1000, "sides": gap <= TARGET_SIDES, "r3": r3 <= TARGET_R3}
+    lines = [f"TARGET P(5+) {p:.4f} (>= {TARGET_P5}; {k} of {n}) -> {ok['p5']}",
+             f"TARGET Wilson low {lo:.4f} (>= {TARGET_WILSON}, n >= 1000) -> {ok['wilson']}",
+             f"TARGET sides legal {', '.join(f'{s} {v:.4f}' for s, v in leg.items())}: gap {gap:.4f} (<= {TARGET_SIDES}) -> {ok['sides']}",
+             f"TARGET R3 court falls / episode {r3:.4f} (<= {TARGET_R3}) -> {ok['r3']}"]
+    return all(ok.values()), lines

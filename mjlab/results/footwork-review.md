@@ -1703,3 +1703,31 @@ Brief: results/footwork-round103-brief.md.
 **Decision:** D-243.
 
 **Round 103 addendum (architecture, received after the decision was recorded):** (b), pair_rally_cap 16 on all courts. The smoke shows (a) cutting free-half practice where K3 fails: free-half (1-h0)(1-h1) fell from 0.60 at the end of D-241 to 0.42, and the share of free-half rallies reaching shot 3 from 0.54 to 0.42; a few very long rallies (87 past 15 shots) use up the extra balls. Final tally (a) 3, (b) 2; D-243 stands. Architecture's KILL-LATE line (a K3 read at +240 against P on dev 4220421) had one vote and is not added.
+
+## Round 104 (2026-11-08): D-243 CONFIRMED; the next run toward the target
+
+Brief: results/footwork-round104-brief.md.
+
+**Correction check (all five):**
+- D-243 ran as registered; CONFIRMED stands (gate 4,134 of 5,328, 0.7759; CONFIRM 4,132 of 5,324, 0.7761; sides 0.997 / 0.996).
+- **The agent's h0 arithmetic was wrong (all five).** A pooled four-seed read has about 5,300 rallies, so the Wilson bar does not bind: at P(5+) 0.80 its low is about 0.789. With Q's h1-h4, the target needs h0 <= about 0.089 on the gate seeds (0.091 on the CONFIRM hazards), not 0.085 / 0.075. P's h0 (0.091) with Q's late hazards would sit at about 0.80.
+- **The cause of Q's h0 rise is not shown (experiment design):** one training seed per arm; training-seed variance on this line has never been measured. Motion: Q's extra feeder misses sit in reach_deep (contact 0.48 -> 0.37), cross_backhand, backspin and fast; reach_deep, cross_backhand and reach_backhand hold 424 of Q's 616 feeder misses (coach, motion). Reset-half training h0 stays at 0.134 through Q's run.
+- **Labels (architecture, RL):** the lc105 summary prints "N" and a "D-242:" header for the child; fixed in lc106.
+
+**Votes:**
+
+| member | lever |
+|---|---|
+| RL | pair_rally_cap 8 -> 5 on the set-start half (no new code) |
+| experiment design | pair_rally_cap 8 -> 5 on the set-start half (no new code) |
+| coach | feed-mix weights x3 on reach-deep, cross-backhand, reach-backhand (no new code) |
+| motion | the same families x2 (no new code) |
+| architecture | free-half cap 16, set-start cap 8 kept (about 10 lines) |
+
+Human-footwork reference: later (all five); motion asks for a CPU-only count of GVHMR segments with >= 2 m backward travel or a left crossover, and for the reference only if reach_deep stays below 0.5 under a feed dose.
+
+**Decision (no majority; the tie rule):** both two-vote options need no new code and have one moving part, so experiment design's position decides: pair_rally_cap 5 on the set-start half, parent Q, lines in experiment design's form. Experiment design also registers the target read (below).
+
+**Estimates:** P(5+) 0.77-0.80 from this run; target from this run about 10-35 % (RL 35 %); within 3-6 runs 20-40 %.
+
+**Decision:** D-244.

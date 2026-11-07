@@ -736,3 +736,21 @@ def test_half_reset_windows_dose_and_kill():
     assert v == ["CONTINUE", "CONTINUE"]
     v = [x[0] for x in dr.half_kill(mk(35595, 0.40, 0.30, 2.0), 35595, 9216)]
     assert v[0] == "KILL-LOST-OPEN"
+
+
+def test_target_read(tmp_path):
+    import json
+    def write(name, k5, n, legal_a, legal_b):
+        h = [n - k5, 0, 0, 0, 0, k5]
+        p = tmp_path / name
+        p.write_text(json.dumps({"pairs": {"court_counts": [[0, 0, 10, 9]], "len_hist": h, "open_len_hist": [0] * 6,
+                                           "sides": {"A": {"legal": legal_a, "feeds": 100}, "B": {"legal": legal_b, "feeds": 100}}}}))
+        return str(p)
+    ok, lines = dr.target_read([write("a.json", 860, 1000, 0.95, 0.96), write("b.json", 850, 1000, 0.95, 0.96)], 0.03)
+    assert ok, lines
+    ok, lines = dr.target_read([write("c.json", 790, 1000, 0.95, 0.96)], 0.03)
+    assert not ok and "False" in lines[0]
+    ok, _ = dr.target_read([write("d.json", 900, 1000, 0.90, 0.96)], 0.03)
+    assert not ok
+    ok, _ = dr.target_read([write("e.json", 900, 1000, 0.95, 0.96)], 0.05)
+    assert not ok
