@@ -7847,3 +7847,26 @@ Panel round 101 is called.
 - picklebot_mj/tasks/footwork_specialist.py: the HalfReset task;
 - picklebot_mj/d1_rule.py: train_open_half, half_dose, half_kill, left_contact.
 - Tests: tests/test_launch_courts.py 6 passed (the task changes only the reset share; placements only on odd live courts; the free half's rallies logged); tests/test_d1_rule.py 46 passed.
+
+**D-241 result (2026-11-07): NO-CANDIDATE on K3-KEPT alone (results/lc103-summary.txt).** CONFIRM was not run.
+
+- Kill at +240: reset-half (1-h0)(1-h1) 0.7351 vs N's 0.7273 (free half 0.5923, reported); falls 1.017; config ok; KILL-NO-FALLS 0.0237 (dev 4220406); KILL-DIR left 0.3441 vs N 0.3369 (dev 4220407). All CONTINUE.
+
+| line | child (rally-d1s3cap8h model_36194) | reference | result |
+|---|---|---|---|
+| GAIN2 vs C | +21.72 points, lower bound +20.14 | | pass |
+| left + back guard | 0.4286 vs parent 0.4557 (-2.7) | kill below -5 | pass |
+| H0 / FEEDER | 0.0907 hazard / 0.9121 legal | | pass |
+| **K3-KEPT late failure share** | **0.0423 vs C 0.0269 (+0.0154)** | **<= +0.005** | **FAIL** |
+| M-KEPT / N-KEPT | 0.7817 vs 0.7454 / 0.7660 | >= -0.02 | pass |
+| OPEN | 0.8333 vs M 0.7883 | >= +0.02 | pass |
+| R3, dev 4220408 | 0.0271 (N 0.0195) | <= 0.04 | pass |
+
+Reported:
+- Hazards h0-h4 0.091 / 0.084 / 0.039 / 0.019 / 0.005 (N 0.110 / 0.088 / 0.039 / 0.013 / 0.004). Late splits: shots 3-4 0.0241, 5+ ended 0.0187 (C 0.0162 / 0.0109; N 0.0175 / 0.0138).
+- Direction contact: forward 0.881, left 0.359, back 0.628, right 0.780 (N 0.903 / 0.349 / 0.624 / 0.799). Left + back +0.8 over N.
+- Recovery median 0.175 m (N 0.275); ready 0.397 (N 0.571).
+- Old read P(5+) 0.3630 vs C 0.4061.
+- Label correction: the summary's printed lines say "N" where they mean the child (the D-240 gate template); the arms are right (lc103-R files).
+
+Plain reading: the best P(5+) so far (0.7817) and the best opening (h0 0.091), and left moved about a point; but late failures rose again, from N's 0.031 to 0.042. Two runs under cap 8 now show the late-rally cost the panel named in round 100. Panel round 102 is called.

@@ -1,0 +1,48 @@
+D-241: C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt (reference); warm start N = artifacts/train/logs/picklebot_return_stand/2026-11-07_03-48-29_rally-d1s3cap8/model_35595.pt (unpromoted); child = rally-d1s3cap8h on Picklebot-Rally22b-FastMove-DrillReset-Launch-HalfReset-G1 (set start on half the pair courts) + training-only pair_rally_cap 8; training seed 244, smoke 245
+smoke exit 0 ok
+smoke no traceback ok
+(reported) smoke falls per 1,000 env-seconds, log estimator (biased by the launcher courts synchronised time-outs) 6.737
+(reported) launcher-court falls per episode 0.0216 (R on the court read 0.0622)
+smoke falls per 1,000 env-seconds off the launcher courts (exact count, steps 854880-858240) 1.104 ok
+smoke std min 0.1001 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + stance_progress + launch_time_out, no fall term, no other new terms True -> ok
+smoke falls half-split (reported): first half 6.835, second half 6.623
+smoke dose half-reset dose over (20, 140): reset half 2.005 placements per rally (in (1.9, 2.05); n 834), free half 0 placements (== 0; n 1026) ok
+smoke launcher courts: {'envs': 256, 'episodes_falls': [2335, 46], 'other_falls': 58, 'step': 858240} (256 envs, episodes booked) ok
+smoke pair-court feeder share 0.1873 of 11572 balls (>= 0.1334; predicted 0.185; M 0.0667) ok
+training: {"run": "rally-d1s3cap8h", "exit_code": 0, "finished": "2026-11-07T14:43:09+08:00"}
+KILL-LOST-OPEN: reset-half training (1-h0)(1-h1) +181-240 0.7351 vs N's 0.7273 (>= -0.02; n 5101); (reported) free half 0.5923 (n 6034) -> CONTINUE
+KILL-UNSTABLE: exact falls off the launcher courts 1.017 per 1,000 env-s (<= 3.14) -> CONTINUE
+config: launcher courts, launch_time_out, no fall term, pair_rally_cap 8, pair_drill_reset_frac 0.5 -> True
+KILL-NO-FALLS: model_35840.pt court falls per episode 0.0237 on dev 4220406 (<= 0.04) -> CONTINUE
+KILL-DIR: left feeder contact model_35840.pt 0.3441 (n 590) vs N 0.3369 (n 555) on dev 4220407 (>= -0.01) -> CONTINUE
+N vs C GAIN2: pooled P(5+) +21.72 points (>= +1); binomial SE 0.81, per-seed SE 0.33; lower bound +20.14 (> 0); per-seed +22.31, +20.98, +21.36, +22.24 -> GAIN
+(reported) old read: N vs C GAIN2: pooled P(5+) -4.31 points (>= +1); binomial SE 0.66, per-seed SE 0.44; lower bound -5.61 (> 0); per-seed -4.26, -5.44, -3.27, -4.32 -> no gain
+(reported) court conversion child: {'q0': 0.7729, 'q1': 0.7586, 'courts': 4096}
+(reported) court conversion C: {'q0': 0.4614, 'q1': 0.6952, 'courts': 4096}
+N (pooled) against the original parent (pooled, same seeds):
+guard: worst family contact vs parent pooled +8.0 (high; kill below -5); cross_forehand 0.9572 vs parent pooled 0.7561 (kill below -3)
+guard: left + back feeder contact 0.4286 vs parent pooled 0.4557 (-2.7; kill below -5)
+mechanism N: ready 0.397 (>= 0.25), falls/1000 hits 0.14 (<= 1.3), WRONG_SIDE 0.282, recovery 0.175 m
+H0: feeder-ball hazard 0.0907 vs 0.2448 (<= -0.03) -> True
+FEEDER: feeder legal 0.9121 vs 0.7619 (>= -0.01) -> True
+K3-KEPT: late failure share 0.0423 vs 0.0269 (<= +0.005) -> False
+(reported) late splits: shots 3-4 0.0241 vs 0.0162; 5+ ended 0.0187 vs 0.0109
+(reported) hazards h0-h4 child 0.091 / 0.084 / 0.039 / 0.019 / 0.005; ref 0.245 / 0.187 / 0.065 / 0.013 / 0.003
+(reported) child: P(5+) 0.7817, feeder 0.9121; R3 pairs falls / (falls + envs) 0.0065
+(reported) M: P(5+) 0.7454, feeder 0.8746; R3 pairs falls / (falls + envs) 0.0093
+(reported) C: P(5+) 0.5645, feeder 0.7619; R3 pairs falls / (falls + envs) 0.0245
+(reported) child (old read): P(5+) 0.3630, feeder 0.6364; R3 pairs falls / (falls + envs) 0.0510
+(reported) C (old read): P(5+) 0.4061, feeder 0.6350; R3 pairs falls / (falls + envs) 0.0524
+R3: court read child (24 s, dev 4220408) robot falls per episode 0.0271 (<= 0.04) -> True
+(reported) child direction contact: forward 0.881, left 0.359, back 0.628, right 0.780
+(reported) M direction contact: forward 0.914, left 0.346, back 0.568, right 0.783
+(reported) C direction contact: forward 0.918, left 0.407, back 0.584, right 0.777
+(reported) N legal(d <= 0.3) 0.9162 (n 5310, Wilson 0.908-0.923); legal(d > 1.2) 0.0000 (n 0, Wilson nan-nan); gap +0.9162
+M-KEPT: P(5+) 0.7817 vs M 0.7454 (>= -0.02) -> True
+OPEN: pooled (1-h0)(1-h1) 0.8333 vs M 0.7883 (>= +0.02; h0 0.091 / 0.128, h1 0.084 / 0.096) -> True
+N-KEPT: P(5+) 0.7817 vs N 0.7660 (>= -0.02) -> True
+(reported) left + back feeder contact N 0.4286 (n 3045) vs M 0.4051 (n 2982): +2.3 points, SE 1.3
+(reported) R3 court read of the warm start N on dev 4220408: 0.0195
+RESULT NO-CANDIDATE
+VERDICT: NO-CANDIDATE (panel)
