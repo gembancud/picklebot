@@ -1823,3 +1823,13 @@ Brief: results/footwork-round109-brief.md.
 **Estimates:** gate pass 25-35 % (architecture); target from this run 5-15 %; within 3-6 runs 15-30 %. The video route so far: pro directions used as move-drill spots raised the ready share (0.315 -> 0.451) but not contact, and cost 2.2 points of P(5+); it has not tested pro pace, the split step or the GVHMR body tracks.
 
 **Decision:** D-250.
+
+**The user's question (2026-11-09) and the agility read (results/agility249-summary.txt; reads only).** The user: the videos were meant to promote agility, not to move P(5+) at once; was movement measured? It was not: D-249's lines read rally outcomes and feeder contact. D-250 was paused before any of its seeds were read (the user chose the read first), and the D-185 bridge drill (Measure60-RallyLamR2: move-only, spots 3-5 m, deterministic) read Q, D-249's model and D-248's model (the same 600 iterations without the drill) on dev 4220447:
+
+| | first step to 1.5 m, median (all / left-back) | sustained speed p50 (all / left-back) | peak, left-back | arrival | falls per 1,000 env-s |
+|---|---|---|---|---|---|
+| Q | 1.36 / 1.34 s | 1.69 / 1.69 m/s | 2.07 m/s | 0.986 | 3.55 |
+| D-249 (pro-move drill) | 1.36 / 1.34 s | 1.70 / 1.68 m/s | 2.04 m/s | 0.987 | 2.94 |
+| D-248 (no drill change) | 1.36 / 1.34 s | 1.69 / 1.67 m/s | 2.04 m/s | 0.989 | 2.90 |
+
+Every direction's first-step median is identical across the three (0.05 s bins) and sustained speeds differ by 0.03 m/s or less. Plain reading: the pro-move drill as built (directions only, mostly shortened, untimed) did not change movement; the small fall drop is shared with D-248, so it comes from the extra training, not the drill.

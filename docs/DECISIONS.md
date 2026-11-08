@@ -8089,3 +8089,13 @@ Plain reading: the pro-move drill made the opening worse (h0 +1.1, h1 +1.3 point
 - Kill at +240: KILL-UNSTABLE and config (training log, stop at once); KILL-NO-FALLS dev 4220443; KILL-DIR dev 4220444 (Q read there at stage 0); KILL-OPEN-DEV and KILL-LATE dev 4220445 (Q read there at stage 0).
 - Gate: D-248's lines unchanged; R3 dev 4220446. All pass -> CONFIRM on 4220425-4220433, the registered target read, one look. Risk on record: K3 (D-244 failed it under cap 5; about 0.030 expected against 0.0319).
 - Driver scripts/diag/lc111.sh (generated from lc109.sh).
+
+**The user's question (2026-11-09) and the agility read (results/agility249-summary.txt; reads only).** The user: the videos were meant to promote agility, not to move P(5+) at once; was movement measured? It was not: D-249's lines read rally outcomes and feeder contact. D-250 was paused before any of its seeds were read (the user chose the read first), and the D-185 bridge drill (Measure60-RallyLamR2: move-only, spots 3-5 m, deterministic) read Q, D-249's model and D-248's model (the same 600 iterations without the drill) on dev 4220447:
+
+| | first step to 1.5 m, median (all / left-back) | sustained speed p50 (all / left-back) | peak, left-back | arrival | falls per 1,000 env-s |
+|---|---|---|---|---|---|
+| Q | 1.36 / 1.34 s | 1.69 / 1.69 m/s | 2.07 m/s | 0.986 | 3.55 |
+| D-249 (pro-move drill) | 1.36 / 1.34 s | 1.70 / 1.68 m/s | 2.04 m/s | 0.987 | 2.94 |
+| D-248 (no drill change) | 1.36 / 1.34 s | 1.69 / 1.67 m/s | 2.04 m/s | 0.989 | 2.90 |
+
+Every direction's first-step median is identical across the three (0.05 s bins) and sustained speeds differ by 0.03 m/s or less. Plain reading: the pro-move drill as built (directions only, mostly shortened, untimed) did not change movement; the small fall drop is shared with D-248, so it comes from the extra training, not the drill.
