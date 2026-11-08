@@ -7948,3 +7948,26 @@ Reported: P(5+) on the fresh seeds 0.7761 (gate seeds 0.7759); hazards h0-h4 0.1
 **The target read (registered now, experiment design):** for a child that passed the gate, its CONFIRM block is the target read of results/rally-target.md. The target is met only if every line passes: pooled P(5+) (open rallies counted) >= 0.80; pooled Wilson low >= 0.78 over >= 1,000 rallies; sides A and B within 3 points of legal returns; R3 <= 0.04. One look per child: no re-reads, no pooling across blocks, never the gate seeds (used to select about eight children). Coded as d1_rule.target_read (tests/test_d1_rule.py, 47 passed).
 
 **Order:** the user-approved GVHMR body pass (58 of the 63 marked rallies) runs first; training starts when it ends.
+
+**D-244 result (2026-11-08): NO-CANDIDATE on K3-KEPT and OPEN (results/lc106-summary.txt).** CONFIRM (the registered target read) was not run.
+
+- Smoke: all 8 lines ok; feeder share 0.1870 (prediction 0.160 +/- 25 %); set-start half never past 5.
+- Kill at +240, all CONTINUE: reset-half (1-h0)(1-h1) 0.7581 vs Q 0.7356 (free half 0.4947); falls 0.750; config ok; KILL-NO-FALLS 0.0248 (dev 4220421); KILL-DIR left 0.3270 vs Q 0.3352 (dev 4220422; passed by 0.002); KILL-LATE 0.0248 (dev 4220423; P(5+) on that one read 0.7777).
+
+| line | child (rally-d1s3cap5hr model_37392) | reference | result |
+|---|---|---|---|
+| GAIN2 vs C | +22.36 points, lower bound +20.77 | | pass |
+| left + back guard | 0.4247 vs parent 0.4557 (-3.1) | kill below -5 | pass |
+| H0 / FEEDER | 0.1060 / 0.8968 | | pass |
+| **K3-KEPT** | **0.0342 vs C 0.0269** | **<= +0.005** | **FAIL** |
+| **OPEN vs Q** | **0.8337 vs 0.8172 (+0.0165)** | **>= +0.02** | **FAIL** |
+| M / N / P / Q-KEPT | 0.7880 | | pass |
+| R3, dev 4220424 | 0.0229 | <= 0.04 | pass |
+
+Reported:
+- P(5+) 0.7880, the best so far; hazards h0-h4 0.106 / 0.068 / 0.042 / 0.010 / 0.003 (Q 0.117 / 0.075 / 0.036 / 0.012 / 0.003).
+- Rally endings by length 3-4 / 5-7 / 8+: child 56 / 6 / 83, Q 63 / 7 / 33, C 68 / 12 / 33. The K3 excess is all at 8+ shots, which P(5+) does not count; endings at shots 3-4 fell.
+- Direction contact forward 0.849, left 0.328, back 0.664, right 0.760.
+- Old read P(5+) vs C -6.81 points.
+
+Plain reading: the shorter set-start cap moved the opening (h0 -0.011, h1 -0.008) and P(5+) +1.2 points, but not by OPEN's +0.02, and it cost long rallies: endings past 8 shots rose 2.5x. Panel round 105 is called.
