@@ -823,6 +823,34 @@ _register(TASK_FW_MEASURE_COURT_STRONG, lambda c: with_strong_legs(footwork_task
                                                                                  spot_box=md.SPOT_BOX)))
 
 
+# The user (2026-11-09) asks what blocks the first step; the damping premise read (motion, round 92/109; RL round 109):
+# the leg, waist and ankle actuators' damping x LOOSE_DAMPING_X (mjlab's G1 damping ratio 2.0 -> 1.0, critically
+# damped), in new tasks only. Stiffness, effort, armature and every policy's action scale are unchanged. Reads only.
+LOOSE_DAMPING_X = 0.5
+
+
+def with_loose_legs(cfg, k: float = LOOSE_DAMPING_X):
+    robot = cfg.scene.entities["robot"]
+    acts = []
+    for a in robot.articulation.actuators:
+        leg = any(re.search(r"(_hip_|_knee_|_ankle_|waist_)", e) for e in a.target_names_expr)
+        acts.append(dataclasses.replace(a, damping=a.damping * k) if leg else a)
+    cfg.scene.entities["robot"] = dataclasses.replace(robot, articulation=dataclasses.replace(robot.articulation,
+                                                                                              actuators=tuple(acts)))
+    return cfg
+
+
+TASK_FW_RALLY_MEASURE_LOOSE = "Picklebot-Footwork-Measure60-RallyLamR2-Loose-G1"
+register_mjlab_task(task_id=TASK_FW_RALLY_MEASURE_LOOSE, env_cfg=with_loose_legs(rally_measure(load_env_cfg(ag.SRC_RES))),
+                    play_env_cfg=with_loose_legs(rally_measure(load_env_cfg(ag.SRC_RES, play=True))),
+                    rl_cfg=load_rl_cfg(ag.SRC_RES), runner_cls=load_runner_cls(ag.SRC_RES))
+TASK_RES_LOOSE = "Picklebot-Latent-Court-Res-Loose-G1"
+register_mjlab_task(task_id=TASK_RES_LOOSE, env_cfg=with_loose_legs(load_env_cfg("Picklebot-Latent-Court-Res-G1")),
+                    play_env_cfg=with_loose_legs(load_env_cfg("Picklebot-Latent-Court-Res-G1", play=True)),
+                    rl_cfg=load_rl_cfg("Picklebot-Latent-Court-Res-G1"),
+                    runner_cls=load_runner_cls("Picklebot-Latent-Court-Res-G1"))
+
+
 # D-235 (D-234's FEED route: panel round 95's pre-registered route; motion's mixed form, round 94): C's drill-reset task
 # with the top half of the drill courts made launcher courts (pair_launch_court_frac 0.25 of 0.5): each robot there plays
 # the court read's own episode (a drill feed in play from the reset at a random start spot, drill v2 recovery, 8-s
