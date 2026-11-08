@@ -905,3 +905,22 @@ def rally_fastmove_dr_launch_half(cfg):
 register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF, env_cfg=rally_fastmove_dr_launch_half(load_env_cfg(ag.SRC_22B)),
                     play_env_cfg=rally_fastmove_dr_launch_half(load_env_cfg(ag.SRC_22B, play=True)),
                     rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))
+
+
+# D-249 (panel round 108, 5 of 5; the user's direction "lets see if the pickleball videos help with training"): D-241's
+# HalfReset task with the move drill's spots drawn from the frozen pro-move table (tasks/pro_move.py: pelvis + a pro
+# displacement, unscaled, MoveDrill's box rule, untimed limit and reward). The only change from
+# TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF; Q's pair_rally_cap 8 on the reset half stays a driver override.
+TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF_PRO = "Picklebot-Rally22b-FastMove-DrillReset-Launch-HalfReset-ProMove-G1"
+
+
+def rally_fastmove_dr_launch_half_pro(cfg):
+    cfg = rally_fastmove_dr_launch_half(cfg)
+    cfg.actions["ball"] = dataclasses.replace(cfg.actions["ball"], move_pro_moves=True)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF_PRO,
+                    env_cfg=rally_fastmove_dr_launch_half_pro(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_fastmove_dr_launch_half_pro(load_env_cfg(ag.SRC_22B, play=True)),
+                    rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))

@@ -1781,3 +1781,24 @@ Brief: results/footwork-round107-brief.md.
 **Votes:** (a) a diagnostic read of model_37040 against Q on the read mix: 5 of 5. Seeds: fresh dev 4220438 for both checkpoints' pairs reads, the child's direction read on 4220435 against Q's stage-0 read (motion, coach, architecture; RL 4220438-39; experiment design: Q's gate seeds for power). Rule: re-run the dose (b) if the child's (1-h0)(1-h1) >= Q's on the same seed - 0.02 (motion, coach, architecture) and the three families' feeder legal is not below Q's (RL, architecture and experiment design each asked for a family condition; the common floor is adopted); otherwise (c).
 
 **Decision:** D-247.
+
+## Round 108 (2026-11-08): the user's direction, train with the pro footwork videos; D-248 NO-CANDIDATE
+
+Brief: results/footwork-round108-brief.md.
+
+**Correction check (all five):** D-248's NO-CANDIDATE is right as coded (OPEN +0.0086 against +0.02); the line stays. **Brief correction (RL, motion, experiment design, architecture):** 41 of the 208 moves are tracking artefacts (duration under 0.5 s or mean speed over 2.9-3 m/s, some up to 6 m/s); 167 remain (left 51, right 52, back 23, forward 41). On the 167, median mean speeds are about 1.0-1.2 m/s, not 1.2-1.6 (motion: left 2.24 m in 2.00 s, right 2.17 m in 1.67 s, back 2.91 m in 3.10 s, forward 4.69 m in 2.93 s).
+
+**Votes:** (a) the pro-move drill, parent Q, Q's cap-8 recipe with every feed weight back to 1.0 (no dose): 5 of 5. (b) rejected by all (no retargeting, noisy tracks, a new motion prior resets rally skill).
+
+**Form (majorities; ties by least new code, then experiment design):**
+- One change: in move episodes, each new spot = pelvis + one of the 167 pro displacements drawn uniformly on the drill's own stream; robot (dx, dy) = (pro dy, -pro dx) (toward the net +x, the player's left +y), with a coded sign test (5 of 5). Distances unscaled (5 of 5). Table frozen and sha256-pinned (picklebot_mj/pro_moves_v1.json; source ppa_moves.json b69b3398).
+- Time limit: MoveDrill's untimed limit kept (coach, experiment design, architecture); RL (1.5 s + pro duration) and motion (Froude-scaled pro time) recorded, not adopted.
+- Box: MoveDrill's SPOT_BOX, flip and shrink kept (RL, motion, experiment design); the flipped / clipped shares are reported. Coach's 1.4 m extension behind the baseline and architecture's depth warning recorded (the 4 m deep box clips many forward moves and flips back moves near the baseline).
+- Smoke: the standing rule (same parent and recipe) needs a basis smoke of Q's unchanged recipe (seed 259) to record the share predictions; the child smoke (seed 260) reads D-248's lines against it (+/- 25 %). Sector line: proposals split (CPU replay +/- 25 %: coach, architecture; back share >= half the table's: experiment design; within 3 SE: motion); tie -> least new code: experiment design's back-share line (issued back share after flips >= 0.069, n >= 200).
+- Kill at +240: D-248's lines on fresh dev seeds (4 of 5): NO-FALLS 4220439, DIR 4220440, OPEN-DEV + LATE 4220441, Q read at stage 0 on 4220440 and 4220441. Extra kill lines proposed singly (RL back contact >= Q - 0.02; experiment design left + back >= Q - 0.01; motion KILL-NO-DRILL) -> tie -> none; left + back contact vs Q is reported at the DIR read.
+- Gate: D-248's lines unchanged; R3 on 4220442. CONFIRM 4220425-4220433, the registered target read, one look. Training seed 258.
+- Architecture's fixes: the driver's summary header now names D-249; the nan "legal(d > 1.2)" line prints "not read (n 0)".
+
+**Estimates:** gate pass 15-30 % (RL about 15 % for OPEN, motion 20-30 %); target from this run 3-10 %. What it can show: whether pro-timed spot practice carries into left / back contact on feeder balls and h0. What it cannot: reading the ball, split-step or crossover technique, speed above about 2 m/s (the user's 3-4 m/s needs body or controller work), or what full-body imitation would do.
+
+**Decision:** D-249.

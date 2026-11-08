@@ -766,3 +766,14 @@ def test_fam3_share():
     s, n = dr.fam3_share(rows)
     assert n == 10 * len(FAMILY_NAMES) + 30 and abs(s - 60 / n) < 1e-9
     assert dr.fam3_share(rows[:1])[1] == 0
+
+
+def test_pro_back():
+    from picklebot_mj import d1_rule as dr
+    row = lambda c: {"launch": {"move_pro": {"pro_class": c, "flipped": [1] * 8, "clipped": [2] * 8,  # noqa: E731
+                                             "arrived": [10] * 8, "timed_out": [0] * 8, "ready": [0] * 8}}}
+    ok, line = dr.pro_back([row([60, 60, 20, 60])])
+    assert ok and "back share 0.100" in line
+    assert not dr.pro_back([row([60, 60, 10, 70])])[0]  # 0.05 < 0.069
+    assert not dr.pro_back([row([30, 30, 10, 30])])[0]  # n 100 < 200
+    assert not dr.pro_back([{"launch": {}}])[0]

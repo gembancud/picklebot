@@ -175,6 +175,8 @@ class BallPhysicsActionCfg(ActionTermCfg):
     move_prob: float = 0.0  # Drill 1 (D-041): fraction of robot episodes that are move-to-spot episodes
     # Drill 1 spot-direction weights per sector (0 = toward the net, counter-clockwise); None = uniform.
     move_sector_weights: tuple | None = None
+    # D-249: move-episode spots from the frozen pro-move table (tasks/pro_move.py ProMoveDrill); False keeps MoveDrill.
+    move_pro_moves: bool = False
     # Adaptive curriculum (D-044): re-weight feed families (by legal return) and move sectors (by arrival)
     # toward what is unmastered or still changing. Training only; evaluation turns it off.
     adaptive_curriculum: bool = False
@@ -427,6 +429,9 @@ class BallPhysicsAction(ActionTerm):
         if cfg.move_prob > 0.0:
             from picklebot_mj.tasks.move_drill import MoveDrill
             self.drill = MoveDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights)
+            if getattr(cfg, "move_pro_moves", False):  # D-249
+                from picklebot_mj.tasks.pro_move import ProMoveDrill
+                self.drill = ProMoveDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights)
         self.v2 = None
         if getattr(cfg, "drill_v2", False):  # Stage 5E drill v2 (D-097)
             from picklebot_mj.drill_v2 import DrillV2Sampler
@@ -1363,6 +1368,8 @@ class BallPhysicsAction(ActionTerm):
                 "fam_feeder": self._fam_feeder.tolist(),  # D-245: pair-court feeder balls by family (FAMILY_NAMES order)
                 "len_hist_sub": None if self.pairs is None or self.pairs.sub is None else self.pairs.len_hist_sub.tolist(),
                 "move_issued": None if self.drill is None else self.drill.stats["issued"].tolist(),  # D-237: spots per sector
+                "move_pro": None if self.drill is None or "pro_class" not in self.drill.stats else  # D-249
+                {k: self.drill.stats[k].tolist() for k in ("pro_class", "flipped", "clipped", "arrived", "timed_out", "ready")},
                 "launch_courts": {"envs": 0 if self.launch_env is None else int(self.launch_env.sum()),
                                   "episodes_falls": self._launch_ep.tolist(), "other_falls": int(self._other_falls),
                                   "step": int(self._env.common_step_counter)},

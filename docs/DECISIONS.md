@@ -8062,3 +8062,13 @@ Reported: hazards h0-h4 0.101 / 0.081 / 0.036 / 0.010 / 0.004 (Q 0.117 / 0.075 /
 Plain reading: the dose cut h0 by 1.6 points (the D-247 diagnostic's direction) and improved the long rallies, but h1 rose 0.6 points, so OPEN moved +0.9 of the required +2. Since D-243 every child sits at P(5+) 0.776-0.788.
 
 **The user (2026-11-08):** "lets see if the pickleball videos help with training shall we?" The direction is the user's; panel round 108 sets the form.
+
+## D-249 (2026-11-08): the pro-move drill (panel round 108, 5 of 5; the user's direction)
+
+The user: "lets see if the pickleball videos help with training shall we?" Panel round 108 set the form (mjlab/results/footwork-review.md).
+
+- Child rally-d1s3pro1 = Q (rally-d1s3cap8hr2 model_36793, CONFIRMED in D-243) on Q's recipe (HalfReset task, pair_rally_cap 8 on the set-start half, every feed weight 1.0) with one change: task Picklebot-Rally22b-FastMove-DrillReset-Launch-HalfReset-ProMove-G1, whose move drill (tasks/pro_move.py ProMoveDrill) issues each spot as pelvis + one of 167 pro displacements from one PPA singles match (frozen table picklebot_mj/pro_moves_v1.json, sha256 3a0680ab...; filter duration >= 0.5 s and mean speed <= 2.9 m/s), mapped to robot (dx, dy) = (pro dy, -pro dx), unscaled; MoveDrill's box rule, untimed limit, arrival and reward unchanged. 600 iterations to model_37392; training seed 258.
+- Smoke: basis smoke of Q's unchanged recipe (seed 259) records the feeder-share and three-family-share predictions; the child smoke (seed 260) reads D-248's 8 lines against them (+/- 25 %) plus the pro-move back share after flips >= 0.069 (half the table's 23/167), n >= 200.
+- Kill at +240: KILL-UNSTABLE and config (training log, stop at once); KILL-NO-FALLS dev 4220439; KILL-DIR dev 4220440 (left contact >= Q - 0.01; Q read there at stage 0; left + back reported); KILL-OPEN-DEV and KILL-LATE dev 4220441 (Q read there at stage 0).
+- Gate: D-248's lines unchanged (GAIN2, guards, K3-KEPT, OPEN vs Q + 0.02, M/N/P/Q/D244-KEPT); R3 dev 4220442. All pass -> CONFIRM on 4220425-4220433, the registered target read, one look.
+- Driver scripts/diag/lc110.sh (generated from lc109.sh). Tests: tests/test_pro_move.py (table hash, sign test: the pro's 51 left moves land in sectors 1-3; task differs only in move_pro_moves; GPU wiring), tests/test_d1_rule.py::test_pro_back.

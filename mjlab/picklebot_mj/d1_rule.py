@@ -1007,8 +1007,9 @@ def dist_route(out_by_d: list[list[int]]) -> tuple[str, list[str]]:
     shot = pn < D216_SHOT
     v = "RESTART-BINDS" if restart else "SHOT-BINDS" if shot else "PANEL"
     coach = pw >= 0.70 and pf <= pw - 0.10
-    lines = [f"legal(d <= 0.3) {pn:.4f} (n {near[0]}, Wilson {nlo:.3f}-{nhi:.3f}); legal(d > 1.2) {pf:.4f} (n {far[0]}, Wilson "
-             f"{flo:.3f}-{fhi:.3f}); gap {pn - pf:+.4f}",
+    far_s = (f"{pf:.4f} (n {far[0]}, Wilson {flo:.3f}-{fhi:.3f}); gap {pn - pf:+.4f}" if far[0]
+             else "not read (n 0: the set-start read places no feeder ball past 1.2 m)")  # D-249: was a nan line
+    lines = [f"legal(d <= 0.3) {pn:.4f} (n {near[0]}, Wilson {nlo:.3f}-{nhi:.3f}); legal(d > 1.2) {far_s}",
              f"RESTART-BINDS: near >= {D216_NEAR} and gap >= {D216_GAP} and intervals apart -> {restart}; "
              f"SHOT-BINDS: near < {D216_SHOT} -> {shot}",
              f"(reported) coach's route: legal(d <= 1.2) {pw:.4f} >= 0.70 and far <= near - 0.10 -> {coach}",
@@ -1766,3 +1767,27 @@ D246_SHARE_PRED = 0.1642
 # (D-246's counter counted every refeed's draw, which samples the same mix as feeder balls).
 D248_SHARE_PRED = 0.1626
 D248_FAM3_PRED = 0.303
+
+
+# D-249 (panel round 108, 5 of 5; the user's direction to train with the pro videos): Q on Q's recipe with the move drill's
+# spots drawn from the frozen pro-move table (tasks/pro_move.py). Smoke share predictions from a basis smoke of Q's
+# unchanged recipe (same parent and recipe, recorded before the child smoke); the child smoke's issued back share (after
+# MoveDrill's flips) >= half the table's (experiment design's line).
+PRO_BACK_TABLE = 23 / 167
+PRO_MIN_SPOTS = 200
+
+
+def pro_back(rows: list[dict]) -> tuple[bool, str]:
+    """From the last share-log row's cumulative move_pro counters (launch_summary)."""
+    rows = [r for r in rows if r.get("launch", {}).get("move_pro")]
+    if not rows:
+        return False, "pro-move spots: no move_pro rows -> NO-DATA"
+    m = rows[-1]["launch"]["move_pro"]
+    c = m["pro_class"]
+    n = sum(c)
+    sh = [x / n if n else float("nan") for x in c]
+    ok = n >= PRO_MIN_SPOTS and sh[2] >= PRO_BACK_TABLE / 2 - 1e-9
+    return ok, (f"pro-move spots: issued back share {sh[2]:.3f} (>= {PRO_BACK_TABLE / 2:.3f}, half the table's; n {n} >= "
+                f"{PRO_MIN_SPOTS}); (reported) forward / left / back / right {' / '.join(f'{x:.3f}' for x in sh)} (table "
+                f"0.246 / 0.305 / 0.138 / 0.311), flipped {sum(m['flipped']) / max(n, 1):.3f}, clipped "
+                f"{sum(m['clipped']) / max(n, 1):.3f}, arrived {sum(m['arrived']) / max(n, 1):.3f}")
