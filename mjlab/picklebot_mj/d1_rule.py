@@ -1759,3 +1759,10 @@ def fam3_share(rows: list[dict]) -> tuple[float, int]:
 # D-246 (panel round 106, (a)): D-245 re-run on a fresh smoke seed. The cap-split share prediction is now a smoke read of
 # the same parent and recipe (+20-140, 1,024 envs), not a training log: D-245's smoke read 0.1642.
 D246_SHARE_PRED = 0.1642
+
+
+# D-248 (D-247's rule -> (b)): D-246 re-run with OPEN-DEV in place of the training-log KILL-LOST-OPEN. Smoke predictions
+# from D-246's smoke (same parent and recipe): pair-court feeder share 0.1626; three-family share of sampled feeds 0.303
+# (D-246's counter counted every refeed's draw, which samples the same mix as feeder balls).
+D248_SHARE_PRED = 0.1626
+D248_FAM3_PRED = 0.303

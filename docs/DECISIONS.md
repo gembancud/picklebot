@@ -8016,3 +8016,26 @@ Labelled DIAGNOSTIC, killed run, not a candidate: D-246 stays KILL; nothing here
 - Reported: per-family feeder legal and falls, left contact, ready share.
 
 **Fix:** fam_feeder now counts feeder balls only (fire & ~recv); D-245/D-246's three-family shares (about 0.30) included hand-offs and are not feeder-ball counts.
+
+**D-247 DIAGNOSTIC result (2026-11-08; killed run, not a candidate).** Frozen set-start pairs on dev 4220438 (read mix):
+
+| | Q model_36793 | D-246 model_37040 (killed at +253) |
+|---|---|---|
+| P(5+) | 0.7829 (n 1,322) | 0.8061 (n 1,284) |
+| (1-h0)(1-h1) | 0.8194 | **0.8411** |
+| h0 / h1 / h2 / h3 / h4 | 0.116 / 0.073 / 0.038 / 0.006 / 0.001 | 0.097 / 0.068 / 0.028 / 0.010 / 0.004 |
+| three families' feeder legal (reach_deep, cross_backhand, reach_backhand) | 0.527 (n 237): 0.289 / 0.588 / 0.739 | **0.594** (n 229): 0.341 / 0.694 / 0.792 |
+| late share | 0.0192 | 0.0248 |
+
+The registered rule: (1-h0)(1-h1) 0.8411 >= 0.8194 - 0.02 -> True; the three families' feeder legal 0.594 >= 0.527 -> True. **Result: (b), re-run the dose.** One seed of about 1,300 rallies: encouraging, not proof. The child's direction read on 4220435 was still running when (b) was registered; it is reported when it lands.
+
+### D-248 (2026-11-08): D-246 re-run with OPEN-DEV in place of the training-log opening line (D-247's registered rule)
+
+**Changed premise (round 107, experiment design's standing rule):** a lever that changes the training input gets its "lost" line on the standard read mix against the reference read on the same seed. KILL-LOST-OPEN (training log, Q's mix) is reported only; OPEN-DEV replaces it.
+
+**Run (scripts/diag/lc109.sh):** everything as D-246 (parent Q model_36793; Q's cap-8 recipe; feed-mix 2.0 on reach_deep, cross_backhand, reach_backhand; gate and CONFIRM unchanged), with:
+- run name rally-d1s3q8w2c; training seed 256, smoke 257;
+- smoke predictions from D-246's smoke: pair-court feeder share 0.1626 and the three families' share of sampled feeds 0.303, each +/- 25 % (D-246's counter counted every refeed's draw, which samples the same mix as feeder balls; the fixed counter counts feeder balls only);
+- stage 0 adds Q's pairs read on dev 4220436 (OPEN-DEV's reference); Q's direction read on 4220435 is reused;
+- kill at +240: KILL-UNSTABLE and config from the training log (stop at once on a KILL); then KILL-NO-FALLS (dev 4220434), KILL-DIR (dev 4220435), and on the pairs read of dev 4220436 both **KILL-OPEN-DEV** (the child's (1-h0)(1-h1) >= Q's on 4220436 - 0.02) and KILL-LATE (<= 0.0319);
+- gate R3 on dev 4220437; CONFIRM / the registered target read on 4220425-4220433, one look.
