@@ -284,6 +284,7 @@ class FootworkBallActionCfg(ag.AgilityBallActionCfg):
     footwork_cmd_cap: float = CMD_CAP  # D-191: the internal command's speed cap (m/s)
     footwork_first_bonus: bool = False  # D-221: the first-step bonus (fw_first_step)
     footwork_first_span: float = FIRST_PAY_SPAN  # D-222: the bonus's pay span (s)
+    call_set: bool = False  # D-252: the call-and-set test drill (tasks/call_set.py CallSetDrill) replaces the drill
 
     def build(self, env) -> "FootworkBallAction":
         return FootworkBallAction(self, env)
@@ -300,6 +301,9 @@ class FootworkBallAction(ag.AgilityBallAction):
                                        heading_free_m=cfg.heading_free_m, pay=cfg.footwork_pay,
                                        cmd_cap=cfg.footwork_cmd_cap, spot_box=cfg.move_spot_box or SPOT_BOX,
                                        first_bonus=cfg.footwork_first_bonus, first_span=cfg.footwork_first_span)
+        if cfg.call_set:  # D-252
+            from picklebot_mj.tasks.call_set import CallSetDrill
+            self.drill = CallSetDrill(self, cfg.move_prob, cfg.seed, spot_box=cfg.move_spot_box or SPOT_BOX)
 
 
 def fw_track_lin_vel(env, std: float = TRACK_STD) -> torch.Tensor:
@@ -840,6 +844,20 @@ def with_loose_legs(cfg, k: float = LOOSE_DAMPING_X):
     return cfg
 
 
+# D-252 (panel round 110): the call-and-set test (mjlab/results/footwork-target.md) on the D-185 bridge task: the rally
+# composite with its ball term's drill replaced by CallSetDrill (tasks/call_set.py); reads only so far.
+TASK_FW_CALLSET = "Picklebot-Footwork-CallSet-RallyLamR2-G1"
+
+
+def callset_task(cfg):
+    cfg = rally_measure(cfg)
+    cfg.actions["ball"] = dataclasses.replace(cfg.actions["ball"], call_set=True)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_FW_CALLSET, env_cfg=callset_task(load_env_cfg(ag.SRC_RES)),
+                    play_env_cfg=callset_task(load_env_cfg(ag.SRC_RES, play=True)), rl_cfg=load_rl_cfg(ag.SRC_RES),
+                    runner_cls=load_runner_cls(ag.SRC_RES))
 TASK_FW_RALLY_MEASURE_LOOSE = "Picklebot-Footwork-Measure60-RallyLamR2-Loose-G1"
 register_mjlab_task(task_id=TASK_FW_RALLY_MEASURE_LOOSE, env_cfg=with_loose_legs(rally_measure(load_env_cfg(ag.SRC_RES))),
                     play_env_cfg=with_loose_legs(rally_measure(load_env_cfg(ag.SRC_RES, play=True))),
