@@ -1,0 +1,18 @@
+D-245: C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt (reference); warm start Q = artifacts/train/logs/picklebot_return_stand/2026-11-07_19-25-03_rally-d1s3cap8hr2/model_36793.pt (CONFIRMED in D-243); child = rally-d1s3q8w2b on Picklebot-Rally22b-FastMove-DrillReset-Launch-HalfReset-G1 + pair_rally_cap 8 on the set-start half + feed-mix x2 on reach_deep, cross_backhand, reach_backhand; training seed 254, smoke 255 (D-246)
+smoke exit 0 ok
+smoke no traceback ok
+(reported) smoke falls per 1,000 env-seconds, log estimator (biased by the launcher courts synchronised time-outs) 9.717
+(reported) launcher-court falls per episode 0.0311 (R on the court read 0.0622)
+smoke falls per 1,000 env-seconds off the launcher courts (exact count, steps 883680-887040) 1.414 ok
+smoke std min 0.1 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + stance_progress + launch_time_out, no fall term, no other new terms True -> ok
+smoke falls half-split (reported): first half 10.911, second half 8.526
+smoke dose half-reset dose over (20, 140): reset half 2.004 placements per rally (in (1.9, 2.05); n 927), free half 0 placements (== 0; n 763) ok
+smoke launcher courts: {'envs': 256, 'episodes_falls': [2343, 66], 'other_falls': 79, 'step': 887040} (256 envs, episodes booked) ok
+smoke cap split: pair-court feeder share 0.1626 (prediction 0.1642 +/- 25 %), reset-half longest rally 8 (<= 8; n 1089), free-half rallies ending 9-15 54 (> 0; past 8 0.156 of 863); three-family feeder share 0.303 of 11971 (prediction 0.261 +/- 25 %) ok
+training: {"run": "rally-d1s3q8w2b", "exit_code": 143, "finished": "2026-11-08T13:12:55+08:00"}
+KILL-LOST-OPEN: reset-half training (1-h0)(1-h1) +181-240 0.6869 vs Q's 0.7356 (>= -0.02; n 5360); (reported) free half 0.4832 (n 2982) -> KILL-LOST-OPEN
+KILL-UNSTABLE: exact falls off the launcher courts 0.934 per 1,000 env-s (<= 3.14) -> CONTINUE
+config: launcher courts, launch_time_out, no fall term, pair_rally_cap 8 on the reset half only, pair_drill_reset_frac 0.5, reach_deep 2.0 -> True
+STOPPED on a training-log line: training stopped at iteration 37046 (+253)
+VERDICT: KILL (-> KILL-LOST-OPEN)

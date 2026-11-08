@@ -7997,3 +7997,9 @@ Plain reading: the shorter set-start cap moved the opening (h0 -0.011, h1 -0.008
 - run name rally-d1s3q8w2b; training seed 254, smoke seed 255;
 - the +240 config check fixed (architecture's find: lc107.sh's `is not None is not None` was always False) and extended to all three weights; tested on D-245's smoke params (True) and Q's (False);
 - dev seeds as D-245 registered: 4220434 (KILL-NO-FALLS), 4220435 (KILL-DIR, against Q's stage-0 read already taken there: results/lc107-dirQ-4220435.json), 4220436 (KILL-LATE), 4220437 (gate R3), CONFIRM / the target read 4220425-4220433 (one look).
+
+**D-246 result (2026-11-08): KILL (KILL-LOST-OPEN) at +240 (results/lc108-summary.txt, results/lc108-kill.txt).**
+
+- Smoke: all 8 lines ok; pair-court feeder share 0.1626 (prediction 0.1642 +/- 25 %); three-family share 0.303 of 11,971 (prediction 0.261).
+- Kill at +240: **KILL-LOST-OPEN reset-half training (1-h0)(1-h1) 0.6869 vs Q's 0.7356 - 0.02** (free half 0.4832); KILL-UNSTABLE 0.934; config ok (the fixed check). Training stopped at iteration 37046 (+253); checkpoints to model_37040. No dev kill reads were taken.
+- Reported: the reset-half training opening by window, Q vs D-246: +1-60 0.694 / 0.639; +61-120 0.760 / 0.694; +121-180 0.752 / 0.696; +181-240 0.736 / 0.687. The gap is present from the first window, as RL recorded before the run: the line compares a harder ball mix with Q's mix. Panel round 107 is called.

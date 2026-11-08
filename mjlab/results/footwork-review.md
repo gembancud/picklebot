@@ -1764,3 +1764,5 @@ Brief: results/footwork-round106-brief.md.
 **Votes:** (a) re-run D-245 unchanged on a fresh smoke seed with the share re-predicted from D-245's own smoke read (0.1642 +/- 25 %): coach, experiment design, architecture, motion (4 of 5; RL had not reported when recorded). Standing rule from now (experiment design): a smoke's share prediction comes from a smoke read of the same parent and recipe.
 
 **Decision:** D-246.
+
+**Round 106 addendum (RL, received after the decision was recorded):** (a), the same form; final tally 5 of 5. RL's recorded risk: under the dose the smoke's reset-half (1-h0)(1-h1) fell to 0.652 from Q's smoke 0.695; if that gap holds in training, KILL-LOST-OPEN (>= 0.7156) can fire because the ball mix is harder rather than because the policy forgot. The line is unchanged; such a kill would be ambiguous and goes to the next round.
