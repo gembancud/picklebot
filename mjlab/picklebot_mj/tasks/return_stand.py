@@ -1273,7 +1273,7 @@ class BallPhysicsAction(ActionTerm):
             self.ready.launch(fire, data.body_link_pos_w[:, self.ready.foot_ids] - origins.unsqueeze(1))
         self._refeed(fire)
         if self.pairs is not None:  # D-245 (logging only): feeder balls on live pair courts, by family
-            fm = fire.clone()
+            fm = fire & ~recv if recv is not None else fire.clone()  # D-247 fix: hand-offs are not feeder balls
             if self.drill_scale is not None:
                 fm &= self.drill_scale == 0
             if self.launch_env is not None:

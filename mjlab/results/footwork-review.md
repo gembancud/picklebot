@@ -1766,3 +1766,18 @@ Brief: results/footwork-round106-brief.md.
 **Decision:** D-246.
 
 **Round 106 addendum (RL, received after the decision was recorded):** (a), the same form; final tally 5 of 5. RL's recorded risk: under the dose the smoke's reset-half (1-h0)(1-h1) fell to 0.652 from Q's smoke 0.695; if that gap holds in training, KILL-LOST-OPEN (>= 0.7156) can fire because the ball mix is harder rather than because the policy forgot. The line is unchanged; such a kill would be ambiguous and goes to the next round.
+
+## Round 107 (2026-11-08): D-246 KILLED by KILL-LOST-OPEN on the harder mix
+
+Brief: results/footwork-round107-brief.md.
+
+**Correction check (all five):**
+- The KILL is right as coded (0.6869 vs 0.7156 on 5,360 rallies) and stands; no resume or rescue of model_37040.
+- **The line was wrong for this lever; the panel's error (RL flagged it in round 106; nobody proposed a fix).** It compared training on Q's mix with training on a harder mix. Mix arithmetic from Q's reads (the three families miss about 45 % of feeder balls, the rest about 4.4 %) predicts training h0 about 0.17 before any learning; the run read 0.166. The gap was flat from the first window (0.055 -> 0.049) and each run rose by about the same (Q +0.042, D-246 +0.048): no sign of forgetting, and no sign of extra learning on the dosed families either (RL).
+- **Standing rule (experiment design):** a lever that changes the training input gets its "lost" line on the standard read mix, against the reference read on the same seed.
+- **Counter bug (architecture, verified):** fam_feeder counted every refeed including hand-offs (fire |= recv runs first), so D-245/D-246's "three-family share" (0.30) is not a feeder-ball count. Fixed (fire & ~recv); logging only, the dose itself was applied as configured.
+- **Motion:** reach_deep (legal 0.25-0.27) looks like a backward-speed limit (body about 2 m/s; human depth p90 1.9, p99 4.0 m/s); if it stays flat, the next dose is cross_backhand and reach_backhand only.
+
+**Votes:** (a) a diagnostic read of model_37040 against Q on the read mix: 5 of 5. Seeds: fresh dev 4220438 for both checkpoints' pairs reads, the child's direction read on 4220435 against Q's stage-0 read (motion, coach, architecture; RL 4220438-39; experiment design: Q's gate seeds for power). Rule: re-run the dose (b) if the child's (1-h0)(1-h1) >= Q's on the same seed - 0.02 (motion, coach, architecture) and the three families' feeder legal is not below Q's (RL, architecture and experiment design each asked for a family condition; the common floor is adopted); otherwise (c).
+
+**Decision:** D-247.

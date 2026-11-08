@@ -8003,3 +8003,16 @@ Plain reading: the shorter set-start cap moved the opening (h0 -0.011, h1 -0.008
 - Smoke: all 8 lines ok; pair-court feeder share 0.1626 (prediction 0.1642 +/- 25 %); three-family share 0.303 of 11,971 (prediction 0.261).
 - Kill at +240: **KILL-LOST-OPEN reset-half training (1-h0)(1-h1) 0.6869 vs Q's 0.7356 - 0.02** (free half 0.4832); KILL-UNSTABLE 0.934; config ok (the fixed check). Training stopped at iteration 37046 (+253); checkpoints to model_37040. No dev kill reads were taken.
 - Reported: the reset-half training opening by window, Q vs D-246: +1-60 0.694 / 0.639; +61-120 0.760 / 0.694; +121-180 0.752 / 0.696; +181-240 0.736 / 0.687. The gap is present from the first window, as RL recorded before the run: the line compares a harder ball mix with Q's mix. Panel round 107 is called.
+
+### D-247 (2026-11-08): a DIAGNOSTIC read of the killed D-246 checkpoint (panel round 107, (a) 5 of 5)
+
+Labelled DIAGNOSTIC, killed run, not a candidate: D-246 stays KILL; nothing here promotes or rescues model_37040; the read only steers the next vote.
+
+**Reads (scripts/diag/diag107.sh, no training):** frozen set-start pairs (read mix, --pair-drill-reset) for rally-d1s3q8w2b model_37040 and Q model_36793 on dev 4220438; the child's direction read on dev 4220435, paired with Q's stage-0 read there.
+
+**Rule, registered before the read:**
+- (b) re-run the dose if the child's pooled (1-h0)(1-h1) >= Q's on 4220438 - 0.02 AND the three families' (reach_deep, cross_backhand, reach_backhand) feeder legal on 4220438 is not below Q's;
+- otherwise (c), drop or change the dose.
+- Reported: per-family feeder legal and falls, left contact, ready share.
+
+**Fix:** fam_feeder now counts feeder balls only (fire & ~recv); D-245/D-246's three-family shares (about 0.30) included hand-offs and are not feeder-ball counts.
