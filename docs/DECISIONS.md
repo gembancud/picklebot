@@ -8114,3 +8114,21 @@ Every direction's first-step median is identical across the three (0.05 s bins) 
 **Proof of the ceiling (the user's "convince me"):** levers climbed one change per run and kept when they raise the score: joint damping, facing freedom (turn and run), action range, effort, a movement-base retrain on the drill, agile human reference motion, training length and network size. The phase ends at the target, or with a table showing every lever tried and the score flat.
 
 The rally work pauses with Q (D-243, CONFIRMED, P(5+) 0.776) as the rally base; the rally target and its unread target-read block stay as they are.
+
+## D-252 (2026-11-09): the call-and-set footwork target frozen (panel round 110)
+
+The user's D-251 target with its numbers frozen in mjlab/results/footwork-target.md (round 110; majority, ties by least new code then experiment design): one rep = one call shown as a ghost ball arriving at T = 0.5 s + d / 2.5 m/s on the called side; pass = SET (speed < 0.3 m/s over the last 0.1 s, both feet down, tilt < 20 deg) and READY (ready_mask + paddle >= 0.10 m to the called side) and REACH (ball within 0.8 m horizontally on the called side) at T, no fall; 1.0-3.0 m, four call types at 25 %, chains of 6, one third early; >= 4,000 reps; target pass >= 0.80 with Wilson low >= 0.78 and every call type >= 0.70, feeder-ball legal within 5 points of Q; pace ladder 1.5 / 2.0 / 2.5 m/s and START reported. Seeds: dev 4220451-4220499; target block 4220500-4220509 unread, one look. Retired: 4220446. Next: build CallSetDrill (evaluation first), read Q's baseline on dev 4220451 with a written prediction, then the first lever (damping if damp249 shows >= 0.05 s faster with no more falls, else the call drill in Q's training).
+
+The user (2026-11-09) also asked for an updated README with a preview of the work, then the loop for footwork.
+
+**Damping premise read (2026-11-09, scripts/diag/damp249.sh, results/damp249-summary.txt; reads only, zero-shot).** Q with the leg, waist and ankle damping halved (mjlab G1 damping ratio 2.0 -> 1.0; stiffness, effort and action scale unchanged):
+
+| | standard | damping x0.5 |
+|---|---|---|
+| first step to 1.5 m, all / left-back (Measure60, dev 4220447) | 1.36 / 1.34 s | 1.38 / 1.36 s |
+| sustained speed p50, all | 1.69 m/s | 1.66 m/s |
+| untimed arrival | 0.986 | 0.952 |
+| falls per 1,000 env-s | 3.55 | 11.05 |
+| set-start pairs P(5+) (dev 4220449) | 0.7623 | 0.1555 (falls 5,061 in 2,048 envs) |
+
+Plain reading: zero-shot, a looser body is not quicker; the frozen movement skill was learned with the heavier damping and loses balance without it. This does not test a skill retrained on the looser body (a later lever). By D-252's rule (damping first only if >= 0.05 s faster with no more falls), the first lever is the call drill in Q's training.

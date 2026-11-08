@@ -1833,3 +1833,29 @@ Brief: results/footwork-round109-brief.md.
 | D-248 (no drill change) | 1.36 / 1.34 s | 1.69 / 1.67 m/s | 2.04 m/s | 0.989 | 2.90 |
 
 Every direction's first-step median is identical across the three (0.05 s bins) and sustained speeds differ by 0.03 m/s or less. Plain reading: the pro-move drill as built (directions only, mostly shortened, untimed) did not change movement; the small fall drop is shared with D-248, so it comes from the extra training, not the drill.
+
+## Round 110 (2026-11-09): freeze the user's call-and-set footwork test (D-251)
+
+Brief: results/footwork-round110-brief.md.
+
+**Correction check (all five):** the D-250 stop is recorded correctly; dev 4220446 was never read and is retired (RL, experiment design). D-251's example times give one formula, 0.5 s + d / 2.5 m/s (2.5 = 2.9 x 0.85; all five). Q needs 1.36 s for its first 1.5 m, so Q's headline baseline will be near 0 %: a reported pace ladder is needed for a climbable signal (all five); the headline is never loosened. Q cannot see the called side or the time left from a spot: the call is shown as a ball (RL, experiment design, architecture), the ghost ball of ShadowSwing (experiment design, architecture). "Split step" means SET by its outcome, no hop required (motion).
+
+**Frozen (majority, ties by least new code, then experiment design):** see results/footwork-target.md. Distance 1.0-3.0 m (coach, motion, architecture); four call types at 25 % (RL, motion, experiment design); chains of 6 (coach, experiment design); one third early at the previous arrival (tie -> experiment design), the rest 1.5 s later (motion, experiment design, architecture); SET at arrival with speed < 0.3 m/s over 0.1 s, both feet down, tilt < 20 deg (speed and feet all five; tilt coach, motion, experiment design; window by tie -> experiment design); READY = MoveDrill's ready_mask + 0.10 m to the called side (height by tie -> experiment design; side four of five); REACH within 0.8 m horizontally on the called side (tie -> experiment design); >= 4,000 reps / 600 chains (experiment design); pass >= 0.80, Wilson low >= 0.78 (four of five; experiment design's chain bootstrap not adopted), every call type >= 0.70 (RL, experiment design); feeder-ball legal within 5 points of Q for the target read (tie -> experiment design); dev block 4220451-4220499, target block 4220500-4220509 unread (experiment design). The ladder (1.5 / 2.0 / 2.5 m/s) is computed from each rep's first all-hold time, reported only (tie -> experiment design; motion's per-rep drawn paces not adopted). START is reported only.
+
+**Build (majority):** an evaluation-first CallSetDrill on DeadlineMoveDrill (RL, motion, experiment design) with the call sent as ShadowSwing's ghost ball (experiment design, architecture); unit tests: the deadline formula, call shares and the early share, the side sign (forehand / backhand mirror), SET / READY / REACH on scripted states, falls in the count, seed determinism. Baseline: Q zero-shot on dev 4220451 with a prediction written before the read (experiment design). Architecture's size estimate: about 200 lines + 120 of tests + 40 of eval script.
+
+**First lever:** damping first if the running damping read (damp249) shows the first step at least 0.05 s faster with falls no higher than Q's (motion; coach at 0.10 s; architecture unconditional); otherwise a fine-tune of Q with the call drill in training (RL, experiment design; coach: a base retrain with side and time inputs).
+
+**Decision:** D-252.
+
+**Damping premise read (2026-11-09, scripts/diag/damp249.sh, results/damp249-summary.txt; reads only, zero-shot).** Q with the leg, waist and ankle damping halved (mjlab G1 damping ratio 2.0 -> 1.0; stiffness, effort and action scale unchanged):
+
+| | standard | damping x0.5 |
+|---|---|---|
+| first step to 1.5 m, all / left-back (Measure60, dev 4220447) | 1.36 / 1.34 s | 1.38 / 1.36 s |
+| sustained speed p50, all | 1.69 m/s | 1.66 m/s |
+| untimed arrival | 0.986 | 0.952 |
+| falls per 1,000 env-s | 3.55 | 11.05 |
+| set-start pairs P(5+) (dev 4220449) | 0.7623 | 0.1555 (falls 5,061 in 2,048 envs) |
+
+Plain reading: zero-shot, a looser body is not quicker; the frozen movement skill was learned with the heavier damping and loses balance without it. This does not test a skill retrained on the looser body (a later lever). By D-252's rule (damping first only if >= 0.05 s faster with no more falls), the first lever is the call drill in Q's training.
