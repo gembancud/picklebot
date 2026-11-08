@@ -8072,3 +8072,12 @@ The user: "lets see if the pickleball videos help with training shall we?" Panel
 - Kill at +240: KILL-UNSTABLE and config (training log, stop at once); KILL-NO-FALLS dev 4220439; KILL-DIR dev 4220440 (left contact >= Q - 0.01; Q read there at stage 0; left + back reported); KILL-OPEN-DEV and KILL-LATE dev 4220441 (Q read there at stage 0).
 - Gate: D-248's lines unchanged (GAIN2, guards, K3-KEPT, OPEN vs Q + 0.02, M/N/P/Q/D244-KEPT); R3 dev 4220442. All pass -> CONFIRM on 4220425-4220433, the registered target read, one look.
 - Driver scripts/diag/lc110.sh (generated from lc109.sh). Tests: tests/test_pro_move.py (table hash, sign test: the pro's 51 left moves land in sectors 1-3; task differs only in move_pro_moves; GPU wiring), tests/test_d1_rule.py::test_pro_back.
+
+**D-249 result (2026-11-09): NO-CANDIDATE (results/lc110-summary.txt).** CONFIRM (the registered target read) was not run; 4220425-4220433 stay unread.
+
+- Basis smoke of Q's recipe (seed 259): feeder share 0.1498, three-family share 0.183. Child smoke (seed 260): all 9 lines ok (feeder share 0.1546; pro-move back share 0.180 after flips, n 5,236; forward / left / back / right 0.201 / 0.309 / 0.180 / 0.311 against the table's 0.246 / 0.305 / 0.138 / 0.311; flipped 0.320, clipped 0.488, arrived 0.924).
+- Kill at +240, all CONTINUE: KILL-UNSTABLE 0.946; config ok; KILL-NO-FALLS 0.0184 (4220439); KILL-DIR left 0.3716 vs Q 0.3504 (4220440; left + back +1.3 reported); KILL-OPEN-DEV 0.7898 vs Q 0.8018 (4220441); KILL-LATE 0.0303. Reported: training-log reset-half opening 0.7415 vs Q's 0.7356.
+- Gate (rally-d1s3pro1 model_37392): GAIN2 +18.92 (lower bound +17.32) pass; guards pass (left + back 0.4178 vs parent 0.4557, -3.8); H0 0.128, FEEDER 0.8737, K3-KEPT 0.0213 pass; R3 0.0260 pass; M-KEPT and N-KEPT pass. **OPEN 0.7956 vs Q 0.8172 (-0.0216; needed +0.02) FAIL; P-KEPT, Q-KEPT (P(5+) 0.7537 vs Q 0.7759) and D244-KEPT FAIL.**
+- Reported: hazards h0-h4 0.128 / 0.088 / 0.039 / 0.012 / 0.002 (Q 0.117 / 0.075 / 0.036 / 0.012 / 0.003); direction contact forward 0.884, left 0.332, back 0.647, right 0.770; ready 0.451, recovery 0.225 m.
+
+Plain reading: the pro-move drill made the opening worse (h0 +1.1, h1 +1.3 points against Q) and P(5+) fell 2.2 points; left contact on feeder balls rose at +240 on one seed but not at the gate. Since D-243 every child reads P(5+) 0.754-0.788.
