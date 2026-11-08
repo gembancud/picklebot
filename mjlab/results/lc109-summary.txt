@@ -1,0 +1,56 @@
+D-245: C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt (reference); warm start Q = artifacts/train/logs/picklebot_return_stand/2026-11-07_19-25-03_rally-d1s3cap8hr2/model_36793.pt (CONFIRMED in D-243); child = rally-d1s3q8w2c on Picklebot-Rally22b-FastMove-DrillReset-Launch-HalfReset-G1 + pair_rally_cap 8 on the set-start half + feed-mix x2 on reach_deep, cross_backhand, reach_backhand; training seed 256, smoke 257 (D-248)
+smoke exit 0 ok
+smoke no traceback ok
+(reported) smoke falls per 1,000 env-seconds, log estimator (biased by the launcher courts synchronised time-outs) 8.092
+(reported) launcher-court falls per episode 0.0315 (R on the court read 0.0622)
+smoke falls per 1,000 env-seconds off the launcher courts (exact count, steps 883680-887040) 1.163 ok
+smoke std min 0.1 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + stance_progress + launch_time_out, no fall term, no other new terms True -> ok
+smoke falls half-split (reported): first half 8.087, second half 8.047
+smoke dose half-reset dose over (20, 140): reset half 1.998 placements per rally (in (1.9, 2.05); n 940), free half 0 placements (== 0; n 736) ok
+smoke launcher courts: {'envs': 256, 'episodes_falls': [2345, 66], 'other_falls': 62, 'step': 887040} (256 envs, episodes booked) ok
+smoke cap split: pair-court feeder share 0.1607 (prediction 0.1626 +/- 25 %), reset-half longest rally 8 (<= 8; n 1106), free-half rallies ending 9-15 62 (> 0; past 8 0.163 of 842); three-family feeder share 0.295 of 1951 (prediction 0.303 +/- 25 %) ok
+training: {"run": "rally-d1s3q8w2c", "exit_code": 0, "finished": "2026-11-08T16:54:38+08:00"}
+(reported) KILL-LOST-OPEN: reset-half training (1-h0)(1-h1) +181-240 0.6968 vs Q's 0.7356 (>= -0.02; n 5326); (reported) free half 0.4514 (n 2951) -> (would kill)
+KILL-UNSTABLE: exact falls off the launcher courts 0.867 per 1,000 env-s (<= 3.14) -> CONTINUE
+config: launcher courts, launch_time_out, no fall term, pair_rally_cap 8 on the reset half only, pair_drill_reset_frac 0.5, reach_deep 2.0 -> True
+KILL-NO-FALLS: model_37040.pt court falls per episode 0.0214 on dev 4220434 (<= 0.04) -> CONTINUE
+KILL-DIR: left feeder contact model_37040.pt 0.3252 (n 612) vs Q 0.3316 (n 594) on dev 4220435 (>= -0.01) -> CONTINUE
+KILL-OPEN-DEV: model_37040.pt read-mix (1-h0)(1-h1) 0.8064 vs Q 0.8028 on dev 4220436 (>= -0.02; h0 0.112 / 0.130) -> CONTINUE
+KILL-LATE: model_37040.pt late failure share 0.0154 on dev 4220436 (<= 0.0319) -> CONTINUE
+child vs C GAIN2: pooled P(5+) +22.08 points (>= +1); binomial SE 0.81, per-seed SE 0.70; lower bound +20.49 (> 0); per-seed +21.43, +21.65, +21.04, +24.14 -> GAIN
+(reported) old read: child vs C GAIN2: pooled P(5+) -5.30 points (>= +1); binomial SE 0.66, per-seed SE 0.22; lower bound -6.59 (> 0); per-seed -5.48, -5.83, -4.83, -5.10 -> no gain
+(reported) court conversion child: {'q0': 0.783, 'q1': 0.7757, 'courts': 4096}
+(reported) court conversion C: {'q0': 0.4614, 'q1': 0.6952, 'courts': 4096}
+child (pooled) against the original parent (pooled, same seeds):
+guard: worst family contact vs parent pooled +8.7 (high; kill below -5); cross_forehand 0.9661 vs parent pooled 0.7561 (kill below -3)
+guard: left + back feeder contact 0.4145 vs parent pooled 0.4557 (-4.1; kill below -5)
+mechanism child: ready 0.427 (>= 0.25), falls/1000 hits 0.13 (<= 1.3), WRONG_SIDE 0.294, recovery 0.300 m
+H0: feeder-ball hazard 0.1009 vs 0.2448 (<= -0.03) -> True
+FEEDER: feeder legal 0.9012 vs 0.7619 (>= -0.01) -> True
+K3-KEPT: late failure share 0.0206 vs 0.0269 (<= +0.005) -> True
+(reported) late splits: shots 3-4 0.0134 vs 0.0162; 5+ ended 0.0073 vs 0.0109
+(reported) hazards h0-h4 child 0.101 / 0.081 / 0.036 / 0.010 / 0.004; ref 0.245 / 0.187 / 0.065 / 0.013 / 0.003
+(reported) child: P(5+) 0.7852, feeder 0.9012; R3 pairs falls / (falls + envs) 0.0059
+(reported) M: P(5+) 0.7454, feeder 0.8746; R3 pairs falls / (falls + envs) 0.0093
+(reported) C: P(5+) 0.5645, feeder 0.7619; R3 pairs falls / (falls + envs) 0.0245
+(reported) child (old read): P(5+) 0.3531, feeder 0.6186; R3 pairs falls / (falls + envs) 0.0501
+(reported) C (old read): P(5+) 0.4061, feeder 0.6350; R3 pairs falls / (falls + envs) 0.0524
+R3: court read child (24 s, dev 4220437) robot falls per episode 0.0231 (<= 0.04) -> True
+(reported) child direction contact: forward 0.871, left 0.328, back 0.645, right 0.771
+(reported) M direction contact: forward 0.914, left 0.346, back 0.568, right 0.783
+(reported) C direction contact: forward 0.918, left 0.407, back 0.584, right 0.777
+(reported) child legal(d <= 0.3) 0.9056 (n 5225, Wilson 0.897-0.913); legal(d > 1.2) 0.0000 (n 0, Wilson nan-nan); gap +0.9056
+M-KEPT: P(5+) 0.7852 vs M 0.7454 (>= -0.02) -> True
+OPEN: pooled (1-h0)(1-h1) 0.8258 vs Q 0.8172 (>= +0.02; h0 0.101 / 0.117, h1 0.081 / 0.075) -> False
+N-KEPT: P(5+) 0.7852 vs N 0.7660 (>= -0.02) -> True
+P-KEPT: P(5+) 0.7852 vs P 0.7817 (>= -0.02) -> True
+Q-KEPT: P(5+) 0.7852 vs Q 0.7759 (>= -0.02) -> True
+D244-KEPT: P(5+) 0.7852 vs D-244 0.7880 (>= -0.02) -> True
+(reported) child rally endings by length: {'3-4': 56, '5-7': 7, '8+': 23}
+(reported) Q rally endings by length: {'3-4': 63, '5-7': 7, '8+': 33}
+(reported) C rally endings by length: {'3-4': 68, '5-7': 12, '8+': 33}
+(reported) left + back feeder contact child 0.4145 (n 3209) vs M 0.4051 (n 2982): +0.9 points, SE 1.3
+(reported) R3 court read of the warm start Q on dev 4220437: 0.0258
+RESULT NO-CANDIDATE
+VERDICT: NO-CANDIDATE (panel)

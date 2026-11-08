@@ -8039,3 +8039,26 @@ The registered rule: (1-h0)(1-h1) 0.8411 >= 0.8194 - 0.02 -> True; the three fam
 - stage 0 adds Q's pairs read on dev 4220436 (OPEN-DEV's reference); Q's direction read on 4220435 is reused;
 - kill at +240: KILL-UNSTABLE and config from the training log (stop at once on a KILL); then KILL-NO-FALLS (dev 4220434), KILL-DIR (dev 4220435), and on the pairs read of dev 4220436 both **KILL-OPEN-DEV** (the child's (1-h0)(1-h1) >= Q's on 4220436 - 0.02) and KILL-LATE (<= 0.0319);
 - gate R3 on dev 4220437; CONFIRM / the registered target read on 4220425-4220433, one look.
+
+**D-247 DIAGNOSTIC, direction read (reported, landed after D-248 was registered):** model_37040 on dev 4220435: forward 0.885, left 0.353, back 0.623, right 0.756; Q on the same seed: 0.877, 0.332, 0.627, 0.751. Left +2.1 points.
+
+**D-248 result (2026-11-08): NO-CANDIDATE on OPEN alone (results/lc109-summary.txt).** CONFIRM (the registered target read) was not run.
+
+- Smoke: all 8 lines ok (feeder share 0.1607 vs 0.1626; three-family share of feeder balls 0.295 of 1,951 with the fixed counter vs 0.303).
+- Kill at +240, all CONTINUE: KILL-UNSTABLE 0.867; config ok; KILL-NO-FALLS 0.0214 (4220434); KILL-DIR left 0.3252 vs Q 0.3316 (4220435); **KILL-OPEN-DEV 0.8064 vs Q 0.8028 (4220436)**; KILL-LATE 0.0154. Reported: training-log reset-half opening 0.6968 (would have killed under the old line).
+
+| line | child (rally-d1s3q8w2c model_37392) | reference | result |
+|---|---|---|---|
+| GAIN2 vs C | +22.08 points, lower bound +20.49 | | pass |
+| left + back guard | 0.4145 vs parent 0.4557 (-4.1) | kill below -5 | pass |
+| H0 / FEEDER | 0.1009 / 0.9012 | | pass |
+| K3-KEPT | 0.0206 vs C 0.0269 | <= +0.005 | pass |
+| **OPEN vs Q** | **0.8258 vs 0.8172 (+0.0086)** | **>= +0.02** | **FAIL** |
+| M / N / P / Q / D244-KEPT | P(5+) 0.7852 | | pass |
+| R3, dev 4220437 | 0.0231 | <= 0.04 | pass |
+
+Reported: hazards h0-h4 0.101 / 0.081 / 0.036 / 0.010 / 0.004 (Q 0.117 / 0.075 / 0.036 / 0.012 / 0.003); rally endings 3-4 / 5-7 / 8+ 56 / 7 / 23 (Q 63 / 7 / 33); direction contact forward 0.871, left 0.328, back 0.645, right 0.776.
+
+Plain reading: the dose cut h0 by 1.6 points (the D-247 diagnostic's direction) and improved the long rallies, but h1 rose 0.6 points, so OPEN moved +0.9 of the required +2. Since D-243 every child sits at P(5+) 0.776-0.788.
+
+**The user (2026-11-08):** "lets see if the pickleball videos help with training shall we?" The direction is the user's; panel round 108 sets the form.

@@ -1,0 +1,7 @@
+(reported) KILL-LOST-OPEN: reset-half training (1-h0)(1-h1) +181-240 0.6968 vs Q's 0.7356 (>= -0.02; n 5326); (reported) free half 0.4514 (n 2951) -> (would kill)
+KILL-UNSTABLE: exact falls off the launcher courts 0.867 per 1,000 env-s (<= 3.14) -> CONTINUE
+config: launcher courts, launch_time_out, no fall term, pair_rally_cap 8 on the reset half only, pair_drill_reset_frac 0.5, reach_deep 2.0 -> True
+KILL-NO-FALLS: model_37040.pt court falls per episode 0.0214 on dev 4220434 (<= 0.04) -> CONTINUE
+KILL-DIR: left feeder contact model_37040.pt 0.3252 (n 612) vs Q 0.3316 (n 594) on dev 4220435 (>= -0.01) -> CONTINUE
+KILL-OPEN-DEV: model_37040.pt read-mix (1-h0)(1-h1) 0.8064 vs Q 0.8028 on dev 4220436 (>= -0.02; h0 0.112 / 0.130) -> CONTINUE
+KILL-LATE: model_37040.pt late failure share 0.0154 on dev 4220436 (<= 0.0319) -> CONTINUE
