@@ -8081,3 +8081,11 @@ The user: "lets see if the pickleball videos help with training shall we?" Panel
 - Reported: hazards h0-h4 0.128 / 0.088 / 0.039 / 0.012 / 0.002 (Q 0.117 / 0.075 / 0.036 / 0.012 / 0.003); direction contact forward 0.884, left 0.332, back 0.647, right 0.770; ready 0.451, recovery 0.225 m.
 
 Plain reading: the pro-move drill made the opening worse (h0 +1.1, h1 +1.3 points against Q) and P(5+) fell 2.2 points; left contact on feeder balls rose at +240 on one seed but not at the gate. Since D-243 every child reads P(5+) 0.754-0.788.
+
+## D-250 (2026-11-09): D-248's recipe with cap 5 on the set-start half (panel round 109, (b) 3 of 5)
+
+- Child rally-d1s3q5w2 = Q (rally-d1s3cap8hr2 model_36793) on D-248's recipe (HalfReset task, feed-mix weights 2.0 on reach_deep, cross_backhand, reach_backhand) with one change: pair_rally_cap 5 on the set-start half instead of 8 (D-244's lever, h1 0.075 -> 0.068). 600 iterations to model_37392; training seed 261, smoke 262.
+- Smoke: D-248's 8 lines; predictions recorded before the smoke (d1_rule D250_*): pair-court feeder share 0.201 (D-244's cap-5 smoke 0.187 x D-248's smoke 0.1607 / D-249's basis smoke 0.1498; experiment design's D-248 smoke x 1.25 gives 0.2009), three-family share 0.295, both +/- 25 %; set-start half never past 5.
+- Kill at +240: KILL-UNSTABLE and config (training log, stop at once); KILL-NO-FALLS dev 4220443; KILL-DIR dev 4220444 (Q read there at stage 0); KILL-OPEN-DEV and KILL-LATE dev 4220445 (Q read there at stage 0).
+- Gate: D-248's lines unchanged; R3 dev 4220446. All pass -> CONFIRM on 4220425-4220433, the registered target read, one look. Risk on record: K3 (D-244 failed it under cap 5; about 0.030 expected against 0.0319).
+- Driver scripts/diag/lc111.sh (generated from lc109.sh).

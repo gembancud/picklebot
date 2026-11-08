@@ -1791,3 +1791,11 @@ def pro_back(rows: list[dict]) -> tuple[bool, str]:
                 f"{PRO_MIN_SPOTS}); (reported) forward / left / back / right {' / '.join(f'{x:.3f}' for x in sh)} (table "
                 f"0.246 / 0.305 / 0.138 / 0.311), flipped {sum(m['flipped']) / max(n, 1):.3f}, clipped "
                 f"{sum(m['clipped']) / max(n, 1):.3f}, arrived {sum(m['arrived']) / max(n, 1):.3f}")
+
+
+# D-250 (panel round 109, (b) 3 of 5; form by architecture and experiment design): Q on D-248's recipe (feed dose x2 on
+# FAM3) with pair_rally_cap 5 on the set-start half (D-244's lever). Smoke predictions from same-parent smokes, recorded
+# before the smoke: feeder share = D-244's cap-5 smoke 0.187 x (D-248's smoke 0.1607 / D-249's basis smoke 0.1498) =
+# 0.201 (experiment design's D-248 smoke x 1.25 gives 0.2009); three-family share 0.295 (D-248's smoke, fixed counter).
+D250_SHARE_PRED = 0.201
+D250_FAM3_PRED = 0.295

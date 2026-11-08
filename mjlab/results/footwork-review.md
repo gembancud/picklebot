@@ -1811,3 +1811,15 @@ Brief: results/footwork-round108-brief.md.
 - Reported: hazards h0-h4 0.128 / 0.088 / 0.039 / 0.012 / 0.002 (Q 0.117 / 0.075 / 0.036 / 0.012 / 0.003); direction contact forward 0.884, left 0.332, back 0.647, right 0.770; ready 0.451, recovery 0.225 m.
 
 Plain reading: the pro-move drill made the opening worse (h0 +1.1, h1 +1.3 points against Q) and P(5+) fell 2.2 points; left contact on feeder balls rose at +240 on one seed but not at the gate. Since D-243 every child reads P(5+) 0.754-0.788.
+
+## Round 109 (2026-11-09): D-249 (the pro-move drill) NO-CANDIDATE
+
+Brief: results/footwork-round109-brief.md.
+
+**Correction check (all five):** NO-CANDIDATE stands; lines coded and read correctly; no code or driver bug (architecture). Framing corrections: D-249 tested shortened pro directions, not pro moves (49 % of spots clipped, 32 % flipped; back over-issued, forward under-issued), and never pro pace (MoveDrill's untimed limit and capped command; motion, architecture). The opening eroded after the +240 read (h0 even with Q at +240), a slow slide the -0.02 kill line cannot catch (RL, architecture). The +240 left gain was about 1 SE on 549 balls and gone at the gate (coach, RL). **Brief errors (experiment design, motion):** "seven children read 0.754-0.788" is wrong (three were gated: D-244 0.788, D-248 0.785, D-249 0.754); the direction and left + back comparisons were against M and the original parent, not Q (against Q's gate read: left 0.332 vs 0.346, left + back 0.4178 vs 0.4249, -0.7). lc110.sh's stage-0 comment names seed 4220435; the code uses 4220440.
+
+**Votes:** (b) coach, experiment design, architecture (3 of 5); (c) a lower leg / waist damping ratio, read first with no training: motion, RL. Form within (b): the lever pair_rally_cap 5 on the set-start half (experiment design, architecture) against coach's drop of reach_deep from the dose; parent Q (coach, architecture) against D-248's checkpoint (experiment design). Result: Q on D-248's recipe with cap 5 on the set-start half (architecture's form). D248-KEPT (experiment design) not added. The damping premise read (registered round 92, never run) is recorded as the next candidate if (b) fails (motion, RL; architecture: could run in a GPU gap, reported only).
+
+**Estimates:** gate pass 25-35 % (architecture); target from this run 5-15 %; within 3-6 runs 15-30 %. The video route so far: pro directions used as move-drill spots raised the ready share (0.315 -> 0.451) but not contact, and cost 2.2 points of P(5+); it has not tested pro pace, the split step or the GVHMR body tracks.
+
+**Decision:** D-250.
