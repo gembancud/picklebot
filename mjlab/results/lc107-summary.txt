@@ -1,0 +1,13 @@
+D-245: C = artifacts/train/logs/picklebot_return_stand/2026-11-04_00-06-34_rally-d1s3lr3/model_32598.pt (reference); warm start Q = artifacts/train/logs/picklebot_return_stand/2026-11-07_19-25-03_rally-d1s3cap8hr2/model_36793.pt (CONFIRMED in D-243); child = rally-d1s3q8w2 on Picklebot-Rally22b-FastMove-DrillReset-Launch-HalfReset-G1 + pair_rally_cap 8 on the set-start half + feed-mix x2 on reach_deep, cross_backhand, reach_backhand; training seed 252, smoke 253
+smoke exit 0 ok
+smoke no traceback ok
+(reported) smoke falls per 1,000 env-seconds, log estimator (biased by the launcher courts synchronised time-outs) 9.143
+(reported) launcher-court falls per episode 0.0454 (R on the court read 0.0622)
+smoke falls per 1,000 env-seconds off the launcher courts (exact count, steps 883680-887040) 1.182 ok
+smoke std min 0.1 outputs with no gradient [] ok
+smoke config check: missing []; d1 base True; fast move + stance_progress + launch_time_out, no fall term, no other new terms True -> ok
+smoke falls half-split (reported): first half 9.525, second half 8.729
+smoke dose half-reset dose over (20, 140): reset half 1.994 placements per rally (in (1.9, 2.05); n 927), free half 0 placements (== 0; n 747) ok
+smoke launcher courts: {'envs': 256, 'episodes_falls': [2367, 103], 'other_falls': 63, 'step': 887040} (256 envs, episodes booked) ok
+smoke cap split: pair-court feeder share 0.1642 (prediction 0.1306 +/- 25 %), reset-half longest rally 8 (<= 8; n 1101), free-half rallies ending 9-15 72 (> 0; past 8 0.167 of 878); three-family feeder share 0.302 of 12031 (prediction 0.261 +/- 25 %) STOP
+VERDICT: SMOKE-FAIL

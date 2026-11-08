@@ -1749,3 +1749,18 @@ Brief: results/footwork-round105-brief.md.
 **Estimates:** gate pass 35-45 % (motion); target from this run 10-25 %; within 3-6 runs 20-45 %. Motion: if reach_deep stays below 0.5 under this dose, the human-footwork (backpedal) reference comes next.
 
 **Decision:** D-245.
+
+## Round 106 (2026-11-08): D-245 SMOKE-FAIL on the cap-split share
+
+Brief: results/footwork-round106-brief.md.
+
+**Correction check:**
+- SMOKE-FAIL is right as coded: 0.1642 on 12,030 balls against a band top of 0.1633 (about 0.3-0.7 binomial SE). The line stands and is not loosened. Seed 253 is spent.
+- **The prediction basis was wrong (the agent's error, shared by the panel):** 0.1306 came from Q's training log (12,288 envs, a late window); a smoke (1,024 envs, +20-140) reads higher. This was on record: D-244's smoke from Q read 0.187 against 0.160 (+17 %), and D-243's smoke 0.1497 against Q's log 0.1297. The dose adds to it (harder feeds end more rallies early). Same-recipe smokes on different seeds agree to about 4 % (D-242 0.1555, D-243 0.1497).
+- **Brief correction (experiment design):** D-243's smoke started from P, not Q; the earlier smoke from Q was D-244's.
+- **Latent driver bug (architecture):** lc107.sh's +240 config check read `... is not None is not None`, which is always False, so a healthy run would have been killed by KILL-CONFIG at +240. Fixed in lc108.sh (all three weights checked) and tested on D-245's smoke params (True) and Q's (False). lc107.sh is left as committed (historical).
+- **Motion flag (reported):** the smoke's launcher-court falls rose from 40 to 103 per about 2,400 episodes and off-court falls from 0.91 to 1.18 per 1,000 env-s against D-243's smoke; KILL-NO-FALLS covers it; launcher-court falls per episode are reported at +240.
+
+**Votes:** (a) re-run D-245 unchanged on a fresh smoke seed with the share re-predicted from D-245's own smoke read (0.1642 +/- 25 %): coach, experiment design, architecture, motion (4 of 5; RL had not reported when recorded). Standing rule from now (experiment design): a smoke's share prediction comes from a smoke read of the same parent and recipe.
+
+**Decision:** D-246.

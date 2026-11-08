@@ -7988,3 +7988,12 @@ Plain reading: the shorter set-start cap moved the opening (h0 -0.011, h1 -0.008
 **CONFIRM and the target read:** pairs 4220425-4220428, directions 4220429-4220432 (C re-read), R3 4220433; every line gating. D-244's registration of this block as the target read carries to D-245 (D-244 never read it): one look.
 
 **New code:** picklebot_mj/tasks/return_stand.py (fam_feeder: pair-court feeder balls by family, logging only); picklebot_mj/d1_rule.py (FAM3, fam3_share). Tests: tests/test_d1_rule.py 48 passed; the GPU half-reset test now also checks fam_feeder.
+
+### D-246 (2026-11-08): D-245 re-run unchanged on a fresh smoke seed, the share re-predicted (panel round 106, (a) 4 of 5)
+
+**Changed premise:** D-245's share prediction came from Q's training log; a smoke reads higher (scale and window), and the dose raises it further. The re-made prediction is D-245's own measured smoke share, 0.1642 (same parent, recipe, 1,024 envs, +20-140 window); the band stays +/- 25 % (0.123-0.205). Recorded before the smoke. Standing rule: a smoke's share prediction comes from a smoke read of the same parent and recipe.
+
+**Run (scripts/diag/lc108.sh):** everything as D-245 (parent Q model_36793; Q's cap-8 recipe; feed-mix 2.0 on reach_deep, cross_backhand, reach_backhand; every smoke, kill, gate and CONFIRM line unchanged), with:
+- run name rally-d1s3q8w2b; training seed 254, smoke seed 255;
+- the +240 config check fixed (architecture's find: lc107.sh's `is not None is not None` was always False) and extended to all three weights; tested on D-245's smoke params (True) and Q's (False);
+- dev seeds as D-245 registered: 4220434 (KILL-NO-FALLS), 4220435 (KILL-DIR, against Q's stage-0 read already taken there: results/lc107-dirQ-4220435.json), 4220436 (KILL-LATE), 4220437 (gate R3), CONFIRM / the target read 4220425-4220433 (one look).

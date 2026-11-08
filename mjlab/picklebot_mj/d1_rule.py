@@ -1754,3 +1754,8 @@ def fam3_share(rows: list[dict]) -> tuple[float, int]:
     n = sum(d)
     k = sum(d[FAMILY_NAMES.index(f)] for f in FAM3)
     return (k / n if n else float("nan")), n
+
+
+# D-246 (panel round 106, (a)): D-245 re-run on a fresh smoke seed. The cap-split share prediction is now a smoke read of
+# the same parent and recipe (+20-140, 1,024 envs), not a training log: D-245's smoke read 0.1642.
+D246_SHARE_PRED = 0.1642
