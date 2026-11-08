@@ -1731,3 +1731,21 @@ Human-footwork reference: later (all five); motion asks for a CPU-only count of 
 **Estimates:** P(5+) 0.77-0.80 from this run; target from this run about 10-35 % (RL 35 %); within 3-6 runs 20-40 %.
 
 **Decision:** D-244.
+
+## Round 105 (2026-11-08): D-244 NO-CANDIDATE on K3-KEPT and OPEN
+
+Brief: results/footwork-round105-brief.md.
+
+**Correction check (all five):**
+- D-244 ran as registered; NO-CANDIDATE stands. Both lines were right and are not loosened. OPEN against Q + 0.02 (0.8372) is looser than the target itself, which needs about 0.845 at the child's h2-h4 (experiment design, RL, architecture). The child's +0.0165 is about 2.3 SE above Q, but about 0.5 SE short of +0.02. Experiment design: no predicted effect was registered and the line had about 50 % power.
+- **The K3 cost is real (about 4.6 SE on shots past 8):** at level shot exposure (383,698 vs 375,107 hand-offs), endings past 8 rose 33 -> 83, 68 of them past shot 30 and 35 at the 64-shot clamp; the per-shot hazard in long rallies about doubled to quadrupled. All four seeds read 0.033-0.037. Redefining K3 to shots 3-7 now would be post-hoc loosening (rejected).
+- **The body signal (motion, coach):** receiver within 0.1 m of its spot at the partner's hand-off 12.1 % -> 3.7 %; recovery median 0.225 -> 0.275 m; paddle speed 5.55 -> 5.32 m/s; BODY_CONTACT endings 65 -> 98; left contact 0.328, the lowest in the chain.
+- **When it happened (architecture, RL):** the reset-half training opening stops improving by +61-120; the +240 KILL-LATE read had about Q's count of late endings, so the cost came after +240. The cap route is used up (RL withdraws its round-104 vote; architecture withdraws its free-half cap-16 vote).
+
+**Votes:** all five vote the weak-family feed dose (reach_deep, cross_backhand, reach_backhand), which held 424 of Q's 616 feeder misses and leaves rally lengths alone. Dose: x2 (RL, experiment design, motion, architecture), x3 (coach). Base recipe: Q's cap 8 (RL, experiment design, motion, coach), D-244's cap 5 with 248 iterations (architecture). Parent Q (all five).
+
+**Decision (majorities):** parent Q, Q's cap-8 recipe, feed-mix weights 2.0 on the three families; lines in experiment design's form, with D244-KEPT added; the target read carried over on the unread block 4220425-4220433.
+
+**Estimates:** gate pass 35-45 % (motion); target from this run 10-25 %; within 3-6 runs 20-45 %. Motion: if reach_deep stays below 0.5 under this dose, the human-footwork (backpedal) reference comes next.
+
+**Decision:** D-245.

@@ -381,6 +381,7 @@ class BallPhysicsAction(ActionTerm):
         self._launch_ep = torch.zeros(2, dtype=torch.long, device=dev)  # D-235: launcher-court episodes, falls
         self._other_falls = torch.zeros((), dtype=torch.long, device=dev)  # D-235 fix: falls off the launcher courts
         self._share_split = torch.zeros(2, 2, dtype=torch.long, device=dev)  # [pair, drill court] x [feeder, hand-off]
+        self._fam_feeder = torch.zeros(len(FAMILY_NAMES), dtype=torch.long, device=dev)  # D-245: pair-court feeder balls by family
         # D-165 (logging only): the receiver's state at each feeder-ball launch, by the court's previous rally length
         # (0-1, 2-4, 5+ shots): distance from its recovery spot and ground speed histograms, and that feeder ball's
         # outcome (feeds, legal returns); pair courts only when drill courts are on.
@@ -1271,6 +1272,13 @@ class BallPhysicsAction(ActionTerm):
             self.ready.step(data.root_link_pos_w[:, 2])
             self.ready.launch(fire, data.body_link_pos_w[:, self.ready.foot_ids] - origins.unsqueeze(1))
         self._refeed(fire)
+        if self.pairs is not None:  # D-245 (logging only): feeder balls on live pair courts, by family
+            fm = fire.clone()
+            if self.drill_scale is not None:
+                fm &= self.drill_scale == 0
+            if self.launch_env is not None:
+                fm &= ~self.launch_env
+            self._fam_feeder.index_add_(0, self.family[fm], torch.ones_like(self.family[fm]))
         if recv is not None:  # the received envs' feed is the partner's ball, mirrored
             m = recv.unsqueeze(-1)
             self.ball = BallState(torch.where(m, handed[:, :3], self.ball.pos), torch.where(m, handed[:, 3:6], self.ball.vel),
@@ -1352,6 +1360,7 @@ class BallPhysicsAction(ActionTerm):
                 "cuts": int(self.cut_count), "drill_places": int(getattr(self, "drill_places", 0)),
                 "drill_place_skipped": int(getattr(self, "drill_place_skipped", 0)),
                 "drill_places_off": int(getattr(self, "drill_places_off", 0)),  # D-241
+                "fam_feeder": self._fam_feeder.tolist(),  # D-245: pair-court feeder balls by family (FAMILY_NAMES order)
                 "len_hist_sub": None if self.pairs is None or self.pairs.sub is None else self.pairs.len_hist_sub.tolist(),
                 "move_issued": None if self.drill is None else self.drill.stats["issued"].tolist(),  # D-237: spots per sector
                 "launch_courts": {"envs": 0 if self.launch_env is None else int(self.launch_env.sum()),

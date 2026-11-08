@@ -137,6 +137,7 @@ def test_half_reset_places_only_on_odd_live_courts(monkeypatch):
     sub_n, all_n = sum(s["len_hist_sub"]), int(t.pairs.len_hist_group[0].sum())
     env.close()
     assert s["drill_places"] > 0 and s["drill_places_off"] == 0, s
+    assert sum(s["fam_feeder"]) > 0, s["fam_feeder"]  # D-245: pair-court feeder balls counted by family
     assert 0 < sub_n < all_n, (sub_n, all_n)
 
 

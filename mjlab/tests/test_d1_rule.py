@@ -754,3 +754,15 @@ def test_target_read(tmp_path):
     assert not ok
     ok, _ = dr.target_read([write("e.json", 900, 1000, 0.95, 0.96)], 0.05)
     assert not ok
+
+
+def test_fam3_share():
+    from picklebot_mj.feeds import FAMILY_NAMES
+    a = [0] * len(FAMILY_NAMES)
+    b = [10] * len(FAMILY_NAMES)
+    for f in dr.FAM3:
+        b[FAMILY_NAMES.index(f)] = 20
+    rows = [{"launch": {"fam_feeder": a}}, {"launch": {"fam_feeder": b}}]
+    s, n = dr.fam3_share(rows)
+    assert n == 10 * len(FAMILY_NAMES) + 30 and abs(s - 60 / n) < 1e-9
+    assert dr.fam3_share(rows[:1])[1] == 0

@@ -7971,3 +7971,20 @@ Reported:
 - Old read P(5+) vs C -6.81 points.
 
 Plain reading: the shorter set-start cap moved the opening (h0 -0.011, h1 -0.008) and P(5+) +1.2 points, but not by OPEN's +0.02, and it cost long rallies: endings past 8 shots rose 2.5x. Panel round 105 is called.
+
+### D-245 (2026-11-08): Q + feed-mix x2 on the three weak families (panel round 105, the lever 5 of 5, x2 4 of 5)
+
+**Run (scripts/diag/lc107.sh):**
+- child = rally-d1s3q8w2 = Q (rally-d1s3cap8hr2 model_36793, CONFIRMED) on Q's recipe: the HalfReset task, pair_rally_cap 8 on the set-start half only (training only).
+- The only change: training feed-mix weights 2.0 on reach_deep, cross_backhand and reach_backhand (every other family 1.0, as Q).
+- 600 iterations to model_37392; training seed 252, smoke 253. Stage 0: Q's direction read on dev 4220435.
+
+**Smoke:** D-244's lines with the cap back at 8 (feeder share within +/- 25 % of 0.1306, set-start half never past 8, free-half rallies ending 9-15 > 0), plus the three families' share of pair-court feeder balls within +/- 25 % of 6/23 = 0.261 (recorded here before the smoke; zone validity ignored), from a new training-log counter; config checks the weights.
+
+**Kill at +240:** training-log lines first (KILL-LOST-OPEN reset half >= Q's 0.7356 - 0.02; KILL-UNSTABLE <= 3.14; config), then KILL-NO-FALLS (dev 4220434), KILL-DIR (left contact on dev 4220435 >= Q's - 0.01), KILL-LATE (dev 4220436, late share <= 0.0319).
+
+**Gate:** every D-244 line unchanged (K3-KEPT, OPEN against Q + 0.02, M/N/P/Q-KEPT, guards, R3), plus D244-KEPT (P(5+) >= 0.7680). R3 on dev 4220437 (Q read there too).
+
+**CONFIRM and the target read:** pairs 4220425-4220428, directions 4220429-4220432 (C re-read), R3 4220433; every line gating. D-244's registration of this block as the target read carries to D-245 (D-244 never read it): one look.
+
+**New code:** picklebot_mj/tasks/return_stand.py (fam_feeder: pair-court feeder balls by family, logging only); picklebot_mj/d1_rule.py (FAM3, fam3_share). Tests: tests/test_d1_rule.py 48 passed; the GPU half-reset test now also checks fam_feeder.

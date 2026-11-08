@@ -1733,3 +1733,24 @@ def target_read(paths: list[str], r3: float) -> tuple[bool, list[str]]:
              f"TARGET sides legal {', '.join(f'{s} {v:.4f}' for s, v in leg.items())}: gap {gap:.4f} (<= {TARGET_SIDES}) -> {ok['sides']}",
              f"TARGET R3 court falls / episode {r3:.4f} (<= {TARGET_R3}) -> {ok['r3']}"]
     return all(ok.values()), lines
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# D-245 (panel round 105, 4 of 5 for the weak-family feed dose, x2 by 3 of 5): P = Q (D-243) on Q's recipe (cap 8 on the
+# set-start half) with training feed-mix weights x2 on reach_deep, cross_backhand and reach_backhand (the families
+# that held 424 of Q's 616 feeder misses). Lines in experiment design's form.
+FAM3 = ("reach_deep", "cross_backhand", "reach_backhand")
+FAM3_SHARE_PRED = 6.0 / 23.0       # 20 families at weight 1, three at 2 (zone validity ignored); recorded before the smoke
+CAP8_Q_SHARE_PRED = 0.1306         # D-244's formula on Q's second-half log at cap 8 (Q measured 0.1297)
+
+
+def fam3_share(rows: list[dict]) -> tuple[float, int]:
+    """Share of pair-court feeder balls in FAM3 between the first and last rows that log fam_feeder."""
+    from picklebot_mj.feeds import FAMILY_NAMES
+    rows = [r for r in rows if r.get("launch", {}).get("fam_feeder") is not None]
+    if len(rows) < 2:
+        return float("nan"), 0
+    d = [y - x for x, y in zip(rows[0]["launch"]["fam_feeder"], rows[-1]["launch"]["fam_feeder"])]
+    n = sum(d)
+    k = sum(d[FAMILY_NAMES.index(f)] for f in FAM3)
+    return (k / n if n else float("nan")), n
