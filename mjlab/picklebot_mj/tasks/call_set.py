@@ -57,6 +57,9 @@ PARK_AFTER_S = 0.4
 G = 9.81
 N_CELLS = len(CALL_TYPES) * 2 * 2  # type x side (forehand, backhand) x early
 STAT_KEYS = ("issued", "judged", "passed", "set", "ready", "reach", "fell", "censored", "reversed", "start_n")
+DIAG_KEYS = ("slow", "feet", "upright", "p_fwd", "p_high", "p_side", "at_s", "at_s_ever")  # reported only
+DIAG_SUMS = ("d_s", "p_fwd", "p_side", "p_z")
+ARRIVE_M = md.ARRIVE_RADIUS  # reported: the pelvis within 0.25 m of the stance spot
 
 
 def deadline(d: torch.Tensor, pace: float = PACE) -> torch.Tensor:
@@ -127,6 +130,9 @@ class CallSetDrill(fs.FootworkDrill):
         self.t_all, self.t_start = torch.full((n,), -1.0, device=dev), torch.full((n,), -1.0, device=dev)
         self.start_xy, self.dirv = torch.zeros(n, 2, device=dev), torch.zeros(n, 2, device=dev)
         self.C, self.L = torch.zeros(n, 3, device=dev), torch.zeros(n, 3, device=dev)
+        self.at_s_ever = torch.zeros(n, dtype=torch.bool, device=dev)
+        self.cs_diag = {k: torch.zeros(N_CELLS, dtype=torch.long, device=dev) for k in DIAG_KEYS}
+        self.cs_diag_sum = {k: torch.zeros(N_CELLS, device=dev) for k in DIAG_SUMS}
         self.cs = {k: torch.zeros(N_CELLS, dtype=torch.long, device=dev) for k in STAT_KEYS}
         self.cs_ladder = torch.zeros(len(PACES), N_CELLS, dtype=torch.long, device=dev)
         self.cs_ladder_n = torch.zeros(N_CELLS, dtype=torch.long, device=dev)
@@ -159,6 +165,7 @@ class CallSetDrill(fs.FootworkDrill):
         for f in (self.pending, self.has_prev, self.next_early):
             f.masked_fill_(mask, False)
         self.limit = torch.where(mask, torch.full_like(self.limit, 1e9), self.limit)  # MoveDrill's limit unused
+        self.at_s_ever = self.at_s_ever & ~mask
 
     # --- calls ----------------------------------------------------------------------------
     def _issue(self, mask: torch.Tensor) -> None:
@@ -250,6 +257,21 @@ class CallSetDrill(fs.FootworkDrill):
                      ("ready", due & ready), ("reach", due & reach), ("start_n", due & self.started)):
             self.cs[k].index_add_(0, c, x.long())
         self.cs_start_sum.index_add_(0, c, torch.where(due & self.started, self.t_start, torch.zeros_like(self.t_start)))
+        # reported diagnostics at T: the parts of SET and READY, the pelvis at the stance spot (now / at any time since
+        # the call), and sums of the pelvis-to-spot distance and the paddle's position in the pelvis frame
+        side = torch.where(self.fh, -torch.ones_like(p_lat), torch.ones_like(p_lat))
+        d_s = (pel - t.recover_xy).norm(dim=-1)
+        self.at_s_ever |= self.pending & (d_s < ARRIVE_M)
+        parts = (("slow", self.spd.mean(-1) < SET_SPEED), ("feet", (feet_z < FOOT_DOWN_Z).all(-1)),
+                 ("upright", tilt < math.radians(SET_TILT_DEG)),
+                 ("p_fwd", (p_fwd >= md.READY_FORWARD[0]) & (p_fwd <= md.READY_FORWARD[1])),
+                 ("p_high", (p_z >= md.READY_HEIGHT[0]) & (p_z <= md.READY_HEIGHT[1])),
+                 ("p_side", side * p_lat >= READY_SIDE_M), ("at_s", d_s < ARRIVE_M), ("at_s_ever", self.at_s_ever))
+        for k, x in parts:
+            self.cs_diag[k].index_add_(0, c, (due & x).long())
+        for k, x in (("d_s", d_s), ("p_fwd", p_fwd), ("p_side", side * p_lat), ("p_z", p_z)):
+            self.cs_diag_sum[k].index_add_(0, c, torch.where(due, x, torch.zeros_like(x)))
+        self.at_s_ever &= ~due
         self.pending &= ~due
         self.has_prev |= due
         last = due & (self.chain_pos >= CHAIN_LEN - 1)
@@ -283,6 +305,8 @@ class CallSetDrill(fs.FootworkDrill):
         out["ladder_n"] = self.cs_ladder_n.tolist()
         out["start_sum"] = [round(x, 4) for x in self.cs_start_sum.tolist()]
         out["chains"] = self.chains.tolist()
+        out["diag"] = {k: v.tolist() for k, v in self.cs_diag.items()}
+        out["diag_sum"] = {k: [round(x, 3) for x in v.tolist()] for k, v in self.cs_diag_sum.items()}
         out["meta"] = {"call_types": list(CALL_TYPES), "cell": "type * 4 + backhand * 2 + early", "paces": list(PACES),
                        "deadline": f"{REACT_S} + d / {PACE}", "chain_len": CHAIN_LEN, "early_share": EARLY_SHARE}
         return out

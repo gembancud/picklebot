@@ -56,12 +56,18 @@ def read(c: dict) -> dict:
     out["start_s"] = sum(c["start_sum"]) / sn if sn else float("nan")
     out["reversed"] = _sum(c, "reversed", allc) / max(out["issued"], 1)
     out["early_share"] = out["early"]["judged"] / n if n else float("nan")
+    if "diag" in c:  # reported: the parts of SET / READY, the pelvis at the stance spot, means at T
+        out["diag"] = {k: sum(v) / n if n else float("nan") for k, v in c["diag"].items()}
+        out["diag_mean"] = {k: sum(v) / n if n else float("nan") for k, v in c["diag_sum"].items()}
     return out
 
 
 def pool(counters: list[dict]) -> dict:
-    keys = [k for k in counters[0] if k not in ("meta", "ladder", "chains")]
+    keys = [k for k in counters[0] if k not in ("meta", "ladder", "chains", "diag", "diag_sum")]
     out = {k: [sum(x) for x in zip(*(c[k] for c in counters))] for k in keys}
+    for d in ("diag", "diag_sum"):
+        if d in counters[0]:
+            out[d] = {k: [sum(x) for x in zip(*(c[d][k] for c in counters))] for k in counters[0][d]}
     out["ladder"] = [[sum(x) for x in zip(*(c["ladder"][i] for c in counters))] for i in range(len(counters[0]["ladder"]))]
     out["chains"] = [sum(x) for x in zip(*(c["chains"] for c in counters))]
     out["meta"] = counters[0]["meta"]
@@ -83,4 +89,9 @@ def target_lines(r: dict) -> tuple[bool, list[str]]:
              f"(reported) forehand {r['forehand']['pass']:.3f}, backhand {r['backhand']['pass']:.3f}, normal "
              f"{r['normal']['pass']:.3f}, early {r['early']['pass']:.3f}",
              f"TARGET-LINES {'MET' if ok else 'NOT MET'}"]
+    if "diag" in r:
+        dg, dm = r["diag"], r["diag_mean"]
+        lines.insert(-1, "(reported) at T: " + ", ".join(f"{k} {v:.3f}" for k, v in dg.items())
+                     + f"; means: pelvis-to-spot {dm['d_s']:.2f} m, paddle fwd {dm['p_fwd']:.2f} m, toward side "
+                     f"{dm['p_side']:.2f} m, height {dm['p_z']:.2f} m")
     return ok, lines
