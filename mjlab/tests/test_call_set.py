@@ -142,3 +142,53 @@ def test_call_drill_runs_on_the_rally_composite(monkeypatch):
     shares = [v["judged"] / r["judged"] for v in r["types"].values()]
     assert min(shares) > 0.1, shares
     assert sum(c["reversed"]) < sum(c["issued"])
+
+
+def test_training_task_only_adds_the_call_drill_and_its_event():
+    import dataclasses
+    import mjlab.tasks  # noqa: F401
+    import picklebot_mj.tasks.footwork_specialist as fs
+    from mjlab.tasks.registry import load_env_cfg
+    from picklebot_mj.tasks.footwork_specialist import callset_event
+    a, b = load_env_cfg(fs.TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF), load_env_cfg(fs.TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF_CALL)
+    da, db = dataclasses.asdict(a.actions["ball"]), dataclasses.asdict(b.actions["ball"])
+    assert {k for k in da if da[k] != db[k]} == {"move_call_set"} and db["move_call_set"] is True
+    assert set(b.rewards) - set(a.rewards) == {"call_set_event"} and set(a.rewards) <= set(b.rewards)
+    assert b.rewards["call_set_event"].func is callset_event
+    assert b.rewards["call_set_event"].weight == b.rewards["move_arrival"].weight
+    assert all(a.rewards[k].weight == b.rewards[k].weight for k in a.rewards)
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+def test_training_task_calls_only_in_move_episodes(monkeypatch):
+    if not BASE.exists():
+        pytest.skip("needs the d1 base")
+    monkeypatch.setenv("PICKLEBOT_RES_BASE", str(BASE))
+    monkeypatch.setenv("PICKLEBOT_LAM_R", "2")
+    import mjlab.tasks  # noqa: F401
+    import picklebot_mj.tasks.footwork_specialist as fs
+    from mjlab.envs import ManagerBasedRlEnv
+    from mjlab.tasks.registry import load_env_cfg
+    from picklebot_mj.tasks.call_set import CallSetDrill
+    cfg = load_env_cfg(fs.TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF_CALL)
+    cfg.scene.num_envs = 64
+    b = cfg.actions["ball"]
+    b.court_feed_prob, b.recovery_mode, b.refeed_delay_s = 1.0, "fixed", 0.5
+    env = ManagerBasedRlEnv(cfg, device="cuda")
+    env.reset()
+    t = env.action_manager.get_term("ball")
+    dr = t.drill
+    assert isinstance(dr, CallSetDrill)
+    act = torch.zeros(env.num_envs, env.action_manager.total_action_dim, device=env.device)
+    ev_sum = 0.0
+    with torch.inference_mode():
+        for _ in range(900):
+            env.step(act)
+            ev_sum += float(env.reward_manager._step_reward[:, list(env.reward_manager.active_terms).index("call_set_event")].sum()) \
+                if hasattr(env.reward_manager, "_step_reward") else 0.0
+            assert not bool((dr.pending & ~dr.move_ep).any())  # calls only in move episodes
+    c = dr.counters()
+    s = t.launch_summary()
+    env.close()
+    assert sum(c["issued"]) > 0 and s["move_call"] is not None
+    assert bool(dr.ghost_mask.equal(dr.move_ep))

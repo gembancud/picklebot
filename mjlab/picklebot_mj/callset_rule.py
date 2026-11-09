@@ -95,3 +95,16 @@ def target_lines(r: dict) -> tuple[bool, list[str]]:
                      + f"; means: pelvis-to-spot {dm['d_s']:.2f} m, paddle fwd {dm['p_fwd']:.2f} m, toward side "
                      f"{dm['p_side']:.2f} m, height {dm['p_z']:.2f} m")
     return ok, lines
+
+
+def ladder_normal(c: dict, pace: float = 1.5) -> tuple[int, int]:
+    """(reached, n) on the pace ladder at `pace`, normal calls only (an early next call cuts the window; D-253)."""
+    i = list(c["meta"]["paces"]).index(pace)
+    return sum(c["ladder_norm"][i]), sum(c["ladder_norm_n"])
+
+
+def paired_gain(k1: int, n1: int, k0: int, n0: int, z: float = 1.96) -> tuple[float, float, float]:
+    """Child minus reference share with a normal-approximation 95 % interval: (gain, low, high)."""
+    p1, p0 = k1 / max(n1, 1), k0 / max(n0, 1)
+    se = math.sqrt(p1 * (1 - p1) / max(n1, 1) + p0 * (1 - p0) / max(n0, 1))
+    return p1 - p0, p1 - p0 - z * se, p1 - p0 + z * se

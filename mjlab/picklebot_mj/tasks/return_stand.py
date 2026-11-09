@@ -177,6 +177,8 @@ class BallPhysicsActionCfg(ActionTermCfg):
     move_sector_weights: tuple | None = None
     # D-249: move-episode spots from the frozen pro-move table (tasks/pro_move.py ProMoveDrill); False keeps MoveDrill.
     move_pro_moves: bool = False
+    # D-253: move episodes become the call-and-set drill (tasks/call_set.py CallSetDrill); False keeps MoveDrill.
+    move_call_set: bool = False
     # Adaptive curriculum (D-044): re-weight feed families (by legal return) and move sectors (by arrival)
     # toward what is unmastered or still changing. Training only; evaluation turns it off.
     adaptive_curriculum: bool = False
@@ -432,6 +434,9 @@ class BallPhysicsAction(ActionTerm):
             if getattr(cfg, "move_pro_moves", False):  # D-249
                 from picklebot_mj.tasks.pro_move import ProMoveDrill
                 self.drill = ProMoveDrill(self, cfg.move_prob, cfg.seed, cfg.move_sector_weights)
+            if getattr(cfg, "move_call_set", False):  # D-253
+                from picklebot_mj.tasks.call_set import CallSetDrill
+                self.drill = CallSetDrill(self, cfg.move_prob, cfg.seed)
         self.v2 = None
         if getattr(cfg, "drill_v2", False):  # Stage 5E drill v2 (D-097)
             from picklebot_mj.drill_v2 import DrillV2Sampler
@@ -1028,6 +1033,10 @@ class BallPhysicsAction(ActionTerm):
         if self.shadow is not None:  # ghost ball: the paddle cannot touch it in swing episodes
             sim_paddle = PaddleState(self.shadow.paddle_for_sim(paddle.pos), paddle.rot, paddle.lin_vel,
                                      paddle.ang_vel)
+        gm = getattr(self.drill, "ghost_mask", None)  # D-253: the call drill's scripted ghost ball never meets the paddle
+        if gm is not None:
+            sim_paddle = PaddleState(torch.where(gm.unsqueeze(-1), sim_paddle.pos + self.drill.far, sim_paddle.pos),
+                                     sim_paddle.rot, sim_paddle.lin_vel, sim_paddle.ang_vel)
         live = ~self.rules.dead
         if getattr(self, "plan_on", False):
             self._plan_step(dt, live)
@@ -1370,6 +1379,7 @@ class BallPhysicsAction(ActionTerm):
                 "move_issued": None if self.drill is None else self.drill.stats["issued"].tolist(),  # D-237: spots per sector
                 "move_pro": None if self.drill is None or "pro_class" not in self.drill.stats else  # D-249
                 {k: self.drill.stats[k].tolist() for k in ("pro_class", "flipped", "clipped", "arrived", "timed_out", "ready")},
+                "move_call": self.drill.counters() if hasattr(self.drill, "cs") else None,  # D-253
                 "launch_courts": {"envs": 0 if self.launch_env is None else int(self.launch_env.sum()),
                                   "episodes_falls": self._launch_ep.tolist(), "other_falls": int(self._other_falls),
                                   "step": int(self._env.common_step_counter)},

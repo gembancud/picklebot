@@ -8132,3 +8132,9 @@ The user (2026-11-09) also asked for an updated README with a preview of the wor
 | set-start pairs P(5+) (dev 4220449) | 0.7623 | 0.1555 (falls 5,061 in 2,048 envs) |
 
 Plain reading: zero-shot, a looser body is not quicker; the frozen movement skill was learned with the heavier damping and loses balance without it. This does not test a skill retrained on the looser body (a later lever). By D-252's rule (damping first only if >= 0.05 s faster with no more falls), the first lever is the call drill in Q's training.
+
+## D-253 (2026-11-09): the first footwork lever - the call drill in Q's training (panel round 111)
+
+- Baseline (D-252's test, Q zero-shot): pass 0.0000 on 52,031 calls (dev 4220451) and 51,950 (dev 4220452); SET 0.11, READY 0.008, REACH 0.06; the 1.5 m/s ladder 0.003; falls 21-22 per 1,000 env-s. At T the pelvis is 1.22 m from the stance spot on average and the paddle 0.64 m high. The prediction (pass <= 0.05) held on the headline.
+- Child rally-d1s3call1 = Q on Q's recipe with the move episodes on the drill courts replaced by CallSetDrill and one event reward at T, (SET + READY + REACH + pass) / 4 at move_arrival's weight (task Picklebot-Rally22b-FastMove-DrillReset-Launch-HalfReset-CallSet-G1). 600 iterations to model_37392; training seed 263, smoke 264. Fixes before launch: the ghost ball is kept out of the paddle's ball simulation; no per-step host sync; the ladder on normal calls; falls between calls counted; call state cleared on every reset.
+- Lines (scripts/diag/lc112.sh): smoke as D-249's with Q's basis-smoke predictions plus a call-drill line; kill at the first checkpoint past +180 (call-and-set falls <= Q's on dev 4220453; the 1.5 m/s ladder on normal calls >= 0.02; feeder-ball legal >= Q's - 0.05 on dev 4220454; training-log falls reported only); gate paired with Q on dev 4220455 (call-and-set) and 4220456 (pairs): KEEP / FLAT / NOT-KEPT by the deciding gain's interval, guards falls and feeder legal.

@@ -970,3 +970,31 @@ register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF_PRO,
                     env_cfg=rally_fastmove_dr_launch_half_pro(load_env_cfg(ag.SRC_22B)),
                     play_env_cfg=rally_fastmove_dr_launch_half_pro(load_env_cfg(ag.SRC_22B, play=True)),
                     rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))
+
+
+# D-253 (panel round 111, 5 of 5 on the form's core): D-241's HalfReset task (Q's) with the move episodes on the drill
+# courts replaced by the call-and-set drill (tasks/call_set.py CallSetDrill: ghost-ball calls, judged at T) and one event
+# reward paid at T, (SET + READY + REACH + pass) / 4, at move_arrival's weight. The speed reward toward the spot
+# (rally_fast_track_lin_vel, cap 2.5 m/s) and every other term are Q's. Q's pair_rally_cap 8 on the reset half stays a
+# driver override.
+TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF_CALL = "Picklebot-Rally22b-FastMove-DrillReset-Launch-HalfReset-CallSet-G1"
+
+
+def callset_event(env) -> torch.Tensor:
+    """D-253: the call drill's event paid at T, (SET + READY + REACH + pass) / 4 (read-and-clear; tasks/call_set.py).
+    Zero without a CallSetDrill. Defined here, not in call_set.py, which imports this module."""
+    f = getattr(env.action_manager.get_term("ball").drill, "consume_event", None)
+    return f() if f is not None else torch.zeros(env.num_envs, device=env.device)
+
+
+def rally_fastmove_dr_launch_half_call(cfg):
+    cfg = rally_fastmove_dr_launch_half(cfg)
+    cfg.actions["ball"] = dataclasses.replace(cfg.actions["ball"], move_call_set=True)
+    cfg.rewards["call_set_event"] = RewardTermCfg(func=callset_event, weight=cfg.rewards["move_arrival"].weight)
+    return cfg
+
+
+register_mjlab_task(task_id=TASK_RALLY_FASTMOVE_DR_LAUNCH_HALF_CALL,
+                    env_cfg=rally_fastmove_dr_launch_half_call(load_env_cfg(ag.SRC_22B)),
+                    play_env_cfg=rally_fastmove_dr_launch_half_call(load_env_cfg(ag.SRC_22B, play=True)),
+                    rl_cfg=load_rl_cfg(ag.SRC_22B), runner_cls=load_runner_cls(ag.SRC_22B))

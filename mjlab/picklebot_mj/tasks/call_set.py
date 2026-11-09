@@ -1,6 +1,7 @@
 """D-252 (panel round 110): the call-and-set footwork test (mjlab/results/footwork-target.md). New file: move_drill.py,
 deadline_drill.py and footwork_specialist.py are unchanged; CallSetDrill is swapped in by FootworkBallAction when its cfg
-sets call_set (evaluation first; no reward term reads it yet).
+sets call_set, and by BallPhysicsAction (return_stand.py) when move_call_set is set (D-253: training on the drill courts, with
+the event reward footwork_specialist.callset_event paid at T).
 
 Every robot episode is a call episode (move_prob 1.0). A chain of CHAIN_LEN calls starts FIRST_CALL_S after the episode
 starts and CHAIN_GAP_S after the previous chain. One call:
@@ -56,7 +57,8 @@ AFTER_BOUNCE_S, AFTER_BOUNCE_V = 0.35, 5.0
 PARK_AFTER_S = 0.4
 G = 9.81
 N_CELLS = len(CALL_TYPES) * 2 * 2  # type x side (forehand, backhand) x early
-STAT_KEYS = ("issued", "judged", "passed", "set", "ready", "reach", "fell", "censored", "reversed", "start_n")
+STAT_KEYS = ("issued", "judged", "passed", "set", "ready", "reach", "fell", "censored", "reversed", "start_n",
+             "fell_between")
 DIAG_KEYS = ("slow", "feet", "upright", "p_fwd", "p_high", "p_side", "at_s", "at_s_ever")  # reported only
 DIAG_SUMS = ("d_s", "p_fwd", "p_side", "p_z")
 ARRIVE_M = md.ARRIVE_RADIUS  # reported: the pelvis within 0.25 m of the stance spot
@@ -142,6 +144,26 @@ class CallSetDrill(fs.FootworkDrill):
         self._ladder_idx = torch.arange(len(PACES), device=dev).unsqueeze(-1) * N_CELLS
         self._ankles = None
         self._park = torch.tensor(md.PARK_POS, device=dev)
+        # D-253 (round 111): the ladder on normal calls only (an early next call cuts the window at T), the reward event
+        # paid at T (read-and-clear), and the paddle kept out of the ball simulation in call episodes
+        self.cs_ladder_norm = torch.zeros(len(PACES), N_CELLS, dtype=torch.long, device=dev)
+        self.cs_ladder_norm_n = torch.zeros(N_CELLS, dtype=torch.long, device=dev)
+        self.event_now = torch.zeros(n, device=dev)
+        self.far = torch.tensor([0.0, 0.0, 100.0], device=dev)
+
+    @property
+    def ghost_mask(self) -> torch.Tensor:
+        """Envs whose ball is this drill's ghost ball (return_stand moves the paddle out of the ball simulation)."""
+        return self.move_ep
+
+    def command(self):
+        """MoveDrill's teacher command (face the net), not FootworkDrill's heading-free one: one change at a time."""
+        return md.MoveDrill.command(self)
+
+    def consume_event(self) -> torch.Tensor:
+        r = self.event_now
+        self.event_now = torch.zeros_like(r)
+        return r
 
     # --- episode hooks -----------------------------------------------------------------
     def reset(self, env_ids: torch.Tensor) -> None:
@@ -149,11 +171,15 @@ class CallSetDrill(fs.FootworkDrill):
         env = getattr(self.t, "_env", None)
         if env is not None and env.common_step_counter > 0 and len(env_ids):
             fell = env.termination_manager.get_term("fell_over")[env_ids].bool()
-            p = self.pending[env_ids]
+            mv = self.move_ep[env_ids]  # the ending episode's type
+            p = self.pending[env_ids] & mv
             c = self.cell[env_ids]
             self.cs["fell"].index_add_(0, c, (p & fell).long())
             self.cs["judged"].index_add_(0, c, (p & fell).long())
             self.cs["censored"].index_add_(0, c, (p & ~fell).long())
+            self.cs["fell_between"].index_add_(0, c, (~p & fell & mv).long())  # after T, before the next call
+        for f in (self.pending, self.has_prev, self.next_early):  # every reset clears the call state (D-253)
+            f[env_ids] = False
         super().reset(env_ids)
 
     def _new_spot(self, mask: torch.Tensor) -> None:
@@ -215,6 +241,10 @@ class CallSetDrill(fs.FootworkDrill):
         self.cs_ladder.view(-1).index_add_(0, (self._ladder_idx + self.cell.unsqueeze(0)).view(-1),
                                            (reached & ok.unsqueeze(0)).long().view(-1))
         self.cs_ladder_n.index_add_(0, self.cell, ok.long())
+        norm = ok & ~self.next_early  # called from _issue: next_early is the new call's flag (the window ran in full)
+        self.cs_ladder_norm.view(-1).index_add_(0, (self._ladder_idx + self.cell.unsqueeze(0)).view(-1),
+                                                (reached & norm.unsqueeze(0)).long().view(-1))
+        self.cs_ladder_norm_n.index_add_(0, self.cell, norm.long())
 
     # --- per physics step ---------------------------------------------------------------
     def _pose(self):
@@ -272,6 +302,8 @@ class CallSetDrill(fs.FootworkDrill):
         for k, x in (("d_s", d_s), ("p_fwd", p_fwd), ("p_side", side * p_lat), ("p_z", p_z)):
             self.cs_diag_sum[k].index_add_(0, c, torch.where(due, x, torch.zeros_like(x)))
         self.at_s_ever &= ~due
+        self.event_now = self.event_now + due.float() * (set_ok.float() + ready.float() + reach.float()
+                                                         + (set_ok & ready & reach).float()) / 4.0
         self.pending &= ~due
         self.has_prev |= due
         last = due & (self.chain_pos >= CHAIN_LEN - 1)
@@ -283,8 +315,7 @@ class CallSetDrill(fs.FootworkDrill):
                           torch.where(early, torch.zeros_like(self.wait), torch.full_like(self.wait, NEXT_CALL_S)))
         self.wait = torch.where(due, gap, self.wait)
         go = mv & ~self.pending & (self.wait <= 0)
-        if bool(go.any()):  # one host sync per physics step; this drill is evaluation-only
-            self._issue(go)
+        self._issue(go)  # masked: no host sync (D-253)
         self._write_ball(mv)
 
     def _write_ball(self, mv: torch.Tensor) -> None:
@@ -303,6 +334,8 @@ class CallSetDrill(fs.FootworkDrill):
         out = {k: v.tolist() for k, v in self.cs.items()}
         out["ladder"] = self.cs_ladder.tolist()
         out["ladder_n"] = self.cs_ladder_n.tolist()
+        out["ladder_norm"] = self.cs_ladder_norm.tolist()
+        out["ladder_norm_n"] = self.cs_ladder_norm_n.tolist()
         out["start_sum"] = [round(x, 4) for x in self.cs_start_sum.tolist()]
         out["chains"] = self.chains.tolist()
         out["diag"] = {k: v.tolist() for k, v in self.cs_diag.items()}
